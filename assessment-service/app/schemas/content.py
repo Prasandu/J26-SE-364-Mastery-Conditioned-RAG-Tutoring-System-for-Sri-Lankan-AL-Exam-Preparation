@@ -1,5 +1,6 @@
 """Shapes of the JSON the API returns."""
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -11,6 +12,13 @@ class _FromORM(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TopicOut(_FromORM):
+    id: int
+    code: str
+    name: str
+    parent_id: int | None
+
+
 class PaperSummary(_FromORM):
     id: int
     title: str
@@ -18,6 +26,21 @@ class PaperSummary(_FromORM):
     kind: PaperKind
     year: int | None
     status: ContentStatus
+
+
+class SchemeSummary(_FromORM):
+    id: int
+    version: int
+    source: SchemeSource
+    status: ContentStatus
+    created_at: datetime
+    published_at: datetime | None
+
+
+class AdminPaperSummary(PaperSummary):
+    created_at: datetime
+    published_at: datetime | None
+    marking_schemes: list[SchemeSummary]
 
 
 class QuestionOut(BaseModel):
@@ -70,11 +93,7 @@ class QuestionSchemeOut(BaseModel):
     rules: list[MarkingRuleOut]
 
 
-class MarkingSchemeOut(BaseModel):
-    id: int
+class MarkingSchemeOut(SchemeSummary):
     paper_id: int
-    version: int
-    source: SchemeSource
-    status: ContentStatus
     notes: str | None
     questions: list[QuestionSchemeOut]

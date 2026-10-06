@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     app_name: str = "Assessment Service"
     app_env: str = "development"
     database_url: str = "sqlite:///./assessment.db"
+    # Key for the /admin endpoints. Empty = admin endpoints are switched off.
+    admin_api_key: str | None = Field(default=None, min_length=16)
 
     @field_validator("database_url")
     @classmethod

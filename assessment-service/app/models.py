@@ -1,9 +1,16 @@
-"""Database tables for the past-paper / model-paper library and marking schemes.
+"""Database tables.
 
-Paper -> Section -> Question (tree of sub-questions)
-MarkingScheme (versioned, per paper) -> MarkingPoint / MarkingRule / ModelAnswer (per question)
+Content library:
+  Paper -> Section -> Question (tree of sub-questions)
+  MarkingScheme (versioned, per paper) -> MarkingPoint / MarkingRule / ModelAnswer (per question)
+
+Student work:
+  Attempt (one student answering one paper, fixed to one scheme version)
+    -> Answer (per answered question) -> PointResult (per marking point)
 """
 
+import uuid
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -20,6 +27,7 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
+    Uuid,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -28,13 +36,14 @@ from app.db import Base
 
 QUESTION_FK = "questions.id"
 SCHEME_FK = "marking_schemes.id"
+ATTEMPT_FK = "attempts.id"
 CASCADE_ALL = "all, delete-orphan"
 
 # JSONB on Postgres (indexable, faster); plain JSON on SQLite (tests).
 JSON_DOC = JSON().with_variant(JSONB(), "postgresql")
 
 
-def _utcnow() -> datetime:
+def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
@@ -113,7 +122,8 @@ class Paper(Base):
     kind: Mapped[PaperKind] = mapped_column(_enum(PaperKind))
     year: Mapped[int | None] = mapped_column(Integer)  # empty for model papers
     status: Mapped[ContentStatus] = mapped_column(_enum(ContentStatus), default=ContentStatus.DRAFT)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     sections: Mapped[list["Section"]] = relationship(
         back_populates="paper", order_by="Section.order_no", cascade=CASCADE_ALL
@@ -121,6 +131,13 @@ class Paper(Base):
     marking_schemes: Mapped[list["MarkingScheme"]] = relationship(
         back_populates="paper", order_by="MarkingScheme.version", cascade=CASCADE_ALL
     )
+
+    def iter_questions(self) -> Iterator["Question"]:
+        """Every question and sub-question, in paper order: 1, 1(a), 1(b), 2, ..."""
+        for section in self.sections:
+            for question in section.questions:
+                if question.parent is None:
+                    yield from question.walk()
 
 
 class Section(Base):
@@ -167,6 +184,12 @@ class Question(Base):
         """Label including parents, e.g. "1(b)(i)"."""
         return (self.parent.full_label if self.parent else "") + self.label
 
+    def walk(self) -> Iterator["Question"]:
+        """This question, then all its sub-questions (depth first)."""
+        yield self
+        for sub in self.sub_questions:
+            yield from sub.walk()
+
 
 class MarkingScheme(Base):
     __tablename__ = "marking_schemes"
@@ -178,7 +201,8 @@ class MarkingScheme(Base):
     source: Mapped[SchemeSource] = mapped_column(_enum(SchemeSource))
     status: Mapped[ContentStatus] = mapped_column(_enum(ContentStatus), default=ContentStatus.DRAFT)
     notes: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     paper: Mapped[Paper] = relationship(back_populates="marking_schemes")
     points: Mapped[list["MarkingPoint"]] = relationship(
@@ -237,3 +261,94 @@ class ModelAnswer(Base):
 
     scheme: Mapped[MarkingScheme] = relationship(back_populates="model_answers")
     question: Mapped[Question] = relationship()
+
+
+# =============================================================
+# Student work
+# =============================================================
+
+
+class AttemptMode(StrEnum):
+    DIGITAL = "digital"  # typed / clicked on screen
+    PAPER = "paper"  # written on paper and uploaded (later step)
+
+
+class AttemptStatus(StrEnum):
+    IN_PROGRESS = "in_progress"  # answers can still change
+    SUBMITTED = "submitted"  # locked; some points still waiting to be marked
+    MARKED = "marked"  # every point decided, total available
+
+
+class PointStatus(StrEnum):
+    AWARDED = "awarded"
+    NOT_AWARDED = "not_awarded"
+    PENDING = "pending"  # no automatic marker for this point type yet
+
+
+class MarkingMethod(StrEnum):
+    RULE = "rule"  # exact rule, e.g. MCQ key
+    CHECKER = "checker"  # chemistry checker (later step)
+    LLM = "llm"  # AI judge (later step)
+    TEACHER = "teacher"  # teacher review (later step)
+
+
+class Attempt(Base):
+    __tablename__ = "attempts"
+
+    # Random id, so nobody can guess another student's attempt URL.
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    paper_id: Mapped[int] = mapped_column(ForeignKey("papers.id"), index=True)
+    # The scheme version is fixed when the attempt starts, so later versions never change old marks.
+    scheme_id: Mapped[int] = mapped_column(ForeignKey(SCHEME_FK), index=True)
+    student_ref: Mapped[str] = mapped_column(String(64), index=True)  # becomes a user id with shared login
+    mode: Mapped[AttemptMode] = mapped_column(_enum(AttemptMode))
+    status: Mapped[AttemptStatus] = mapped_column(_enum(AttemptStatus), default=AttemptStatus.IN_PROGRESS)
+    score: Mapped[float | None] = mapped_column(Float)  # empty until every point is marked
+    max_score: Mapped[float] = mapped_column(Float)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    marked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    paper: Mapped[Paper] = relationship()
+    scheme: Mapped[MarkingScheme] = relationship()
+    answers: Mapped[list["Answer"]] = relationship(back_populates="attempt", cascade=CASCADE_ALL)
+
+
+class Answer(Base):
+    """The student's answer to one question (MCQ option or text), in the same shape for every input mode."""
+
+    __tablename__ = "answers"
+    __table_args__ = (UniqueConstraint("attempt_id", "question_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    attempt_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(ATTEMPT_FK, ondelete="CASCADE"))
+    question_id: Mapped[int] = mapped_column(ForeignKey(QUESTION_FK), index=True)
+    mcq_option: Mapped[str | None] = mapped_column(String(20))
+    text: Mapped[str | None] = mapped_column(Text)
+    score: Mapped[float | None] = mapped_column(Float)  # empty until every point is marked
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    attempt: Mapped[Attempt] = relationship(back_populates="answers")
+    question: Mapped[Question] = relationship()
+    point_results: Mapped[list["PointResult"]] = relationship(
+        back_populates="answer", order_by="PointResult.id", cascade=CASCADE_ALL
+    )
+
+
+class PointResult(Base):
+    """Decision for one marking point of one answer, with the evidence behind it (traceability)."""
+
+    __tablename__ = "point_results"
+    __table_args__ = (UniqueConstraint("answer_id", "point_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"))
+    point_id: Mapped[int] = mapped_column(ForeignKey("marking_points.id"), index=True)
+    status: Mapped[PointStatus] = mapped_column(_enum(PointStatus))
+    awarded: Mapped[float] = mapped_column(Float, default=0.0)
+    method: Mapped[MarkingMethod | None] = mapped_column(_enum(MarkingMethod))
+    evidence: Mapped[str | None] = mapped_column(Text)
+    confidence: Mapped[float | None] = mapped_column(Float)  # 0..1
+
+    answer: Mapped[Answer] = relationship(back_populates="point_results")
+    point: Mapped[MarkingPoint] = relationship()

@@ -15,12 +15,17 @@ __pycache__/
 .venv/
 venv/
 env/
+tests/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Local SQLite database (development only)
+*.db
+*.db-journal
 
 # Jupyter (fine-tuning / experiment notebooks)
 .ipynb_checkpoints/

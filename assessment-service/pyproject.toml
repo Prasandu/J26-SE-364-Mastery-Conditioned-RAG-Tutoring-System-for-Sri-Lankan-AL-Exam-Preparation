@@ -1,3 +1,15 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+
+[tool.ruff.lint]
+# E/W: style, F: bugs, I: import order, B: likely bugs, UP: modern Python, SIM: simpler code
+select = ["E", "W", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Depends(...) in default arguments is the normal pattern.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]

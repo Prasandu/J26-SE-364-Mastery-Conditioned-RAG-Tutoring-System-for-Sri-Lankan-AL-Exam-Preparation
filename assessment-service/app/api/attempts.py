@@ -2,12 +2,17 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_judge, get_session_factory
+from app.config import Settings, get_settings
 from app.db import get_db
 from app.schemas.attempts import AnswerIn, AnswerOut, AttemptCreate, AttemptOut
 from app.services import attempts
+from app.services.attempts import SessionFactory
+from app.services.judge import AnswerJudge
+from app.services.marking import has_pending
 
 router = APIRouter(prefix="/attempts", tags=["attempts"])
 
@@ -31,6 +36,26 @@ def save_answer(attempt_id: uuid.UUID, question_id: int, data: AnswerIn, db: Ses
 
 
 @router.post("/{attempt_id}/submit", response_model=AttemptOut)
-def submit_attempt(attempt_id: uuid.UUID, db: Session = Depends(get_db)):
-    """Lock the answers and mark them."""
-    return attempts.to_attempt_out(attempts.submit_attempt(db, attempt_id))
+def submit_attempt(
+    attempt_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    judge: AnswerJudge | None = Depends(get_judge),
+    session_factory: SessionFactory = Depends(get_session_factory),
+    settings: Settings = Depends(get_settings),
+):
+    """Lock the answers and mark them.
+
+    MCQs are marked at once. Written answers are marked by the AI judge in the
+    background: call GET /attempts/{id} again to see the results.
+    """
+    attempt = attempts.submit_attempt(db, attempt_id)
+    if judge is not None and has_pending(attempt):
+        background_tasks.add_task(
+            attempts.judge_pending_in_background,
+            session_factory,
+            judge,
+            attempt.id,
+            settings.ai_min_confidence,
+        )
+    return attempts.to_attempt_out(attempt)

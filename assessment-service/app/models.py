@@ -282,7 +282,8 @@ class AttemptStatus(StrEnum):
 class PointStatus(StrEnum):
     AWARDED = "awarded"
     NOT_AWARDED = "not_awarded"
-    PENDING = "pending"  # no automatic marker for this point type yet
+    PENDING = "pending"  # not decided yet (waiting for a marker)
+    NEEDS_REVIEW = "needs_review"  # a marker decided, but the decision is not trusted -> teacher
 
 
 class MarkingMethod(StrEnum):
@@ -347,7 +348,9 @@ class PointResult(Base):
     status: Mapped[PointStatus] = mapped_column(_enum(PointStatus))
     awarded: Mapped[float] = mapped_column(Float, default=0.0)
     method: Mapped[MarkingMethod | None] = mapped_column(_enum(MarkingMethod))
-    evidence: Mapped[str | None] = mapped_column(Text)
+    evidence: Mapped[str | None] = mapped_column(Text)  # the student's own words, or the rule applied
+    reason: Mapped[str | None] = mapped_column(Text)  # short explanation shown as feedback
+    marker: Mapped[str | None] = mapped_column(String(100))  # e.g. "mcq-key" or the AI model name
     confidence: Mapped[float | None] = mapped_column(Float)  # 0..1
 
     answer: Mapped[Answer] = relationship(back_populates="point_results")

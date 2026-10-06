@@ -1,17 +1,23 @@
-"""Admin endpoints: manage topics, papers and versioned marking schemes (FR11).
+"""Admin endpoints: manage topics, papers and versioned marking schemes (FR11), retry AI marking.
 
 Every route needs the X-Admin-Key header (see app/security.py).
 """
 
-from fastapi import APIRouter, Depends, status
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_judge
+from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import PaperKind
 from app.schemas.admin import MarkingSchemeIn, PaperIn, TopicIn
+from app.schemas.attempts import AttemptOut
 from app.schemas.content import AdminPaperSummary, MarkingSchemeOut, PaperDetail, SchemeSummary, TopicOut
 from app.security import require_admin
-from app.services import papers, schemes, topics
+from app.services import attempts, papers, schemes, topics
+from app.services.judge import AnswerJudge
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -110,3 +116,21 @@ def copy_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
 def publish_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
     """Lock this version. Checks that every question's points add up to its marks."""
     return schemes.to_scheme_out(schemes.publish_scheme(db, paper_id, version))
+
+
+# ---------- Attempts ----------
+
+
+@router.post("/attempts/{attempt_id}/judge", response_model=AttemptOut)
+def judge_attempt(
+    attempt_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    judge: AnswerJudge | None = Depends(get_judge),
+    settings: Settings = Depends(get_settings),
+):
+    """Run the AI judge now for every still-pending point (e.g. after a network or quota failure)."""
+    if judge is None:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "AI judge is switched off. Set GEMINI_API_KEY."
+        )
+    return attempts.to_attempt_out(attempts.judge_pending(db, attempt_id, judge, settings.ai_min_confidence))

@@ -3,9 +3,15 @@
 Life cycle: in_progress -> submitted -> marked.
 Answers can only change while in progress. The scheme version is fixed at the
 start, so publishing a corrected scheme later never changes this attempt's marks.
+
+Written answers are marked by the AI judge after submit, in the background. If the
+judge fails (no internet, quota), the points simply stay pending and can be retried.
 """
 
+import logging
 import uuid
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 
 from sqlalchemy.orm import Session
 
@@ -27,9 +33,20 @@ from app.schemas.attempts import (
     PointResultOut,
     QuestionResultOut,
 )
-from app.services.marking import mark_attempt, paper_max_score
+from app.services.judge import AnswerJudge
+from app.services.marking import (
+    FINAL_STATUSES,
+    judge_answer,
+    mark_attempt,
+    paper_max_score,
+    refresh_scores,
+)
 from app.services.papers import get_paper
 from app.services.schemes import latest_published_scheme
+
+logger = logging.getLogger(__name__)
+
+SessionFactory = Callable[[], AbstractContextManager[Session]]
 
 
 def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
@@ -82,6 +99,34 @@ def submit_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
     return attempt
 
 
+def judge_pending(db: Session, attempt_id: uuid.UUID, judge: AnswerJudge, min_confidence: float) -> Attempt:
+    """Let the AI judge decide every pending point. Progress is saved answer by answer."""
+    attempt = get_attempt(db, attempt_id)
+    if attempt.status == AttemptStatus.IN_PROGRESS:
+        raise ConflictError("Submit the attempt before marking it")
+
+    for answer in attempt.answers:
+        try:
+            judge_answer(answer, judge, min_confidence)
+        except Exception:  # network, quota or a bad AI reply: keep the points pending for a retry
+            logger.exception("AI judge failed for attempt %s, question %s", attempt.id, answer.question_id)
+            db.rollback()
+            continue
+        db.commit()
+
+    refresh_scores(attempt)
+    db.commit()
+    return attempt
+
+
+def judge_pending_in_background(
+    session_factory: SessionFactory, judge: AnswerJudge, attempt_id: uuid.UUID, min_confidence: float
+) -> None:
+    """Runs after the submit response is sent, with its own database session."""
+    with session_factory() as db:
+        judge_pending(db, attempt_id, judge, min_confidence)
+
+
 def to_attempt_out(attempt: Attempt) -> AttemptOut:
     answers = {answer.question_id: answer for answer in attempt.answers}
     submitted = attempt.status != AttemptStatus.IN_PROGRESS
@@ -121,9 +166,12 @@ def _question_result(question: Question, answer: Answer | None, submitted: bool)
                 description=result.point.description,
                 marks=result.point.marks,
                 status=result.status,
-                awarded=result.awarded,
+                awarded=result.awarded if result.status in FINAL_STATUSES else None,
                 method=result.method,
+                marker=result.marker,
                 evidence=result.evidence,
+                reason=result.reason,
+                confidence=result.confidence,
             )
             for result in (answer.point_results if answer and submitted else [])
         ],

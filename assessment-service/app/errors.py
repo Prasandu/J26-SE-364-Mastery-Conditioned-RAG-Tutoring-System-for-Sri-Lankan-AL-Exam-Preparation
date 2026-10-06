@@ -24,3 +24,9 @@ class ContentValidationError(DomainError):
     """The content breaks a paper / marking-scheme rule. `errors` lists every problem found."""
 
     status_code = 422
+
+
+class ConfigurationError(DomainError):
+    """The .env settings do not make sense (e.g. a provider without its URL)."""
+
+    status_code = 503

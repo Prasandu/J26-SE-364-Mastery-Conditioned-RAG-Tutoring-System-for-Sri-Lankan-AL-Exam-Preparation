@@ -47,8 +47,32 @@ Open http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs
 |---|---|
 | `POST /attempts` | Start answering a published paper (fixes the scheme version) |
 | `PUT /attempts/{id}/answers/{question_id}` | Save or change an answer: `{"mcq_option": "4"}` or `{"text": "..."}` |
-| `POST /attempts/{id}/submit` | Lock and mark: MCQ by rule now; written answers stay `pending` until the AI judge |
+| `POST /attempts/{id}/submit` | Lock and mark: MCQ by rule at once; written answers by the AI judge in the background |
 | `GET /attempts/{id}` | Answers, then per-point results and totals after submitting |
+
+### How written answers are marked (AI judge)
+
+1. The AI decides each marking point and must quote the student's exact words as evidence.
+2. Code checks every decision. It only counts if the quote is really in the answer and the
+   confidence is at least `AI_MIN_CONFIDENCE`; otherwise the point is `needs_review` (teacher).
+3. Diagram and graph points in typed answers always go to a teacher.
+4. Totals come from the rule engine, never from the AI. A paper is only `marked` when every point is final.
+5. Every decision stores the model that made it, so results stay comparable between models.
+
+Set `AI_PROVIDER` in `.env` to pick the service, then check it with `python -m app.check_ai`:
+
+| `AI_PROVIDER` | Service | Key setting |
+|---|---|---|
+| `gemini` (default) | Google Gemini | `GEMINI_API_KEY`, `GEMINI_MODEL` |
+| `groq` | Groq | `AI_API_KEY` |
+| `openrouter` | OpenRouter | `AI_API_KEY` |
+| `cerebras` | Cerebras | `AI_API_KEY` |
+| `github` | GitHub Models | `AI_API_KEY` |
+| `ollama` | Ollama on this computer | none |
+| `custom` | Any OpenAI-compatible API | `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` |
+
+Every provider except `gemini` uses the same OpenAI-style API, so `AI_MODEL` (empty = the
+provider's default) and `AI_API_KEY` are all you change.
 
 ### Admin endpoints (header `X-Admin-Key: <ADMIN_API_KEY>`)
 
@@ -62,6 +86,7 @@ Open http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs
 | `GET/PUT/DELETE /admin/papers/{id}/marking-schemes/{v}` | View / replace / delete a draft version |
 | `POST /admin/papers/{id}/marking-schemes/{v}/copy` | Copy a version into a new draft version |
 | `POST /admin/papers/{id}/marking-schemes/{v}/publish` | Lock a version (checks marks add up) |
+| `POST /admin/attempts/{id}/judge` | Run the AI judge again for still-pending points |
 
 Content life cycle: **draft → published**. Published content never changes. To correct a
 published marking scheme: copy → edit the new draft → publish. Old versions stay for traceability.

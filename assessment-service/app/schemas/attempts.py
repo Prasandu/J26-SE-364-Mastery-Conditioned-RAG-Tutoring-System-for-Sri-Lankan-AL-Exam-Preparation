@@ -46,9 +46,12 @@ class PointResultOut(BaseModel):
     description: str
     marks: float
     status: PointStatus
-    awarded: float
+    awarded: float | None  # empty until the decision is final
     method: MarkingMethod | None
+    marker: str | None
     evidence: str | None
+    reason: str | None
+    confidence: float | None
 
 
 class QuestionResultOut(BaseModel):

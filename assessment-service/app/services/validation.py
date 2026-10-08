@@ -23,6 +23,7 @@ from app.schemas.admin import (
     RuleIn,
     SectionIn,
 )
+from app.services.chemistry.checkers import GRAPH_CHECKS
 from app.services.marks import question_total
 
 QuestionRef = tuple[str, str]  # (section code, full label), e.g. ("II-A", "1(b)")
@@ -148,6 +149,14 @@ def _check_points(where: str, points: list[PointIn], question: Question) -> list
     elif keys:
         errors.append(f"{where}: mcq_key points are only for MCQ questions")
 
+    errors += [
+        f'{where} {point.code}: a graph point\'s expected needs "check" to be one of '
+        f"{', '.join(GRAPH_CHECKS)}"
+        for point in points
+        if point.point_type == PointType.GRAPH
+        and point.expected is not None
+        and point.expected.get("check") not in GRAPH_CHECKS
+    ]
     errors += [
         f"{where} {point.code}: a calculation's expected needs a numeric 'value'"
         for point in points

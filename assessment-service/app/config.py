@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     ai_provider: ProviderName = ProviderName.GEMINI
     # AI decisions below this confidence go to teacher review instead of counting.
     ai_min_confidence: float = Field(default=0.7, ge=0, le=1)
+    # Ask the AI judge about points the chemistry checker already decided, without telling it
+    # the checker's answer. They must agree, or a teacher reviews. Costs an extra AI call.
+    ai_cross_check: bool = True
 
     # Google Gemini (ai_provider=gemini)
     gemini_api_key: str | None = None

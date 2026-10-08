@@ -50,14 +50,49 @@ Open http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs
 | `POST /attempts/{id}/submit` | Lock and mark: MCQ by rule at once; written answers by the AI judge in the background |
 | `GET /attempts/{id}` | Answers, then per-point results and totals after submitting |
 
-### How written answers are marked (AI judge)
+### How written answers are marked
 
-1. The AI decides each marking point and must quote the student's exact words as evidence.
+Each marking point goes to the best marker available, in this order:
+
+| Point type | Marker | When |
+|---|---|---|
+| `mcq_key` | exact rule | at submit |
+| `diagram`, `graph` | teacher | at submit (typed text cannot show a drawing) |
+| `calculation`, `unit` | **chemistry checker** (code) | at submit |
+| `graph` | **chemistry checker** when the student plotted it as data, else teacher | at submit |
+| everything else | AI judge | in the background after submit |
+
+**Chemistry checker** (`app/services/chemistry/`) first rewrites the answer in one standard
+form - `SO₄²⁻`, `\ce{SO4^{2-}}` and `SO4^2-` all become `SO4^2-` - then finds the numbers with
+their units and compares them with the marking scheme. Units are compared by what they measure,
+so `0.0800 mol dm-3`, `0.0800 mol/L`, `0.0800 M` and `80 mol m-3` all count as the same answer.
+
+It gives three kinds of answer: **award** (value and unit both right), **do not award** (the
+student's number was found but the unit is missing or wrong), or **cannot decide**, which hands
+the point to the AI judge. So code never fails an answer it simply did not understand, and the
+marks it does give are exact and the same every time.
+
+**Graphs are marked from the student's data, not from a picture.** In digital mode the student
+plots points with a tool and states the gradient they read off, so code can check the axis labels
+and units, the plotted points, whether the points lie on a straight line (r²), and the gradient
+and intercept. A gradient read correctly from the student's *own* points keeps its mark even when
+a point was plotted wrongly - the same error-carried-forward rule a teacher would apply. A typed
+answer to a graph question has no data to check, so it goes to a teacher.
+
+**Two markers, one mark.** With `AI_CROSS_CHECK=true` a point the checker decided is also sent to
+the AI judge, which is never told what the checker said. If they agree the mark stands with high
+confidence; if they disagree the point goes to a teacher. Each point stores `checker_awarded` and
+`ai_awarded`, so how often the two agree can be measured.
+
+### How the AI judge marks the rest
+
+1. The AI decides each remaining marking point and must quote the student's exact words as evidence.
 2. Code checks every decision. It only counts if the quote is really in the answer and the
    confidence is at least `AI_MIN_CONFIDENCE`; otherwise the point is `needs_review` (teacher).
 3. Diagram and graph points in typed answers always go to a teacher.
 4. Totals come from the rule engine, never from the AI. A paper is only `marked` when every point is final.
-5. Every decision stores the model that made it, so results stay comparable between models.
+5. Every decision stores the marker that made it (`chemistry-checker` or the model name), so
+   results stay traceable and comparable between models.
 
 Set `AI_PROVIDER` in `.env` to pick the service, then check it with `python -m app.check_ai`:
 

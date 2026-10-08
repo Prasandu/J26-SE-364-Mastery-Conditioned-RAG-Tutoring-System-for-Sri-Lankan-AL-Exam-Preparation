@@ -36,6 +36,7 @@ from app.schemas.attempts import (
 from app.services.judge import AnswerJudge
 from app.services.marking import (
     FINAL_STATUSES,
+    finalize_without_ai,
     judge_answer,
     mark_attempt,
     paper_max_score,
@@ -86,15 +87,16 @@ def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: Answ
         attempt.answers.append(answer)
     answer.mcq_option = data.mcq_option
     answer.text = data.text
+    answer.data = data.graph.model_dump() if data.graph else None
     db.commit()
     return answer
 
 
-def submit_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
+def submit_attempt(db: Session, attempt_id: uuid.UUID, cross_check: bool = False) -> Attempt:
     attempt = _get_in_progress(db, attempt_id)
     attempt.status = AttemptStatus.SUBMITTED
     attempt.submitted_at = utcnow()
-    mark_attempt(attempt)
+    mark_attempt(attempt, cross_check=cross_check)
     db.commit()
     return attempt
 
@@ -108,10 +110,10 @@ def judge_pending(db: Session, attempt_id: uuid.UUID, judge: AnswerJudge, min_co
     for answer in attempt.answers:
         try:
             judge_answer(answer, judge, min_confidence)
-        except Exception:  # network, quota or a bad AI reply: keep the points pending for a retry
+        except Exception:  # network, quota or a bad AI reply
             logger.exception("AI judge failed for attempt %s, question %s", attempt.id, answer.question_id)
             db.rollback()
-            continue
+            finalize_without_ai(answer)  # points the checker decided do not wait for the AI
         db.commit()
 
     refresh_scores(attempt)
@@ -169,6 +171,8 @@ def _question_result(question: Question, answer: Answer | None, submitted: bool)
                 awarded=result.awarded if result.status in FINAL_STATUSES else None,
                 method=result.method,
                 marker=result.marker,
+                checker_awarded=result.checker_awarded,
+                ai_awarded=result.ai_awarded,
                 evidence=result.evidence,
                 reason=result.reason,
                 confidence=result.confidence,
@@ -199,13 +203,15 @@ def _answerable_question(attempt: Attempt, question_id: int) -> Question:
 def _check_answer_kind(question: Question, data: AnswerIn) -> None:
     where = f"Section {question.section.code} Q{question.full_label}"
     if question.section.answer_mode != AnswerMode.MCQ:
-        if data.text is None:
-            raise ContentValidationError("Wrong answer type", [f"{where}: send text, not mcq_option"])
+        if data.mcq_option is not None:
+            raise ContentValidationError(
+                "Wrong answer type", [f"{where}: send text or graph, not mcq_option"]
+            )
         return
 
     options = [option["label"] for option in question.options or []]
     if data.mcq_option is None:
-        raise ContentValidationError("Wrong answer type", [f"{where}: send mcq_option, not text"])
+        raise ContentValidationError("Wrong answer type", [f"{where}: send mcq_option, not text or graph"])
     if data.mcq_option not in options:
         raise ContentValidationError(
             "Unknown option", [f"{where}: mcq_option must be one of {', '.join(options)}"]

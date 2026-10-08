@@ -46,10 +46,11 @@ def submit_attempt(
 ):
     """Lock the answers and mark them.
 
-    MCQs are marked at once. Written answers are marked by the AI judge in the
-    background: call GET /attempts/{id} again to see the results.
+    MCQs and points the chemistry checker can decide are marked at once. The rest are
+    marked by the AI judge in the background: call GET /attempts/{id} again to see them.
     """
-    attempt = attempts.submit_attempt(db, attempt_id)
+    cross_check = judge is not None and settings.ai_cross_check
+    attempt = attempts.submit_attempt(db, attempt_id, cross_check=cross_check)
     if judge is not None and has_pending(attempt):
         background_tasks.add_task(
             attempts.judge_pending_in_background,

@@ -17,6 +17,7 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     Column,
     DateTime,
     Enum,
@@ -316,7 +317,7 @@ class Attempt(Base):
 
 
 class Answer(Base):
-    """The student's answer to one question (MCQ option or text), in the same shape for every input mode."""
+    """The student's answer to one question, in the same shape for every input mode."""
 
     __tablename__ = "answers"
     __table_args__ = (UniqueConstraint("attempt_id", "question_id"),)
@@ -326,6 +327,8 @@ class Answer(Base):
     question_id: Mapped[int] = mapped_column(ForeignKey(QUESTION_FK), index=True)
     mcq_option: Mapped[str | None] = mapped_column(String(20))
     text: Mapped[str | None] = mapped_column(Text)
+    # Structured answers the student built with a tool rather than typed, e.g. a plotted graph.
+    data: Mapped[dict[str, Any] | None] = mapped_column(JSON_DOC)
     score: Mapped[float | None] = mapped_column(Float)  # empty until every point is marked
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -348,6 +351,10 @@ class PointResult(Base):
     status: Mapped[PointStatus] = mapped_column(_enum(PointStatus))
     awarded: Mapped[float] = mapped_column(Float, default=0.0)
     method: Mapped[MarkingMethod | None] = mapped_column(_enum(MarkingMethod))
+    # What each marker decided on its own, kept even when they disagree. Two independent
+    # markers agreeing is the main evidence behind the confidence score.
+    checker_awarded: Mapped[bool | None] = mapped_column(Boolean)
+    ai_awarded: Mapped[bool | None] = mapped_column(Boolean)
     evidence: Mapped[str | None] = mapped_column(Text)  # the student's own words, or the rule applied
     reason: Mapped[str | None] = mapped_column(Text)  # short explanation shown as feedback
     marker: Mapped[str | None] = mapped_column(String(100))  # e.g. "mcq-key" or the AI model name

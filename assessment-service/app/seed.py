@@ -25,7 +25,11 @@ SAMPLE_TOPICS = {
     "STOICH": "Chemical calculations (mole concept)",
     "REDOX": "Oxidation and reduction",
     "ACIDBASE": "Acids, bases and titration",
+    "RATES": "Reaction kinetics",
 }
+
+# rate = 0.025 x [A]: a straight line through the origin
+RATE_POINTS = [[0.10, 0.0025], [0.20, 0.0050], [0.30, 0.0075], [0.40, 0.0100], [0.50, 0.0125]]
 
 
 def _options(*texts: str) -> list[dict[str, str]]:
@@ -111,7 +115,14 @@ SAMPLE_PAPER = {
                             "topics": ["ACIDBASE"],
                         },
                     ],
-                }
+                },
+                {
+                    "label": "2",
+                    "text": "A student measured the rate of a reaction at five concentrations of A. "
+                    "Plot rate against [A], draw the best straight line and find its gradient.",
+                    "max_marks": 4,
+                    "topics": ["RATES"],
+                },
             ],
         },
         {
@@ -196,6 +207,40 @@ SAMPLE_SCHEME = {
                         "phenolphthalein: pink to colourless",
                         "methyl orange: yellow to orange/red",
                     ],
+                ),
+            ],
+        },
+        {
+            "section": "II-A",
+            "question": "2",
+            "points": [
+                _point(
+                    "P1",
+                    "Both axes labelled with the correct quantity and unit",
+                    "graph",
+                    expected={
+                        "check": "axes",
+                        "x": {"label": "[A]", "unit": "mol dm-3"},
+                        "y": {"label": "rate", "unit": "mol dm-3 s-1"},
+                    },
+                ),
+                _point(
+                    "P2",
+                    "All five points plotted correctly",
+                    "graph",
+                    expected={"check": "points", "points": RATE_POINTS, "tolerance_pct": 5},
+                ),
+                _point(
+                    "P3",
+                    "Best straight line drawn through the points",
+                    "graph",
+                    expected={"check": "linear"},
+                ),
+                _point(
+                    "P4",
+                    "Gradient = 0.025 s-1 (read from the drawn line)",
+                    "graph",
+                    expected={"check": "gradient", "value": 0.025, "tolerance_pct": 5},
                 ),
             ],
         },

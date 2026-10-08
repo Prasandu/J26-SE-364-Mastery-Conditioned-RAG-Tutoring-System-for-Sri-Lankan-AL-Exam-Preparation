@@ -1,9 +1,15 @@
 """Marking engine: decide every marking point of every answer, then total with the rules.
 
 Who decides a point:
-- mcq_key        -> exact rule, at submit time
-- diagram/graph  -> teacher (cannot be judged from typed text)
-- everything else-> AI judge, after submit (stays PENDING until then)
+- mcq_key          -> exact rule, at submit time
+- diagram          -> teacher (a typed answer cannot show a drawing)
+- graph            -> chemistry checker when the student plotted it as data, else teacher
+- chemistry checker-> exact code check (calculations, units, graphs), at submit time
+- everything else  -> AI judge, after submit (stays PENDING until then)
+
+With AI_CROSS_CHECK on, a point the checker decided is also sent to the AI judge, which is
+never told what the checker said. Two independent markers agreeing is strong evidence; when
+they disagree the point goes to a teacher instead of silently trusting one of them.
 
 An AI decision only counts if code can confirm it: the quoted evidence must really
 be in the student's answer, and the AI must be confident enough. Otherwise the
@@ -15,6 +21,7 @@ half-finished mark presented as final.
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 
 from app.models import (
     Answer,
@@ -31,22 +38,25 @@ from app.models import (
     RuleType,
     utcnow,
 )
+from app.services.chemistry.checkers import CHECKER_NAME, StudentAnswer, check_point
+from app.services.chemistry.graphs import GraphAnswer
 from app.services.judge import AnswerJudge, JudgeRequest, PointToJudge, PointVerdict
 from app.services.marks import best_of, question_total
 
 FINAL_STATUSES = {PointStatus.AWARDED, PointStatus.NOT_AWARDED}
-TEACHER_ONLY_TYPES = {PointType.DIAGRAM, PointType.GRAPH}
 MCQ_KEY_MARKER = "mcq-key"
 
 
 # ---------- Public ----------
 
 
-def mark_attempt(attempt: Attempt) -> None:
+def mark_attempt(attempt: Attempt, cross_check: bool = False) -> None:
     """First pass at submit time: rule-based points are decided, the rest wait."""
     points = _by_question(attempt.scheme.points)
     for answer in attempt.answers:
-        answer.point_results = [_first_pass(point, answer) for point in points[answer.question_id]]
+        answer.point_results = [
+            _first_pass(point, answer, cross_check) for point in points[answer.question_id]
+        ]
     refresh_scores(attempt)
 
 
@@ -58,6 +68,13 @@ def judge_answer(answer: Answer, judge: AnswerJudge, min_confidence: float) -> N
     verdicts = {v.code: v for v in judge.judge(_judge_request(answer, [r.point for r in pending]))}
     for result in pending:
         _apply_verdict(result, verdicts.get(result.point.code), answer.text or "", judge.name, min_confidence)
+
+
+def finalize_without_ai(answer: Answer) -> None:
+    """The AI judge could not be reached: let the checker's own decisions stand."""
+    for result in answer.point_results:
+        if result.status == PointStatus.PENDING and result.checker_awarded is not None:
+            _finalize_from_checker(result)
 
 
 def has_pending(attempt: Attempt) -> bool:
@@ -92,17 +109,52 @@ def quote_in_answer(quote: str | None, answer_text: str) -> bool:
 # ---------- First pass ----------
 
 
-def _first_pass(point: MarkingPoint, answer: Answer) -> PointResult:
+def _first_pass(point: MarkingPoint, answer: Answer, cross_check: bool) -> PointResult:
     if point.point_type == PointType.MCQ_KEY:
         return _judge_mcq(point, answer)
-    if point.point_type in TEACHER_ONLY_TYPES:
+    if _needs_teacher(point, answer):
         return PointResult(
             point=point,
             status=PointStatus.NEEDS_REVIEW,
             awarded=0.0,
-            reason="Diagrams and graphs in typed answers are marked by a teacher",
+            reason="A drawing in a typed answer is marked by a teacher",
         )
-    return PointResult(point=point, status=PointStatus.PENDING, awarded=0.0)
+
+    outcome = check_point(point, _student_answer(answer))
+    if outcome is None:
+        return PointResult(point=point, status=PointStatus.PENDING, awarded=0.0)
+
+    result = PointResult(
+        point=point,
+        status=PointStatus.PENDING,
+        awarded=0.0,
+        checker_awarded=outcome.awarded,
+        evidence=outcome.evidence,
+        reason=outcome.reason,
+    )
+    if not cross_check:
+        _finalize_from_checker(result)
+    return result
+
+
+def _needs_teacher(point: MarkingPoint, answer: Answer) -> bool:
+    """A drawing can only be marked by a teacher, unless the student plotted it as data."""
+    if point.point_type == PointType.DIAGRAM:
+        return True
+    return point.point_type == PointType.GRAPH and answer.data is None
+
+
+def _student_answer(answer: Answer) -> StudentAnswer:
+    return StudentAnswer(text=answer.text or "", graph=GraphAnswer.from_data(answer.data))
+
+
+def _finalize_from_checker(result: PointResult) -> None:
+    awarded = bool(result.checker_awarded)
+    result.status = PointStatus.AWARDED if awarded else PointStatus.NOT_AWARDED
+    result.awarded = result.point.marks if awarded else 0.0
+    result.method = MarkingMethod.CHECKER
+    result.marker = CHECKER_NAME
+    result.confidence = 1.0  # an exact code check, not a guess
 
 
 def _judge_mcq(point: MarkingPoint, answer: Answer) -> PointResult:
@@ -165,28 +217,68 @@ def _question_with_context(question: Question) -> str:
     return "\n".join(reversed(chain))
 
 
+@dataclass(frozen=True)
+class _Judgement:
+    """What the AI decided, once code has checked whether it can be trusted."""
+
+    awarded: bool | None  # None = cannot be trusted
+    reason: str
+
+
+def _trust(verdict: PointVerdict | None, answer_text: str, min_confidence: float) -> _Judgement:
+    if verdict is None:
+        return _Judgement(None, "The AI judge gave no decision for this point")
+    if verdict.awarded and not quote_in_answer(verdict.evidence_quote, answer_text):
+        return _Judgement(None, f"AI evidence was not found in the answer. AI said: {verdict.reason}")
+    if verdict.confidence < min_confidence:
+        return _Judgement(None, verdict.reason)
+    return _Judgement(verdict.awarded, verdict.reason)
+
+
 def _apply_verdict(
     result: PointResult, verdict: PointVerdict | None, answer_text: str, marker: str, min_confidence: float
 ) -> None:
-    result.method = MarkingMethod.LLM
-    result.marker = marker
-    if verdict is None:
-        result.status = PointStatus.NEEDS_REVIEW
-        result.reason = "The AI judge gave no decision for this point"
+    result.ai_awarded = verdict.awarded if verdict else None
+    judgement = _trust(verdict, answer_text, min_confidence)
+
+    if result.checker_awarded is not None:
+        _combine(result, judgement, marker)
         return
 
-    result.confidence = min(max(verdict.confidence, 0.0), 1.0)
-    result.awarded = result.point.marks if verdict.awarded else 0.0  # AI suggestion, final only if trusted
-    result.evidence = verdict.evidence_quote
-    result.reason = verdict.reason
+    result.method = MarkingMethod.LLM
+    result.marker = marker
+    result.reason = judgement.reason
+    if verdict is not None:
+        result.confidence = min(max(verdict.confidence, 0.0), 1.0)
+        result.evidence = verdict.evidence_quote
+    if judgement.awarded is None:
+        result.status = PointStatus.NEEDS_REVIEW
+        result.awarded = 0.0
+        return
+    result.status = PointStatus.AWARDED if judgement.awarded else PointStatus.NOT_AWARDED
+    result.awarded = result.point.marks if judgement.awarded else 0.0
 
-    if verdict.awarded and not quote_in_answer(verdict.evidence_quote, answer_text):
-        result.status = PointStatus.NEEDS_REVIEW
-        result.reason = f"AI evidence was not found in the answer. AI said: {verdict.reason}"
-    elif result.confidence < min_confidence:
-        result.status = PointStatus.NEEDS_REVIEW
-    else:
-        result.status = PointStatus.AWARDED if verdict.awarded else PointStatus.NOT_AWARDED
+
+def _combine(result: PointResult, judgement: _Judgement, marker: str) -> None:
+    """The checker and the AI judged this point without seeing each other's answer."""
+    if judgement.awarded is None:  # the AI was unusable, so the exact code check stands
+        _finalize_from_checker(result)
+        result.reason = f"{result.reason} (the AI judge could not confirm this)"
+        return
+    if judgement.awarded == result.checker_awarded:  # both agree
+        _finalize_from_checker(result)
+        return
+
+    checker_said = "earns the mark" if result.checker_awarded else "does not earn the mark"
+    result.status = PointStatus.NEEDS_REVIEW
+    result.awarded = 0.0
+    result.method = MarkingMethod.CHECKER
+    result.marker = f"{CHECKER_NAME} vs {marker}"
+    result.confidence = None
+    result.reason = (
+        f"A teacher should check this: the chemistry checker says the answer {checker_said} "
+        f"({result.reason}), but the AI judge disagrees ({judgement.reason})."
+    )
 
 
 # ---------- Totals ----------

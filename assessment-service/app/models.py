@@ -226,10 +226,7 @@ class MarkingPoint(Base):
     description: Mapped[str] = mapped_column(Text)
     marks: Mapped[float] = mapped_column(Float)
     point_type: Mapped[PointType] = mapped_column(_enum(PointType))
-    # Machine-checkable answer, depends on point_type. Examples:
-    #   mcq_key:     {"option": "4"}
-    #   equation:    {"equation": "\\ce{NaOH(aq) + HCl(aq) -> NaCl(aq) + H2O(l)}"}
-    #   calculation: {"value": 0.08, "unit": "mol dm-3", "tolerance_pct": 1}
+    # What code can check, e.g. {"value": 0.08, "unit": "mol dm-3", "tolerance_pct": 1}
     expected: Mapped[dict[str, Any] | None] = mapped_column(JSON_DOC)
     alternatives: Mapped[list[str]] = mapped_column(JSON_DOC, default=list)  # other accepted answers
     order_no: Mapped[int] = mapped_column(Integer, default=0)
@@ -264,9 +261,7 @@ class ModelAnswer(Base):
     question: Mapped[Question] = relationship()
 
 
-# =============================================================
 # Student work
-# =============================================================
 
 
 class AttemptMode(StrEnum):
@@ -329,6 +324,11 @@ class Answer(Base):
     text: Mapped[str | None] = mapped_column(Text)
     # Structured answers the student built with a tool rather than typed, e.g. a plotted graph.
     data: Mapped[dict[str, Any] | None] = mapped_column(JSON_DOC)
+    # Paper mode: what the model read, kept beside the version the student confirmed in `text`.
+    extracted_text: Mapped[str | None] = mapped_column(Text)
+    reader: Mapped[str | None] = mapped_column(String(100))  # the vision model that read it
+    reading_confidence: Mapped[float | None] = mapped_column(Float)
+    corrected_by_student: Mapped[bool] = mapped_column(Boolean, default=False)
     score: Mapped[float | None] = mapped_column(Float)  # empty until every point is marked
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -336,6 +336,9 @@ class Answer(Base):
     question: Mapped[Question] = relationship()
     point_results: Mapped[list["PointResult"]] = relationship(
         back_populates="answer", order_by="PointResult.id", cascade=CASCADE_ALL
+    )
+    images: Mapped[list["AnswerImage"]] = relationship(
+        back_populates="answer", order_by="AnswerImage.order_no", cascade=CASCADE_ALL
     )
 
 
@@ -351,8 +354,7 @@ class PointResult(Base):
     status: Mapped[PointStatus] = mapped_column(_enum(PointStatus), index=True)
     awarded: Mapped[float] = mapped_column(Float, default=0.0)
     method: Mapped[MarkingMethod | None] = mapped_column(_enum(MarkingMethod))
-    # What each marker decided on its own, kept even when they disagree. Two independent
-    # markers agreeing is the main evidence behind the confidence score.
+    # What each marker decided on its own, kept even when they disagree.
     checker_awarded: Mapped[bool | None] = mapped_column(Boolean)
     ai_awarded: Mapped[bool | None] = mapped_column(Boolean)
     teacher_awarded: Mapped[bool | None] = mapped_column(Boolean)
@@ -366,3 +368,18 @@ class PointResult(Base):
 
     answer: Mapped[Answer] = relationship(back_populates="point_results")
     point: Mapped[MarkingPoint] = relationship()
+
+
+class AnswerImage(Base):
+    """A photo of one handwritten answer. Several pages may belong to one answer."""
+
+    __tablename__ = "answer_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"), index=True)
+    storage_key: Mapped[str] = mapped_column(String(300))
+    content_type: Mapped[str] = mapped_column(String(100))
+    order_no: Mapped[int] = mapped_column(Integer, default=0)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    answer: Mapped[Answer] = relationship(back_populates="images")

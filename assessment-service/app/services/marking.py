@@ -47,7 +47,7 @@ FINAL_STATUSES = {PointStatus.AWARDED, PointStatus.NOT_AWARDED}
 MCQ_KEY_MARKER = "mcq-key"
 
 
-# ---------- Public ----------
+# Public
 
 
 def mark_attempt(attempt: Attempt, cross_check: bool = False) -> None:
@@ -106,7 +106,7 @@ def quote_in_answer(quote: str | None, answer_text: str) -> bool:
     return bool(cleaned) and cleaned in normalize(answer_text)
 
 
-# ---------- First pass ----------
+# First pass
 
 
 def _first_pass(point: MarkingPoint, answer: Answer, cross_check: bool) -> PointResult:
@@ -171,7 +171,7 @@ def _judge_mcq(point: MarkingPoint, answer: Answer) -> PointResult:
     )
 
 
-# ---------- AI judge ----------
+# AI judge
 
 
 def _judge_request(answer: Answer, points: list[MarkingPoint]) -> JudgeRequest:
@@ -281,7 +281,7 @@ def _combine(result: PointResult, judgement: _Judgement, marker: str) -> None:
     )
 
 
-# ---------- Totals ----------
+# Totals
 
 
 def _answer_score(answer: Answer, rules: list[MarkingRule]) -> float | None:

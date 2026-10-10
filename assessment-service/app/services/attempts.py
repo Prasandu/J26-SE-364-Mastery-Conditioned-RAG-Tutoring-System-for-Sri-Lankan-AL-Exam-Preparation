@@ -4,6 +4,9 @@ Life cycle: in_progress -> submitted -> marked.
 Answers can only change while in progress. The scheme version is fixed at the
 start, so publishing a corrected scheme later never changes this attempt's marks.
 
+In paper mode the student uploads a photo, a vision model reads it into `extracted_text`,
+and the student confirms or corrects it before marking (FR3, FR4). Both versions are kept.
+
 Written answers are marked by the AI judge after submit, in the background. If the
 judge fails (no internet, quota), the points simply stay pending and can be retried.
 """
@@ -18,6 +21,7 @@ from sqlalchemy.orm import Session
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import (
     Answer,
+    AnswerImage,
     AnswerMode,
     Attempt,
     AttemptMode,
@@ -43,11 +47,15 @@ from app.services.marking import (
     refresh_scores,
 )
 from app.services.papers import get_paper
+from app.services.reader import AnswerReader, ReadRequest
 from app.services.schemes import latest_published_scheme
+from app.services.storage import CONTENT_TYPES, FileStore
 
 logger = logging.getLogger(__name__)
 
 SessionFactory = Callable[[], AbstractContextManager[Session]]
+
+WRONG_ANSWER_TYPE = "Wrong answer type"
 
 
 def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
@@ -86,10 +94,65 @@ def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: Answ
         answer = Answer(question=question)
         attempt.answers.append(answer)
     answer.mcq_option = data.mcq_option
-    answer.text = data.text
     answer.data = data.graph.model_dump() if data.graph else None
+    if answer.extracted_text is not None and data.text is not None:
+        # Paper mode: this is the student confirming or correcting what the machine read.
+        answer.corrected_by_student = _differs(data.text, answer.extracted_text)
+    answer.text = data.text
     db.commit()
     return answer
+
+
+def add_answer_image(
+    db: Session,
+    attempt_id: uuid.UUID,
+    question_id: int,
+    *,
+    image: bytes,
+    content_type: str,
+    store: FileStore,
+    reader: AnswerReader,
+) -> Answer:
+    """Save a photo of a handwritten answer and read it into text the student can correct."""
+    attempt = _get_in_progress(db, attempt_id)
+    question = _answerable_question(attempt, question_id)
+    if question.section.answer_mode == AnswerMode.MCQ:
+        raise ContentValidationError(
+            WRONG_ANSWER_TYPE,
+            [f"Section {question.section.code} Q{question.full_label}: upload the MCQ sheet instead"],
+        )
+    if content_type not in CONTENT_TYPES:
+        raise ContentValidationError(
+            "Unsupported image", [f"Send one of: {', '.join(sorted(CONTENT_TYPES))}"]
+        )
+
+    result = reader.read(ReadRequest(image=image, content_type=content_type, question=question.text))
+
+    answer = next((a for a in attempt.answers if a.question_id == question_id), None)
+    if answer is None:
+        answer = Answer(question=question)
+        attempt.answers.append(answer)
+    answer.images.append(
+        AnswerImage(
+            storage_key=store.save(image, content_type),
+            content_type=content_type,
+            order_no=len(answer.images),
+        )
+    )
+
+    pages = [page for page in [answer.extracted_text, result.text] if page]
+    answer.extracted_text = "\n\n".join(pages)
+    answer.text = answer.extracted_text  # a draft the student may still correct
+    answer.corrected_by_student = False
+    answer.reader = reader.name
+    answer.reading_confidence = result.confidence
+    attempt.mode = AttemptMode.PAPER
+    db.commit()
+    return answer
+
+
+def _differs(confirmed: str, extracted: str) -> bool:
+    return " ".join(confirmed.split()) != " ".join(extracted.split())
 
 
 def submit_attempt(db: Session, attempt_id: uuid.UUID, cross_check: bool = False) -> Attempt:
@@ -205,14 +268,12 @@ def _check_answer_kind(question: Question, data: AnswerIn) -> None:
     where = f"Section {question.section.code} Q{question.full_label}"
     if question.section.answer_mode != AnswerMode.MCQ:
         if data.mcq_option is not None:
-            raise ContentValidationError(
-                "Wrong answer type", [f"{where}: send text or graph, not mcq_option"]
-            )
+            raise ContentValidationError(WRONG_ANSWER_TYPE, [f"{where}: send text or graph, not mcq_option"])
         return
 
     options = [option["label"] for option in question.options or []]
     if data.mcq_option is None:
-        raise ContentValidationError("Wrong answer type", [f"{where}: send mcq_option, not text or graph"])
+        raise ContentValidationError(WRONG_ANSWER_TYPE, [f"{where}: send mcq_option, not text or graph"])
     if data.mcq_option not in options:
         raise ContentValidationError(
             "Unknown option", [f"{where}: mcq_option must be one of {', '.join(options)}"]

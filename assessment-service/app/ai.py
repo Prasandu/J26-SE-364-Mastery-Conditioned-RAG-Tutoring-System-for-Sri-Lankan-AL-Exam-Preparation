@@ -1,14 +1,16 @@
-"""Builds the AI judge described by the settings."""
+"""Builds the AI judge and the handwriting reader described by the settings."""
 
 from app.config import Settings
 from app.errors import ConfigurationError
 from app.services.judge import (
     PROVIDERS,
     AnswerJudge,
+    Provider,
     ProviderName,
     gemini_judge,
     openai_compatible_judge,
 )
+from app.services.reader import AnswerReader, gemini_reader, openai_compatible_reader
 
 
 def build_judge(settings: Settings) -> AnswerJudge | None:
@@ -32,3 +34,27 @@ def _openai_compatible_target(settings: Settings) -> tuple[str, str, bool]:
 
     provider = PROVIDERS[settings.ai_provider]
     return settings.ai_base_url or provider.base_url, provider.default_model, provider.needs_key
+
+
+def build_reader(settings: Settings) -> AnswerReader | None:
+    """The handwriting reader, or None when it is not configured."""
+    if settings.vision_provider == ProviderName.GEMINI:
+        if not settings.gemini_api_key:
+            return None
+        return gemini_reader(settings.gemini_api_key, settings.vision_model or settings.gemini_model)
+
+    provider = _provider(settings.vision_provider, settings)
+    if provider.needs_key and not settings.ai_api_key:
+        return None
+    base_url = settings.ai_base_url or provider.base_url
+    return openai_compatible_reader(
+        settings.ai_api_key, base_url, settings.vision_model or provider.default_model
+    )
+
+
+def _provider(name: ProviderName, settings: Settings) -> Provider:
+    if name != ProviderName.CUSTOM:
+        return PROVIDERS[name]
+    if not settings.ai_base_url:
+        raise ConfigurationError("A custom provider needs AI_BASE_URL")
+    return Provider(settings.ai_base_url, settings.ai_model or "", needs_key=True)

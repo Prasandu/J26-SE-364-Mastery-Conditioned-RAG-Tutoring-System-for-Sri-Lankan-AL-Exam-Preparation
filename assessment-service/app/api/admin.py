@@ -24,7 +24,7 @@ router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(requir
 SCHEME_PATH = "/papers/{paper_id}/marking-schemes/{version}"
 
 
-# ---------- Topics ----------
+# Topics
 
 
 @router.get("/topics", response_model=list[TopicOut])
@@ -37,7 +37,7 @@ def create_topic(data: TopicIn, db: Session = Depends(get_db)):
     return topics.create_topic(db, data)
 
 
-# ---------- Papers ----------
+# Papers
 
 
 @router.get("/papers", response_model=list[AdminPaperSummary])
@@ -74,7 +74,7 @@ def publish_paper(paper_id: int, db: Session = Depends(get_db)):
     return papers.to_paper_detail(papers.publish_paper(db, paper_id))
 
 
-# ---------- Marking schemes ----------
+# Marking schemes
 
 
 @router.get("/papers/{paper_id}/marking-schemes", response_model=list[SchemeSummary])
@@ -118,7 +118,7 @@ def publish_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
     return schemes.to_scheme_out(schemes.publish_scheme(db, paper_id, version))
 
 
-# ---------- Attempts ----------
+# Attempts
 
 
 @router.post("/attempts/{attempt_id}/judge", response_model=AttemptOut)

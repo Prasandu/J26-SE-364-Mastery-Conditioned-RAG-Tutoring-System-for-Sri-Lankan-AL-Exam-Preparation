@@ -37,7 +37,7 @@ def _where(section_code: str, label: str) -> str:
     return f"Section {section_code} Q{label}"
 
 
-# ---------- Papers ----------
+# Papers
 
 
 def check_paper(data: PaperIn, known_topics: set[str]) -> list[str]:
@@ -113,7 +113,7 @@ def _check_leaf_marks(paper: Paper) -> list[str]:
     ]
 
 
-# ---------- Marking schemes ----------
+# Marking schemes
 
 
 def check_scheme(data: MarkingSchemeIn, questions: Mapping[QuestionRef, Question]) -> list[str]:

@@ -60,7 +60,7 @@ def check_point(point: MarkingPoint, answer: StudentAnswer) -> CheckOutcome | No
             return None  # formulas and equations are checked by the AI judge for now
 
 
-# ---------- Numbers and units ----------
+# Numbers and units
 
 
 def _check_calculation(expected: dict[str, Any], text: str) -> CheckOutcome | None:
@@ -94,7 +94,7 @@ def _check_unit(expected: dict[str, Any], text: str) -> CheckOutcome | None:
     return CheckOutcome(True, f"Correct unit ({unit}).", written.text) if written else None
 
 
-# ---------- Graphs ----------
+# Graphs
 
 
 def _check_graph(expected: dict[str, Any], graph: GraphAnswer) -> CheckOutcome | None:

@@ -122,7 +122,7 @@ def _fill_scheme(scheme: MarkingScheme, data: MarkingSchemeIn) -> None:
             scheme.model_answers.append(ModelAnswer(question=question, answer_text=entry.model_answer))
 
 
-# ---------- Converting a stored scheme ----------
+# Converting a stored scheme
 
 
 @dataclass

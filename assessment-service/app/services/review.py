@@ -32,8 +32,7 @@ from app.schemas.review import (
 from app.services.marking import question_with_context, refresh_scores
 
 MAX_QUEUE_PAGE = 200
-# A point still waiting for a marker needs a human just as much as one sent for review:
-# without this, points would sit unseen whenever the AI judge is off or unreachable.
+# Pending points need a human too, or they sit unseen when the AI judge is off.
 UNRESOLVED = (PointStatus.NEEDS_REVIEW, PointStatus.PENDING)
 
 

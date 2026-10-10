@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,12 +21,11 @@ class Settings(BaseSettings):
     # Key for the /review endpoints used by teachers. Empty = teacher review is switched off.
     teacher_api_key: str | None = Field(default=None, min_length=16)
 
-    # --- AI judge for written answers. Without a key, written answers stay "pending". ---
+    # AI judge for written answers. Without a key, written answers stay "pending".
     ai_provider: ProviderName = ProviderName.GEMINI
     # AI decisions below this confidence go to teacher review instead of counting.
     ai_min_confidence: float = Field(default=0.7, ge=0, le=1)
-    # Ask the AI judge about points the chemistry checker already decided, without telling it
-    # the checker's answer. They must agree, or a teacher reviews. Costs an extra AI call.
+    # Also ask the AI about points the checker decided. Disagreement -> teacher.
     ai_cross_check: bool = True
 
     # Google Gemini (ai_provider=gemini)
@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     ai_api_key: str | None = None
     ai_model: str | None = None  # empty = the provider's default model
     ai_base_url: str | None = None  # only needed when ai_provider=custom
+
+    # Reading handwriting. Needs a model that can see images (Groq's cannot).
+    vision_provider: ProviderName = ProviderName.GEMINI
+    vision_model: str | None = None  # empty = the provider's default
+    upload_dir: Path = Path("uploads")
+    max_upload_mb: float = Field(default=8.0, gt=0, le=50)
 
     @field_validator("ai_provider", mode="before")
     @classmethod

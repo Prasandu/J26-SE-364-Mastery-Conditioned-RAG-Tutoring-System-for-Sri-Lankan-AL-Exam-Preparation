@@ -1,15 +1,11 @@
-# =============================================================
 # Secrets - NEVER commit (API keys, Supabase keys, DB passwords)
 # Commit a .env.example with empty values instead.
-# =============================================================
 .env
 .env.*
 !.env.example
 secrets.json
 
-# =============================================================
 # Python  ->  assessment-service/
-# =============================================================
 __pycache__/
 *.py[cod]
 .venv/
@@ -30,9 +26,7 @@ htmlcov/
 # Jupyter (fine-tuning / experiment notebooks)
 .ipynb_checkpoints/
 
-# =============================================================
 # Node / Next.js  ->  frontend/
-# =============================================================
 node_modules/
 .next/
 out/
@@ -41,14 +35,14 @@ dist/
 npm-debug.log*
 .vercel
 
-# =============================================================
 # Research data and models
 # Student answer scripts are private (consent + PII rules in the
 # proposal), so raw data stays out of git. Model weights are too large.
-# =============================================================
 data/raw/
 data/private/
 uploads/
+samples/
+assessment-service/samples/
 *.safetensors
 *.bin
 *.gguf
@@ -57,9 +51,7 @@ uploads/
 models/checkpoints/
 wandb/
 
-# =============================================================
 # Logs, editors, OS
-# =============================================================
 logs/
 *.log
 .idea/

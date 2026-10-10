@@ -109,6 +109,25 @@ Set `AI_PROVIDER` in `.env` to pick the service, then check it with `python -m a
 Every provider except `gemini` uses the same OpenAI-style API, so `AI_MODEL` (empty = the
 provider's default) and `AI_API_KEY` are all you change.
 
+### Paper mode: reading handwriting
+
+| Endpoint | What it does |
+|---|---|
+| `POST /attempts/{id}/answers/{question_id}/images` | Upload a photo of a handwritten answer; a vision model reads it |
+
+The reader only transcribes. It is told not to solve the question or correct the student's
+chemistry, so a wrong formula stays wrong and the marking engine grades the student, not the
+model. Drawings it cannot write out are marked `[Diagram ...]` and flagged.
+
+What was read comes back as a **draft**: the student checks it and sends corrections with
+`PUT /attempts/{id}/answers/{question_id}`. Both versions are kept - `extracted_text` is what
+the machine read, `text` is what the student confirmed, and `corrected_by_student` says whether
+they differ. That pair measures reading accuracy and shows what a student changed.
+
+Marking is then exactly the same as digital mode.
+
+Try it on one image without a database: `python -m app.check_reading path/to/photo.jpg`
+
 ### Teacher review (header `X-Teacher-Key: <TEACHER_API_KEY>`)
 
 | Endpoint | What it does |

@@ -19,7 +19,7 @@ class _Input(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
-# ---------- Topics ----------
+# Topics
 
 
 class TopicIn(_Input):
@@ -28,7 +28,7 @@ class TopicIn(_Input):
     parent_code: str | None = None
 
 
-# ---------- Papers ----------
+# Papers
 
 
 class OptionIn(_Input):
@@ -68,7 +68,7 @@ class PaperIn(_Input):
         return self
 
 
-# ---------- Marking schemes ----------
+# Marking schemes
 
 
 class PointIn(_Input):

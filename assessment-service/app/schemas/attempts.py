@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models import AttemptMode, AttemptStatus, MarkingMethod, PointStatus
 
@@ -57,7 +57,18 @@ class AnswerOut(BaseModel):
     mcq_option: str | None
     text: str | None
     graph: GraphIn | None = Field(default=None, validation_alias="data")
+    # Paper mode: what was read, by which model, and whether the student changed it.
+    extracted_text: str | None = None
+    reader: str | None = None
+    reading_confidence: float | None = None
+    corrected_by_student: bool = False
+    image_count: int = Field(default=0, validation_alias="images")
     updated_at: datetime
+
+    @field_validator("image_count", mode="before")
+    @classmethod
+    def count_images(cls, value: object) -> object:
+        return len(value) if isinstance(value, list) else value
 
 
 class PointResultOut(BaseModel):

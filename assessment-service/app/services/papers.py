@@ -157,7 +157,6 @@ def _add_questions(
             order_no=order,
             topics=[topics[code] for code in item.topics],
         )
-        # Append on the section side: SQLAlchemy saves objects added to a collection,
-        # but not objects only linked the other way (question.section = ...).
+        # SQLAlchemy only saves objects appended to a collection, not ones linked back.
         section.questions.append(question)
         _add_questions(section, item.sub_questions, parent=question, topics=topics)

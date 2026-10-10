@@ -21,13 +21,13 @@ _SUPERSCRIPT_RUN = re.compile(f"[{SUPERSCRIPT_DIGITS}]+")
 _CE_WRAPPER = re.compile(r"\\ce\s*\{([^{}]*)\}")  # mhchem: \ce{H2O} -> H2O
 _LATEX_SUPERSCRIPT = re.compile(r"\^\s*\{([^{}]*)\}")  # ^{2-} -> ^2-
 _LATEX_SUBSCRIPT = re.compile(r"_\s*\{([^{}]*)\}|_(\w)")  # _{2} or _2 -> 2
-_SPACED_EXPONENT = re.compile(r"\^\s+")  # "^ 2-" -> "^2-"
+_SPACED_EXPONENT = re.compile(r"\^[ 	]+")  # "^ 2-" -> "^2-"
+_BLANK_LINES = re.compile(r"\n{3,}")  # never more than one empty line in a row
 
 REVERSIBLE_ARROW = "<=>"
 FORWARD_ARROW = "->"
 
-# One pass over the text, longest spelling first, so "<-->" is not read as "<-" plus "->"
-# and a replacement is never scanned again ("<=>" must not become "< ->").
+# One pass, longest spelling first, so a replacement is never scanned again.
 _ARROW_MAP = {
     "<-->": REVERSIBLE_ARROW,
     "<==>": REVERSIBLE_ARROW,
@@ -72,4 +72,15 @@ def normalize(text: str) -> str:
     result = _ARROWS.sub(lambda m: f" {_ARROW_MAP[m.group()]} ", result)
 
     result = _SPACED_EXPONENT.sub("^", result)
-    return " ".join(result.split())
+    return _tidy_spacing(result)
+
+
+def _tidy_spacing(text: str) -> str:
+    """Even out the spaces inside each line, but keep the lines.
+
+    A transcribed answer's line breaks are the student's working steps, so losing them
+    would lose the order of their reasoning.
+    """
+    lines = [" ".join(line.split()) for line in text.splitlines()]
+    tidied = "\n".join(lines).strip("\n")
+    return _BLANK_LINES.sub("\n\n", tidied)

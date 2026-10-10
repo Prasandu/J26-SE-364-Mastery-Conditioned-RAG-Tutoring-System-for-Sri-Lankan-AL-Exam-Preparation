@@ -1,10 +1,21 @@
+from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.services.judge import ProviderName
+
+class ProviderName(StrEnum):
+    """Which AI service to call. The base URLs live in app/ai/judge.py."""
+
+    GEMINI = "gemini"
+    GROQ = "groq"
+    OPENROUTER = "openrouter"
+    CEREBRAS = "cerebras"
+    GITHUB = "github"
+    OLLAMA = "ollama"
+    CUSTOM = "custom"  # any other OpenAI-compatible service; set AI_BASE_URL yourself
 
 
 class Settings(BaseSettings):

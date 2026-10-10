@@ -23,6 +23,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
+from app.ai.judge import AnswerJudge, JudgeRequest, PointToJudge, PointVerdict
 from app.models import (
     Answer,
     Attempt,
@@ -40,7 +41,6 @@ from app.models import (
 )
 from app.services.chemistry.checkers import CHECKER_NAME, StudentAnswer, check_point
 from app.services.chemistry.graphs import GraphAnswer
-from app.services.judge import AnswerJudge, JudgeRequest, PointToJudge, PointVerdict
 from app.services.marks import best_of, question_total
 
 FINAL_STATUSES = {PointStatus.AWARDED, PointStatus.NOT_AWARDED}

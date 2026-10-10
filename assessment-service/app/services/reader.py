@@ -10,7 +10,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from app.services.vision import Image, VisionModel
+from app.ai.vision import Image, VisionModel
 
 UNCLEAR_MARK = "[?]"
 

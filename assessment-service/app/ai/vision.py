@@ -15,7 +15,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-from app.services.judge import RETRY_ATTEMPTS, RETRY_STATUS_CODES, json_instruction
+from app.ai.judge import RETRY_ATTEMPTS, RETRY_STATUS_CODES, json_instruction
 
 # Reading a page takes longer than judging text.
 VISION_TIMEOUT_SECONDS = 180.0

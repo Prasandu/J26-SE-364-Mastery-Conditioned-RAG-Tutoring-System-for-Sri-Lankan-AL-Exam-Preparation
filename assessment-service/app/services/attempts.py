@@ -18,6 +18,7 @@ from contextlib import AbstractContextManager
 
 from sqlalchemy.orm import Session
 
+from app.ai.judge import AnswerJudge
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import (
     Answer,
@@ -37,7 +38,6 @@ from app.schemas.attempts import (
     PointResultOut,
     QuestionResultOut,
 )
-from app.services.judge import AnswerJudge
 from app.services.marking import (
     FINAL_STATUSES,
     finalize_without_ai,

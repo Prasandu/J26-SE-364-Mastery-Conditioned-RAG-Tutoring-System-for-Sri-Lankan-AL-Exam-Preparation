@@ -4,6 +4,52 @@ Python FastAPI service for the **Intelligent Assessment & Automated Evaluation**
 (J26-SE-364, IT23215306). It will hold MCQ sheet reading, handwriting reading, chemistry
 normalization, point-by-point marking and confidence scoring.
 
+## Folder layout
+
+One layer per job, and each layer only talks to the one below it:
+`api -> services -> models -> db`.
+
+```
+assessment-service/
+  app/
+    main.py            builds the FastAPI app and includes the routers
+    config.py          settings read from .env (including which AI provider to use)
+    db.py              engine, session, declarative Base
+    errors.py          domain errors the api layer turns into HTTP codes
+    security.py        admin and teacher key checks
+    api/               HTTP only: routes, request validation, status codes
+    schemas/           Pydantic request and response shapes
+    services/          the real work (no FastAPI, no HTTP)
+      papers.py schemes.py topics.py validation.py    content library
+      marking.py marks.py review.py                   deciding and totalling marks
+      chemistry/                                      formula, unit and graph checkers
+      attempts.py reader.py storage.py                student work and uploads
+      drafts.py extractor.py pdf.py plan_report.py    importing scanned past papers
+    models/            database tables, grouped by what they describe
+      base.py          column helpers shared by the table modules
+      content.py       Paper, Section, Question, Topic
+      scheme.py        MarkingScheme, MarkingPoint, MarkingRule, ModelAnswer
+      attempts.py      Attempt, Answer, PointResult, AnswerImage
+    ai/                clients for the outside AI models, nothing else
+      __init__.py      reads the settings and builds the judge and the reader
+      judge.py         text models that judge a written answer
+      vision.py        models that can see images
+    seed.py import_pdf.py load_draft.py load_scheme.py check_ai.py check_reading.py
+                       command line tools, each run with `python -m app.<name>`
+  migrations/          Alembic migrations (the only way tables change)
+  tests/               pytest suite, one file per feature area
+  drafts/ samples/     local working files, not in git
+```
+
+Rules that keep it this way:
+
+- `api/` never touches the database directly and never calls an AI model.
+- `services/` never imports FastAPI, so every rule can be tested without HTTP.
+- `models/` is imported everywhere as `from app.models import X`; the module split inside
+  is an internal detail.
+- Only `app/ai/` knows provider names, base URLs and API keys, so swapping Gemini for
+  another model changes one folder.
+
 ## Run locally (Windows, PowerShell)
 
 ```powershell
@@ -14,17 +60,19 @@ pip install -r requirements-dev.txt
 copy .env.example .env      # then put your Supabase URL in DATABASE_URL
 alembic upgrade head        # creates / updates the tables
 python -m app.seed          # loads a SAMPLE paper (test data, not official)
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8081
+
+Port 8081 on purpose: other projects on the same machine take 8000.
 ```
 
-Open http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs
+Open http://127.0.0.1:8081/health and http://127.0.0.1:8081/docs
 
 ## Database
 
 - **Supabase PostgreSQL** when `DATABASE_URL` is set (use the *Session pooler* URI).
 - **SQLite file** `assessment.db` when `DATABASE_URL` is empty (offline development).
 - Tables are created and changed only by **Alembic migrations** in `migrations/versions/`.
-  After changing `app/models.py`:
+  After changing anything in `app/models/`:
   ```powershell
   alembic revision --autogenerate -m "short description"   # then review the new file
   alembic upgrade head

@@ -10,9 +10,9 @@ import openai
 from google.genai import errors as genai_errors
 
 from app.ai import build_judge
+from app.ai.judge import AnswerJudge, JudgeRequest, PointToJudge
 from app.config import get_settings
 from app.seed import SAMPLE_PAPER, SAMPLE_SCHEME
-from app.services.judge import AnswerJudge, JudgeRequest, PointToJudge
 
 SAMPLE_ANSWER = (
     "Moles of HCl = 0.100 x 20.0/1000 = 2.00 x 10^-3 mol. NaOH reacts 1:1 so the same moles. c = 0.08"

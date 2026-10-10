@@ -11,7 +11,6 @@ Two judges, same prompt, so results can be compared model against model:
 
 import json
 from dataclasses import dataclass
-from enum import StrEnum
 from functools import lru_cache
 from typing import Protocol
 
@@ -19,6 +18,8 @@ import openai
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
+
+from app.config import ProviderName
 
 # What the judge is asked, and what it answers
 
@@ -151,16 +152,6 @@ class Provider:
     base_url: str
     default_model: str
     needs_key: bool = True
-
-
-class ProviderName(StrEnum):
-    GEMINI = "gemini"
-    GROQ = "groq"
-    OPENROUTER = "openrouter"
-    CEREBRAS = "cerebras"
-    GITHUB = "github"
-    OLLAMA = "ollama"
-    CUSTOM = "custom"  # any other OpenAI-compatible service; set AI_BASE_URL yourself
 
 
 # Model names change often. `python -m app.check_ai` lists the ones your key can use.

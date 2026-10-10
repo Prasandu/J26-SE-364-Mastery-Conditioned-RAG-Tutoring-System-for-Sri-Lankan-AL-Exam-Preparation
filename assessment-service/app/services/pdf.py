@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pypdfium2 as pdfium
 
-from app.services.vision import Image
+from app.ai.vision import Image
 
 PNG = "image/png"
 # Scanned A4 at scale 2 is about 1190x1684, which is readable without being huge.

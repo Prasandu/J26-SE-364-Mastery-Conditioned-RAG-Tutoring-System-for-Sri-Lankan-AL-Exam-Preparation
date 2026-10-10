@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.services.vision import Image, VisionModel
+from app.ai.vision import Image, VisionModel
 
 CHEMISTRY_NOTATION = (
     "Write chemistry in plain standard notation: H2SO4, SO4^2-, Ca^2+, NaOH(aq), -> for a "

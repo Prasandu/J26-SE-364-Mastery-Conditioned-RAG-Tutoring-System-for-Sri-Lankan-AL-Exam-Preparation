@@ -8,6 +8,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.ai.judge import AnswerJudge
 from app.api.deps import get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
@@ -17,7 +18,6 @@ from app.schemas.attempts import AttemptOut
 from app.schemas.content import AdminPaperSummary, MarkingSchemeOut, PaperDetail, SchemeSummary, TopicOut
 from app.security import require_admin
 from app.services import attempts, papers, schemes, topics
-from app.services.judge import AnswerJudge
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 

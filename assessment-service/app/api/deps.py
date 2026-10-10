@@ -3,10 +3,10 @@
 from fastapi import Depends
 
 from app.ai import build_judge, build_reader
+from app.ai.judge import AnswerJudge
 from app.config import Settings, get_settings
 from app.db import SessionLocal
 from app.services.attempts import SessionFactory
-from app.services.judge import AnswerJudge
 from app.services.reader import AnswerReader
 from app.services.storage import FileStore, LocalFileStore
 

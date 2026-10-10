@@ -1,17 +1,23 @@
-"""Builds the AI judge and the handwriting reader described by the settings."""
+"""Clients for the outside AI models, kept apart from the marking logic.
 
-from app.config import Settings
-from app.errors import ConfigurationError
-from app.services.judge import (
+judge:  text models that judge a written answer
+vision: models that can see images (handwriting, past-paper pages)
+
+This file is the only place that reads the settings and decides which provider to
+build, so swapping a provider never touches a service.
+"""
+
+from app.ai.judge import (
     PROVIDERS,
     AnswerJudge,
     Provider,
-    ProviderName,
     gemini_judge,
     openai_compatible_judge,
 )
+from app.ai.vision import VisionModel, gemini_vision, openai_compatible_vision
+from app.config import ProviderName, Settings
+from app.errors import ConfigurationError
 from app.services.reader import AnswerReader, VisionAnswerReader
-from app.services.vision import VisionModel, gemini_vision, openai_compatible_vision
 
 
 def build_judge(settings: Settings) -> AnswerJudge | None:

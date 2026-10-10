@@ -5,13 +5,13 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.ai.judge import AnswerJudge
 from app.api.deps import get_file_store, get_judge, get_reader, get_session_factory
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.schemas.attempts import AnswerIn, AnswerOut, AttemptCreate, AttemptOut
 from app.services import attempts
 from app.services.attempts import SessionFactory
-from app.services.judge import AnswerJudge
 from app.services.marking import has_pending
 from app.services.reader import AnswerReader
 from app.services.storage import FileStore
@@ -73,7 +73,7 @@ async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
     limit = int(max_mb * 1024 * 1024)
     image = await file.read(limit + 1)
     if len(image) > limit:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"The image must be under {max_mb} MB")
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, f"The image must be under {max_mb} MB")
     if not image:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The uploaded file is empty")
     return image

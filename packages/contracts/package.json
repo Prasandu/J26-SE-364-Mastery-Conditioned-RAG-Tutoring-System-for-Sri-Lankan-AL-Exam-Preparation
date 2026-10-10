@@ -1,0 +1,18 @@
+{
+  "name": "@vlab/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:content": "vitest run test/content.test.ts test/schema-export.test.ts",
+    "schemas:write": "vitest run --config vitest.write-schemas.config.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

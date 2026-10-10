@@ -1,0 +1,384 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "assessmentId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "experimentId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "resultLabel": {
+      "type": "string",
+      "const": "practical competency estimate"
+    },
+    "disclaimerKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "parameters": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "parameterId": {
+            "type": "string",
+            "pattern": "^param\\.[a-z0-9_]+$"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "g",
+                  "cm3",
+                  "fraction",
+                  "count",
+                  "points",
+                  "weight",
+                  "policy"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 10
+          },
+          "sourceType": {
+            "type": "string",
+            "const": "simulation_assumption"
+          },
+          "reviewStatus": {
+            "type": "string",
+            "const": "teacher_review_pending"
+          },
+          "effectCategory": {
+            "type": "string",
+            "enum": [
+              "measurement_tolerance",
+              "numeric_consequence",
+              "homogeneity",
+              "scoring",
+              "guidance",
+              "automatic_demonstration",
+              "initial_state"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "parameterId",
+          "value",
+          "unit",
+          "rationale",
+          "sourceType",
+          "reviewStatus",
+          "effectCategory",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "properties": {
+        "massTolerance": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "sliderTolerance": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "balanceResolution": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "concentrationRelativeTolerance": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "watchGlassMassRange": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "watchGlassResidueFraction": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "funnelResidueFraction": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "rinseVolume": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "eyeLevelVolumeError": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "requiredInversions": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "flaskBrimFraction": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "demoDissolutionWater": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "demoDropwiseMargin": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        }
+      },
+      "required": [
+        "massTolerance",
+        "sliderTolerance",
+        "balanceResolution",
+        "concentrationRelativeTolerance",
+        "watchGlassMassRange",
+        "watchGlassResidueFraction",
+        "funnelResidueFraction",
+        "rinseVolume",
+        "eyeLevelVolumeError",
+        "requiredInversions",
+        "flaskBrimFraction",
+        "demoDissolutionWater",
+        "demoDropwiseMargin"
+      ],
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "properties": {
+        "categoryWeights": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "safety",
+              "technique",
+              "measurement",
+              "completeness",
+              "independence"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^param\\.[a-z0-9_]+$"
+          },
+          "required": [
+            "safety",
+            "technique",
+            "measurement",
+            "completeness",
+            "independence"
+          ]
+        },
+        "errorDeductions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "errorCode": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "parameterId": {
+                "type": "string",
+                "pattern": "^param\\.[a-z0-9_]+$"
+              }
+            },
+            "required": [
+              "errorCode",
+              "parameterId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "recoveredErrorFactor": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "hintDeduction": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "guidanceDeductions": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "automatic",
+              "guided_beginner",
+              "guided_intermediate",
+              "guided_advanced",
+              "manual"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^param\\.[a-z0-9_]+$"
+          },
+          "required": [
+            "automatic",
+            "guided_beginner",
+            "guided_intermediate",
+            "guided_advanced",
+            "manual"
+          ]
+        },
+        "concentrationOutOfTolerance": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "concentrationUnavailable": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        }
+      },
+      "required": [
+        "categoryWeights",
+        "errorDeductions",
+        "recoveredErrorFactor",
+        "hintDeduction",
+        "guidanceDeductions",
+        "concentrationOutOfTolerance",
+        "concentrationUnavailable"
+      ],
+      "additionalProperties": false
+    },
+    "safetyPolicy": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "automatic",
+          "guided_beginner",
+          "guided_intermediate",
+          "guided_advanced",
+          "manual"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^param\\.[a-z0-9_]+$"
+      },
+      "required": [
+        "automatic",
+        "guided_beginner",
+        "guided_intermediate",
+        "guided_advanced",
+        "manual"
+      ]
+    },
+    "adaptation": {
+      "type": "object",
+      "properties": {
+        "windowActions": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "errorsToStepDown": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        },
+        "cleanActionsToStepUp": {
+          "type": "string",
+          "pattern": "^param\\.[a-z0-9_]+$"
+        }
+      },
+      "required": [
+        "windowActions",
+        "errorsToStepDown",
+        "cleanActionsToStepUp"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "assessmentId",
+    "version",
+    "experimentId",
+    "resultLabel",
+    "disclaimerKey",
+    "parameters",
+    "bindings",
+    "scoring",
+    "safetyPolicy",
+    "adaptation"
+  ],
+  "additionalProperties": false
+}

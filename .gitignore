@@ -200,3 +200,26 @@ captures/
 Thumbs.db
 desktop.ini
 *.swp
+
+# --- Virtual Chemistry Lab (M1) ---
+# Private source PDFs (licensing): never commit
+research-sources/*.pdf
+# Node / build
+node_modules/
+dist/
+coverage/
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Private derived research data (chunk text, embeddings) and model caches
+data/
+.cache/huggingface/

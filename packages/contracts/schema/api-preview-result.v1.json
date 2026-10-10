@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "predictedErrors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SAFETY_NOT_CONFIRMED",
+          "SAFETY_CHECKLIST_INCOMPLETE",
+          "CHEMICAL_SKIN_CONTACT",
+          "DIRTY_FLASK_USED",
+          "DIRTY_GLASSWARE_USED",
+          "INCOMPLETE_TRANSFER",
+          "WATCH_GLASS_NOT_RINSED",
+          "FUNNEL_NOT_RINSED",
+          "UNDISSOLVED_AT_MARK",
+          "TAP_WATER_USED",
+          "INSUFFICIENT_MIXING",
+          "FLASK_HELD_BY_BODY",
+          "SLIDER_SETTING_INCORRECT",
+          "MASS_OUT_OF_TOLERANCE",
+          "WRONG_FLASK_CAPACITY",
+          "OVERSHOOT_MARK",
+          "EYE_LEVEL_INCORRECT",
+          "LABEL_MISSING",
+          "LABEL_INCORRECT",
+          "INCOMPLETE_PROCEDURE"
+        ]
+      }
+    }
+  },
+  "required": [
+    "predictedErrors"
+  ],
+  "additionalProperties": false
+}

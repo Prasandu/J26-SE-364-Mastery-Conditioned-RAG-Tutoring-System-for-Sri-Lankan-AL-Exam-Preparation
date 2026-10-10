@@ -1,0 +1,27 @@
+{
+  "expectedVersion": 0,
+  "document": {
+    "schemaVersion": 1,
+    "experimentDate": "2026-10-10",
+    "aim": "To prepare 250 cm³ of 1 mol dm⁻³ Na₂CO₃ solution.",
+    "apparatus": [],
+    "chemicals": [],
+    "procedure": "",
+    "observations": "",
+    "measurements": [
+      {
+        "label": "Mass of watch glass",
+        "trial": 1,
+        "value": 31.42,
+        "unit": "g",
+        "note": ""
+      }
+    ],
+    "calculations": "",
+    "graphNotes": "",
+    "result": "",
+    "discussion": "",
+    "identifiedErrors": "",
+    "conclusion": ""
+  }
+}

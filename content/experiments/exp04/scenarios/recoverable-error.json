@@ -1,0 +1,43 @@
+{
+  "scenarioId": "recoverable_error",
+  "description": "Guided intermediate sets the balance sliders wrongly and under-mixes, then corrects both before submitting.",
+  "init": {
+    "sessionId": "fixture-recoverable",
+    "mode": "guided",
+    "guidanceLevel": "intermediate",
+    "seed": 77,
+    "startedOn": "2026-10-10"
+  },
+  "steps": [
+    { "canonicalUntil": "set_balance_sliders" },
+    { "action": { "type": "set_balance_sliders", "mass": { "value": 10, "unit": "g" } } },
+    { "expect": { "openErrors": ["SLIDER_SETTING_INCORRECT"] } },
+    { "canonicalUntil": "mix_solution" },
+    { "action": { "type": "mix_solution", "inversions": 3, "grip": "neck" } },
+    {
+      "action": {
+        "type": "apply_label",
+        "solutionName": "Na2CO3",
+        "concentration": { "value": 1, "unit": "mol dm-3" },
+        "preparationDate": "2026-10-10"
+      }
+    },
+    { "expect": { "openErrors": ["INSUFFICIENT_MIXING"], "homogeneity": "partially_mixed" } },
+    { "action": { "type": "mix_solution", "inversions": 7, "grip": "neck" } },
+    { "canonicalUntil": "end" }
+  ],
+  "expect": {
+    "attempt": 1,
+    "submitted": true,
+    "errorCodes": ["SLIDER_SETTING_INCORRECT", "INSUFFICIENT_MIXING"],
+    "resolvedCodes": ["SLIDER_SETTING_INCORRECT", "INSUFFICIENT_MIXING"],
+    "openErrors": [],
+    "restartRequired": false,
+    "purityRisks": [],
+    "homogeneity": "homogeneous",
+    "volumeValidity": "valid",
+    "transferredMass": { "value": 26.5, "tolerance": 1e-9 },
+    "finalVolume": { "value": 250, "tolerance": 1e-9 },
+    "concentration": { "value": 1, "tolerance": 1e-9 }
+  }
+}

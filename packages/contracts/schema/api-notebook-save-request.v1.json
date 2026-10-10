@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "expectedVersion": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "document": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "experimentDate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aim": {
+          "type": "string",
+          "maxLength": 2000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "apparatus": {
+          "maxItems": 30,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+          }
+        },
+        "chemicals": {
+          "maxItems": 30,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+          }
+        },
+        "procedure": {
+          "type": "string",
+          "maxLength": 5000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "observations": {
+          "type": "string",
+          "maxLength": 5000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "measurements": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "maxLength": 120,
+                "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+              },
+              "trial": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "g",
+                      "kg",
+                      "cm3",
+                      "dm3",
+                      "mol",
+                      "mol dm-3",
+                      "g mol-1"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 300,
+                "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+              }
+            },
+            "required": [
+              "label",
+              "trial",
+              "value",
+              "unit",
+              "note"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "calculations": {
+          "type": "string",
+          "maxLength": 5000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "graphNotes": {
+          "type": "string",
+          "maxLength": 2000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "result": {
+          "type": "string",
+          "maxLength": 2000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "discussion": {
+          "type": "string",
+          "maxLength": 5000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "identifiedErrors": {
+          "type": "string",
+          "maxLength": 5000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        },
+        "conclusion": {
+          "type": "string",
+          "maxLength": 2000,
+          "pattern": "^(?![\\s\\S]*<[A-Za-z/!?])[\\s\\S]*$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "experimentDate",
+        "aim",
+        "apparatus",
+        "chemicals",
+        "procedure",
+        "observations",
+        "measurements",
+        "calculations",
+        "graphNotes",
+        "result",
+        "discussion",
+        "identifiedErrors",
+        "conclusion"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "expectedVersion",
+    "document"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "experimentId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "experimentVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "assessmentVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "automatic",
+        "guided",
+        "manual"
+      ]
+    },
+    "guidanceLevel": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "locale": {
+      "type": "string",
+      "enum": [
+        "en",
+        "si"
+      ]
+    },
+    "preLab": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "answers": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            },
+            "prediction": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "acknowledgedSafety": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              }
+            }
+          },
+          "required": [
+            "answers",
+            "prediction",
+            "acknowledgedSafety"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "experimentId",
+    "experimentVersion",
+    "assessmentVersion",
+    "mode",
+    "guidanceLevel",
+    "locale",
+    "preLab"
+  ],
+  "additionalProperties": false
+}

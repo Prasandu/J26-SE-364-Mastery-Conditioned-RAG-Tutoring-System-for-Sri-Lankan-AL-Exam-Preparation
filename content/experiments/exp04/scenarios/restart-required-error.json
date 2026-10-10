@@ -1,0 +1,47 @@
+{
+  "scenarioId": "restart_required_error",
+  "description": "Manual run overshoots the calibration mark (restart required), restarts, and completes a correct second attempt.",
+  "init": {
+    "sessionId": "fixture-restart",
+    "mode": "manual",
+    "guidanceLevel": null,
+    "seed": 314,
+    "startedOn": "2026-10-10"
+  },
+  "steps": [
+    { "canonicalUntil": "add_water_near_mark" },
+    {
+      "action": {
+        "type": "add_water",
+        "volume": { "value": 155, "unit": "cm3" },
+        "source": "distilled"
+      }
+    },
+    {
+      "expect": {
+        "errorCodes": ["OVERSHOOT_MARK"],
+        "restartRequired": true,
+        "finalVolume": { "value": 255, "tolerance": 1e-9 },
+        "concentration": { "lessThan": 1 }
+      }
+    },
+    { "action": { "type": "restart_experiment" } },
+    { "canonicalUntil": "end" }
+  ],
+  "expect": {
+    "attempt": 2,
+    "retries": 1,
+    "submitted": true,
+    "errorCodes": [],
+    "allAttemptErrorCodes": ["OVERSHOOT_MARK"],
+    "resolvedCodes": [],
+    "openErrors": [],
+    "restartRequired": false,
+    "purityRisks": [],
+    "homogeneity": "homogeneous",
+    "volumeValidity": "valid",
+    "transferredMass": { "value": 26.5, "tolerance": 1e-9 },
+    "finalVolume": { "value": 250, "tolerance": 1e-9 },
+    "concentration": { "value": 1, "tolerance": 1e-9 }
+  }
+}

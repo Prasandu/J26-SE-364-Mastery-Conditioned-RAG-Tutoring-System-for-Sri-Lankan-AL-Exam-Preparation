@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "request_too_large",
+            "not_found",
+            "experiment_version_unavailable",
+            "stale_sequence",
+            "idempotency_key_reused",
+            "notebook_version_conflict",
+            "report_not_available",
+            "preview_not_available",
+            "system_action_not_permitted",
+            "event_chain_invalid",
+            "verifier_unavailable",
+            "verifier_timeout",
+            "verifier_invalid_response",
+            "assistant_unavailable",
+            "assistant_timeout",
+            "assistant_rate_limited",
+            "assistant_invalid_response",
+            "knowledge_unavailable",
+            "auth_not_configured",
+            "internal_error"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "correlationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "details": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "correlationId",
+        "retryable"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "error"
+  ],
+  "additionalProperties": false
+}

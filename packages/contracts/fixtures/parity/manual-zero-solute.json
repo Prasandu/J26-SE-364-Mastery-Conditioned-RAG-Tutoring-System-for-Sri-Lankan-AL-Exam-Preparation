@@ -1,0 +1,1127 @@
+{
+  "init": {
+    "sessionId": "fixture",
+    "mode": "manual",
+    "guidanceLevel": null,
+    "seed": 42,
+    "startedOn": "2026-10-10"
+  },
+  "steps": [
+    {
+      "envelope": {
+        "action": {
+          "type": "confirm_safety",
+          "checklistItemIds": [
+            "read_procedure",
+            "goggles",
+            "no_food_drink",
+            "closed_shoes",
+            "hair_restrained",
+            "report_incidents"
+          ]
+        },
+        "actor": "student",
+        "acknowledgedSafetyWarning": false
+      },
+      "expected": {
+        "event": {
+          "seq": 0,
+          "attempt": 1,
+          "actor": "student",
+          "actionType": "confirm_safety",
+          "action": {
+            "type": "confirm_safety",
+            "checklistItemIds": [
+              "read_procedure",
+              "goggles",
+              "no_food_drink",
+              "closed_shoes",
+              "hair_restrained",
+              "report_incidents"
+            ]
+          },
+          "accepted": true,
+          "rejectionCode": null,
+          "elapsedMs": 1000,
+          "hintUsed": false,
+          "observations": [],
+          "measurements": [],
+          "errors": [],
+          "resolvedErrors": []
+        },
+        "feedback": [],
+        "session": {
+          "sessionId": "fixture",
+          "experimentId": "exp04_standard_solution",
+          "definitionVersion": "1.1.0",
+          "assessmentVersion": "1.0.0",
+          "mode": "manual",
+          "guidanceLevel": null,
+          "startedOn": "2026-10-10",
+          "attempt": 1,
+          "hints": 0,
+          "retries": 0,
+          "elapsedMs": 1000,
+          "nextSequence": 1,
+          "status": "active",
+          "disclosure": "observable",
+          "stage": "setup",
+          "bench": {
+            "safetyConfirmed": true,
+            "selectedApparatus": [],
+            "cleanliness": {
+              "volumetric_flask_250": "dirty",
+              "volumetric_flask_100": "dirty",
+              "volumetric_flask_500": "dirty",
+              "funnel": "dirty",
+              "watch_glass": "dirty"
+            },
+            "workingFlaskId": null,
+            "flaskCapacity": null,
+            "balance": {
+              "pan": "empty",
+              "sliderSetting": null,
+              "watchGlassReading": null
+            },
+            "watchGlassHasSolid": false,
+            "funnelOnFlask": false,
+            "stoppered": false,
+            "madeUp": false,
+            "liquid": "empty",
+            "liquidFraction": 0,
+            "undissolvedVisible": false,
+            "label": null
+          },
+          "validity": null,
+          "events": [
+            {
+              "seq": 0,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "confirm_safety",
+              "action": {
+                "type": "confirm_safety",
+                "checklistItemIds": [
+                  "read_procedure",
+                  "goggles",
+                  "no_food_drink",
+                  "closed_shoes",
+                  "hair_restrained",
+                  "report_incidents"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 1000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            }
+          ],
+          "guidance": {
+            "profile": "manual",
+            "promptKey": null,
+            "nextAction": null,
+            "suggestedAction": null,
+            "stepSourceRefs": [],
+            "confirmPredictedErrors": false,
+            "showProceduralFeedback": false,
+            "safetyPolicy": "warn"
+          }
+        }
+      }
+    },
+    {
+      "envelope": {
+        "action": {
+          "type": "select_apparatus",
+          "apparatusIds": [
+            "volumetric_flask_250"
+          ]
+        },
+        "actor": "student",
+        "acknowledgedSafetyWarning": false
+      },
+      "expected": {
+        "event": {
+          "seq": 1,
+          "attempt": 1,
+          "actor": "student",
+          "actionType": "select_apparatus",
+          "action": {
+            "type": "select_apparatus",
+            "apparatusIds": [
+              "volumetric_flask_250"
+            ]
+          },
+          "accepted": true,
+          "rejectionCode": null,
+          "elapsedMs": 2000,
+          "hintUsed": false,
+          "observations": [],
+          "measurements": [],
+          "errors": [],
+          "resolvedErrors": []
+        },
+        "feedback": [],
+        "session": {
+          "sessionId": "fixture",
+          "experimentId": "exp04_standard_solution",
+          "definitionVersion": "1.1.0",
+          "assessmentVersion": "1.0.0",
+          "mode": "manual",
+          "guidanceLevel": null,
+          "startedOn": "2026-10-10",
+          "attempt": 1,
+          "hints": 0,
+          "retries": 0,
+          "elapsedMs": 2000,
+          "nextSequence": 2,
+          "status": "active",
+          "disclosure": "observable",
+          "stage": "setup",
+          "bench": {
+            "safetyConfirmed": true,
+            "selectedApparatus": [
+              "volumetric_flask_250"
+            ],
+            "cleanliness": {
+              "volumetric_flask_250": "dirty",
+              "volumetric_flask_100": "dirty",
+              "volumetric_flask_500": "dirty",
+              "funnel": "dirty",
+              "watch_glass": "dirty"
+            },
+            "workingFlaskId": "volumetric_flask_250",
+            "flaskCapacity": {
+              "value": 250,
+              "unit": "cm3"
+            },
+            "balance": {
+              "pan": "empty",
+              "sliderSetting": null,
+              "watchGlassReading": null
+            },
+            "watchGlassHasSolid": false,
+            "funnelOnFlask": false,
+            "stoppered": false,
+            "madeUp": false,
+            "liquid": "empty",
+            "liquidFraction": 0,
+            "undissolvedVisible": false,
+            "label": null
+          },
+          "validity": null,
+          "events": [
+            {
+              "seq": 0,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "confirm_safety",
+              "action": {
+                "type": "confirm_safety",
+                "checklistItemIds": [
+                  "read_procedure",
+                  "goggles",
+                  "no_food_drink",
+                  "closed_shoes",
+                  "hair_restrained",
+                  "report_incidents"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 1000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 1,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "select_apparatus",
+              "action": {
+                "type": "select_apparatus",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 2000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            }
+          ],
+          "guidance": {
+            "profile": "manual",
+            "promptKey": null,
+            "nextAction": null,
+            "suggestedAction": null,
+            "stepSourceRefs": [],
+            "confirmPredictedErrors": false,
+            "showProceduralFeedback": false,
+            "safetyPolicy": "warn"
+          }
+        }
+      }
+    },
+    {
+      "envelope": {
+        "action": {
+          "type": "clean_glassware",
+          "apparatusIds": [
+            "volumetric_flask_250"
+          ]
+        },
+        "actor": "student",
+        "acknowledgedSafetyWarning": false
+      },
+      "expected": {
+        "event": {
+          "seq": 2,
+          "attempt": 1,
+          "actor": "student",
+          "actionType": "clean_glassware",
+          "action": {
+            "type": "clean_glassware",
+            "apparatusIds": [
+              "volumetric_flask_250"
+            ]
+          },
+          "accepted": true,
+          "rejectionCode": null,
+          "elapsedMs": 3000,
+          "hintUsed": false,
+          "observations": [],
+          "measurements": [],
+          "errors": [],
+          "resolvedErrors": []
+        },
+        "feedback": [],
+        "session": {
+          "sessionId": "fixture",
+          "experimentId": "exp04_standard_solution",
+          "definitionVersion": "1.1.0",
+          "assessmentVersion": "1.0.0",
+          "mode": "manual",
+          "guidanceLevel": null,
+          "startedOn": "2026-10-10",
+          "attempt": 1,
+          "hints": 0,
+          "retries": 0,
+          "elapsedMs": 3000,
+          "nextSequence": 3,
+          "status": "active",
+          "disclosure": "observable",
+          "stage": "setup",
+          "bench": {
+            "safetyConfirmed": true,
+            "selectedApparatus": [
+              "volumetric_flask_250"
+            ],
+            "cleanliness": {
+              "volumetric_flask_250": "clean",
+              "volumetric_flask_100": "dirty",
+              "volumetric_flask_500": "dirty",
+              "funnel": "dirty",
+              "watch_glass": "dirty"
+            },
+            "workingFlaskId": "volumetric_flask_250",
+            "flaskCapacity": {
+              "value": 250,
+              "unit": "cm3"
+            },
+            "balance": {
+              "pan": "empty",
+              "sliderSetting": null,
+              "watchGlassReading": null
+            },
+            "watchGlassHasSolid": false,
+            "funnelOnFlask": false,
+            "stoppered": false,
+            "madeUp": false,
+            "liquid": "empty",
+            "liquidFraction": 0,
+            "undissolvedVisible": false,
+            "label": null
+          },
+          "validity": null,
+          "events": [
+            {
+              "seq": 0,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "confirm_safety",
+              "action": {
+                "type": "confirm_safety",
+                "checklistItemIds": [
+                  "read_procedure",
+                  "goggles",
+                  "no_food_drink",
+                  "closed_shoes",
+                  "hair_restrained",
+                  "report_incidents"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 1000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 1,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "select_apparatus",
+              "action": {
+                "type": "select_apparatus",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 2000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 2,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "clean_glassware",
+              "action": {
+                "type": "clean_glassware",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 3000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            }
+          ],
+          "guidance": {
+            "profile": "manual",
+            "promptKey": null,
+            "nextAction": null,
+            "suggestedAction": null,
+            "stepSourceRefs": [],
+            "confirmPredictedErrors": false,
+            "showProceduralFeedback": false,
+            "safetyPolicy": "warn"
+          }
+        }
+      }
+    },
+    {
+      "envelope": {
+        "action": {
+          "type": "add_water",
+          "volume": {
+            "value": 250,
+            "unit": "cm3"
+          },
+          "source": "distilled"
+        },
+        "actor": "student",
+        "acknowledgedSafetyWarning": false
+      },
+      "expected": {
+        "event": {
+          "seq": 3,
+          "attempt": 1,
+          "actor": "student",
+          "actionType": "add_water",
+          "action": {
+            "type": "add_water",
+            "volume": {
+              "value": 250,
+              "unit": "cm3"
+            },
+            "source": "distilled"
+          },
+          "accepted": true,
+          "rejectionCode": null,
+          "elapsedMs": 4000,
+          "hintUsed": false,
+          "observations": [
+            "meniscus_at_mark"
+          ],
+          "measurements": [],
+          "errors": [],
+          "resolvedErrors": []
+        },
+        "feedback": [
+          {
+            "severity": "observation",
+            "messageKey": "exp04.observation.meniscus_at_mark",
+            "errorCode": null,
+            "visibility": "always"
+          }
+        ],
+        "session": {
+          "sessionId": "fixture",
+          "experimentId": "exp04_standard_solution",
+          "definitionVersion": "1.1.0",
+          "assessmentVersion": "1.0.0",
+          "mode": "manual",
+          "guidanceLevel": null,
+          "startedOn": "2026-10-10",
+          "attempt": 1,
+          "hints": 0,
+          "retries": 0,
+          "elapsedMs": 4000,
+          "nextSequence": 4,
+          "status": "active",
+          "disclosure": "observable",
+          "stage": "setup",
+          "bench": {
+            "safetyConfirmed": true,
+            "selectedApparatus": [
+              "volumetric_flask_250"
+            ],
+            "cleanliness": {
+              "volumetric_flask_250": "clean",
+              "volumetric_flask_100": "dirty",
+              "volumetric_flask_500": "dirty",
+              "funnel": "dirty",
+              "watch_glass": "dirty"
+            },
+            "workingFlaskId": "volumetric_flask_250",
+            "flaskCapacity": {
+              "value": 250,
+              "unit": "cm3"
+            },
+            "balance": {
+              "pan": "empty",
+              "sliderSetting": null,
+              "watchGlassReading": null
+            },
+            "watchGlassHasSolid": false,
+            "funnelOnFlask": false,
+            "stoppered": false,
+            "madeUp": true,
+            "liquid": "at_mark",
+            "liquidFraction": 1,
+            "undissolvedVisible": false,
+            "label": null
+          },
+          "validity": null,
+          "events": [
+            {
+              "seq": 0,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "confirm_safety",
+              "action": {
+                "type": "confirm_safety",
+                "checklistItemIds": [
+                  "read_procedure",
+                  "goggles",
+                  "no_food_drink",
+                  "closed_shoes",
+                  "hair_restrained",
+                  "report_incidents"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 1000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 1,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "select_apparatus",
+              "action": {
+                "type": "select_apparatus",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 2000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 2,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "clean_glassware",
+              "action": {
+                "type": "clean_glassware",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 3000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 3,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "add_water",
+              "action": {
+                "type": "add_water",
+                "volume": {
+                  "value": 250,
+                  "unit": "cm3"
+                },
+                "source": "distilled"
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 4000,
+              "hintUsed": false,
+              "observations": [
+                "meniscus_at_mark"
+              ],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            }
+          ],
+          "guidance": {
+            "profile": "manual",
+            "promptKey": null,
+            "nextAction": null,
+            "suggestedAction": null,
+            "stepSourceRefs": [],
+            "confirmPredictedErrors": false,
+            "showProceduralFeedback": false,
+            "safetyPolicy": "warn"
+          }
+        }
+      }
+    },
+    {
+      "envelope": {
+        "action": {
+          "type": "submit_experiment"
+        },
+        "actor": "student",
+        "acknowledgedSafetyWarning": false
+      },
+      "expected": {
+        "event": {
+          "seq": 4,
+          "attempt": 1,
+          "actor": "student",
+          "actionType": "submit_experiment",
+          "action": {
+            "type": "submit_experiment"
+          },
+          "accepted": true,
+          "rejectionCode": null,
+          "elapsedMs": 5000,
+          "hintUsed": false,
+          "observations": [],
+          "measurements": [],
+          "errors": [],
+          "resolvedErrors": []
+        },
+        "feedback": [
+          {
+            "severity": "info",
+            "messageKey": "engine.feedback.submitted",
+            "errorCode": null,
+            "visibility": "always"
+          }
+        ],
+        "session": {
+          "sessionId": "fixture",
+          "experimentId": "exp04_standard_solution",
+          "definitionVersion": "1.1.0",
+          "assessmentVersion": "1.0.0",
+          "mode": "manual",
+          "guidanceLevel": null,
+          "startedOn": "2026-10-10",
+          "attempt": 1,
+          "hints": 0,
+          "retries": 0,
+          "elapsedMs": 5000,
+          "nextSequence": 5,
+          "status": "submitted",
+          "disclosure": "observable",
+          "stage": "complete",
+          "bench": {
+            "safetyConfirmed": true,
+            "selectedApparatus": [
+              "volumetric_flask_250"
+            ],
+            "cleanliness": {
+              "volumetric_flask_250": "clean",
+              "volumetric_flask_100": "dirty",
+              "volumetric_flask_500": "dirty",
+              "funnel": "dirty",
+              "watch_glass": "dirty"
+            },
+            "workingFlaskId": "volumetric_flask_250",
+            "flaskCapacity": {
+              "value": 250,
+              "unit": "cm3"
+            },
+            "balance": {
+              "pan": "empty",
+              "sliderSetting": null,
+              "watchGlassReading": null
+            },
+            "watchGlassHasSolid": false,
+            "funnelOnFlask": false,
+            "stoppered": false,
+            "madeUp": true,
+            "liquid": "at_mark",
+            "liquidFraction": 1,
+            "undissolvedVisible": false,
+            "label": null
+          },
+          "validity": null,
+          "events": [
+            {
+              "seq": 0,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "confirm_safety",
+              "action": {
+                "type": "confirm_safety",
+                "checklistItemIds": [
+                  "read_procedure",
+                  "goggles",
+                  "no_food_drink",
+                  "closed_shoes",
+                  "hair_restrained",
+                  "report_incidents"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 1000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 1,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "select_apparatus",
+              "action": {
+                "type": "select_apparatus",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 2000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 2,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "clean_glassware",
+              "action": {
+                "type": "clean_glassware",
+                "apparatusIds": [
+                  "volumetric_flask_250"
+                ]
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 3000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 3,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "add_water",
+              "action": {
+                "type": "add_water",
+                "volume": {
+                  "value": 250,
+                  "unit": "cm3"
+                },
+                "source": "distilled"
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 4000,
+              "hintUsed": false,
+              "observations": [
+                "meniscus_at_mark"
+              ],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            },
+            {
+              "seq": 4,
+              "attempt": 1,
+              "actor": "student",
+              "actionType": "submit_experiment",
+              "action": {
+                "type": "submit_experiment"
+              },
+              "accepted": true,
+              "rejectionCode": null,
+              "elapsedMs": 5000,
+              "hintUsed": false,
+              "observations": [],
+              "measurements": [],
+              "errors": [],
+              "resolvedErrors": []
+            }
+          ],
+          "guidance": {
+            "profile": "manual",
+            "promptKey": null,
+            "nextAction": null,
+            "suggestedAction": null,
+            "stepSourceRefs": [],
+            "confirmPredictedErrors": false,
+            "showProceduralFeedback": false,
+            "safetyPolicy": "warn"
+          }
+        }
+      }
+    }
+  ],
+  "finalReport": {
+    "sessionId": "fixture",
+    "experimentId": "exp04_standard_solution",
+    "definitionVersion": "1.1.0",
+    "mode": "manual",
+    "guidanceLevel": null,
+    "attempt": 1,
+    "resultLabel": "practical competency estimate",
+    "disclaimerKey": "assessment.exp04.disclaimer",
+    "assessmentVersion": "1.0.0",
+    "categories": [
+      {
+        "category": "safety",
+        "score": 100,
+        "weightParameterId": "param.weight_safety",
+        "deductions": []
+      },
+      {
+        "category": "technique",
+        "score": 85,
+        "weightParameterId": "param.weight_technique",
+        "deductions": [
+          {
+            "reason": "INSUFFICIENT_MIXING",
+            "points": 15,
+            "parameterIds": [
+              "param.deduction_insufficient_mixing"
+            ],
+            "eventSeqs": [
+              4
+            ],
+            "resolved": false,
+            "sourceRefs": [
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "V5",
+                "pdfPage": 16,
+                "printedPage": 8
+              },
+              {
+                "sourceId": "nie-rb-g12-en",
+                "factId": "E24",
+                "pdfPage": 124,
+                "printedPage": 114
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "measurement",
+        "score": 80,
+        "weightParameterId": "param.weight_measurement",
+        "deductions": [
+          {
+            "reason": "concentration_out_of_tolerance",
+            "points": 20,
+            "parameterIds": [
+              "param.deduction_concentration_out_of_tolerance",
+              "param.concentration_relative_tolerance"
+            ],
+            "eventSeqs": [
+              3,
+              4
+            ],
+            "resolved": false,
+            "sourceRefs": [
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E4",
+                "pdfPage": 29,
+                "printedPage": 21
+              },
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E6",
+                "pdfPage": 29,
+                "printedPage": 21
+              },
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E7",
+                "pdfPage": 29,
+                "printedPage": 21
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "completeness",
+        "score": 30,
+        "weightParameterId": "param.weight_completeness",
+        "deductions": [
+          {
+            "reason": "INCOMPLETE_PROCEDURE",
+            "points": 40,
+            "parameterIds": [
+              "param.deduction_incomplete_procedure"
+            ],
+            "eventSeqs": [
+              4
+            ],
+            "resolved": false,
+            "sourceRefs": [
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E8",
+                "pdfPage": 29,
+                "printedPage": 21
+              },
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E15",
+                "pdfPage": 30,
+                "printedPage": 22
+              }
+            ]
+          },
+          {
+            "reason": "LABEL_MISSING",
+            "points": 30,
+            "parameterIds": [
+              "param.deduction_label_missing"
+            ],
+            "eventSeqs": [
+              4
+            ],
+            "resolved": false,
+            "sourceRefs": [
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "E19",
+                "pdfPage": 30,
+                "printedPage": 22
+              },
+              {
+                "sourceId": "nie-handbook-2018",
+                "factId": "S2",
+                "pdfPage": 9,
+                "printedPage": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "independence",
+        "score": 100,
+        "weightParameterId": "param.weight_independence",
+        "deductions": []
+      }
+    ],
+    "overall": 80.8,
+    "measurements": {
+      "targetConcentration": {
+        "value": 1,
+        "unit": "mol dm-3"
+      },
+      "weighedMass": null,
+      "transferredMass": {
+        "value": 0,
+        "unit": "g"
+      },
+      "finalVolume": {
+        "value": 250,
+        "unit": "cm3"
+      },
+      "achievedConcentration": {
+        "value": 0,
+        "unit": "mol dm-3"
+      },
+      "concentrationUnavailableReason": null,
+      "absoluteError": {
+        "value": -1,
+        "unit": "mol dm-3"
+      },
+      "relativeError": -1
+    },
+    "validity": {
+      "purityRisks": [],
+      "homogeneity": "not_mixed",
+      "volumeValidity": "valid",
+      "restartRequired": true
+    },
+    "completion": "submitted",
+    "hints": 0,
+    "retries": 0,
+    "elapsedMs": 5000,
+    "actionSequence": [
+      "confirm_safety",
+      "select_apparatus",
+      "clean_glassware",
+      "add_water",
+      "submit_experiment"
+    ],
+    "errorSummary": {
+      "recovered": [],
+      "unresolved": [
+        {
+          "code": "INCOMPLETE_PROCEDURE",
+          "seq": 4,
+          "recoverability": "restart_required"
+        },
+        {
+          "code": "LABEL_MISSING",
+          "seq": 4,
+          "recoverability": "not_correctable"
+        },
+        {
+          "code": "INSUFFICIENT_MIXING",
+          "seq": 4,
+          "recoverability": "recoverable"
+        }
+      ]
+    },
+    "provisionalParameterIds": [
+      "param.concentration_relative_tolerance",
+      "param.deduction_concentration_out_of_tolerance",
+      "param.deduction_incomplete_procedure",
+      "param.deduction_insufficient_mixing",
+      "param.deduction_label_missing",
+      "param.required_inversions",
+      "param.weight_completeness",
+      "param.weight_independence",
+      "param.weight_measurement",
+      "param.weight_safety",
+      "param.weight_technique"
+    ],
+    "sourceRefs": [
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E5",
+        "pdfPage": 29,
+        "printedPage": 21
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E6",
+        "pdfPage": 29,
+        "printedPage": 21
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E7",
+        "pdfPage": 29,
+        "printedPage": 21
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E8",
+        "pdfPage": 29,
+        "printedPage": 21
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E15",
+        "pdfPage": 30,
+        "printedPage": 22
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E19",
+        "pdfPage": 30,
+        "printedPage": 22
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "S2",
+        "pdfPage": 9,
+        "printedPage": 1
+      },
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "V5",
+        "pdfPage": 16,
+        "printedPage": 8
+      },
+      {
+        "sourceId": "nie-rb-g12-en",
+        "factId": "E24",
+        "pdfPage": 124,
+        "printedPage": 114
+      }
+    ],
+    "headFingerprint": "180ee894557882"
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "knowledgeVersion": "kb-exp04-1.0.0",
+  "extractorVersion": "extract-1.0.0",
+  "notes": "Only these pages may be ingested. Repairs are reviewed, deterministic normalisations of the PDF text layer; each page repair must match exactly once or extraction fails.",
+  "sources": [
+    {
+      "sourceId": "nie-handbook-2018",
+      "filename": "nie-chemistry-practical-handbook-2018.pdf",
+      "documentTitle": "G.C.E. (A/L) Chemistry Practical Handbook",
+      "edition": "2018",
+      "dropLeadingLines": [
+        "G.C.E.(A/L) Chemistry Practical Handbook",
+        "G.C.E.(A.L) Chemistry Practical Handbook",
+        "Introduction",
+        "Unit 03 - Chemical Calculations"
+      ],
+      "segmentHeader": null
+    },
+    {
+      "sourceId": "nie-rb-g12-en",
+      "filename": "nie-grade-12-chemistry-resource-book-en.pdf",
+      "documentTitle": "Grade 12 Chemistry Resource Book, Units 1, 2, 3 & 6 (English)",
+      "edition": "2021 print",
+      "dropLeadingLines": [],
+      "segmentHeader": "^G\\. C\\. E\\. \\(A/L\\) CHEMISTRY: UNIT 3 Chemical Calculations$"
+    },
+    {
+      "sourceId": "nie-syllabus-2017",
+      "filename": "nie-al-chemistry-syllabus-2017.pdf",
+      "documentTitle": "G.C.E. (A/L) Chemistry Syllabus",
+      "edition": "implemented from 2017",
+      "dropLeadingLines": [],
+      "segmentHeader": null
+    }
+  ],
+  "pages": [
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1,
+      "unit": "Introduction",
+      "section": "Introduction to Laboratory Safety",
+      "experimentId": null,
+      "initialHeading": null,
+      "headings": [
+        "Introduction to Laboratory Safety",
+        "Preparing for laboratory work",
+        "During laboratory work",
+        "Waste disposal",
+        "Cleaning up before leaving"
+      ],
+      "outOfScopeHeadings": [],
+      "repairs": []
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 10,
+      "printedPage": 2,
+      "unit": "Introduction",
+      "section": "Introduction to Laboratory Safety",
+      "experimentId": null,
+      "initialHeading": "Cleaning up before leaving",
+      "headings": [
+        "Potential laboratory hazards",
+        "Precautions for handling corrosive materials",
+        "Essential components in a chemical label"
+      ],
+      "outOfScopeHeadings": [],
+      "repairs": []
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8,
+      "unit": "Introduction",
+      "section": "Laboratory techniques",
+      "experimentId": null,
+      "initialHeading": "Laboratory techniques",
+      "headings": ["Use of burette", "Use of volumetric flask", "Use of balances"],
+      "outOfScopeHeadings": [],
+      "repairs": []
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Experiment 4: Preparation of standard solutions",
+      "experimentId": "exp04_standard_solution",
+      "initialHeading": null,
+      "headings": [
+        "Experiment 4: Preparation of standard solutions",
+        "Aims:",
+        "Pre lab questions:",
+        "Introduction:",
+        "Equipment and chemicals required:",
+        "Precautions:"
+      ],
+      "outOfScopeHeadings": [],
+      "repairs": [
+        {
+          "find": "Concentration can be defined as follows.\nAmount of the solute\nVolume of the solution",
+          "replace": "Concentration can be defined as follows.\nConcentration = Amount of the solute ÷ Volume of the solution",
+          "note": "Fraction typeset as two lines; restored as one equation (layout checked against pdftotext)."
+        },
+        {
+          "find": "Amount of Na₂CO₃ present in that volume of the solution =\n= 0.25 mol",
+          "replace": "Amount of Na₂CO₃ present in that volume of the solution = (1 mol dm⁻³ × 250 cm³) ÷ 1000 cm³ dm⁻³ = 0.25 mol",
+          "note": "The fraction's numerator and denominator are emitted at the end of the page; moved back into the equation."
+        },
+        {
+          "find": "\nConcentration =\n1 mol dm⁻³ x 250 cm³\n1000 cm³ dm⁻³",
+          "replace": "",
+          "note": "Displaced fraction fragment removed after being restored in the equation above."
+        },
+        {
+          "find": "Equipment\nChemicals\nVolumetric flask (250 cm³)\nBeakers\nFunnel\nWatch glasses\nFour beam balance\nWash bottle\nNa₂CO₃(s)",
+          "replace": "Equipment: Volumetric flask (250 cm³); Beakers; Funnel; Watch glasses; Four beam balance; Wash bottle.\nChemicals: Na₂CO₃(s).",
+          "note": "Two-column table rendered as one row per column."
+        }
+      ]
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Experiment 4: Preparation of standard solutions",
+      "experimentId": "exp04_standard_solution",
+      "initialHeading": "Experiment 4: Preparation of standard solutions",
+      "headings": ["Procedure:", "Post lab questions:"],
+      "outOfScopeHeadings": [],
+      "repairs": [
+        {
+          "find": "26.5 g of solid Na₂CO₃•\nKeep the funnel",
+          "replace": "26.5 g of solid Na₂CO₃.\n• Keep the funnel",
+          "note": "Bullet glyph attached to the preceding subscript line."
+        }
+      ]
+    },
+    {
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 123,
+      "printedPage": 113,
+      "unit": "Unit 3 Chemical Calculations",
+      "section": "3.7 Preparation of solutions",
+      "experimentId": null,
+      "initialHeading": "3.6.3 Balancing simple nuclear reactions",
+      "headings": ["Rules for balancing nuclear reactions", "3.7 Preparation of solutions"],
+      "outOfScopeHeadings": [
+        "3.6.3 Balancing simple nuclear reactions",
+        "Rules for balancing nuclear reactions"
+      ],
+      "repairs": [
+        {
+          "find": "These s tandard solutions are standardiz ed",
+          "replace": "These standard solutions are standardized",
+          "note": "Text-layer spacing artefact."
+        },
+        {
+          "find": "using e xtremely",
+          "replace": "using extremely",
+          "note": "Text-layer spacing artefact."
+        },
+        {
+          "find": "and high ly water",
+          "replace": "and highly water",
+          "note": "Text-layer spacing artefact."
+        }
+      ]
+    },
+    {
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 124,
+      "printedPage": 114,
+      "unit": "Unit 3 Chemical Calculations",
+      "section": "3.7 Preparation of solutions",
+      "experimentId": null,
+      "initialHeading": "3.7 Preparation of solutions",
+      "headings": ["Methods:"],
+      "outOfScopeHeadings": [],
+      "repairs": []
+    },
+    {
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 125,
+      "printedPage": 115,
+      "unit": "Unit 3 Chemical Calculations",
+      "section": "3.7 Preparation of solutions",
+      "experimentId": null,
+      "initialHeading": "3.7 Preparation of solutions",
+      "headings": ["3.8 Calculations based on chemical reactions"],
+      "outOfScopeHeadings": [],
+      "repairs": [
+        {
+          "find": "with an unkn own amount",
+          "replace": "with an unknown amount",
+          "note": "Text-layer spacing artefact."
+        }
+      ]
+    },
+    {
+      "sourceId": "nie-syllabus-2017",
+      "pdfPage": 22,
+      "printedPage": 11,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Competency 3.3",
+      "experimentId": null,
+      "initialHeading": "Competency 3.3",
+      "headings": ["Contents:", "Outcomes:"],
+      "outOfScopeHeadings": [],
+      "repairs": [
+        {
+          "find": "Competency\nCompetency level\nContents\nOutcome\nTime\n3.3Carries out\ncalculations\nassociatedWith\nstoichiometry and\nreaction equations.",
+          "replace": "Competency level 3.3: Carries out calculations associated with stoichiometry and reaction equations.\nContents:",
+          "note": "Table header and wrapped competency cell rendered as one statement."
+        },
+        {
+          "find": "Calculation involving a\ncid-base and redox",
+          "replace": "Calculation involving acid-base and redox",
+          "note": "Word split across table lines."
+        },
+        {
+          "find": "Na₂CO₃•\nCalculates quantities in chemical",
+          "replace": "Na₂CO₃\nOutcomes:\n• Calculates quantities in chemical",
+          "note": "Start of the Outcome column (bullet glyph attached to the preceding subscript line)."
+        },
+        {
+          "find": "Prepares solution of Na₂CO₃.14",
+          "replace": "Prepares solution of Na₂CO₃.\nTime: 14",
+          "note": "Time column value separated from the last outcome."
+        }
+      ]
+    }
+  ]
+}

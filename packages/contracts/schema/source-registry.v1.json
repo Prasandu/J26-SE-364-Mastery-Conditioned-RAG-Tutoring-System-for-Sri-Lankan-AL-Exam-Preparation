@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "documents": {
+      "minItems": 4,
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "enum": [
+              "nie-handbook-2018",
+              "nie-rb-g12-en",
+              "nie-syllabus-2017",
+              "proposal-c01"
+            ]
+          },
+          "filename": {
+            "type": "string",
+            "enum": [
+              "nie-chemistry-practical-handbook-2018.pdf",
+              "nie-grade-12-chemistry-resource-book-en.pdf",
+              "nie-al-chemistry-syllabus-2017.pdf",
+              "component-01-virtual-lab-proposal.pdf"
+            ]
+          },
+          "titleKey": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "nie_official",
+              "project_material"
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "sourceId",
+          "filename",
+          "titleKey",
+          "edition",
+          "kind",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "facts": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "factId": {
+            "type": "string",
+            "pattern": "^[ESVP]\\d+$"
+          },
+          "sourceId": {
+            "type": "string",
+            "enum": [
+              "nie-handbook-2018",
+              "nie-rb-g12-en",
+              "nie-syllabus-2017",
+              "proposal-c01"
+            ]
+          },
+          "pdfPage": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "printedPage": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "factId",
+          "sourceId",
+          "pdfPage",
+          "printedPage"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "documents",
+    "facts"
+  ],
+  "additionalProperties": false
+}

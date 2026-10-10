@@ -1,0 +1,33 @@
+{
+  "name": "virtual-chem-lab",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @vlab/web dev",
+    "dev:api": "pnpm --filter @vlab/api dev",
+    "format": "prettier --write . && pnpm --filter @vlab/api format",
+    "format:check": "prettier --check . && pnpm --filter @vlab/api format:check",
+    "lint": "eslint . && pnpm --filter @vlab/api lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "content:validate": "pnpm --filter @vlab/contracts test:content",
+    "build": "pnpm content:validate && pnpm -r build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "db:smoke": "uv run --project apps/api python scripts/db/migration_smoke.py"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.3"
+  }
+}

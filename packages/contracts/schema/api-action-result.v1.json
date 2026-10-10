@@ -1,0 +1,2920 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "event": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "attempt": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "student",
+            "system"
+          ]
+        },
+        "actionType": {
+          "type": "string",
+          "enum": [
+            "confirm_safety",
+            "select_apparatus",
+            "clean_glassware",
+            "weigh_watch_glass",
+            "set_balance_sliders",
+            "add_solid",
+            "remove_solid",
+            "place_funnel",
+            "transfer_solid",
+            "rinse_watch_glass",
+            "rinse_funnel",
+            "remove_funnel",
+            "add_water",
+            "stopper_flask",
+            "dissolve_solute",
+            "adjust_to_mark",
+            "mix_solution",
+            "apply_label",
+            "request_hint",
+            "submit_experiment",
+            "restart_experiment"
+          ]
+        },
+        "action": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "confirm_safety"
+                },
+                "checklistItemIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "checklistItemIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "select_apparatus"
+                },
+                "apparatusIds": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "apparatusIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "clean_glassware"
+                },
+                "apparatusIds": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "apparatusIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "weigh_watch_glass"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "set_balance_sliders"
+                },
+                "mass": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "type",
+                "mass"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "add_solid"
+                },
+                "mass": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "handContact": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "mass",
+                "handContact"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "remove_solid"
+                },
+                "mass": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "handContact": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "mass",
+                "handContact"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "place_funnel"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "transfer_solid"
+                },
+                "fractionIntoFunnel": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                },
+                "handContact": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "fractionIntoFunnel",
+                "handContact"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "rinse_watch_glass"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "distilled",
+                    "tap"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "source"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "rinse_funnel"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "distilled",
+                    "tap"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "source"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "remove_funnel"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "add_water"
+                },
+                "volume": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "cm3",
+                        "dm3"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "distilled",
+                    "tap"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "volume",
+                "source"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "stopper_flask"
+                },
+                "inserted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "inserted"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "dissolve_solute"
+                },
+                "grip": {
+                  "type": "string",
+                  "enum": [
+                    "neck",
+                    "body"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "grip"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "adjust_to_mark"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "distilled",
+                    "tap"
+                  ]
+                },
+                "eyeLevel": {
+                  "type": "string",
+                  "enum": [
+                    "level",
+                    "above",
+                    "below"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "source",
+                "eyeLevel"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "mix_solution"
+                },
+                "inversions": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "grip": {
+                  "type": "string",
+                  "enum": [
+                    "neck",
+                    "body"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "inversions",
+                "grip"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "apply_label"
+                },
+                "solutionName": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "concentration": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "g",
+                            "kg",
+                            "cm3",
+                            "dm3",
+                            "mol",
+                            "mol dm-3",
+                            "g mol-1"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "preparationDate": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "solutionName",
+                "concentration",
+                "preparationDate"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "request_hint"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "submit_experiment"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "restart_experiment"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "rejectionCode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "not_submitted",
+                "apparatus_known",
+                "apparatus_selected",
+                "glassware_cleanable_and_empty",
+                "flask_selected",
+                "flask_switch_allowed",
+                "watch_glass_on_balance",
+                "transfer_not_started",
+                "solid_on_watch_glass",
+                "sufficient_solid",
+                "funnel_on_flask",
+                "funnel_not_on_flask",
+                "flask_unstoppered",
+                "flask_stoppered",
+                "stopper_state_changes",
+                "flask_has_liquid",
+                "flask_has_solute",
+                "below_mark",
+                "within_brim",
+                "invalid_envelope",
+                "safety_acknowledgement_required"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "hintUsed": {
+          "type": "boolean"
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pointer_below_zero",
+              "pointer_at_zero",
+              "pointer_above_zero",
+              "solid_in_flask_undissolved",
+              "solid_dissolved",
+              "liquid_below_mark",
+              "meniscus_at_mark",
+              "liquid_above_mark",
+              "solution_homogeneous",
+              "solid_spilled"
+            ]
+          }
+        },
+        "measurements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "watch_glass_mass",
+                  "balance_slider_setting",
+                  "weighed_solute_mass",
+                  "transferred_solute_mass",
+                  "final_volume",
+                  "achieved_concentration"
+                ]
+              },
+              "quantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "g",
+                      "kg",
+                      "cm3",
+                      "dm3",
+                      "mol",
+                      "mol dm-3",
+                      "g mol-1"
+                    ]
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "quantity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "safety_violation",
+                  "technique_error",
+                  "measurement_error",
+                  "completion_error"
+                ]
+              },
+              "consequence": {
+                "type": "string",
+                "enum": [
+                  "numeric_mass",
+                  "numeric_volume",
+                  "purity_risk",
+                  "homogeneity_risk",
+                  "volume_validity",
+                  "technique_only",
+                  "completion",
+                  "safety"
+                ]
+              },
+              "recoverability": {
+                "type": "string",
+                "enum": [
+                  "recoverable",
+                  "not_correctable",
+                  "numeric_consequence",
+                  "restart_required"
+                ]
+              },
+              "parameterIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sourceRefs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "code",
+              "category",
+              "consequence",
+              "recoverability",
+              "parameterIds",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "resolvedErrors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "code",
+              "seq"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "seq",
+        "attempt",
+        "actor",
+        "actionType",
+        "action",
+        "accepted",
+        "rejectionCode",
+        "elapsedMs",
+        "hintUsed",
+        "observations",
+        "measurements",
+        "errors",
+        "resolvedErrors"
+      ],
+      "additionalProperties": false
+    },
+    "feedback": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "observation",
+              "warning",
+              "error",
+              "safety"
+            ]
+          },
+          "messageKey": {
+            "type": "string"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "always",
+              "procedural"
+            ]
+          }
+        },
+        "required": [
+          "severity",
+          "messageKey",
+          "errorCode",
+          "visibility"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "experimentId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "definitionVersion": {
+          "type": "string"
+        },
+        "assessmentVersion": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "guided",
+            "manual"
+          ]
+        },
+        "guidanceLevel": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startedOn": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "attempt": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "hints": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nextSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "submitted"
+          ]
+        },
+        "disclosure": {
+          "type": "string",
+          "enum": [
+            "full",
+            "observable"
+          ]
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "safety",
+            "setup",
+            "weighing",
+            "transfer",
+            "dissolution",
+            "make_up",
+            "mixing",
+            "labelling",
+            "review",
+            "complete"
+          ]
+        },
+        "bench": {
+          "type": "object",
+          "properties": {
+            "safetyConfirmed": {
+              "type": "boolean"
+            },
+            "selectedApparatus": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              }
+            },
+            "cleanliness": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "dirty",
+                  "clean"
+                ]
+              }
+            },
+            "workingFlaskId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "flaskCapacity": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "cm3",
+                        "dm3"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "balance": {
+              "type": "object",
+              "properties": {
+                "pan": {
+                  "type": "string",
+                  "enum": [
+                    "empty",
+                    "watch_glass"
+                  ]
+                },
+                "sliderSetting": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "g",
+                            "kg"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "watchGlassReading": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "g",
+                            "kg"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "pan",
+                "sliderSetting",
+                "watchGlassReading"
+              ],
+              "additionalProperties": false
+            },
+            "watchGlassHasSolid": {
+              "type": "boolean"
+            },
+            "funnelOnFlask": {
+              "type": "boolean"
+            },
+            "stoppered": {
+              "type": "boolean"
+            },
+            "madeUp": {
+              "type": "boolean"
+            },
+            "liquid": {
+              "type": "string",
+              "enum": [
+                "empty",
+                "below_mark",
+                "at_mark",
+                "above_mark"
+              ]
+            },
+            "liquidFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1.1
+            },
+            "undissolvedVisible": {
+              "type": "boolean"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "solutionName": {
+                      "type": "string"
+                    },
+                    "concentration": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "g",
+                                "kg",
+                                "cm3",
+                                "dm3",
+                                "mol",
+                                "mol dm-3",
+                                "g mol-1"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "preparationDate": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "solutionName",
+                    "concentration",
+                    "preparationDate"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "safetyConfirmed",
+            "selectedApparatus",
+            "cleanliness",
+            "workingFlaskId",
+            "flaskCapacity",
+            "balance",
+            "watchGlassHasSolid",
+            "funnelOnFlask",
+            "stoppered",
+            "madeUp",
+            "liquid",
+            "liquidFraction",
+            "undissolvedVisible",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "validity": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "purityRisks": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "SAFETY_NOT_CONFIRMED",
+                      "SAFETY_CHECKLIST_INCOMPLETE",
+                      "CHEMICAL_SKIN_CONTACT",
+                      "DIRTY_FLASK_USED",
+                      "DIRTY_GLASSWARE_USED",
+                      "INCOMPLETE_TRANSFER",
+                      "WATCH_GLASS_NOT_RINSED",
+                      "FUNNEL_NOT_RINSED",
+                      "UNDISSOLVED_AT_MARK",
+                      "TAP_WATER_USED",
+                      "INSUFFICIENT_MIXING",
+                      "FLASK_HELD_BY_BODY",
+                      "SLIDER_SETTING_INCORRECT",
+                      "MASS_OUT_OF_TOLERANCE",
+                      "WRONG_FLASK_CAPACITY",
+                      "OVERSHOOT_MARK",
+                      "EYE_LEVEL_INCORRECT",
+                      "LABEL_MISSING",
+                      "LABEL_INCORRECT",
+                      "INCOMPLETE_PROCEDURE"
+                    ]
+                  }
+                },
+                "homogeneity": {
+                  "type": "string",
+                  "enum": [
+                    "not_applicable",
+                    "not_mixed",
+                    "partially_mixed",
+                    "homogeneous"
+                  ]
+                },
+                "volumeValidity": {
+                  "type": "string",
+                  "enum": [
+                    "not_made_up",
+                    "valid",
+                    "invalid"
+                  ]
+                },
+                "restartRequired": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "purityRisks",
+                "homogeneity",
+                "volumeValidity",
+                "restartRequired"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "attempt": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "actor": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "system"
+                ]
+              },
+              "actionType": {
+                "type": "string",
+                "enum": [
+                  "confirm_safety",
+                  "select_apparatus",
+                  "clean_glassware",
+                  "weigh_watch_glass",
+                  "set_balance_sliders",
+                  "add_solid",
+                  "remove_solid",
+                  "place_funnel",
+                  "transfer_solid",
+                  "rinse_watch_glass",
+                  "rinse_funnel",
+                  "remove_funnel",
+                  "add_water",
+                  "stopper_flask",
+                  "dissolve_solute",
+                  "adjust_to_mark",
+                  "mix_solution",
+                  "apply_label",
+                  "request_hint",
+                  "submit_experiment",
+                  "restart_experiment"
+                ]
+              },
+              "action": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "confirm_safety"
+                      },
+                      "checklistItemIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]*$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "checklistItemIds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "select_apparatus"
+                      },
+                      "apparatusIds": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]*$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "apparatusIds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "clean_glassware"
+                      },
+                      "apparatusIds": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]*$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "apparatusIds"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "weigh_watch_glass"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "set_balance_sliders"
+                      },
+                      "mass": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "mass"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "add_solid"
+                      },
+                      "mass": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "handContact": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "mass",
+                      "handContact"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "remove_solid"
+                      },
+                      "mass": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "handContact": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "mass",
+                      "handContact"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "place_funnel"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "transfer_solid"
+                      },
+                      "fractionIntoFunnel": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1
+                      },
+                      "handContact": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "fractionIntoFunnel",
+                      "handContact"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "rinse_watch_glass"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "distilled",
+                          "tap"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "rinse_funnel"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "distilled",
+                          "tap"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "remove_funnel"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "add_water"
+                      },
+                      "volume": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "cm3",
+                              "dm3"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "distilled",
+                          "tap"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "volume",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "stopper_flask"
+                      },
+                      "inserted": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "inserted"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "dissolve_solute"
+                      },
+                      "grip": {
+                        "type": "string",
+                        "enum": [
+                          "neck",
+                          "body"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "grip"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "adjust_to_mark"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "distilled",
+                          "tap"
+                        ]
+                      },
+                      "eyeLevel": {
+                        "type": "string",
+                        "enum": [
+                          "level",
+                          "above",
+                          "below"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "source",
+                      "eyeLevel"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "mix_solution"
+                      },
+                      "inversions": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100
+                      },
+                      "grip": {
+                        "type": "string",
+                        "enum": [
+                          "neck",
+                          "body"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "inversions",
+                      "grip"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "apply_label"
+                      },
+                      "solutionName": {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      "concentration": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "g",
+                                  "kg",
+                                  "cm3",
+                                  "dm3",
+                                  "mol",
+                                  "mol dm-3",
+                                  "g mol-1"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "unit"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "preparationDate": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "solutionName",
+                      "concentration",
+                      "preparationDate"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "request_hint"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "submit_experiment"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "restart_experiment"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "rejectionCode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "not_submitted",
+                      "apparatus_known",
+                      "apparatus_selected",
+                      "glassware_cleanable_and_empty",
+                      "flask_selected",
+                      "flask_switch_allowed",
+                      "watch_glass_on_balance",
+                      "transfer_not_started",
+                      "solid_on_watch_glass",
+                      "sufficient_solid",
+                      "funnel_on_flask",
+                      "funnel_not_on_flask",
+                      "flask_unstoppered",
+                      "flask_stoppered",
+                      "stopper_state_changes",
+                      "flask_has_liquid",
+                      "flask_has_solute",
+                      "below_mark",
+                      "within_brim",
+                      "invalid_envelope",
+                      "safety_acknowledgement_required"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "elapsedMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hintUsed": {
+                "type": "boolean"
+              },
+              "observations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "pointer_below_zero",
+                    "pointer_at_zero",
+                    "pointer_above_zero",
+                    "solid_in_flask_undissolved",
+                    "solid_dissolved",
+                    "liquid_below_mark",
+                    "meniscus_at_mark",
+                    "liquid_above_mark",
+                    "solution_homogeneous",
+                    "solid_spilled"
+                  ]
+                }
+              },
+              "measurements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "enum": [
+                        "watch_glass_mass",
+                        "balance_slider_setting",
+                        "weighed_solute_mass",
+                        "transferred_solute_mass",
+                        "final_volume",
+                        "achieved_concentration"
+                      ]
+                    },
+                    "quantity": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "g",
+                            "kg",
+                            "cm3",
+                            "dm3",
+                            "mol",
+                            "mol dm-3",
+                            "g mol-1"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "quantity"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SAFETY_NOT_CONFIRMED",
+                        "SAFETY_CHECKLIST_INCOMPLETE",
+                        "CHEMICAL_SKIN_CONTACT",
+                        "DIRTY_FLASK_USED",
+                        "DIRTY_GLASSWARE_USED",
+                        "INCOMPLETE_TRANSFER",
+                        "WATCH_GLASS_NOT_RINSED",
+                        "FUNNEL_NOT_RINSED",
+                        "UNDISSOLVED_AT_MARK",
+                        "TAP_WATER_USED",
+                        "INSUFFICIENT_MIXING",
+                        "FLASK_HELD_BY_BODY",
+                        "SLIDER_SETTING_INCORRECT",
+                        "MASS_OUT_OF_TOLERANCE",
+                        "WRONG_FLASK_CAPACITY",
+                        "OVERSHOOT_MARK",
+                        "EYE_LEVEL_INCORRECT",
+                        "LABEL_MISSING",
+                        "LABEL_INCORRECT",
+                        "INCOMPLETE_PROCEDURE"
+                      ]
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "safety_violation",
+                        "technique_error",
+                        "measurement_error",
+                        "completion_error"
+                      ]
+                    },
+                    "consequence": {
+                      "type": "string",
+                      "enum": [
+                        "numeric_mass",
+                        "numeric_volume",
+                        "purity_risk",
+                        "homogeneity_risk",
+                        "volume_validity",
+                        "technique_only",
+                        "completion",
+                        "safety"
+                      ]
+                    },
+                    "recoverability": {
+                      "type": "string",
+                      "enum": [
+                        "recoverable",
+                        "not_correctable",
+                        "numeric_consequence",
+                        "restart_required"
+                      ]
+                    },
+                    "parameterIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "sourceRefs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceId": {
+                            "type": "string",
+                            "enum": [
+                              "nie-handbook-2018",
+                              "nie-rb-g12-en",
+                              "nie-syllabus-2017",
+                              "proposal-c01"
+                            ]
+                          },
+                          "factId": {
+                            "type": "string",
+                            "pattern": "^[ESVP]\\d+$"
+                          },
+                          "pdfPage": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "printedPage": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "sourceId",
+                          "factId",
+                          "pdfPage",
+                          "printedPage"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "category",
+                    "consequence",
+                    "recoverability",
+                    "parameterIds",
+                    "sourceRefs"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "resolvedErrors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SAFETY_NOT_CONFIRMED",
+                        "SAFETY_CHECKLIST_INCOMPLETE",
+                        "CHEMICAL_SKIN_CONTACT",
+                        "DIRTY_FLASK_USED",
+                        "DIRTY_GLASSWARE_USED",
+                        "INCOMPLETE_TRANSFER",
+                        "WATCH_GLASS_NOT_RINSED",
+                        "FUNNEL_NOT_RINSED",
+                        "UNDISSOLVED_AT_MARK",
+                        "TAP_WATER_USED",
+                        "INSUFFICIENT_MIXING",
+                        "FLASK_HELD_BY_BODY",
+                        "SLIDER_SETTING_INCORRECT",
+                        "MASS_OUT_OF_TOLERANCE",
+                        "WRONG_FLASK_CAPACITY",
+                        "OVERSHOOT_MARK",
+                        "EYE_LEVEL_INCORRECT",
+                        "LABEL_MISSING",
+                        "LABEL_INCORRECT",
+                        "INCOMPLETE_PROCEDURE"
+                      ]
+                    },
+                    "seq": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "seq"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "seq",
+              "attempt",
+              "actor",
+              "actionType",
+              "action",
+              "accepted",
+              "rejectionCode",
+              "elapsedMs",
+              "hintUsed",
+              "observations",
+              "measurements",
+              "errors",
+              "resolvedErrors"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "guidance": {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "type": "string",
+              "enum": [
+                "automatic",
+                "guided_beginner",
+                "guided_intermediate",
+                "guided_advanced",
+                "manual"
+              ]
+            },
+            "promptKey": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "nextAction": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "confirm_safety"
+                        },
+                        "checklistItemIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "checklistItemIds"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "select_apparatus"
+                        },
+                        "apparatusIds": {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "apparatusIds"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "clean_glassware"
+                        },
+                        "apparatusIds": {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "apparatusIds"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "weigh_watch_glass"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "set_balance_sliders"
+                        },
+                        "mass": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "g",
+                                "kg"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "mass"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "add_solid"
+                        },
+                        "mass": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "g",
+                                "kg"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "handContact": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "mass",
+                        "handContact"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "remove_solid"
+                        },
+                        "mass": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "g",
+                                "kg"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "handContact": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "mass",
+                        "handContact"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "place_funnel"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "transfer_solid"
+                        },
+                        "fractionIntoFunnel": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 1
+                        },
+                        "handContact": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "fractionIntoFunnel",
+                        "handContact"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "rinse_watch_glass"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "distilled",
+                            "tap"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "rinse_funnel"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "distilled",
+                            "tap"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "remove_funnel"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "add_water"
+                        },
+                        "volume": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "cm3",
+                                "dm3"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "distilled",
+                            "tap"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "volume",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "stopper_flask"
+                        },
+                        "inserted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "inserted"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "dissolve_solute"
+                        },
+                        "grip": {
+                          "type": "string",
+                          "enum": [
+                            "neck",
+                            "body"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "grip"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "adjust_to_mark"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "distilled",
+                            "tap"
+                          ]
+                        },
+                        "eyeLevel": {
+                          "type": "string",
+                          "enum": [
+                            "level",
+                            "above",
+                            "below"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "source",
+                        "eyeLevel"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "mix_solution"
+                        },
+                        "inversions": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 100
+                        },
+                        "grip": {
+                          "type": "string",
+                          "enum": [
+                            "neck",
+                            "body"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "inversions",
+                        "grip"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "apply_label"
+                        },
+                        "solutionName": {
+                          "type": "string",
+                          "maxLength": 80
+                        },
+                        "concentration": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "value": {
+                                  "type": "number"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "enum": [
+                                    "g",
+                                    "kg",
+                                    "cm3",
+                                    "dm3",
+                                    "mol",
+                                    "mol dm-3",
+                                    "g mol-1"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "preparationDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "solutionName",
+                        "concentration",
+                        "preparationDate"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "request_hint"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "submit_experiment"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "restart_experiment"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "suggestedAction": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "confirm_safety",
+                    "select_apparatus",
+                    "clean_glassware",
+                    "weigh_watch_glass",
+                    "set_balance_sliders",
+                    "add_solid",
+                    "remove_solid",
+                    "place_funnel",
+                    "transfer_solid",
+                    "rinse_watch_glass",
+                    "rinse_funnel",
+                    "remove_funnel",
+                    "add_water",
+                    "stopper_flask",
+                    "dissolve_solute",
+                    "adjust_to_mark",
+                    "mix_solution",
+                    "apply_label",
+                    "request_hint",
+                    "submit_experiment",
+                    "restart_experiment"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "stepSourceRefs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "enum": [
+                      "nie-handbook-2018",
+                      "nie-rb-g12-en",
+                      "nie-syllabus-2017",
+                      "proposal-c01"
+                    ]
+                  },
+                  "factId": {
+                    "type": "string",
+                    "pattern": "^[ESVP]\\d+$"
+                  },
+                  "pdfPage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "printedPage": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "factId",
+                  "pdfPage",
+                  "printedPage"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "confirmPredictedErrors": {
+              "type": "boolean"
+            },
+            "showProceduralFeedback": {
+              "type": "boolean"
+            },
+            "safetyPolicy": {
+              "type": "string",
+              "enum": [
+                "confirm",
+                "warn"
+              ]
+            }
+          },
+          "required": [
+            "profile",
+            "promptKey",
+            "nextAction",
+            "suggestedAction",
+            "stepSourceRefs",
+            "confirmPredictedErrors",
+            "showProceduralFeedback",
+            "safetyPolicy"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "sessionId",
+        "experimentId",
+        "definitionVersion",
+        "assessmentVersion",
+        "mode",
+        "guidanceLevel",
+        "startedOn",
+        "attempt",
+        "hints",
+        "retries",
+        "elapsedMs",
+        "nextSequence",
+        "status",
+        "disclosure",
+        "stage",
+        "bench",
+        "validity",
+        "events",
+        "guidance"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "event",
+    "feedback",
+    "session"
+  ],
+  "additionalProperties": false
+}

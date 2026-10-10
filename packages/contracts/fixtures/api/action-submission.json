@@ -1,0 +1,20 @@
+{
+  "clientActionId": "7b0f2c1e-8d4a-4f6e-9a3b-2c5d6e7f8a9b",
+  "expectedSequence": 0,
+  "envelope": {
+    "action": {
+      "type": "confirm_safety",
+      "checklistItemIds": [
+        "read_procedure",
+        "goggles",
+        "no_food_drink",
+        "closed_shoes",
+        "hair_restrained",
+        "report_incidents"
+      ]
+    },
+    "actor": "student",
+    "acknowledgedSafetyWarning": false
+  },
+  "preview": false
+}

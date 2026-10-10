@@ -6,6 +6,7 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
 import { Spinner } from "@/components/Spinner";
+import { StartAttempt } from "@/features/attempt/StartAttempt";
 import { useApi } from "@/hooks/useApi";
 import { paperSubtitle } from "@/lib/format";
 
@@ -37,6 +38,14 @@ export function PaperDetail() {
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>
         <p className="mt-1 text-sm text-slate-500">{paperSubtitle(paper)}</p>
       </div>
+
+      <Card>
+        <h2 className="font-medium">Answer this paper</h2>
+        <p className="mb-4 mt-1 text-sm text-slate-500">
+          Your answers save as you click. You can submit when you are ready.
+        </p>
+        <StartAttempt paperId={paper.id} />
+      </Card>
 
       {paper.sections.map((section) => (
         <Card key={section.id}>

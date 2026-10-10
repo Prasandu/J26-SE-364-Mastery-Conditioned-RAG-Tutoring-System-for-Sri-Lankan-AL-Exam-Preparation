@@ -40,9 +40,10 @@ src/
     client.ts       fetch wrapper: base URL, errors
     types.ts        types that match the backend schemas
     papers.ts       /papers, /health
+    attempts.ts     start, save an answer, submit
   features/         one folder per area of the app
     papers/         browse a paper and its questions
-    attempt/        answering a paper (next step)
+    attempt/        start, answer, submit, see the result
     review/         teacher review (later step)
   components/       small reusable pieces, no API calls inside
   hooks/            reusable React logic (useApi)

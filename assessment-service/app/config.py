@@ -1,9 +1,10 @@
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class ProviderName(StrEnum):
@@ -53,6 +54,22 @@ class Settings(BaseSettings):
     vision_model: str | None = None  # empty = the provider's default
     upload_dir: Path = Path("uploads")
     max_upload_mb: float = Field(default=8.0, gt=0, le=50)
+
+    # Browsers only let these origins call the API. Comma separated, never "*",
+    # because the admin and teacher keys travel in headers.
+    # NoDecode: read CORS_ORIGINS as plain text, not as JSON, so split_origins can see it.
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:5180",
+        "http://127.0.0.1:5180",
+    ]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def split_origins(cls, value: object) -> object:
+        """CORS_ORIGINS in .env is one line: "http://a, http://b"."""
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
     @field_validator("ai_provider", mode="before")
     @classmethod

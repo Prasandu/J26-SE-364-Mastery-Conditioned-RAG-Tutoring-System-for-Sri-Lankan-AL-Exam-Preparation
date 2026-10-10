@@ -60,12 +60,12 @@ pip install -r requirements-dev.txt
 copy .env.example .env      # then put your Supabase URL in DATABASE_URL
 alembic upgrade head        # creates / updates the tables
 python -m app.seed          # loads a SAMPLE paper (test data, not official)
-uvicorn app.main:app --reload --port 8081
+uvicorn app.main:app --reload --port 8001
 
-Port 8081 on purpose: other projects on the same machine take 8000.
+Port 8001 on purpose: other projects on this machine already hold 8000 and 8081.
 ```
 
-Open http://127.0.0.1:8081/health and http://127.0.0.1:8081/docs
+Open http://127.0.0.1:8001/health and http://127.0.0.1:8001/docs
 
 ## Database
 

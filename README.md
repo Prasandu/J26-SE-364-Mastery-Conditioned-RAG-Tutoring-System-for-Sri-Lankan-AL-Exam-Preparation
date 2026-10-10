@@ -33,10 +33,10 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 copy .env.example .env      # then put your Supabase URL in DATABASE_URL
 alembic upgrade head
-uvicorn app.main:app --reload --port 8081
+uvicorn app.main:app --reload --port 8001
 ```
 
-Then open http://127.0.0.1:8081/docs. Full details in
+Then open http://127.0.0.1:8001/docs. Full details in
 [assessment-service/README.md](assessment-service/README.md).
 
 ## Rules that apply to everyone

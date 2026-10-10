@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api import admin, attempts, papers, review
@@ -12,6 +13,15 @@ app = FastAPI(
     description="Intelligent Assessment & Automated Evaluation for A/L Chemistry (J26-SE-364)",
     version="0.1.0",
 )
+# The frontend runs on another port, so the browser needs this to allow the calls.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(papers.router)
 app.include_router(attempts.router)
 app.include_router(review.router)

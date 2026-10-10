@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app.api import admin, attempts, papers
+from app.api import admin, attempts, papers, review
 from app.config import get_settings
 from app.errors import DomainError
 
@@ -14,6 +14,7 @@ app = FastAPI(
 )
 app.include_router(papers.router)
 app.include_router(attempts.router)
+app.include_router(review.router)
 app.include_router(admin.router)
 
 

@@ -183,7 +183,7 @@ def _judge_request(answer: Answer, points: list[MarkingPoint]) -> JudgeRequest:
         if r.question_id == question.id and r.rule_type == RuleType.ERROR_CARRIED_FORWARD
     ]
     return JudgeRequest(
-        question=_question_with_context(question),
+        question=question_with_context(question),
         model_answer=next(
             (m.answer_text for m in scheme.model_answers if m.question_id == question.id), None
         ),
@@ -207,8 +207,8 @@ def _judge_request(answer: Answer, points: list[MarkingPoint]) -> JudgeRequest:
     )
 
 
-def _question_with_context(question: Question) -> str:
-    """Parent question text first, e.g. the titration set-up before part (b)."""
+def question_with_context(question: Question) -> str:
+    """The question's wording with its parents', e.g. the titration set-up before part (b)."""
     chain = []
     current: Question | None = question
     while current is not None:

@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./assessment.db"
     # Key for the /admin endpoints. Empty = admin endpoints are switched off.
     admin_api_key: str | None = Field(default=None, min_length=16)
+    # Key for the /review endpoints used by teachers. Empty = teacher review is switched off.
+    teacher_api_key: str | None = Field(default=None, min_length=16)
 
     # --- AI judge for written answers. Without a key, written answers stay "pending". ---
     ai_provider: ProviderName = ProviderName.GEMINI

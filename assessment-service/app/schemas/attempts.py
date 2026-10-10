@@ -71,6 +71,7 @@ class PointResultOut(BaseModel):
     # What each marker decided on its own (empty when that marker did not judge this point)
     checker_awarded: bool | None
     ai_awarded: bool | None
+    teacher_comment: str | None
     evidence: str | None
     reason: str | None
     confidence: float | None

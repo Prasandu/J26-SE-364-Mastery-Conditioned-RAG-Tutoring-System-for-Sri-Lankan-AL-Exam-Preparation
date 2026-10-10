@@ -173,6 +173,7 @@ def _question_result(question: Question, answer: Answer | None, submitted: bool)
                 marker=result.marker,
                 checker_awarded=result.checker_awarded,
                 ai_awarded=result.ai_awarded,
+                teacher_comment=result.teacher_comment,
                 evidence=result.evidence,
                 reason=result.reason,
                 confidence=result.confidence,

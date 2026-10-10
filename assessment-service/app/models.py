@@ -348,17 +348,21 @@ class PointResult(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"))
     point_id: Mapped[int] = mapped_column(ForeignKey("marking_points.id"), index=True)
-    status: Mapped[PointStatus] = mapped_column(_enum(PointStatus))
+    status: Mapped[PointStatus] = mapped_column(_enum(PointStatus), index=True)
     awarded: Mapped[float] = mapped_column(Float, default=0.0)
     method: Mapped[MarkingMethod | None] = mapped_column(_enum(MarkingMethod))
     # What each marker decided on its own, kept even when they disagree. Two independent
     # markers agreeing is the main evidence behind the confidence score.
     checker_awarded: Mapped[bool | None] = mapped_column(Boolean)
     ai_awarded: Mapped[bool | None] = mapped_column(Boolean)
+    teacher_awarded: Mapped[bool | None] = mapped_column(Boolean)
     evidence: Mapped[str | None] = mapped_column(Text)  # the student's own words, or the rule applied
     reason: Mapped[str | None] = mapped_column(Text)  # short explanation shown as feedback
     marker: Mapped[str | None] = mapped_column(String(100))  # e.g. "mcq-key" or the AI model name
     confidence: Mapped[float | None] = mapped_column(Float)  # 0..1
+    teacher_comment: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[str | None] = mapped_column(String(64))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     answer: Mapped[Answer] = relationship(back_populates="point_results")
     point: Mapped[MarkingPoint] = relationship()

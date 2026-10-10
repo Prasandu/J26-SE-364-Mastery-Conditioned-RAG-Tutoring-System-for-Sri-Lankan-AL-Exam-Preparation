@@ -109,6 +109,19 @@ Set `AI_PROVIDER` in `.env` to pick the service, then check it with `python -m a
 Every provider except `gemini` uses the same OpenAI-style API, so `AI_MODEL` (empty = the
 provider's default) and `AI_API_KEY` are all you change.
 
+### Teacher review (header `X-Teacher-Key: <TEACHER_API_KEY>`)
+
+| Endpoint | What it does |
+|---|---|
+| `GET /review/queue?paper_id=&status=&limit=&offset=` | Points no marker settled, oldest submission first |
+| `GET /review/attempts/{id}` | Every point of one submitted attempt, for double-marking a whole script |
+| `POST /review/points/{result_id}` | The teacher's decision: `{"awarded": true, "teacher_ref": "...", "comment": "..."}` |
+| `GET /review/agreement?paper_id=` | How often the checker and the AI reached the same decision as a teacher |
+
+A teacher's decision is final, replaces the machine's and recalculates the totals. It is stored
+in `teacher_awarded` beside `checker_awarded` and `ai_awarded`, so `GET /review/agreement` can
+report how well each machine marker matches the reference standard.
+
 ### Admin endpoints (header `X-Admin-Key: <ADMIN_API_KEY>`)
 
 | Endpoint | What it does |

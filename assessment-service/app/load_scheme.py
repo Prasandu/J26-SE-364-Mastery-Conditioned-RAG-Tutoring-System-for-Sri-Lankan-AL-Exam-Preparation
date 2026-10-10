@@ -1,20 +1,20 @@
-"""Create a draft paper in the database from imported pages.
+"""Add a marking scheme to an existing paper from imported pages.
 
-  python -m app.load_draft drafts/2024_plan.json
+  python -m app.load_scheme drafts/2024_scheme_plan.json
 
-The plan file says how the imported pages map onto sections:
+The plan file says which paper the scheme belongs to and which pages cover which section:
 
   {
-    "title": "G.C.E. (A/L) Chemistry 2024",
-    "kind": "past",
-    "year": 2024,
+    "paper_id": 1,
+    "source": "official",
+    "notes": "Department of Examinations 2024",
     "sections": [
-      {"code": "I", "title": "Paper I - Multiple choice", "answer_mode": "mcq",
-       "marks_each": 1, "drafts": ["2024_p1.json", "2024_p2.json"]}
+      {"code": "I", "mcq_marks": 1, "drafts": ["2024_key.json"]},
+      {"code": "II-A", "drafts": ["2024_schemeA.json"]}
     ]
   }
 
-The paper is created as a draft. Check it, add its marking scheme, then publish.
+The scheme is created as a draft version. Check it, then publish it.
 """
 
 import argparse
@@ -25,9 +25,9 @@ from pydantic import ValidationError
 
 from app.db import SessionLocal
 from app.errors import DomainError
-from app.services.drafts import build_paper, load_plan, plan_problems
-from app.services.papers import create_paper
+from app.services.drafts import build_scheme, load_scheme_plan, plan_problems
 from app.services.plan_report import warn_about
+from app.services.schemes import create_scheme
 
 
 def main() -> None:
@@ -43,15 +43,15 @@ def main() -> None:
         sys.exit(f"No such file: {args.plan}")
 
     try:
-        plan = load_plan(args.plan)
-        body = build_paper(plan)
+        plan = load_scheme_plan(args.plan)
+        body = build_scheme(plan)
     except (ValidationError, ValueError, OSError) as error:
         sys.exit(f"The plan or its drafts could not be read:\n{error}")
 
     warn_about(plan_problems(plan.sections), args.force)
 
-    for section in body.sections:
-        print(f"  {section.code}: {len(section.questions)} questions ({section.answer_mode})")
+    marks = sum(point.marks for question in body.questions for point in question.points)
+    print(f"  {len(body.questions)} marked questions, {marks:g} marks in total")
 
     if args.dry_run:
         print("\nDry run, nothing saved.")
@@ -59,12 +59,12 @@ def main() -> None:
 
     with SessionLocal() as db:
         try:
-            paper = create_paper(db, body)
+            scheme = create_scheme(db, plan.paper_id, body)
         except DomainError as error:
             sys.exit(f"\n{error.message}\n" + "\n".join(f"  - {problem}" for problem in error.errors))
 
-    print(f"\nCreated draft paper id={paper.id}: {paper.title}")
-    print("Next: add its marking scheme, then publish both.")
+    print(f"\nCreated draft marking scheme v{scheme.version} for paper {plan.paper_id}")
+    print("Next: check it, then publish the scheme and the paper.")
 
 
 if __name__ == "__main__":

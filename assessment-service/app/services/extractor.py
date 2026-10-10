@@ -36,13 +36,26 @@ class ExtractedPaper(BaseModel):
     notes: list[str] = []  # anything a person should check, e.g. "Q9 depends on a figure"
 
 
+class ExpectedAnswer(BaseModel):
+    """The part of an answer code can check. Only the fields that apply are filled."""
+
+    option: str | None = Field(default=None, description="mcq_key: the correct option number")
+    value: float | None = Field(default=None, description="calculation: the numeric answer")
+    unit: str | None = Field(default=None, description='calculation or unit: e.g. "mol dm-3"')
+    equation: str | None = Field(default=None, description="equation: the balanced equation")
+
+    def as_dict(self) -> dict[str, Any] | None:
+        filled = {key: value for key, value in self.model_dump().items() if value is not None}
+        return filled or None
+
+
 class ExtractedPoint(BaseModel):
     description: str = Field(description="What earns the mark, in the marking scheme's own words")
     marks: float
     point_type: str = Field(
         description="mcq_key, concept, equation, formula, calculation, unit, diagram or graph"
     )
-    expected: dict[str, Any] | None = None
+    expected: ExpectedAnswer | None = None
     alternatives: list[str] = []
 
 
@@ -52,9 +65,14 @@ class ExtractedScheme(BaseModel):
     points: list[ExtractedPoint] = []
 
 
+class McqAnswer(BaseModel):
+    question: str = Field(description='Question number as printed, e.g. "7"')
+    option: str = Field(description='Correct option number, e.g. "4"')
+
+
 class ExtractedSchemePage(BaseModel):
     questions: list[ExtractedScheme] = []
-    mcq_answers: dict[str, str] = Field(default_factory=dict, description='Answer key, e.g. {"7": "4"}')
+    mcq_answers: list[McqAnswer] = Field(default_factory=list, description="An answer key table")
     notes: list[str] = []
 
 
@@ -65,7 +83,10 @@ Rules:
 1. Copy only what is printed. Do NOT answer the questions and do NOT invent anything.
 2. {CHEMISTRY_NOTATION}
 3. Use the labels exactly as printed: "7", "(a)", "(i)". Put sub-parts in sub_questions.
-4. Include every option of a multiple choice question, with its printed number.
+4. A multiple choice question must never come back with an empty options list. Copy all five,
+   with their printed numbers, however they are laid out: as a table of columns, as drawn
+   structures, or as a row across the page. For a table, join each row into one line
+   (e.g. "- +"). For a structure or graph, describe it in square brackets.
 5. If a question continues past the bottom of the page, copy what is visible and say so in notes.
 6. Set has_figure to true where the question relies on a diagram, graph or structure, and
    describe it in one short line in square brackets inside the text.
@@ -83,10 +104,10 @@ Rules:
    points worth 4 marks each, so list eight points.
 5. point_type: mcq_key for an answer key, calculation for a numeric answer, equation for a
    chemical equation, unit for a unit, diagram or graph for a drawing, otherwise concept.
-6. expected is only for what code can check, such as
-   {{"value": 0.08, "unit": "mol dm-3"}} or {{"equation": "..."}} or {{"option": "4"}}.
+6. Fill expected only with what code can check: option for an answer key, value and unit for a
+   numeric answer, equation for a balanced equation. Leave the rest empty.
 7. Put any instruction to the examiner, such as "deduct 01 mark if ...", into notes.
-8. For an answer key table, fill mcq_answers with question number to option number.
+8. For an answer key table, list every question and its correct option in mcq_answers.
 """
 
 

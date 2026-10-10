@@ -161,7 +161,48 @@ A plan file:
 }
 ```
 
-Then add the marking scheme through the admin API and publish both.
+`shared_options` covers "multiple completion" questions, where statements (a)-(d) are printed
+per question but the numbered options appear once for the whole section:
+
+```json
+{"code": "I-B", "title": "Paper I - Multiple completion", "answer_mode": "mcq", "marks_each": 1,
+ "shared_options": [
+   {"label": "1", "text": "only (a) and (b) are correct"},
+   {"label": "2", "text": "only (b) and (c) are correct"},
+   {"label": "3", "text": "only (c) and (d) are correct"},
+   {"label": "4", "text": "only (d) and (a) are correct"},
+   {"label": "5", "text": "any other number or combination of responses is correct"}
+ ],
+ "drafts": ["2024_p7.json"]}
+```
+
+Questions that already have their own options keep them.
+
+Then do the same for the marking scheme:
+
+```powershell
+python -m app.import_pdf "2024-scheme.pdf" --pages 19 --kind scheme --out drafts/2024_sA.json
+python -m app.load_scheme drafts/2024_scheme_plan.json --dry-run
+python -m app.load_scheme drafts/2024_scheme_plan.json
+```
+
+A scheme plan:
+
+```json
+{
+  "paper_id": 1,
+  "source": "official",
+  "sections": [
+    {"code": "I", "mcq_marks": 1, "drafts": ["2024_key.json"]},
+    {"code": "II-A", "drafts": ["2024_sA.json"]}
+  ]
+}
+```
+
+Marks and the machine-checkable parts come across too: an equation becomes
+`{"equation": "..."}` and a numeric answer becomes `{"value": -57, "unit": "kJ mol^-1"}`,
+which is what the chemistry checkers need. Publishing checks that every question's points
+add up to its marks, so a misread scheme cannot go live.
 
 ### Teacher review (header `X-Teacher-Key: <TEACHER_API_KEY>`)
 

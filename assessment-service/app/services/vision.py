@@ -19,6 +19,8 @@ from app.services.judge import RETRY_ATTEMPTS, RETRY_STATUS_CODES, json_instruct
 
 # Reading a page takes longer than judging text.
 VISION_TIMEOUT_SECONDS = 180.0
+# A dense exam page can hold 6 questions with 5 long options each.
+MAX_OUTPUT_TOKENS = 32768
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,7 @@ class GeminiVision:
                 temperature=0,
                 response_mime_type="application/json",
                 response_schema=shape,
+                max_output_tokens=MAX_OUTPUT_TOKENS,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
         )
@@ -91,6 +94,7 @@ class OpenAICompatibleVision:
                 {"role": "user", "content": content},
             ],
             temperature=0,
+            max_completion_tokens=MAX_OUTPUT_TOKENS,
             response_format={"type": "json_object"},
         )
         return shape.model_validate_json(response.choices[0].message.content or "")

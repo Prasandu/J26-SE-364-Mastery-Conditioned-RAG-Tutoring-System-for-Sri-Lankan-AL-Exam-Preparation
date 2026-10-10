@@ -158,8 +158,10 @@ def _finalize_from_checker(result: PointResult) -> None:
 
 
 def _judge_mcq(point: MarkingPoint, answer: Answer) -> PointResult:
-    key = point.expected["option"]
-    correct = answer.mcq_option == key
+    # Some schemes accept more than one option as equally correct, e.g. "4/5".
+    accepted = [point.expected["option"], *point.alternatives]
+    correct = answer.mcq_option in accepted
+    key = "/".join(accepted)
     return PointResult(
         point=point,
         status=PointStatus.AWARDED if correct else PointStatus.NOT_AWARDED,

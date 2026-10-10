@@ -144,8 +144,15 @@ def _check_points(where: str, points: list[PointIn], question: Question) -> list
         option_labels = sorted(option["label"] for option in question.options or [])
         if len(points) != 1 or len(keys) != 1:
             errors.append(f"{where}: an MCQ question needs exactly one mcq_key point")
-        elif (keys[0].expected or {}).get("option") not in option_labels:
-            errors.append(f"{where}: mcq_key expected.option must be one of {', '.join(option_labels)}")
+        else:
+            # alternatives: other options the scheme accepts as equally correct, e.g. "4/5".
+            key = keys[0]
+            option = (key.expected or {}).get("option")
+            if option is None:
+                errors.append(f"{where}: mcq_key needs an expected.option")
+            elif unknown := sorted({option, *key.alternatives} - set(option_labels)):
+                valid = ", ".join(option_labels)
+                errors.append(f"{where}: mcq_key option(s) {', '.join(unknown)} must be one of {valid}")
     elif keys:
         errors.append(f"{where}: mcq_key points are only for MCQ questions")
 

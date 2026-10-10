@@ -82,7 +82,10 @@ You copy printed Sri Lankan G.C.E. A/L Chemistry exam questions from a scanned p
 Rules:
 1. Copy only what is printed. Do NOT answer the questions and do NOT invent anything.
 2. {CHEMISTRY_NOTATION}
-3. Use the labels exactly as printed: "7", "(a)", "(i)". Put sub-parts in sub_questions.
+3. Use the labels exactly as printed: "7", "(a)", "(i)". Put sub-parts in sub_questions, up to
+   3 levels deep (question, letter, number). If a lettered/numbered part has its own further
+   numbered items (e.g. "I.", "II." inside part (iv)), keep those as plain lines of text inside
+   that part's own text field instead of adding a 4th level of sub_questions.
 4. A multiple choice question must never come back with an empty options list. Copy all five,
    with their printed numbers, however they are laid out: as a table of columns, as drawn
    structures, or as a row across the page. For a table, join each row into one line

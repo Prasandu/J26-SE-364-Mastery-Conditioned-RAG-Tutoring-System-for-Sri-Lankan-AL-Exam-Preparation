@@ -128,6 +128,41 @@ Marking is then exactly the same as digital mode.
 
 Try it on one image without a database: `python -m app.check_reading path/to/photo.jpg`
 
+### Importing a real past paper
+
+Sri Lankan A/L past papers and marking schemes are scanned, so there is no text inside the PDF.
+A vision model reads the pages instead, and the result is always a draft for a person to check.
+
+```powershell
+# 1. Read the pages into a JSON draft (nothing is saved to the database)
+python -m app.import_pdf "2024-paper.pdf" --pages 2-5 --out drafts/2024_p1.json
+python -m app.import_pdf "2024-scheme.pdf" --pages 3 --kind scheme --out drafts/2024_key.json
+
+# 2. Open the JSON and fix anything the model misread.
+
+# 3. Write a plan saying how the pages map onto sections, then load it as a draft paper
+python -m app.load_draft drafts/2024_plan.json --dry-run
+python -m app.load_draft drafts/2024_plan.json
+```
+
+A plan file:
+
+```json
+{
+  "title": "G.C.E. (A/L) Chemistry 2024",
+  "kind": "past",
+  "year": 2024,
+  "sections": [
+    {"code": "I", "title": "Paper I - Multiple choice", "answer_mode": "mcq",
+     "marks_each": 1, "drafts": ["2024_p1.json"]},
+    {"code": "II-B", "title": "Paper II Part B", "answer_mode": "essay",
+     "choose_count": 2, "drafts": ["2024_pB.json"]}
+  ]
+}
+```
+
+Then add the marking scheme through the admin API and publish both.
+
 ### Teacher review (header `X-Teacher-Key: <TEACHER_API_KEY>`)
 
 | Endpoint | What it does |

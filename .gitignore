@@ -43,6 +43,7 @@ data/private/
 uploads/
 samples/
 assessment-service/samples/
+drafts/
 *.safetensors
 *.bin
 *.gguf

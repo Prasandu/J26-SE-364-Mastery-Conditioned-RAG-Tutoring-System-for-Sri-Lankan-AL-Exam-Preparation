@@ -5,6 +5,9 @@
 !.env.example
 secrets.json
 
+# Research proposal document
+IT23215306.pdf
+
 # Python  ->  assessment-service/
 __pycache__/
 *.py[cod]

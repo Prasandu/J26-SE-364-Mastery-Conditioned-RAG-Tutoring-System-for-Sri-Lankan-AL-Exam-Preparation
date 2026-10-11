@@ -297,6 +297,25 @@ python -m app.marking_sheet 1 --version 2         a scheme version other than th
 
 `docs/teacher-guide.md` is the page to give the teacher alongside it.
 
+## Exporting results for the evaluation
+
+```
+python -m app.export_results                 write into results/
+python -m app.export_results --paper 4       one paper only
+python -m app.export_results --out analysis  a different folder
+```
+
+Three files, all openable in Excel:
+
+- `points.csv` - one row per marking point decision: who decided it, how sure, and what
+  the checker, the AI and the teacher each said. Every other figure can be worked out
+  from this one.
+- `attempts.csv` - one row per script, with score and percentage.
+- `summary.csv` - agreement between each pair of markers, **over all reviewed points
+  and over blind ones only**. Report the blind figures.
+
+`results/` holds student marks, so keep it out of git.
+
 ## Tests and code quality
 
 ```powershell

@@ -142,6 +142,7 @@ export interface ReviewDecision {
   awarded: boolean;
   teacher_ref: string;
   comment?: string | null;
+  saw_machine: boolean; // did the teacher read the machine's decision first?
 }
 
 export interface ReviewedPoint {
@@ -167,4 +168,7 @@ export interface Agreement {
   checker_vs_teacher: MarkerAgreement;
   ai_vs_teacher: MarkerAgreement;
   checker_vs_ai: MarkerAgreement;
+  blind_points: number;
+  blind_checker_vs_teacher: MarkerAgreement;
+  blind_ai_vs_teacher: MarkerAgreement;
 }

@@ -139,6 +139,9 @@ class PointResult(Base):
     teacher_comment: Mapped[str | None] = mapped_column(Text)
     reviewed_by: Mapped[str | None] = mapped_column(String(64))
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Did the teacher look at the machine's decision before making their own? A teacher
+    # who read it first tends to agree with it, so only blind decisions are a fair test.
+    teacher_saw_machine: Mapped[bool | None] = mapped_column(Boolean)
 
     answer: Mapped[Answer] = relationship(back_populates="point_results")
     point: Mapped[MarkingPoint] = relationship()

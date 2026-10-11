@@ -1,10 +1,15 @@
 import type { Agreement, MarkerAgreement } from "@/api/types";
 import { Card } from "@/components/Card";
 
-const ROWS: { key: keyof Agreement; label: string }[] = [
+const ALL_ROWS: { key: keyof Agreement; label: string }[] = [
   { key: "checker_vs_teacher", label: "Chemistry checker vs teacher" },
   { key: "ai_vs_teacher", label: "AI judge vs teacher" },
   { key: "checker_vs_ai", label: "Chemistry checker vs AI judge" },
+];
+
+const BLIND_ROWS: { key: keyof Agreement; label: string }[] = [
+  { key: "blind_checker_vs_teacher", label: "Chemistry checker vs teacher" },
+  { key: "blind_ai_vs_teacher", label: "AI judge vs teacher" },
 ];
 
 /** How often each marker matched the teacher. These are the research numbers. */
@@ -24,24 +29,44 @@ export function AgreementPanel({ data }: { data: Agreement }) {
           Nothing reviewed yet. Decide some points below and the numbers appear here.
         </p>
       ) : (
-        <table className="mt-4 w-full text-sm">
-          <thead>
-            <tr className="text-left text-slate-500">
-              <th className="pb-2 font-normal">Comparison</th>
-              <th className="pb-2 text-right font-normal">Judged</th>
-              <th className="pb-2 text-right font-normal">Agree</th>
-              <th className="pb-2 text-right font-normal">Disagree</th>
-              <th className="pb-2 text-right font-normal">Agreement</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {ROWS.map((row) => (
-              <Row key={row.key} label={row.label} value={data[row.key] as MarkerAgreement} />
-            ))}
-          </tbody>
-        </table>
+        <>
+          <Table rows={BLIND_ROWS} data={data} />
+          <p className="mt-2 text-xs text-slate-500">
+            Blind decisions only: {data.blind_points} of {data.reviewed_points}. These are the
+            figures to report, because a teacher who had already read the machine's answer may
+            simply have agreed with it.
+          </p>
+
+          <details className="mt-5">
+            <summary className="cursor-pointer text-sm text-slate-500">
+              Show every reviewed point, blind or not
+            </summary>
+            <Table rows={ALL_ROWS} data={data} />
+          </details>
+        </>
       )}
     </Card>
+  );
+}
+
+function Table({ rows, data }: { rows: typeof ALL_ROWS; data: Agreement }) {
+  return (
+    <table className="mt-4 w-full text-sm">
+      <thead>
+        <tr className="text-left text-slate-500">
+          <th className="pb-2 font-normal">Comparison</th>
+          <th className="pb-2 text-right font-normal">Judged</th>
+          <th className="pb-2 text-right font-normal">Agree</th>
+          <th className="pb-2 text-right font-normal">Disagree</th>
+          <th className="pb-2 text-right font-normal">Agreement</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-100">
+        {rows.map((row) => (
+          <Row key={row.key} label={row.label} value={data[row.key] as MarkerAgreement} />
+        ))}
+      </tbody>
+    </table>
   );
 }
 

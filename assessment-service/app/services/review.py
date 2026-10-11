@@ -77,6 +77,7 @@ def record_decision(db: Session, result_id: int, decision: ReviewDecisionIn) -> 
     result.teacher_comment = decision.comment
     result.reviewed_by = decision.teacher_ref
     result.reviewed_at = utcnow()
+    result.teacher_saw_machine = decision.saw_machine
     result.status = PointStatus.AWARDED if decision.awarded else PointStatus.NOT_AWARDED
     result.awarded = result.point.marks if decision.awarded else 0.0
     result.method = MarkingMethod.TEACHER
@@ -94,12 +95,16 @@ def agreement(db: Session, *, paper_id: int | None = None) -> AgreementOut:
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
     reviewed = db.scalars(stmt).all()
+    blind = [r for r in reviewed if not r.teacher_saw_machine]
 
     return AgreementOut(
         reviewed_points=len(reviewed),
         checker_vs_teacher=_compare(reviewed, "checker_awarded", "teacher_awarded"),
         ai_vs_teacher=_compare(reviewed, "ai_awarded", "teacher_awarded"),
         checker_vs_ai=_compare(reviewed, "checker_awarded", "ai_awarded"),
+        blind_points=len(blind),
+        blind_checker_vs_teacher=_compare(blind, "checker_awarded", "teacher_awarded"),
+        blind_ai_vs_teacher=_compare(blind, "ai_awarded", "teacher_awarded"),
     )
 
 

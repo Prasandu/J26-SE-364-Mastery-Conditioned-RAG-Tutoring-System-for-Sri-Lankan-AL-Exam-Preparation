@@ -282,6 +282,21 @@ report how well each machine marker matches the reference standard.
 Content life cycle: **draft → published**. Published content never changes. To correct a
 published marking scheme: copy → edit the new draft → publish. Old versions stay for traceability.
 
+## Teacher marking sheet
+
+A sheet for a teacher to mark a script by hand, one row per marking point, taken
+straight from the published scheme. Marking the same points the system marks is what
+makes teacher and machine comparable.
+
+```
+python -m app.marking_sheet 1                     print the sheet for paper 1
+python -m app.marking_sheet 1 --student S001      the student id already filled in
+python -m app.marking_sheet 1 --out sheet.csv     save it (opens in Excel)
+python -m app.marking_sheet 1 --version 2         a scheme version other than the published one
+```
+
+`docs/teacher-guide.md` is the page to give the teacher alongside it.
+
 ## Tests and code quality
 
 ```powershell

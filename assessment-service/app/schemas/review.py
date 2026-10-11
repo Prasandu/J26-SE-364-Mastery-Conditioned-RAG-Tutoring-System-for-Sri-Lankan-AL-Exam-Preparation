@@ -46,6 +46,10 @@ class ReviewDecisionIn(BaseModel):
     awarded: bool
     teacher_ref: str = Field(min_length=1, max_length=64, description="Who is marking (until login exists)")
     comment: str | None = Field(default=None, max_length=2000)
+    saw_machine: bool = Field(
+        default=False,
+        description="True if the teacher read the machine's decision before deciding",
+    )
 
 
 class ReviewedPointOut(BaseModel):
@@ -59,6 +63,7 @@ class ReviewedPointOut(BaseModel):
     teacher_comment: str | None
     reviewed_by: str | None
     reviewed_at: datetime | None
+    teacher_saw_machine: bool | None
 
 
 class MarkerAgreement(BaseModel):
@@ -75,3 +80,8 @@ class AgreementOut(BaseModel):
     checker_vs_teacher: MarkerAgreement
     ai_vs_teacher: MarkerAgreement
     checker_vs_ai: MarkerAgreement
+    # The same figures over blind decisions only. This is the fair comparison, because
+    # a teacher who had already read the machine's answer may just have agreed with it.
+    blind_points: int
+    blind_checker_vs_teacher: MarkerAgreement
+    blind_ai_vs_teacher: MarkerAgreement

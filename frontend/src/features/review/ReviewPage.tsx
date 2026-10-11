@@ -10,6 +10,8 @@ import { Spinner } from "@/components/Spinner";
 import { readTeacherKey, readTeacherRef, saveTeacherKey } from "@/lib/teacher";
 
 import { AgreementPanel } from "./AgreementPanel";
+import type { Decided } from "./JustDecided";
+import { JustDecided } from "./JustDecided";
 import { ReviewCard } from "./ReviewCard";
 import { TeacherSignIn } from "./TeacherSignIn";
 
@@ -20,6 +22,7 @@ export function ReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [deciding, setDeciding] = useState<number | null>(null);
+  const [decided, setDecided] = useState<Decided[]>([]);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -51,16 +54,28 @@ export function ReviewPage() {
     return () => controller.abort();
   }, [signedIn, load]);
 
-  async function decide(item: ReviewItem, awarded: boolean, comment: string) {
+  async function decide(item: ReviewItem, awarded: boolean, comment: string, peeked: boolean) {
     setDeciding(item.id);
     try {
       await decidePoint(item.id, {
         awarded,
         teacher_ref: readTeacherRef() || "teacher",
         comment: comment.trim() === "" ? null : comment,
+        saw_machine: peeked,
       });
       // Take the decided point off the list and refresh the agreement numbers.
       setItems((current) => current.filter((other) => other.id !== item.id));
+      setDecided((current) => [
+        {
+          id: item.id,
+          question: item.question,
+          code: item.code,
+          teacherAwarded: awarded,
+          aiAwarded: item.ai_awarded,
+          blind: !peeked,
+        },
+        ...current,
+      ]);
       setStats(await agreement());
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : String(cause));
@@ -74,6 +89,7 @@ export function ReviewPage() {
     setSignedIn(false);
     setItems([]);
     setStats(null);
+    setDecided([]);
   }
 
   if (!signedIn) {
@@ -103,6 +119,8 @@ export function ReviewPage() {
 
       {stats && <AgreementPanel data={stats} />}
 
+      <JustDecided decisions={decided} />
+
       {items.length === 0 ? (
         <Card>
           <p className="text-slate-600">
@@ -120,7 +138,7 @@ export function ReviewPage() {
               key={item.id}
               item={item}
               busy={deciding === item.id}
-              onDecide={(awarded, comment) => void decide(item, awarded, comment)}
+              onDecide={(awarded, comment, peeked) => void decide(item, awarded, comment, peeked)}
             />
           ))}
         </div>

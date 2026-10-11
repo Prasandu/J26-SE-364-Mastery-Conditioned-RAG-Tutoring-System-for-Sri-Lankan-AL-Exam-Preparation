@@ -1,0 +1,26 @@
+# Env secrets
+*.env
+!.env.example
+
+# Python
+**/venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Node
+**/node_modules/
+**/dist/
+
+# Student data (never commit)
+**/uploads/
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json

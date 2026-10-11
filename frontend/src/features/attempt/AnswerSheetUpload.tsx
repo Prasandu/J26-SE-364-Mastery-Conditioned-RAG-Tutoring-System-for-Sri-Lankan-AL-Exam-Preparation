@@ -107,6 +107,15 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved }: Props) {
         </Button>
       </div>
 
+      {busy === "saving" && (
+        <div className="mt-5 rounded-2xl bg-brand-50/70 p-4">
+          <Steps steps={savingSteps(seconds, Object.keys(chosen).length)} />
+          <p className="mt-3 text-xs text-slate-500">
+            Writing them all in one go. Please do not close this page.
+          </p>
+        </div>
+      )}
+
       {busy === "reading" && (
         <div className="mt-5 rounded-xl bg-slate-50 p-4">
           <Steps steps={readingSteps(seconds)} />
@@ -291,6 +300,19 @@ function inTens(answers: SheetAnswer[]): SheetAnswer[][] {
     blocks.push(answers.slice(start, start + BLOCK));
   }
   return blocks;
+}
+
+/** Saving is one request, but a slow one, so name what it is doing. */
+function savingSteps(seconds: number, count: number): Step[] {
+  return [
+    {
+      label: `Sending ${count} ${count === 1 ? "answer" : "answers"}`,
+      detail: seconds > 0 ? `${spell(seconds)} so far` : undefined,
+      state: seconds >= 1 ? "done" : "doing",
+    },
+    { label: "Saving them to your attempt", state: seconds >= 1 ? "doing" : "waiting" },
+    { label: "Filling them into the questions below", state: "waiting" },
+  ];
 }
 
 /** The three things the server does with a photo, so the wait is not a blank spinner. */

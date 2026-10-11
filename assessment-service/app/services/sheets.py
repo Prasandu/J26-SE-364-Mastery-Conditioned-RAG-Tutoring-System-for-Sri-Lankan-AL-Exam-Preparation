@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.errors import ContentValidationError
 from app.models import AnswerMode, Attempt, Question
 from app.schemas.attempts import AnswerIn, BulkAnswersIn, SheetAnswerOut, SheetReadOut
-from app.services.attempts import get_in_progress, save_answer
+from app.services.attempts import apply_answer, get_in_progress, question_index
 from app.services.omr.detect import read_any_sheet
 from app.services.omr.reader import Mark, SheetError, read_sheet
 
@@ -90,7 +90,17 @@ def _option_labels(question: Question) -> list[str]:
 
 
 def save_sheet_answers(db: Session, attempt_id: uuid.UUID, data: BulkAnswersIn) -> int:
-    """Store the answers the student confirmed. Returns how many were saved."""
-    for answer in data.answers:
-        save_answer(db, attempt_id, answer.question_id, AnswerIn(mcq_option=answer.mcq_option))
+    """Store the answers the student confirmed, in one transaction.
+
+    One commit for the whole sheet, not one per question: the database is remote, so
+    fifty commits is fifty round trips and the student watches a spinner for it.
+    """
+    attempt = get_in_progress(db, attempt_id)
+    # no_autoflush: looking at attempt.answers would otherwise flush the answer added
+    # on the previous turn of the loop, making this one INSERT per question again.
+    index = question_index(db, attempt)
+    with db.no_autoflush:
+        for answer in data.answers:
+            apply_answer(attempt, answer.question_id, AnswerIn(mcq_option=answer.mcq_option), index)
+    db.commit()
     return len(data.answers)

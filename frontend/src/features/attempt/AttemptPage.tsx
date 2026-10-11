@@ -209,7 +209,7 @@ export function AttemptPage() {
               <div className="flex items-center gap-3">
                 <SaveHint state={saveState} />
                 <Button onClick={submit} disabled={submitting || answered === 0}>
-                  {submitting ? "Marking..." : "Submit"}
+                  {submitting ? "Sending your answers..." : "Submit"}
                 </Button>
               </div>
             </div>

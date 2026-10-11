@@ -46,6 +46,11 @@ ROW_TOLERANCE = 0.6
 # A horizontal gap wider than this many bubble widths starts a new column block.
 BLOCK_GAP = 2.2
 MIN_BUBBLES = 10
+# A bubble needs enough pixels for its darkness to mean anything. At 6 px across one
+# pixel is 3% of the reading, so a faint mark and an empty bubble look the same.
+WANTED_RADIUS = 13
+MAX_ENLARGEMENT = 4.0
+MAX_SIDE = 2400
 
 
 @dataclass(frozen=True)
@@ -73,8 +78,7 @@ class DetectedSheet:
 
 def read_any_sheet(image_bytes: bytes, option_labels: list[str] | None = None) -> DetectedSheet:
     """Read a sheet of unknown design. Labels default to 1..n for the options found."""
-    photo = _decode(image_bytes)
-    spots = _find_bubbles(photo)
+    photo, spots = _at_workable_size(_decode(image_bytes))
     if len(spots) < MIN_BUBBLES:
         raise SheetError("No answer bubbles could be found. Use a sharper, flatter photo of the whole sheet.")
 
@@ -105,6 +109,32 @@ def _without_column_bias(grid: np.ndarray) -> np.ndarray:
     percentile of that column is what an unmarked bubble looks like there.
     """
     return grid - np.percentile(grid, BASELINE_PERCENTILE, axis=0)
+
+
+def _at_workable_size(photo: np.ndarray) -> tuple[np.ndarray, list[Spot]]:
+    """Enlarge a small picture until its bubbles are big enough to measure.
+
+    A screenshot or a downscaled photo can have 6 px bubbles. Measuring those gives
+    almost no detail: one pixel is 3% of the reading, so every row looks like a tie.
+    Enlarging invents no detail, but it lets the fill ratio vary smoothly instead of
+    in big steps, which is what the comparison between options needs.
+    """
+    spots = _find_bubbles(photo)
+    if len(spots) < MIN_BUBBLES:
+        return photo, spots
+
+    radius = float(np.median([s.radius for s in spots]))
+    if radius >= WANTED_RADIUS:
+        return photo, spots
+
+    scale = min(WANTED_RADIUS / radius, MAX_ENLARGEMENT, MAX_SIDE / max(photo.shape))
+    if scale <= 1.05:
+        return photo, spots
+
+    bigger = cv2.resize(photo, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    found = _find_bubbles(bigger)
+    # Keep the enlargement only if it did not confuse the detector.
+    return (bigger, found) if len(found) >= len(spots) * 0.9 else (photo, spots)
 
 
 def _decode(image_bytes: bytes) -> np.ndarray:

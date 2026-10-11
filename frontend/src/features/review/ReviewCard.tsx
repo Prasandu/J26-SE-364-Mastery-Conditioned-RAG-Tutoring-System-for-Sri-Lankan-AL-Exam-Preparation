@@ -83,6 +83,7 @@ export function ReviewCard({ item, busy, onDecide }: Props) {
           >
             Do not award
           </Button>
+          {busy && <span className="text-xs text-slate-500">Saving your decision...</span>}
         </div>
         <MachineOpinion item={item} open={false} onOpen={() => setPeeked(true)} />
       </div>

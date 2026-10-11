@@ -16,7 +16,8 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.ai.judge import AnswerJudge
 from app.errors import ConflictError, ContentValidationError, NotFoundError
@@ -27,7 +28,10 @@ from app.models import (
     Attempt,
     AttemptMode,
     AttemptStatus,
+    Paper,
+    PointResult,
     Question,
+    Section,
     utcnow,
 )
 from app.schemas.attempts import (
@@ -76,8 +80,22 @@ def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
     return attempt
 
 
+# Everything to_attempt_out reads. Without these the result is built one question at
+# a time, which is a round trip each: over two hundred for a fifty question paper.
+OUTPUT_LOADING = (
+    selectinload(Attempt.answers).selectinload(Answer.point_results).selectinload(PointResult.point),
+    selectinload(Attempt.answers).selectinload(Answer.images),
+    selectinload(Attempt.paper)
+    .selectinload(Paper.sections)
+    .selectinload(Section.questions)
+    .selectinload(Question.sub_questions, recursion_depth=3),
+)
+
+
 def get_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
-    attempt = db.get(Attempt, attempt_id)
+    # populate_existing: an attempt already in the session was probably loaded without
+    # these options, and the eager loading would then be quietly skipped.
+    attempt = db.get(Attempt, attempt_id, options=OUTPUT_LOADING, populate_existing=True)
     if attempt is None:
         raise NotFoundError("Attempt not found")
     return attempt
@@ -86,7 +104,40 @@ def get_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
 def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: AnswerIn) -> Answer:
     """Create or replace the answer to one question."""
     attempt = get_in_progress(db, attempt_id)
-    question = _answerable_question(attempt, question_id)
+    answer = apply_answer(attempt, question_id, data)
+    db.commit()
+    return answer
+
+
+def question_index(db: Session, attempt: Attempt) -> dict[int, Question]:
+    """Every question of the paper by id, in two queries.
+
+    Worth building once when several answers are saved together. Walking the paper
+    instead loads each question's sub-questions on demand, which is one round trip
+    per question: fifty of them is several seconds against a remote database.
+    """
+    stmt = (
+        select(Question)
+        .join(Question.section)
+        .where(Section.paper_id == attempt.paper_id)
+        .options(selectinload(Question.sub_questions))
+    )
+    return {question.id: question for question in db.scalars(stmt)}
+
+
+def apply_answer(
+    attempt: Attempt,
+    question_id: int,
+    data: AnswerIn,
+    index: dict[int, Question] | None = None,
+) -> Answer:
+    """Change one answer without saving.
+
+    Kept apart from save_answer so a whole answer sheet can be written in one
+    transaction. Committing per answer means a round trip to the database per
+    question, which is slow enough to notice with fifty of them.
+    """
+    question = _answerable_question(attempt, question_id, index)
     _check_answer_kind(question, data)
 
     answer = next((a for a in attempt.answers if a.question_id == question_id), None)
@@ -99,7 +150,6 @@ def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: Answ
         # Paper mode: this is the student confirming or correcting what the machine read.
         answer.corrected_by_student = _differs(data.text, answer.extracted_text)
     answer.text = data.text
-    db.commit()
     return answer
 
 
@@ -155,8 +205,20 @@ def _differs(confirmed: str, extracted: str) -> bool:
     return " ".join(confirmed.split()) != " ".join(extracted.split())
 
 
+def preload_point_results(db: Session, attempt: Attempt) -> None:
+    """Fetch every answer's marking results in one query.
+
+    Marking reads answer.point_results for each answer in turn, which is otherwise a
+    round trip per question.
+    """
+    db.scalars(
+        select(Answer).where(Answer.attempt_id == attempt.id).options(selectinload(Answer.point_results))
+    ).all()
+
+
 def submit_attempt(db: Session, attempt_id: uuid.UUID, cross_check: bool = False) -> Attempt:
     attempt = get_in_progress(db, attempt_id)
+    preload_point_results(db, attempt)
     attempt.status = AttemptStatus.SUBMITTED
     attempt.submitted_at = utcnow()
     mark_attempt(attempt, cross_check=cross_check)
@@ -253,8 +315,13 @@ def get_in_progress(db: Session, attempt_id: uuid.UUID) -> Attempt:
     return attempt
 
 
-def _answerable_question(attempt: Attempt, question_id: int) -> Question:
-    question = next((q for q in attempt.paper.iter_questions() if q.id == question_id), None)
+def _answerable_question(
+    attempt: Attempt, question_id: int, index: dict[int, Question] | None = None
+) -> Question:
+    if index is not None:
+        question = index.get(question_id)
+    else:
+        question = next((q for q in attempt.paper.iter_questions() if q.id == question_id), None)
     if question is None:
         raise NotFoundError("Question not found in this paper")
     if question.sub_questions:

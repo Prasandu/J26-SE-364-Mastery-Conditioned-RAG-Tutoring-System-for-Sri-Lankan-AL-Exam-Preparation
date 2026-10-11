@@ -337,6 +337,19 @@ than the paper **and** clearly darker than the next bubble, so two marks come ba
 Printing: A4, 100% scale, no "fit to page". Photograph the whole sheet from above with
 all four corner squares visible.
 
+### Getting a good read
+
+Resolution is what decides accuracy, not the algorithm. A bubble needs roughly 13 px
+of radius before its darkness means anything; at 6 px a single pixel is 3% of the
+reading and a faint mark looks the same as an empty bubble. Small pictures are
+enlarged automatically before measuring, but a photo that was never sharp cannot be
+rescued.
+
+- photograph the **whole sheet**, filling the frame, from directly above
+- **2000 px or more** across for a 50 question sheet
+- even light, no shadow across the page
+- a flat sheet, not curled
+
 ## Tests and code quality
 
 ```powershell

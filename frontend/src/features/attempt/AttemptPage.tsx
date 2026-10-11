@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { getAttempt, saveAnswer, submitAttempt } from "@/api/attempts";
 import { ApiError } from "@/api/client";
 import { getPaper } from "@/api/papers";
-import type { AnswerInput, Attempt, PaperDetail } from "@/api/types";
+import type { AnswerInput, AnswerOut, Attempt, PaperDetail } from "@/api/types";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -33,6 +33,7 @@ export function AttemptPage() {
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [paper, setPaper] = useState<PaperDetail | null>(null);
   const [given, setGiven] = useState<Record<number, Given>>({});
+  const [readings, setReadings] = useState<Record<number, AnswerOut>>({});
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [submitting, setSubmitting] = useState(false);
@@ -47,14 +48,20 @@ export function AttemptPage() {
         const itsPaper = await getPaper(loaded.paper_id, controller.signal);
         setAttempt(loaded);
         setPaper(itsPaper);
+        const answered = loaded.questions.filter((question) => question.answer);
         setGiven(
           Object.fromEntries(
-            loaded.questions
-              .filter((question) => question.answer)
-              .map((question) => [
-                question.question_id,
-                { option: question.answer!.mcq_option, text: question.answer!.text ?? "" },
-              ]),
+            answered.map((question) => [
+              question.question_id,
+              { option: question.answer!.mcq_option, text: question.answer!.text ?? "" },
+            ]),
+          ),
+        );
+        setReadings(
+          Object.fromEntries(
+            answered
+              .filter((question) => question.answer!.reader)
+              .map((question) => [question.question_id, question.answer!]),
           ),
         );
       } catch (cause) {
@@ -123,6 +130,15 @@ export function AttemptPage() {
     }, POLL_EVERY_MS);
     return () => clearInterval(timer);
   }, [attempt?.status, attemptId]);
+
+  /** A photo was read: put the transcription in the box for the student to check. */
+  const handleRead = useCallback((questionId: number, answer: AnswerOut) => {
+    setReadings((current) => ({ ...current, [questionId]: answer }));
+    setGiven((current) => ({
+      ...current,
+      [questionId]: { ...(current[questionId] ?? BLANK), text: answer.text ?? "" },
+    }));
+  }, []);
 
   async function submit() {
     setSubmitting(true);
@@ -216,9 +232,12 @@ export function AttemptPage() {
                     item={item}
                     chosen={given[item.question.id]?.option ?? null}
                     text={given[item.question.id]?.text ?? ""}
+                    reading={readings[item.question.id] ?? null}
+                    attemptId={attemptId}
                     disabled={locked}
                     onChoose={(option) => choose(item.question.id, option)}
                     onWrite={(text) => write(item.question.id, text)}
+                    onRead={(answer) => handleRead(item.question.id, answer)}
                   />
                 </div>
               );

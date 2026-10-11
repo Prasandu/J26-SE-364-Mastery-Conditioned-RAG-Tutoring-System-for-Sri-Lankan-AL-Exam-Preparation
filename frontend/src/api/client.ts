@@ -17,20 +17,22 @@ export class ApiError extends Error {
 interface RequestOptions {
   method?: string;
   body?: unknown;
+  form?: FormData; // an upload; the browser sets the content type itself
   headers?: Record<string, string>;
   signal?: AbortSignal;
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, headers = {}, signal } = options;
+  const { method = "GET", body, form, headers = {}, signal } = options;
 
   let response: Response;
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
       signal,
+      // Never set Content-Type for FormData: the browser adds the multipart boundary.
       headers: body ? { "Content-Type": "application/json", ...headers } : headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: form ?? (body ? JSON.stringify(body) : undefined),
     });
   } catch (cause) {
     // fetch only rejects when the server could not be reached at all.

@@ -1,22 +1,38 @@
+import type { AnswerOut } from "@/api/types";
 import { Badge } from "@/components/Badge";
 import type { Answerable } from "@/lib/questions";
 import { isMcq } from "@/lib/questions";
 import { marks } from "@/lib/format";
 
 import { McqOptions } from "./McqOptions";
+import { PhotoUpload } from "./PhotoUpload";
+import { ReadingNote } from "./ReadingNote";
 import { WrittenAnswer } from "./WrittenAnswer";
 
 interface Props {
   item: Answerable;
   chosen: string | null;
   text: string;
+  reading: AnswerOut | null;
+  attemptId: string;
   disabled: boolean;
   onChoose: (option: string) => void;
   onWrite: (text: string) => void;
+  onRead: (answer: AnswerOut) => void;
 }
 
 /** One answerable question: its wording, then the right kind of input. */
-export function QuestionBlock({ item, chosen, text, disabled, onChoose, onWrite }: Props) {
+export function QuestionBlock({
+  item,
+  chosen,
+  text,
+  reading,
+  attemptId,
+  disabled,
+  onChoose,
+  onWrite,
+  onRead,
+}: Props) {
   const { question, label } = item;
 
   return (
@@ -39,12 +55,23 @@ export function QuestionBlock({ item, chosen, text, disabled, onChoose, onWrite 
         {isMcq(item) ? (
           <McqOptions question={question} chosen={chosen} disabled={disabled} onChoose={onChoose} />
         ) : (
-          <WrittenAnswer
-            value={text}
-            questionId={question.id}
-            disabled={disabled}
-            onSave={onWrite}
-          />
+          <div className="space-y-2">
+            <WrittenAnswer
+              value={text}
+              questionId={question.id}
+              disabled={disabled}
+              onSave={onWrite}
+            />
+            {reading && <ReadingNote answer={reading} />}
+            {!disabled && (
+              <PhotoUpload
+                attemptId={attemptId}
+                questionId={question.id}
+                disabled={disabled}
+                onRead={onRead}
+              />
+            )}
+          </div>
         )}
       </div>
     </fieldset>

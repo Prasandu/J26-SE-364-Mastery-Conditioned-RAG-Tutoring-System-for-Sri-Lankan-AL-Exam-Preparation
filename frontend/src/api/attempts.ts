@@ -31,3 +31,18 @@ export function saveAnswer(
 export function submitAttempt(attemptId: string): Promise<Attempt> {
   return request<Attempt>(`/attempts/${attemptId}/submit`, { method: "POST" });
 }
+
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export function uploadAnswerImage(
+  attemptId: string,
+  questionId: number,
+  file: File,
+): Promise<AnswerOut> {
+  const form = new FormData();
+  form.append("file", file);
+  return request<AnswerOut>(`/attempts/${attemptId}/answers/${questionId}/images`, {
+    method: "POST",
+    form,
+  });
+}

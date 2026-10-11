@@ -8,6 +8,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.ai import build_author
+from app.ai.author import QuestionAuthor
 from app.ai.judge import AnswerJudge
 from app.api.deps import get_judge
 from app.config import Settings, get_settings
@@ -16,8 +18,10 @@ from app.models import PaperKind
 from app.schemas.admin import MarkingSchemeIn, PaperIn, TopicIn
 from app.schemas.attempts import AttemptOut
 from app.schemas.content import AdminPaperSummary, MarkingSchemeOut, PaperDetail, SchemeSummary, TopicOut
+from app.schemas.generate import GeneratedOut, GenerateIn, RatesOut, ShapeOut
 from app.security import require_admin
 from app.services import attempts, papers, schemes, topics
+from app.services.generator import api as generator
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -30,6 +34,39 @@ SCHEME_PATH = "/papers/{paper_id}/marking-schemes/{version}"
 @router.get("/topics", response_model=list[TopicOut])
 def list_topics(db: Session = Depends(get_db)):
     return topics.list_topics(db)
+
+
+@router.get("/model-papers/rates", response_model=RatesOut)
+def generator_rates():
+    """How long each kind of question takes, so a screen can show the time live."""
+    return generator.rates()
+
+
+@router.post("/model-papers/plan", response_model=ShapeOut)
+def plan_model_paper(data: GenerateIn, db: Session = Depends(get_db)):
+    """What the paper would look like. Nothing is written and no model is called."""
+    return generator.plan(db, data)
+
+
+@router.post("/model-papers", response_model=GeneratedOut, status_code=status.HTTP_201_CREATED)
+def generate_model_paper(
+    data: GenerateIn,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    """Write a model paper from the chosen topics.
+
+    The paper and its marking scheme are saved as drafts. An AI wrote the scheme, and
+    the checks only catch structural mistakes, not wrong chemistry, so a person reads
+    it and publishes it.
+    """
+    author: QuestionAuthor | None = build_author(settings)
+    if author is None:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "No AI model is configured. Set a key in .env.",
+        )
+    return generator.write(db, data, author)
 
 
 @router.post("/topics", response_model=TopicOut, status_code=status.HTTP_201_CREATED)

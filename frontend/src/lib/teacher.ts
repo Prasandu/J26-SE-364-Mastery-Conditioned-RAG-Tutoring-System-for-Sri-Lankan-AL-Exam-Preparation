@@ -5,6 +5,7 @@
 
 const KEY = "assessment.teacherKey";
 const NAME = "assessment.teacherRef";
+const ADMIN = "assessment.adminKey";
 
 function read(name: string, store: Storage): string {
   try {
@@ -26,3 +27,6 @@ export const readTeacherKey = () => read(KEY, sessionStorage);
 export const saveTeacherKey = (value: string) => write(KEY, value, sessionStorage);
 export const readTeacherRef = () => read(NAME, localStorage);
 export const saveTeacherRef = (value: string) => write(NAME, value, localStorage);
+
+export const readAdminKey = () => read(ADMIN, sessionStorage);
+export const saveAdminKey = (value: string) => write(ADMIN, value, sessionStorage);

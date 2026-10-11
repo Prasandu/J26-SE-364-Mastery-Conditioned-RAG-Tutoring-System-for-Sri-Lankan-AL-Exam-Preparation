@@ -33,3 +33,13 @@ def create_topic(db: Session, data: TopicIn) -> Topic:
     db.add(topic)
     db.commit()
     return topic
+
+
+def rename_topic(db: Session, code: str, name: str) -> Topic:
+    """Correct a topic's name. The code is what papers refer to, so it never changes."""
+    topic = db.scalars(select(Topic).where(Topic.code == code)).first()
+    if topic is None:
+        raise ContentValidationError("The topic has problems", [f"Unknown topic {code}"])
+    topic.name = name
+    db.commit()
+    return topic

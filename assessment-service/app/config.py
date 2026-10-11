@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     upload_dir: Path = Path("uploads")
     max_upload_mb: float = Field(default=8.0, gt=0, le=50)
 
+    # Practice papers a student may generate per day. The AI quota is shared and
+    # small, so one person cannot use it all up.
+    practice_papers_per_day: int = Field(default=3, ge=0, le=50)
+    practice_questions_at_once: int = Field(default=15, ge=1, le=60)
+
     # Browsers only let these origins call the API. Comma separated, never "*",
     # because the admin and teacher keys travel in headers.
     # NoDecode: read CORS_ORIGINS as plain text, not as JSON, so split_origins can see it.

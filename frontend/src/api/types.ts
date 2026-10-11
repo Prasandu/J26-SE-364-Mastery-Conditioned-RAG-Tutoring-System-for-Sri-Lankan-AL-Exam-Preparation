@@ -199,3 +199,60 @@ export interface SheetRead {
   options_found: number;
   answers: SheetAnswer[];
 }
+
+// Topics and generating a model paper.
+
+export interface Topic {
+  id: number;
+  code: string;
+  name: string;
+  parent_id: number | null;
+}
+
+export interface Counts {
+  mcq: number;
+  structured: number;
+  essay: number;
+}
+
+export interface SectionShape {
+  code: string;
+  title: string;
+  answer_mode: AnswerMode;
+  count: number;
+  marks: number;
+  minutes: number;
+}
+
+export interface Shape {
+  title: string;
+  sections: SectionShape[];
+  questions: number;
+  marks: number;
+  minutes: number;
+  duration: string;
+  problems: string[];
+}
+
+export interface Rates {
+  minutes_per_question: Record<string, number>;
+  marks_per_question: Record<string, number>;
+  round_to_minutes: number;
+  max_per_section: number;
+}
+
+export interface GeneratedPaper {
+  paper_id: number;
+  scheme_version: number;
+  title: string;
+  written_by: string;
+  kept: number;
+  dropped: string[];
+  shape: Shape;
+}
+
+export interface PracticeLimits {
+  per_day: number;
+  made_today: number;
+  questions_at_once: number;
+}

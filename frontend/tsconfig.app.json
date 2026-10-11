@@ -6,7 +6,8 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": ["vitest/globals", "@testing-library/jest-dom"],
-    "baseUrl": ".",
+    // No baseUrl: since TypeScript 5 these resolve against this file, and
+    // baseUrl is deprecated in 7.
     "paths": { "@/*": ["./src/*"] },
     "strict": true,
     "noUnusedLocals": true,

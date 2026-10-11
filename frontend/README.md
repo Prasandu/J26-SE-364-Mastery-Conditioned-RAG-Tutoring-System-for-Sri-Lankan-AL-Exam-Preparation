@@ -42,11 +42,15 @@ src/
     papers.ts       /papers, /health
     attempts.ts     start, save an answer, upload a photo, submit
     review.ts       review queue, teacher decisions, agreement
+    admin.ts        topics, generating a model paper, publishing
+    practice.ts     practice papers a student makes (no key needed)
   features/         one folder per area of the app
     papers/         browse a paper and its questions
     attempt/        start, answer, photo upload, answer sheet upload,
                     marking progress, submit, see the result
     review/         teacher review queue and marker agreement
+    generate/       admin: make a model paper, check it, publish it
+    practice/       student: make a practice paper for themselves
   components/       small reusable pieces, no API calls inside
                     Layout, NavBar, Footer, Hero, Card, Button, Badge,
                     Steps (what is happening during a wait), Spinner, ErrorBox

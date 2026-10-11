@@ -1,12 +1,14 @@
 """Clients for the outside AI models, kept apart from the marking logic.
 
 judge:  text models that judge a written answer
+author: text models that write questions and their marking points
 vision: models that can see images (handwriting, past-paper pages)
 
 This file is the only place that reads the settings and decides which provider to
 build, so swapping a provider never touches a service.
 """
 
+from app.ai.author import QuestionAuthor, gemini_author, openai_compatible_author
 from app.ai.judge import (
     PROVIDERS,
     AnswerJudge,
@@ -41,6 +43,19 @@ def _openai_compatible_target(settings: Settings) -> tuple[str, str, bool]:
 
     provider = PROVIDERS[settings.ai_provider]
     return settings.ai_base_url or provider.base_url, provider.default_model, provider.needs_key
+
+
+def build_author(settings: Settings) -> QuestionAuthor | None:
+    """The model that writes questions, or None when no key is set."""
+    if settings.ai_provider == ProviderName.GEMINI:
+        if not settings.gemini_api_key:
+            return None
+        return gemini_author(settings.gemini_api_key, settings.gemini_model)
+
+    base_url, default_model, needs_key = _openai_compatible_target(settings)
+    if needs_key and not settings.ai_api_key:
+        return None
+    return openai_compatible_author(settings.ai_api_key, base_url, settings.ai_model or default_model)
 
 
 def build_reader(settings: Settings) -> AnswerReader | None:

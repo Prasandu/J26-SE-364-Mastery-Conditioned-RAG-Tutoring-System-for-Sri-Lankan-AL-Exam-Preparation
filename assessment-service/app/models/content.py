@@ -75,6 +75,9 @@ class Paper(Base):
     status: Mapped[ContentStatus] = mapped_column(text_enum(ContentStatus), default=ContentStatus.DRAFT)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Who made it. Empty means it belongs to everyone: a past paper, or one an admin
+    # published. A student's practice paper carries their own ref, so it stays theirs.
+    created_by: Mapped[str | None] = mapped_column(String(64), index=True)
 
     sections: Mapped[list["Section"]] = relationship(
         back_populates="paper", order_by="Section.order_no", cascade=CASCADE_ALL

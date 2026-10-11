@@ -350,6 +350,79 @@ rescued.
 - even light, no shadow across the page
 - a flat sheet, not curled
 
+## Syllabus topics
+
+The topic tree comes from the National Institute of Education Chemistry syllabus
+(2017): 14 units, each with its competency levels.
+
+```
+python -m app.import_syllabus read syllabus.pdf          writes drafts/syllabus.json
+python -m app.import_syllabus load drafts/syllabus.json --dry-run
+python -m app.import_syllabus load drafts/syllabus.json
+python -m app.import_syllabus load drafts/syllabus.json --update   correct names already loaded
+```
+
+`load` only adds topics that are new. If you fix a name in the file after loading,
+re-run it with `--update`. A topic's **code** never changes, because that is what
+papers point at.
+
+Two steps on purpose. The PDF is a four column table, so plain text extraction leaves
+a few headings with a stray page number or a missing space. Read the JSON, fix those,
+then load. These topics decide what a generated paper may ask about.
+
+## Generating a model paper
+
+```
+python -m app.generate_paper --topics U01 U03 --mcq 10 --plan-only
+python -m app.generate_paper --topics U01 --mcq 5
+python -m app.generate_paper --topics U12_1 U12_2 --structured 2 --essay 1
+```
+
+Timing follows the real papers: 50 multiple choice in 2 hours, 4 structured in
+1 hour, 4 essays in 2 hours. `--plan-only` shows the shape, marks and duration
+without calling the model.
+
+The model writes each question **and its marking points**, because a paper with no
+points cannot be marked by anything. A question whose points do not add up, or whose
+multiple choice key is not one of its own options, is dropped with a reason.
+
+**The paper and scheme are saved as drafts, always.** An AI wrote the scheme, and the
+checks above only catch structural mistakes, not wrong chemistry. In testing, a
+generated set of five questions contained one wrong answer key and two questions with
+more than one correct option. Read every question before publishing.
+
+### Practice papers a student makes themselves
+
+Students do not need any key. `POST /papers/practice` writes a paper for one student
+and publishes it to **them only**: `papers.created_by` holds their ref, and
+`GET /papers?student_ref=...` adds their own papers to the shared ones. Nobody else
+ever sees it.
+
+Two limits protect the shared AI quota, both in `.env`:
+
+```
+PRACTICE_PAPERS_PER_DAY=3       0 switches practice papers off
+PRACTICE_QUESTIONS_AT_ONCE=15
+```
+
+There is no teacher check here, because the student made it to sit it now. The screen
+tells them plainly that a computer wrote the questions and one may be wrong.
+
+## Clearing test data
+
+Attempts made while testing make an evaluation export useless, so clear them before a
+real session.
+
+```
+python -m app.clear_test_data --list
+python -m app.clear_test_data --keep S001 S002 --papers --dry-run
+python -m app.clear_test_data --keep S001 S002 --papers
+```
+
+`--keep` removes everyone else; `--students` removes only the ones named. Attempts a
+teacher has reviewed are never removed, whichever you use: that is research data.
+`--papers` also removes practice papers nobody has sat.
+
 ## Tests and code quality
 
 ```powershell

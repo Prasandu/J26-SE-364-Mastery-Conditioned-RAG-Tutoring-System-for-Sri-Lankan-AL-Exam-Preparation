@@ -6,6 +6,7 @@ import { Logo } from "./Logo";
 
 const LINKS = [
   { to: "/", label: "Papers", end: true },
+  { to: "/practice", label: "Practice", end: false },
   { to: "/review", label: "Teacher review", end: false },
   { to: "/about", label: "About", end: false },
 ];

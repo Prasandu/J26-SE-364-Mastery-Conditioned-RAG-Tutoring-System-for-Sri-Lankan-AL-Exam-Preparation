@@ -1,6 +1,7 @@
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
 
-import { listPapers } from "@/api/papers";
+import { myPapers } from "@/api/practice";
 import type { PaperSummary } from "@/api/types";
 import { Badge } from "@/components/Badge";
 import { EmptyState, ErrorBox } from "@/components/ErrorBox";
@@ -8,12 +9,16 @@ import { GlassOrb } from "@/components/GlassOrb";
 import { Hero, SectionTitle } from "@/components/Hero";
 import { CardSkeleton } from "@/components/Spinner";
 import { useApi } from "@/hooks/useApi";
+import { readStudentRef } from "@/lib/student";
 import { paperSubtitle } from "@/lib/format";
 
 import { HowItWorks } from "./HowItWorks";
 
 export function PaperList() {
-  const { data: papers, error, loading } = useApi(listPapers, []);
+  // A student's own practice papers only appear for them.
+  const studentRef = readStudentRef();
+  const load = useCallback((signal: AbortSignal) => myPapers(studentRef, signal), [studentRef]);
+  const { data: papers, error, loading } = useApi(load, [studentRef]);
 
   return (
     <div className="space-y-14">
@@ -73,7 +78,9 @@ function PaperCard({ paper }: { paper: PaperSummary }) {
         <div className="flex flex-1 flex-col p-6">
           <div className="flex items-start justify-between gap-3">
             <h3 className="font-medium leading-snug text-slate-900">{paper.title}</h3>
-            <Badge tone={paper.kind === "past" ? "neutral" : "good"}>{paper.kind}</Badge>
+            <Badge tone={paper.kind === "past" ? "neutral" : "good"}>
+              {paper.kind === "model" ? "practice" : paper.kind}
+            </Badge>
           </div>
           <p className="mt-2 text-sm text-slate-500">{paperSubtitle(paper)}</p>
 

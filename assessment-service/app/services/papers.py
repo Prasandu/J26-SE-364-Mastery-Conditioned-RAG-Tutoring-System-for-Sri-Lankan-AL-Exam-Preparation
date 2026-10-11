@@ -6,7 +6,7 @@ given against them stays traceable.
 
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.errors import ConflictError, ContentValidationError, NotFoundError
@@ -27,9 +27,23 @@ from app.services.validation import check_paper, check_paper_ready
 
 
 def list_papers(
-    db: Session, *, kind: PaperKind | None = None, year: int | None = None, published_only: bool = False
+    db: Session,
+    *,
+    kind: PaperKind | None = None,
+    year: int | None = None,
+    published_only: bool = False,
+    student_ref: str | None = None,
 ) -> Sequence[Paper]:
+    """Papers to show. Practice papers belong to the student who made them.
+
+    Without a student_ref only the shared papers are listed, so one student's practice
+    paper never turns up in someone else's list.
+    """
     stmt = select(Paper).order_by(Paper.id)
+    mine = Paper.created_by.is_(None)
+    if student_ref:
+        mine = or_(mine, Paper.created_by == student_ref)
+    stmt = stmt.where(mine)
     if kind is not None:
         stmt = stmt.where(Paper.kind == kind)
     if year is not None:

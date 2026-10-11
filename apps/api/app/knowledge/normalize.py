@@ -146,3 +146,14 @@ def normalize_page(raw: str, source: SourceConfig, page: PageConfig) -> list[str
             )
         joined = joined.replace(repair.find, repair.replace)
     return [line for line in joined.split("\n") if line.strip()]
+
+
+def fix_ligatures(text: str) -> str:
+    """Public alias used by the admin importer (same rules as the approved pipeline)."""
+    for pattern, replacement in _LIGATURES:
+        text = pattern.sub(replacement, text)
+    return text
+
+
+#: Public alias used by the admin importer (same rule as the approved pipeline).
+rejoin_scripts = _rejoin_scripts

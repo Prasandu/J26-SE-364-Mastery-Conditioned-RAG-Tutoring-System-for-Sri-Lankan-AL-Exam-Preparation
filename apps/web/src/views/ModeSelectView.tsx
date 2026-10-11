@@ -1,8 +1,15 @@
 import type { GuidanceLevel, Mode } from '@vlab/contracts';
 import { useTranslation } from 'react-i18next';
+import { FlowSteps } from '../components/FlowSteps';
+import { Icon, type IconName } from '../components/ui/Icon';
+import { PageHeader } from '../components/ui/PageHeader';
 import { useSession } from '../store/StoreProvider';
 
-const MODES: Mode[] = ['automatic', 'guided', 'manual'];
+const MODES: { mode: Mode; icon: IconName }[] = [
+  { mode: 'automatic', icon: 'play' },
+  { mode: 'guided', icon: 'compass' },
+  { mode: 'manual', icon: 'hand' },
+];
 const LEVELS: GuidanceLevel[] = ['beginner', 'intermediate', 'advanced'];
 
 /** ModeSelector: the chosen mode and level are frozen into the session when it starts. */
@@ -23,33 +30,52 @@ export function ModeSelectView() {
 
   return (
     <section className="view view--mode" aria-labelledby="mode-title">
-      <h1 id="mode-title">{t('ui.mode.title')}</h1>
+      <PageHeader id="mode-title" title={t('ui.mode.title')} lead={t('ui.mode.lead')} />
+      <FlowSteps current="mode" />
       <fieldset className="mode-options">
-        <legend>{t('ui.mode.legend')}</legend>
-        {MODES.map((m) => (
+        <legend className="visually-hidden">{t('ui.mode.legend')}</legend>
+        {MODES.map(({ mode: m, icon }) => (
           <div
             key={m}
-            className={selection.mode === m ? 'mode-option mode-option--selected' : 'mode-option'}
+            className={
+              selection.mode === m
+                ? `mode-option mode-option--${m} mode-option--selected`
+                : `mode-option mode-option--${m}`
+            }
           >
-            <input
-              type="radio"
-              id={`mode-${m}`}
-              name="mode"
-              checked={selection.mode === m}
-              onChange={() =>
-                selectMode(m, m === 'guided' ? (selection.guidanceLevel ?? 'beginner') : null)
-              }
-              aria-describedby={`mode-${m}-desc`}
-            />
-            <label htmlFor={`mode-${m}`}>{t(`ui.mode.${m}.title`)}</label>
-            <p id={`mode-${m}-desc`} className="hint-text">
+            <div className="mode-option__head">
+              <span className="mode-option__icon">
+                <Icon name={icon} size={26} />
+              </span>
+              <input
+                type="radio"
+                id={`mode-${m}`}
+                name="mode"
+                checked={selection.mode === m}
+                onChange={() =>
+                  selectMode(m, m === 'guided' ? (selection.guidanceLevel ?? 'beginner') : null)
+                }
+                aria-describedby={`mode-${m}-desc mode-${m}-support`}
+              />
+              <label htmlFor={`mode-${m}`}>{t(`ui.mode.${m}.title`)}</label>
+            </div>
+            <p id={`mode-${m}-desc`} className="mode-option__desc">
               {t(`ui.mode.${m}.description`)}
+            </p>
+            <p id={`mode-${m}-support`} className="mode-option__support">
+              <span className="label">{t('ui.mode.support_label')}</span>{' '}
+              {t(`ui.mode.${m}.support`)}
             </p>
             {m === 'guided' && selection.mode === 'guided' && (
               <fieldset className="level-options">
                 <legend>{t('ui.mode.level_legend')}</legend>
                 {LEVELS.map((l) => (
-                  <div className="check" key={l}>
+                  <div
+                    className={
+                      selection.guidanceLevel === l ? 'level-option is-selected' : 'level-option'
+                    }
+                    key={l}
+                  >
                     <input
                       type="radio"
                       id={`level-${l}`}
@@ -60,8 +86,7 @@ export function ModeSelectView() {
                     />
                     <label htmlFor={`level-${l}`}>{t(`ui.level.${l}.title`)}</label>
                     <span id={`level-${l}-desc`} className="hint-text">
-                      {' '}
-                      — {t(`ui.level.${l}.description`)}
+                      {t(`ui.level.${l}.description`)}
                     </span>
                   </div>
                 ))}

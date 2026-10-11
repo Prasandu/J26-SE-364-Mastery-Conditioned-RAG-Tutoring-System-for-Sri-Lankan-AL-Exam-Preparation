@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "expectedVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "mark_field",
+        "submit_for_review",
+        "approve_content",
+        "return_to_draft",
+        "archive"
+      ]
+    },
+    "field": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "experimentNumber",
+            "title",
+            "syllabusUnit",
+            "aims",
+            "apparatus",
+            "chemicals",
+            "procedure",
+            "precautions",
+            "calculations",
+            "observations",
+            "preLabQuestions",
+            "postLabQuestions"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reviewed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "expectedVersion",
+    "action",
+    "field",
+    "reviewed"
+  ],
+  "additionalProperties": false
+}

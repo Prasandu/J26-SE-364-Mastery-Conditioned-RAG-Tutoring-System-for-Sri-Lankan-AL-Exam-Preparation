@@ -13,12 +13,22 @@ import {
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import {
   EngineError,
+  type CatalogEntry,
   type EngineAdapter,
   type EngineErrorCode,
   type SubmitRequest,
 } from '../engine/adapter';
 
-export type View = 'library' | 'overview' | 'prelab' | 'mode' | 'workbench' | 'notebook' | 'report';
+export type View =
+  | 'dashboard'
+  | 'library'
+  | 'overview'
+  | 'prelab'
+  | 'mode'
+  | 'workbench'
+  | 'notebook'
+  | 'report'
+  | 'admin';
 
 export type LogKind = 'observation' | 'safety' | 'rejected' | 'procedural' | 'guidance';
 
@@ -74,6 +84,8 @@ export interface SessionStoreState {
     conflictVersion: number | null;
   };
   report: { status: 'idle' | 'loading' | 'ready' | 'unavailable' | 'error'; data: Report | null };
+  /** Published practicals this client can run (real catalog data only). */
+  catalog: { status: 'idle' | 'loading' | 'ready' | 'error'; items: CatalogEntry[] };
   ui: {
     pendingApparatus: string[];
     focusedItem: string | null;
@@ -105,6 +117,7 @@ export interface SessionStoreState {
   editNotebook(update: (doc: NotebookDocument) => NotebookDocument): void;
   saveNotebook(opts?: { overwrite?: boolean }): Promise<void>;
   loadReport(): Promise<void>;
+  loadCatalog(): Promise<void>;
 }
 
 export interface StoreDeps {
@@ -239,7 +252,7 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
 
     return {
       engine: adapter,
-      view: 'library',
+      view: 'dashboard',
       locale: 'en',
       preLab: { answers: {}, prediction: '', acknowledgedSafety: [] },
       selection: { mode: 'guided', guidanceLevel: 'beginner' },
@@ -250,6 +263,7 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
       connection: null,
       notebook: freshNotebook(),
       report: { status: 'idle', data: null },
+      catalog: { status: 'idle', items: [] },
       ui: { pendingApparatus: [], focusedItem: null, pending: null, busy: false },
 
       navigate: (view) => {
@@ -465,6 +479,17 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
           const unavailable = error instanceof EngineError && error.code === 'report_not_available';
           set({ report: { status: unavailable ? 'unavailable' : 'error', data: null } });
           if (!unavailable) fail(error, null);
+        }
+      },
+
+      loadCatalog: async () => {
+        if (get().catalog.status === 'loading') return;
+        set((s) => ({ catalog: { ...s.catalog, status: 'loading' } }));
+        try {
+          const items = await adapter.listExperiments();
+          set({ catalog: { status: 'ready', items } });
+        } catch {
+          set({ catalog: { status: 'error', items: [] } });
         }
       },
     };

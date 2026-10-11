@@ -8,13 +8,17 @@ const si = resources.si.translation;
 const tx = (key: string) => en[key] ?? key;
 
 describe('student flow', () => {
-  it('library → overview → pre-lab → mode → workbench, with source-backed content', async () => {
+  it('dashboard → library → overview → pre-lab → mode → workbench, with source-backed content', async () => {
     const { user, store } = renderApp();
+    expect(
+      screen.getByRole('heading', { level: 1, name: tx('ui.dashboard.title') }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: tx('ui.dashboard.browse') }));
     expect(
       screen.getByRole('heading', { level: 1, name: tx('ui.library.title') }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(tx('ui.card.experiment_number').replace('{{number}}', '4')),
+      await screen.findByText(tx('ui.card.experiment_number').replace('{{number}}', '4')),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: tx('ui.card.start') }));
 
@@ -69,7 +73,7 @@ describe('language', () => {
     await waitFor(() => expect(document.documentElement.lang).toBe('si'));
     expect(screen.getByText(si['ui.translation.draft_notice']!)).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: si['ui.library.title']! }),
+      screen.getByRole('heading', { level: 1, name: si['ui.dashboard.title']! }),
     ).toBeInTheDocument();
   });
 
@@ -241,11 +245,23 @@ describe('keyboard operation', () => {
   it('primary controls are reachable and operable with the keyboard alone', async () => {
     const { user, store } = renderApp();
     await user.tab(); // skip link
-    await user.tab(); // app title
+    await user.tab(); // brand (home)
+    expect(screen.getByRole('button', { name: tx('ui.nav.home_label') })).toHaveFocus();
+    await user.tab(); // Dashboard
+    await user.tab(); // Practical library
+    const libraryNav = screen.getByRole('button', { name: tx('ui.nav.library') });
+    expect(libraryNav).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(store.getState().view).toBe('library');
+    expect(libraryNav).toHaveAttribute('aria-current', 'page');
+    await user.tab(); // English
+    await user.tab(); // Sinhala
+    await user.tab(); // search
+    expect(screen.getByLabelText(tx('ui.library.search_label'))).toHaveFocus();
+    await user.tab(); // unit filter
+    expect(screen.getByLabelText(tx('ui.library.unit_filter'))).toHaveFocus();
     await user.tab();
-    await user.tab(); // language buttons
-    await user.tab();
-    expect(screen.getByRole('button', { name: tx('ui.card.start') })).toHaveFocus();
+    expect(await screen.findByRole('button', { name: tx('ui.card.start') })).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(store.getState().view).toBe('overview');
   });

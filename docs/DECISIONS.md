@@ -322,3 +322,31 @@ Supersedes the "runtime provider choice required" note in D23.
   - A 429 pauses the run (exit 3) and is never recorded as a quality failure.
   - `check_providers.py` sends exactly one Groq request and one OpenAI request when confirmed.
 - **Status (2026-10-11):** no live call has been made, because the keys are not available to the tooling. Two keys were pasted into `.env.example` and have been removed from the file; **they should be rotated**.
+
+## D31 — Development-only admin drafts (M3 Slice C)
+
+- **Why:** practical content must be imported and reviewed against the NIE handbook before any
+  future publishing. Real authentication does not exist yet, so admin access is restricted to a
+  local development context instead of faking production login.
+- **Disabled by default:** `LAB_ADMIN_MODE=disabled`. While it is disabled, every
+  `/admin/dev/*` route returns 404. `development` admin mode is refused at startup unless
+  `LAB_ENVIRONMENT=development`. Development admin privileges must never be used in production.
+- **Loopback guard (server-side, per request):**
+  - the peer address is loopback;
+  - no `Forwarded`, `X-Forwarded-*`, `X-Real-IP` or `Via` header is present;
+  - `Host` is loopback (DNS-rebinding defence);
+  - any `Origin` is loopback and listed in `LAB_CORS_ORIGINS`.
+
+  Any failure returns 404. Run uvicorn bound to `127.0.0.1` with no reverse proxy in front.
+
+- **Untrusted PDFs:** a size cap is enforced while streaming, then the signature and page limit
+  are checked. Text is extracted by pypdf in an isolated subprocess, which has a timeout and an
+  output cap everywhere and resource limits on POSIX. Uploaded documents are never sent to Groq,
+  OpenAI or any other external service.
+- **Storage:** `data/admin/` (gitignored, outside `content/`). Uploads are content-addressed and
+  write-once; records are written atomically, carry an integrity hash, and use optimistic
+  versions. Filesystem errors return `admin_storage_error`.
+- **Separation:** drafts never modify active student definitions. `content_approved` means only
+  that the content was reviewed. It never makes a practical runnable, because that requires a
+  validated deterministic simulation definition (`simulation_pending` until then).
+- **Not in Slice C:** publishing, catalog replacement, rollback, production roles and OCR.

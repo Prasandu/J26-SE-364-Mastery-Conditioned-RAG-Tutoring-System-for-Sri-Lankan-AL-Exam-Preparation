@@ -48,6 +48,16 @@ class Settings(BaseSettings):
     llm_circuit_cooldown_seconds: float = Field(default=60.0, ge=1, le=3600)
     #: Paid fallback calls allowed per UTC day (process-local); 0 disables paid fallback.
     openai_fallback_daily_request_limit: int = Field(default=50, ge=0, le=100_000)
+
+    #: Development-only practical administration (drafts, PDF imports, review). Disabled by
+    #: default; refused at startup outside the development environment. There is no production
+    #: authentication yet, so this never grants anything outside a verified loopback request.
+    admin_mode: Literal["disabled", "development"] = "disabled"
+    #: Private, gitignored draft storage. Must never point into content/ (student definitions).
+    admin_data_dir: Path = REPO_ROOT / "data" / "admin"
+    admin_max_upload_bytes: int = Field(default=25 * 1024 * 1024, ge=1024, le=25 * 1024 * 1024)
+    admin_max_pages: int = Field(default=400, ge=1, le=400)
+    admin_extract_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
     embedding_provider: Literal["disabled", "fake", "e5_local"] = "disabled"
     embedding_model: str = "intfloat/multilingual-e5-small"
     #: Pinned model revision; defaults to the revision recorded in the knowledge manifest.
@@ -82,6 +92,15 @@ class Settings(BaseSettings):
         return str(data["version"])
 
     def validate_for_startup(self) -> None:
+        if self.admin_mode == "development":
+            if self.environment != "development":
+                raise ConfigurationError(
+                    "Development admin mode is only allowed in the development environment"
+                )
+            data = self.admin_data_dir.resolve()
+            content = self.content_dir.resolve()
+            if data == content or content in data.parents:
+                raise ConfigurationError("LAB_ADMIN_DATA_DIR must not be inside content/")
         if "*" in self.cors_origins:
             raise ConfigurationError("Wildcard CORS origins are not allowed")
         if self.environment == "production" and self.principal_provider != "supabase_jwt":

@@ -16,7 +16,9 @@ from app.rag.generation_eval import (
     load_cases,
     oracle_evidence,
     public_row,
+    request_budget,
     run_case,
+    select_cases,
     summarize,
 )
 from app.settings import REPO_ROOT
@@ -60,6 +62,48 @@ def test_cases_extend_the_gold_set_without_changing_labels() -> None:
     assert {c.language for c in must_refuse} == {"en", "si"}
 
 
+def test_m2_groq_subset_is_fixed_bilingual_and_preserves_full_dataset() -> None:
+    cases = load_cases(GOLD / "retrieval-gold.v1.json", GOLD / "generation-adversarial.v1.json")
+    subset = select_cases(cases, "m2-groq")
+    assert [case.case_id for case in subset] == [
+        "mass-en",
+        "mass-si",
+        "funnel-en",
+        "funnel-si",
+        "mark-en",
+        "mark-si",
+        "kmno4-en",
+        "kmno4-si",
+        "false-premise-30g-en",
+        "hidden-state-errors-si",
+    ]
+    assert len(cases) > len(subset)
+    assert {case.language for case in subset} == {"en", "si"}
+    assert sum(case.kind == "supported" for case in subset) == 6
+    assert sum(case.must_refuse for case in subset) == 4
+    assert all(case.language == "en" or case.case_id.endswith("-si") for case in subset)
+
+
+def test_subset_selection_is_reproducible_and_caps_without_mutating_source() -> None:
+    cases = load_cases(GOLD / "retrieval-gold.v1.json", GOLD / "generation-adversarial.v1.json")
+    before = [case.case_id for case in cases]
+    assert [c.case_id for c in select_cases(cases, "m2-groq", 4)] == before[:0] + [
+        "mass-en",
+        "mass-si",
+        "funnel-en",
+        "funnel-si",
+    ]
+    assert [case.case_id for case in cases] == before
+
+
+def test_m2_request_and_output_budget_is_conservative_and_reproducible() -> None:
+    cases = load_cases(GOLD / "retrieval-gold.v1.json", GOLD / "generation-adversarial.v1.json")
+    subset = select_cases(cases, "m2-groq")
+    budget = request_budget(len(subset), 4, ("oracle", "e2e"), 2, 512)
+    assert budget == {"requests": 44, "output_tokens": 22528}
+    assert request_budget(len(subset), 4, ("oracle", "e2e"), 2, 512) == budget
+
+
 def test_oracle_evidence_is_the_labelled_chunks() -> None:
     evidence = oracle_evidence(SUPPORTED, CHUNKS)
     assert evidence and all(PROCEDURE.matches(c) for c in evidence)
@@ -79,6 +123,28 @@ def test_supported_and_kmno4_rows_and_gates() -> None:
     assert summary["refusal"]["recall"] == 1.0 and summary["refusal"]["precision"] == 1.0
     assert summary["citations"]["precision"] == 1.0 and summary["citations"]["pageAccuracy"] == 1.0
     assert all(gates(rows, 180).values())
+
+
+def test_invalid_citation_is_retained_as_private_diagnostic_category() -> None:
+    def invalid_citation(request: GenerationRequest) -> dict[str, Any]:
+        chunk = request.evidence[0]
+        line = chunk.text.split("\n")[1]
+        return {
+            "decision": "answer",
+            "answer": line,
+            "claims": [
+                {
+                    "text": line,
+                    "citedChunkIds": ["kc_not_supplied"],
+                    "supportingSpans": [{"chunkId": chunk.chunk_id, "text": line}],
+                }
+            ],
+        }
+
+    row = run(SUPPORTED, FakeGenerationProvider(invalid_citation))
+    assert row.status == "refused"
+    assert row.category == "invalid_citation"
+    assert row.answer
 
 
 def test_fabrication_schema_and_instability_are_detected() -> None:

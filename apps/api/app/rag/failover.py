@@ -185,6 +185,7 @@ class FailoverGenerationProvider:
     ) -> Outcome:
         deadline = self._clock() + self._total_deadline
         attempted: list[str] = []
+        failures: list[str] = []
         failure_category: str | None = None
         for index, provider in enumerate(self._providers):
             if cancel is not None and cancel.is_set():
@@ -208,6 +209,7 @@ class FailoverGenerationProvider:
             try:
                 result = provider.generate(request, timeout=per_call)
             except GenerationFailure as exc:
+                failures.append(exc.kind)
                 if primary:
                     if exc.kind in CIRCUIT_KINDS:
                         self.circuit.record_failure(exc.retry_after)
@@ -232,7 +234,12 @@ class FailoverGenerationProvider:
                 failure_category=failure_category,
             )
             return Outcome(outcome.verdict, outcome.output, meta)
-        raise GenerationUnavailable("all providers failed", kind="all_providers_failed")
+        aggregate = (
+            "all_providers_rate_limited"
+            if failures and all(kind == "rate_limited" for kind in failures)
+            else "all_providers_failed"
+        )
+        raise GenerationUnavailable("all providers failed", kind=aggregate)
 
     def _warn_budget(self, attempted: Sequence[str]) -> None:
         logger.warning(

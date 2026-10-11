@@ -66,6 +66,24 @@ export interface EngineAdapter {
   getReport(sessionId: string): Promise<Report>;
   /** Grounded assistant: sends only the session, question and locale (never state or sources). */
   askAssistant(req: AssistantRequest): Promise<AssistantAnswer>;
+  /** Published practicals that this client can run (see CatalogEntry). */
+  listExperiments(): Promise<CatalogEntry[]>;
+}
+
+/**
+ * One practical this client can actually run: published by the source of truth (bundled content
+ * offline, `GET /experiments` online) AND supported by the bundled simulation definition. Only real
+ * catalog facts; nothing (such as a duration) is invented.
+ */
+export interface CatalogEntry {
+  experimentId: string;
+  experimentNumber: number;
+  titleKey: string;
+  unitNumber: number;
+  unitTitleKey: string;
+  modes: Mode[];
+  locales: Locale[];
+  definitionVersion: string;
 }
 
 export interface AssistantRequest {

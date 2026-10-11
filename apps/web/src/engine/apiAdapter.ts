@@ -1,6 +1,8 @@
 import {
   ActionResultSchema,
   ApiErrorSchema,
+  ExperimentSummarySchema,
+  type ExperimentSummary,
   AssistantAnswerSchema,
   NotebookSaveResultSchema,
   PreviewResultSchema,
@@ -10,6 +12,7 @@ import {
   type CreateSessionRequest,
 } from '@vlab/contracts';
 import { EngineError, type EngineAdapter } from './adapter';
+import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
 
 /**
@@ -26,6 +29,20 @@ export interface ApiAdapterDeps {
 interface Parser<T> {
   safeParse(value: unknown): { success: true; data: T } | { success: false };
 }
+
+/** An array of contract-valid experiment summaries (any invalid item rejects the response). */
+const SummaryListParser: Parser<ExperimentSummary[]> = {
+  safeParse: (value) => {
+    if (!Array.isArray(value)) return { success: false };
+    const items: ExperimentSummary[] = [];
+    for (const item of value) {
+      const parsed = ExperimentSummarySchema.safeParse(item);
+      if (!parsed.success) return { success: false };
+      items.push(parsed.data);
+    }
+    return { success: true, data: items };
+  },
+};
 
 export const createApiEngineAdapter = ({
   baseUrl,
@@ -108,6 +125,18 @@ export const createApiEngineAdapter = ({
       ),
     getReport: (sessionId) =>
       request('GET', `/sessions/${encodeURIComponent(sessionId)}/report`, ReportSchema),
+    listExperiments: async () => {
+      const summaries = await request('GET', '/experiments', SummaryListParser);
+      // Only published (active) practicals that this client's bundled simulation can run.
+      return summaries
+        .filter((s) => s.active && s.experimentId === definition.experimentId)
+        .map((s) => ({
+          ...bundledCatalogEntry(definition),
+          modes: s.modes,
+          locales: s.locales,
+          definitionVersion: s.definitionVersion,
+        }));
+    },
     askAssistant: ({ sessionId, question, locale }) => {
       const body: AssistantAskRequest = { sessionId, question, locale };
       return request('POST', '/assistant/ask', AssistantAnswerSchema, body);

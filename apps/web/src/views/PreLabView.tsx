@@ -1,7 +1,13 @@
 import { useTranslation } from 'react-i18next';
+import { FlowSteps } from '../components/FlowSteps';
 import { SourceList } from '../components/SourceList';
+import { Icon } from '../components/ui/Icon';
+import { PageHeader } from '../components/ui/PageHeader';
 import { definition } from '../engine/content';
 import { useSession } from '../store/StoreProvider';
+
+/** Limit from the API contract (PreLabSubmission: answers and prediction max 2000 characters). */
+const MAX_ANSWER = 2000;
 
 /** PreLabPanel: answers live in the session store; no answers are shown before submission. */
 export function PreLabView() {
@@ -17,120 +23,182 @@ export function PreLabView() {
   const solute = definition.chemicals.find(
     (c) => c.id === definition.expectedResults.soluteChemicalId,
   );
-  const allAcknowledged = checklist.every((r) => preLab.acknowledgedSafety.includes(r.id));
+  const acknowledged = checklist.filter((r) => preLab.acknowledgedSafety.includes(r.id)).length;
+  const allAcknowledged = acknowledged === checklist.length;
+  const answered = definition.preLabQuestions.filter(
+    (q) => (preLab.answers[q.id] ?? '').trim() !== '',
+  ).length;
+  const predicted = preLab.prediction.trim() !== '';
 
   return (
     <section className="view view--prelab" aria-labelledby="prelab-title">
-      <h1 id="prelab-title">{t('ui.prelab.title')}</h1>
+      <PageHeader id="prelab-title" title={t('ui.prelab.title')} lead={t('ui.prelab.lead')} />
+      <FlowSteps current="prelab" />
       <p className="notice" role="note">
         {t('ui.prelab.demo_note')}
       </p>
 
-      <div className="two-column">
-        <section className="card" aria-labelledby="pl-aim">
-          <h2 id="pl-aim">{t('ui.overview.aims')}</h2>
-          <ul>
-            {aims.map((o) => (
-              <li key={o.id}>{t(o.textKey)}</li>
-            ))}
-          </ul>
-          <h3>{t('ui.prelab.theory')}</h3>
-          <ul>
-            {definition.prerequisites.map((p) => (
-              <li key={p.id}>{t(p.textKey)}</li>
-            ))}
-          </ul>
-          <ol className="calculation">
-            {definition.expectedResults.calculations.map((c) => (
-              <li key={c.id}>{t(c.stepKey)}</li>
-            ))}
-          </ol>
-          <SourceList
-            refs={[
-              ...definition.prerequisites.flatMap((p) => p.sourceRefs),
-              ...definition.expectedResults.calculations.flatMap((c) => c.result.sourceRefs),
-            ]}
-          />
-        </section>
-        <section className="card" aria-labelledby="pl-apparatus">
-          <h2 id="pl-apparatus">{t('ui.prelab.apparatus_checklist')}</h2>
-          <ul>
-            {definition.apparatus
-              .filter((a) => a.role !== 'distractor')
-              .map((a) => (
-                <li key={a.id}>{t(a.nameKey)}</li>
-              ))}
-          </ul>
-          <h3>{t('ui.overview.chemical')}</h3>
-          <p>{solute && t(solute.nameKey)}</p>
-          <h3>{t('ui.prelab.precautions')}</h3>
-          <ul>
-            {precautions.map((r) => (
-              <li key={r.id}>{t(r.textKey)}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="card" aria-labelledby="pl-questions">
-        <h2 id="pl-questions">{t('ui.prelab.questions')}</h2>
-        <p className="hint-text">{t('ui.prelab.answers_after_submission')}</p>
-        {definition.preLabQuestions.map((q, i) => (
-          <div className="field" key={q.id}>
-            <label htmlFor={`prelab-${q.id}`}>
-              {i + 1}. {t(q.promptKey)}
-            </label>
-            <textarea
-              id={`prelab-${q.id}`}
-              rows={3}
-              value={preLab.answers[q.id] ?? ''}
-              onChange={(e) => saveAnswer(q.id, e.target.value)}
-            />
-          </div>
-        ))}
-        <SourceList refs={definition.preLabQuestions.flatMap((q) => q.sourceRefs)} />
-        <div className="field">
-          <label htmlFor="prelab-prediction">{t('ui.prelab.prediction')}</label>
-          <textarea
-            id="prelab-prediction"
-            rows={2}
-            value={preLab.prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-          />
-        </div>
-      </section>
-
-      <section className="card card--safety" aria-labelledby="pl-safety">
-        <h2 id="pl-safety">{t('ui.prelab.safety_ack')}</h2>
-        <fieldset>
-          <legend>{t('ui.prelab.safety_ack_legend')}</legend>
-          {checklist.map((r) => (
-            <div className="check" key={r.id}>
-              <input
-                type="checkbox"
-                id={`ack-${r.id}`}
-                checked={preLab.acknowledgedSafety.includes(r.id)}
-                onChange={() => toggleAck(r.id)}
+      <div className="content-layout content-layout--prelab">
+        <div className="content-layout__main">
+          <section className="card" aria-labelledby="pl-questions">
+            <h2 id="pl-questions" className="card__title">
+              <Icon name="clipboard" /> {t('ui.prelab.questions')}
+            </h2>
+            <p className="hint-text">{t('ui.prelab.answers_after_submission')}</p>
+            {definition.preLabQuestions.map((q, i) => {
+              const value = preLab.answers[q.id] ?? '';
+              return (
+                <div className="field" key={q.id}>
+                  <label htmlFor={`prelab-${q.id}`}>
+                    {i + 1}. {t(q.promptKey)}
+                  </label>
+                  <textarea
+                    id={`prelab-${q.id}`}
+                    rows={3}
+                    maxLength={MAX_ANSWER}
+                    value={value}
+                    aria-describedby={`prelab-${q.id}-count`}
+                    onChange={(e) => saveAnswer(q.id, e.target.value)}
+                  />
+                  <span id={`prelab-${q.id}-count`} className="field__counter">
+                    {t('ui.prelab.characters', { count: value.length, max: MAX_ANSWER })}
+                  </span>
+                </div>
+              );
+            })}
+            <SourceList refs={definition.preLabQuestions.flatMap((q) => q.sourceRefs)} />
+            <div className="field">
+              <label htmlFor="prelab-prediction">{t('ui.prelab.prediction')}</label>
+              <textarea
+                id="prelab-prediction"
+                rows={2}
+                maxLength={MAX_ANSWER}
+                value={preLab.prediction}
+                onChange={(e) => setPrediction(e.target.value)}
               />
-              <label htmlFor={`ack-${r.id}`}>{t(r.textKey)}</label>
             </div>
-          ))}
-        </fieldset>
-        <SourceList refs={checklist.flatMap((r) => r.sourceRefs)} />
-        <p
-          className={allAcknowledged ? 'status status--ok' : 'status status--pending'}
-          aria-live="polite"
-        >
-          {t(allAcknowledged ? 'ui.prelab.safety_complete' : 'ui.prelab.safety_incomplete')}
-        </p>
-      </section>
+          </section>
+
+          <section className="card card--safety" aria-labelledby="pl-safety">
+            <h2 id="pl-safety" className="card__title">
+              <Icon name="shield" /> {t('ui.prelab.safety_ack')}
+            </h2>
+            <fieldset className="checklist">
+              <legend>{t('ui.prelab.safety_ack_legend')}</legend>
+              {checklist.map((r) => (
+                <div className="check check--card" key={r.id}>
+                  <input
+                    type="checkbox"
+                    id={`ack-${r.id}`}
+                    checked={preLab.acknowledgedSafety.includes(r.id)}
+                    onChange={() => toggleAck(r.id)}
+                  />
+                  <label htmlFor={`ack-${r.id}`}>{t(r.textKey)}</label>
+                </div>
+              ))}
+            </fieldset>
+            <SourceList refs={checklist.flatMap((r) => r.sourceRefs)} />
+            <p
+              className={allAcknowledged ? 'status status--ok' : 'status status--pending'}
+              aria-live="polite"
+            >
+              {t(allAcknowledged ? 'ui.prelab.safety_complete' : 'ui.prelab.safety_incomplete')}
+            </p>
+          </section>
+        </div>
+
+        <aside className="content-layout__side" aria-labelledby="pl-ready">
+          <section className="card readiness">
+            <h2 id="pl-ready" className="card__title">
+              <Icon name="check" /> {t('ui.prelab.readiness')}
+            </h2>
+            <ul className="readiness__list">
+              <li className={allAcknowledged ? 'readiness__item is-done' : 'readiness__item'}>
+                <span>{t('ui.prelab.ready_safety')}</span>
+                <span className="readiness__value">
+                  {acknowledged} / {checklist.length}
+                </span>
+                <span className="meter" aria-hidden="true">
+                  <span
+                    className="meter__fill"
+                    style={{ width: `${(acknowledged / checklist.length) * 100}%` }}
+                  />
+                </span>
+                <span className="readiness__note">{t('ui.prelab.ready_safety_note')}</span>
+              </li>
+              <li className={answered > 0 ? 'readiness__item is-done' : 'readiness__item'}>
+                <span>{t('ui.prelab.ready_questions')}</span>
+                <span className="readiness__value">
+                  {answered} / {definition.preLabQuestions.length}
+                </span>
+                <span className="readiness__note">{t('ui.prelab.ready_optional')}</span>
+              </li>
+              <li className={predicted ? 'readiness__item is-done' : 'readiness__item'}>
+                <span>{t('ui.prelab.ready_prediction')}</span>
+                <span className="readiness__value">
+                  {t(predicted ? 'ui.prelab.done' : 'ui.prelab.not_yet')}
+                </span>
+                <span className="readiness__note">{t('ui.prelab.ready_optional')}</span>
+              </li>
+            </ul>
+          </section>
+
+          <section className="card" aria-labelledby="pl-aim">
+            <h2 id="pl-aim" className="card__title">
+              <Icon name="compass" /> {t('ui.overview.aims')}
+            </h2>
+            <ul>
+              {aims.map((o) => (
+                <li key={o.id}>{t(o.textKey)}</li>
+              ))}
+            </ul>
+            <h3>{t('ui.prelab.theory')}</h3>
+            <ul>
+              {definition.prerequisites.map((p) => (
+                <li key={p.id}>{t(p.textKey)}</li>
+              ))}
+            </ul>
+            <ol className="calculation">
+              {definition.expectedResults.calculations.map((c) => (
+                <li key={c.id}>{t(c.stepKey)}</li>
+              ))}
+            </ol>
+            <SourceList
+              refs={[
+                ...definition.prerequisites.flatMap((p) => p.sourceRefs),
+                ...definition.expectedResults.calculations.flatMap((c) => c.result.sourceRefs),
+              ]}
+            />
+          </section>
+          <section className="card" aria-labelledby="pl-apparatus">
+            <h2 id="pl-apparatus" className="card__title">
+              <Icon name="flask" /> {t('ui.prelab.apparatus_checklist')}
+            </h2>
+            <ul className="item-list">
+              {definition.apparatus
+                .filter((a) => a.role !== 'distractor')
+                .map((a) => (
+                  <li key={a.id}>{t(a.nameKey)}</li>
+                ))}
+            </ul>
+            <h3>{t('ui.overview.chemical')}</h3>
+            <p>{solute && t(solute.nameKey)}</p>
+            <h3>{t('ui.prelab.precautions')}</h3>
+            <ul>
+              {precautions.map((r) => (
+                <li key={r.id}>{t(r.textKey)}</li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      </div>
 
       <nav className="view-nav" aria-label={t('ui.nav.steps')}>
         <button type="button" className="button" onClick={() => navigate('overview')}>
           {t('ui.nav.back_overview')}
         </button>
         <button type="button" className="button button--primary" onClick={() => navigate('mode')}>
-          {t('ui.nav.to_mode')}
+          {t('ui.nav.to_mode')} <Icon name="arrow" size={18} />
         </button>
       </nav>
     </section>

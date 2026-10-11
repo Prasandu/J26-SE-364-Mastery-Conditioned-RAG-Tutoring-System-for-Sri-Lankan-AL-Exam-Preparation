@@ -1,6 +1,6 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-11 (Slice 6b: Groq primary + OpenAI fallback routing; no live calls)_
+_Last updated: 2026-10-11 (M3 Slice C: development-only admin drafts; Slice D awaits approval)_
 
 ## Slices
 
@@ -15,6 +15,63 @@ _Last updated: 2026-10-11 (Slice 6b: Groq primary + OpenAI fallback routing; no 
 | 6a    | OpenAI generation provider + comparison harness       | ✅ code done; live run blocked (no API key) |
 | 6b    | Groq primary, OpenAI paid fallback (failover router)  | ✅ code done; live runs blocked (no keys)   |
 | 6     | Integration + evaluation                              | pending                                     |
+| M3-B  | Student UI/UX redesign                                | ✅ done                                     |
+| M3-C  | Development-only admin drafts + safe PDF ingestion    | ✅ done (no publishing; D31)                |
+
+## M3 Slice C — development-only admin practical management (2026-10-11, D31)
+
+- **Scope:** draft ingestion, editing, validation and review only. There is no publishing,
+  catalog replacement or rollback, and no change to `content/` or the student API.
+- **Access:** `LAB_ADMIN_MODE=disabled` by default (every `/admin/dev/*` route returns 404).
+  Startup refuses `development` admin mode outside `LAB_ENVIRONMENT=development`, and refuses a
+  data directory inside `content/`. Each request must pass a server-side loopback guard: loopback
+  peer, loopback `Host`, no proxy headers, and any `Origin` loopback and allow-listed. Every
+  failure returns 404; no header or frontend route grants access.
+- **Ingestion:** raw `application/pdf` body streamed with a 25 MB cap, `%PDF-` signature,
+  400-page limit. Text is extracted in an isolated `python -I` subprocess with a timeout and
+  output cap (plus rlimits on POSIX). Encrypted, corrupt and no-text PDFs are rejected. Nothing
+  is sent to any external model.
+- **Extraction:** deterministic headings (`Experiment N`, sections, `Unit NN`). Every field keeps
+  its PDF pages, and issues are recorded (missing fields, heuristic apparatus/chemical split,
+  reconstructed headings, duplicates). On the private handbook it found 45/45 practicals with
+  Experiment 4 correct. This was a manual check; the handbook is never used in tests.
+- **Drafts:** stored privately in `data/admin/` (gitignored), with content-addressed write-once
+  uploads, atomic writes, integrity hashes and optimistic versions. The states are `draft`,
+  `needs_review`, `content_approved` and `archived`. Approval needs complete content, valid
+  provenance, no blocking duplicates and every field reviewed. Editing a field resets its review.
+  `runnable` is always `false`, and simulation is always `simulation_pending`.
+- **UI:** a lazily loaded Admin area (overview, drafts, import with progress, review form). It is
+  shown only when the API reports admin mode; in offline mode it is absent.
+- **Browser check** (headless Chrome, real API in admin mode, synthetic PDF uploaded through the
+  file input; desktop 1440, tablet 834, mobile 390): 11 states, with no horizontal overflow, no
+  low-contrast text and no unlabelled controls. This check found that a filesystem error
+  (Windows path length) escaped as an unhandled 500 without CORS headers. Storage errors now map
+  to `admin_storage_error`, with a regression test.
+- **Tests:** total 677 → 778 (contracts 59, simulation-core 168, web 183, API 312, content 56).
+
+## M3 Slice B — student UI/UX redesign (2026-10-11)
+
+- **Design system:** `apps/web/src/styles/*` (tokens, base, layout, components, views, workbench, print).
+  - Teal/blue/neutral tokens with AA text contrast and 44 px controls.
+  - A Sinhala-specific line height.
+  - Breakpoints at 1360, 1100, 1024, 900 and 760 px.
+  - Inline SVG icons; no new dependency.
+- **New pages and components:** a dashboard (new landing page), a searchable and filterable library fed by the real catalog, `FlowSteps`, `PageHeader` and `StatusMessage`.
+- **Catalog data:** `EngineAdapter.listExperiments()` returns bundled content offline, or in API mode `GET /experiments` limited to active practicals this client can run. No contract change was needed beyond exporting the `ExperimentSummary` type.
+- **Redesigned pages:**
+  - **Overview:** two-column layout with a target banner.
+  - **Pre-lab:** a readiness panel stating the real requirements, and the 2000-character contract limits.
+  - **Mode selection:** cards with support levels.
+  - **Workbench:** a three-zone responsive grid, a larger scene, session chips, and no hidden panels.
+  - **Report:** a summary with score tiles, a table of recorded actions and observations, and the hazard warnings recorded during the session; the deterministic scores and evidence are unchanged.
+  - **Assistant:** chat-style, showing the current exchange only, with no history.
+- **3D scene (presentation only):** lighting, a bench with depth, selection and on-bench rings, a pointer cursor, and the camera aimed at the bench. Scene state still comes only from the engine's scene model.
+- **Honesty fixes:**
+  - The invented "About 20–30 minutes" duration was removed (decision 5).
+  - The dashboard shows no progress history (none exists).
+  - The assistant entry states that it needs a session.
+- **Browser check** (headless Chrome over DevTools, offline engine; desktop 1440, tablet 834, mobile 390): 22 page states, with no horizontal overflow, no text below AA contrast and no unlabelled controls, after fixing an overflow from visually-hidden spans and `1fr` grid tracks, plus a teal contrast shortfall (4.39 → above 4.5). Not browser-tested: the API-mode assistant with a real provider (no live calls), and real touch devices.
+- **Tests:** web 135 → 156. Two UI tests were updated deliberately for the new landing page and header; 15 new student-UI tests were added.
 
 ## Slice 6b — dual-provider generation (D30)
 
@@ -164,6 +221,9 @@ Node 22.13.0 · pnpm 10.34.6 · uv 0.13.0 · Python 3.12.15 · TypeScript 6.0.3 
 - **Verifier overhead:** about 260 ms per action (one Node process per call).
 - **Offline adapter secrecy:** the browser holds the full state, and the assistant is unavailable offline.
 - **Answer cache:** in process and unbounded across restarts (not persisted).
+- **Admin extraction is heuristic:** apparatus/chemical splitting and headings need human
+  review. Scanned (image-only) PDFs are rejected (no OCR). On Windows, the worker has a
+  timeout and an output cap but no memory rlimit.
 - **Bundle size:** above Vite's default warning; this is documented debt. Provisional parameters and Sinhala strings await teacher review. F17–F21 are open.
 - **OneDrive and Windows:**
   - pytest and ruff caches report `Access is denied`.
@@ -173,8 +233,8 @@ Node 22.13.0 · pnpm 10.34.6 · uv 0.13.0 · Python 3.12.15 · TypeScript 6.0.3 
 
 ## Next smallest task
 
-Rotate the two exposed keys, then put the new values only in the untracked `.env` or the server
-environment. Run `check_providers.py --confirm-live` (one request per provider), then the resumable
-Groq evaluation (`evaluate_generation.py --provider groq --confirm-live`) and the OpenAI comparison.
-Record the aggregate gates, and have a teacher review the Sinhala outputs before any model or
-routing claim.
+Await separate approval for Slice D. Prerequisites before any publishing work: real
+authentication and roles (D31 forbids reusing development admin access), a reviewed decision on
+how a content-approved draft becomes a versioned definition with a validated simulation, audit
+logging and rollback design, and teacher review of the Sinhala content. Separately: rotate the
+exposed provider keys before any authorised live Groq evaluation.

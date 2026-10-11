@@ -11,3 +11,4 @@ export * from './notebook';
 export * from './api';
 export * from './verifier';
 export * from './assistant';
+export * from './admin';

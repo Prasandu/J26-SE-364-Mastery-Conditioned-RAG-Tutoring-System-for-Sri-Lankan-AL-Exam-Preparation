@@ -18,6 +18,9 @@ const COLORS = {
   label: '#fffdf5',
   stopper: '#4a4a4a',
   bottle: '#e8f1f2',
+  selection: '#0f9d8a',
+  onBench: '#1f6f8b',
+  benchEdge: '#bfb8a6',
 };
 
 const POSITIONS: Record<string, [number, number, number]> = {
@@ -51,9 +54,35 @@ function Pickable({
         e.stopPropagation();
         onPick(item.id);
       }}
+      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = '';
+      }}
     >
+      <SelectionRing item={item} />
       {children}
     </group>
+  );
+}
+
+/**
+ * Presentation-only state cue on the bench surface: a teal ring for the item the learner has
+ * selected or focused, a faint ring for apparatus the engine has accepted onto the bench.
+ */
+function SelectionRing({ item }: { item: SceneItem }) {
+  if (!item.highlighted && !item.onBench) return null;
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
+      <ringGeometry args={item.highlighted ? [0.62, 0.74, 40] : [0.64, 0.68, 40]} />
+      <meshBasicMaterial
+        color={item.highlighted ? COLORS.selection : COLORS.onBench}
+        transparent
+        opacity={item.highlighted ? 0.95 : 0.55}
+      />
+    </mesh>
   );
 }
 
@@ -230,16 +259,24 @@ export default function LabScene({
   return (
     <Canvas
       frameloop="demand"
-      camera={{ position: [0, 4, 6.5], fov: 45 }}
+      camera={{ position: [0, 4.2, 6.8], fov: 42 }}
       aria-label={label}
       role="img"
+      onCreated={({ camera }) => camera.lookAt(0, 0.4, 0)}
       dpr={[1, 2]}
     >
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[4, 6, 4]} intensity={0.9} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[9, 5]} />
-        <meshStandardMaterial color={COLORS.bench} />
+      <color attach="background" args={['#eef5f7']} />
+      <hemisphereLight args={['#ffffff', '#c9d6dc', 0.55]} />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[4, 7, 5]} intensity={1.05} />
+      <directionalLight position={[-5, 3, -2]} intensity={0.35} />
+      <mesh position={[0, -0.16, 0]}>
+        <boxGeometry args={[9.4, 0.3, 5.4]} />
+        <meshStandardMaterial color={COLORS.benchEdge} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
+        <planeGeometry args={[9.2, 5.2]} />
+        <meshStandardMaterial color={COLORS.bench} roughness={0.85} />
       </mesh>
       {model.items.map((item) => (
         <Pickable

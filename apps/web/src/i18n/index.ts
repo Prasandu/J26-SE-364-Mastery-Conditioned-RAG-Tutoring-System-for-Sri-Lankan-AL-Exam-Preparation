@@ -1,17 +1,19 @@
 import { TranslationMetaSchema, type Locale, type TranslationMeta } from '@vlab/contracts';
 import i18next, { type i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import enAdmin from '../../../../content/locales/en/admin.json';
 import enCommon from '../../../../content/locales/en/common.json';
 import enExp04 from '../../../../content/locales/en/exp04.json';
 import enUi from '../../../../content/locales/en/ui.json';
+import siAdmin from '../../../../content/locales/si/admin.json';
 import siCommon from '../../../../content/locales/si/common.json';
 import siExp04 from '../../../../content/locales/si/exp04.json';
 import siUi from '../../../../content/locales/si/ui.json';
 
 type LocaleFile = { _meta: unknown } & Record<string, unknown>;
 export const LOCALE_FILES = {
-  en: { ui: enUi, exp04: enExp04, common: enCommon },
-  si: { ui: siUi, exp04: siExp04, common: siCommon },
+  en: { ui: enUi, exp04: enExp04, common: enCommon, admin: enAdmin },
+  si: { ui: siUi, exp04: siExp04, common: siCommon, admin: siAdmin },
 } satisfies Record<Locale, Record<string, LocaleFile>>;
 export type LocaleFileName = keyof (typeof LOCALE_FILES)['en'];
 

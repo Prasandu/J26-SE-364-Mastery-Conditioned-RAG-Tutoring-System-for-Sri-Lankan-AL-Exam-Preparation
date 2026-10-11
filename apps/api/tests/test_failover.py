@@ -170,6 +170,14 @@ def test_both_failing_is_a_safe_error_and_no_retry_loop() -> None:
     assert len(g.calls) == 1 and len(o.calls) == 1  # each provider at most once, never revisited
 
 
+def test_both_rate_limited_has_sanitized_aggregate_category() -> None:
+    g, o = groq(rate_limited()), oai(rate_limited())
+    with pytest.raises(GenerationUnavailable) as caught:
+        router(g, o).generate_validated(REQUEST)
+    assert caught.value.kind == "all_providers_rate_limited"
+    assert len(g.calls) == 1 and len(o.calls) == 1
+
+
 def test_router_rejects_duplicate_or_single_providers() -> None:
     with pytest.raises(ValueError):
         FailoverGenerationProvider([groq(VALID)])

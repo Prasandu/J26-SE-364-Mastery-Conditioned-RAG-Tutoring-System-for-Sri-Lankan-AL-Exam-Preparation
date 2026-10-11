@@ -1,0 +1,142 @@
+import {
+  AdminDraftDetailSchema,
+  AdminDraftSummarySchema,
+  AdminImportResultSchema,
+  AdminStatusSchema,
+  ApiErrorSchema,
+  type AdminDraftDetail,
+  type AdminDraftSummary,
+  type AdminDraftUpdateRequest,
+  type AdminImportResult,
+  type AdminReviewRequest,
+  type AdminStatus,
+} from '@vlab/contracts';
+import { EngineError } from '../engine/adapter';
+
+/**
+ * Client for the development-only admin API. The server alone decides access (loopback-only,
+ * 404 otherwise); this client never assumes it is authorised.
+ */
+export type UploadProgress = (fraction: number) => void;
+export type Uploader = (
+  url: string,
+  file: Blob,
+  onProgress: UploadProgress,
+) => Promise<{ status: number; body: unknown }>;
+
+export interface AdminClient {
+  status(): Promise<AdminStatus>;
+  drafts(): Promise<AdminDraftSummary[]>;
+  draft(id: string): Promise<AdminDraftDetail>;
+  upload(
+    kind: 'guide' | 'single',
+    file: File,
+    onProgress: UploadProgress,
+  ): Promise<AdminImportResult>;
+  update(id: string, req: AdminDraftUpdateRequest): Promise<AdminDraftDetail>;
+  validate(id: string): Promise<AdminDraftDetail>;
+  review(id: string, req: AdminReviewRequest): Promise<AdminDraftDetail>;
+}
+
+interface Parser<T> {
+  safeParse(value: unknown): { success: true; data: T } | { success: false };
+}
+
+const listOf = <T>(item: Parser<T>): Parser<T[]> => ({
+  safeParse: (value) => {
+    if (!Array.isArray(value)) return { success: false };
+    const out: T[] = [];
+    for (const v of value) {
+      const parsed = item.safeParse(v);
+      if (!parsed.success) return { success: false };
+      out.push(parsed.data);
+    }
+    return { success: true, data: out };
+  },
+});
+
+/** Browser upload with real progress events (fetch cannot report upload progress). */
+export const xhrUploader: Uploader = (url, file, onProgress) =>
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-Type', 'application/pdf');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let body: unknown;
+      try {
+        body = JSON.parse(xhr.responseText);
+      } catch {
+        body = null;
+      }
+      resolve({ status: xhr.status, body });
+    };
+    xhr.onerror = () => reject(new EngineError('network_unavailable', null, true));
+    xhr.send(file);
+  });
+
+const toResult = <T>(status: number, body: unknown, schema: Parser<T>): T => {
+  if (status < 200 || status >= 300) {
+    const parsed = ApiErrorSchema.safeParse(body);
+    if (!parsed.success) throw new EngineError('invalid_response', status, status >= 500);
+    const e = parsed.data.error;
+    throw new EngineError(e.code, status, e.retryable, e.details ?? {}, e.correlationId);
+  }
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) throw new EngineError('invalid_response', status, false);
+  return parsed.data;
+};
+
+export const createAdminClient = ({
+  baseUrl,
+  fetch: fetchImpl,
+  uploader = xhrUploader,
+}: {
+  baseUrl: string;
+  fetch?: typeof fetch;
+  uploader?: Uploader;
+}): AdminClient => {
+  const doFetch = fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
+  const root = `${baseUrl.replace(/\/+$/, '')}/admin/dev`;
+  const call = async <T>(
+    method: string,
+    path: string,
+    schema: Parser<T>,
+    body?: unknown,
+  ): Promise<T> => {
+    let response: Response;
+    try {
+      response = await doFetch(`${root}${path}`, {
+        method,
+        headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+    } catch {
+      throw new EngineError('network_unavailable', null, true);
+    }
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch {
+      json = null;
+    }
+    return toResult(response.status, json, schema);
+  };
+  const id = (draftId: string) => `/drafts/${encodeURIComponent(draftId)}`;
+
+  return {
+    status: () => call('GET', '/status', AdminStatusSchema),
+    drafts: () => call('GET', '/drafts', listOf(AdminDraftSummarySchema)),
+    draft: (draftId) => call('GET', id(draftId), AdminDraftDetailSchema),
+    upload: async (kind, file, onProgress) => {
+      const url = `${root}/imports?kind=${kind}&filename=${encodeURIComponent(file.name)}`;
+      const { status, body } = await uploader(url, file, onProgress);
+      return toResult(status, body, AdminImportResultSchema);
+    },
+    update: (draftId, req) => call('PUT', id(draftId), AdminDraftDetailSchema, req),
+    validate: (draftId) => call('POST', `${id(draftId)}/validate`, AdminDraftDetailSchema),
+    review: (draftId, req) => call('POST', `${id(draftId)}/review`, AdminDraftDetailSchema, req),
+  };
+};

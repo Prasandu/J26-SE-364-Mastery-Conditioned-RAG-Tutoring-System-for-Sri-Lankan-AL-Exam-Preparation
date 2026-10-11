@@ -80,13 +80,48 @@ LAB_EMBEDDING_PROVIDER=e5_local LAB_LLM_PROVIDER=failover LAB_GROQ_MODEL=qwen/qw
   uv run --project apps/api --group rag uvicorn app.main:app --app-dir apps/api --port 8000
 # Connectivity check: exactly one Groq and one OpenAI request (opt-in)
 uv run --project apps/api python scripts/ingest/check_providers.py --confirm-live
-# Opt-in live evaluation of ONE provider (direct, resumable; --provider groq|openai)
+# M2 dry run: Groq-only controlled subset, no requests and no key required
 UV_PROJECT_ENVIRONMENT=C:/Users/<you>/.venvs/vlab-rag HF_HUB_OFFLINE=1 uv run --project apps/api --group rag \
-  python scripts/ingest/evaluate_generation.py --runs 2 --confirm-live
+  python scripts/ingest/evaluate_generation.py --provider groq --subset m2-groq --runs 2 --track both
+# M2 live run (only after separate approval; direct Groq, no OpenAI fallback)
+UV_PROJECT_ENVIRONMENT=C:/Users/<you>/.venvs/vlab-rag HF_HUB_OFFLINE=1 uv run --project apps/api --group rag \
+  python scripts/ingest/evaluate_generation.py --provider groq --subset m2-groq --runs 2 --track both \
+  --confirm-live
+# Full evaluation is opt-in and substantially larger; it does not change the M2 subset
+UV_PROJECT_ENVIRONMENT=C:/Users/<you>/.venvs/vlab-rag HF_HUB_OFFLINE=1 uv run --project apps/api --group rag \
+  python scripts/ingest/evaluate_generation.py --provider groq --subset full --runs 2 --track both \
+  --confirm-live
 ```
+
+The M2 subset contains 10 cases and, with the default two runs and two tracks, permits at most
+44 provider requests per model: 4 smoke requests plus 40 track requests. Injection-screened
+cases do not make provider requests. The dry run prints the conservative input-token estimate
+and output ceiling (`44 × LAB_LLM_MAX_OUTPUT_TOKENS`, currently 22,528 tokens at the default
+512-token limit). It pauses on a rate limit (exit 3), aborts on a critical smoke/quality failure,
+and resumes from the provider/model/track/run/case checkpoint without recording the rate-limited
+request. Use `--fresh` only when intentionally starting a new private checkpoint.
+
+The live command is Groq-only and bypasses the failover router; it never enables OpenAI fallback.
+Generated answers remain in gitignored private rows only. Aggregate summaries retain metrics and
+sanitized diagnostic categories, while excluding questions, answers, credentials, headers, and
+raw provider responses. Sinhala cases remain `teacher_review_pending` until reviewed.
 
 `data/` (chunk text, embeddings, evaluation output) is private derived research data: it is
 gitignored and must never be committed, served or deployed.
+
+## Development admin (local only, optional)
+
+Imports practical PDFs into private drafts for review. It never publishes and never changes the
+student library. Disabled by default; see D31 in `docs/DECISIONS.md`.
+
+```bash
+# apps/api, development only, bound to loopback with no proxy in front
+LAB_ENVIRONMENT=development LAB_ADMIN_MODE=development uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+# apps/web in API mode (VITE_ENGINE_ADAPTER=api), then open "Admin (development)"
+```
+
+Uploads and drafts are stored in gitignored `data/admin/`. Requests that are not local (a
+foreign `Host` or `Origin`, or proxy headers) get 404.
 
 ## Quality gate
 

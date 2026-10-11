@@ -115,3 +115,17 @@ gpt-6.1-sol as paid technical fallback). Failover happens only on 429, connectio
 is final. Circuit and fallback budget are process-local (no database; shared state would be
 needed for several processes). Logs carry metadata only (no question, answer or
 evidence). The assistant is advisory and never grades (D28).
+
+## Development admin drafts (M3 Slice C, D31)
+
+```text
+browser (Admin area, lazy chunk) --raw PDF / JSON--> /admin/dev/* (FastAPI)
+  access.py   loopback guard -> 404 on any failure; disabled mode -> 404
+  ingest.py   size/signature checks -> isolated `python -I pdf_worker.py` (timeout, caps)
+  extract.py  deterministic Experiment/section headings, per-field PDF pages, issues
+  drafts.py   validation (completeness, provenance, duplicates, review, simulation_pending)
+  store.py    data/admin/{uploads,imports,drafts} (atomic, integrity hash, versions)
+```
+
+Admin modules import nothing from the simulation or student session path. The only read from
+the student side is the published experiment list, used for duplicate information.

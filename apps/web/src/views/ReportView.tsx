@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { SessionNav } from '../components/SessionNav';
 import { SourceList } from '../components/SourceList';
-import { formatQuantity } from '../lib/format';
+import { Icon } from '../components/ui/Icon';
+import { StatusMessage } from '../components/ui/StatusMessage';
+import { formatQuantity, formatSeconds } from '../lib/format';
 import { useSession } from '../store/StoreProvider';
 
 /**
@@ -47,10 +49,15 @@ export function ReportView() {
   const report = useSession((s) => s.report);
   const engine = useSession((s) => s.engine);
   const load = useSession((s) => s.loadReport);
+  const session = useSession((s) => s.session);
+  const log = useSession((s) => s.log);
 
   const header = (
     <header className="workbench__bar">
-      <h1 id="report-title">{t('ui.report.title')}</h1>
+      <div className="workbench__heading">
+        <p className="page-header__eyebrow">{t(engine.definition.titleKey)}</p>
+        <h1 id="report-title">{t('ui.report.title')}</h1>
+      </div>
       <SessionNav current="report" />
     </header>
   );
@@ -59,17 +66,29 @@ export function ReportView() {
       <section className="view" aria-labelledby="report-title">
         {header}
         <ConnectionBanner />
-        <p role="status">{t(`ui.report.status.${report.status}`)}</p>
-        {report.status === 'error' && (
-          <button type="button" className="button" onClick={() => void load()}>
-            {t('ui.connection.retry')}
-          </button>
-        )}
+        <StatusMessage
+          tone={
+            report.status === 'error' ? 'error' : report.status === 'loading' ? 'loading' : 'info'
+          }
+          title={t(`ui.report.status.${report.status}`)}
+          action={
+            report.status === 'error' ? (
+              <button type="button" className="button" onClick={() => void load()}>
+                {t('ui.connection.retry')}
+              </button>
+            ) : undefined
+          }
+        />
       </section>
     );
   }
   const r = report.data;
   const m = r.measurements;
+  const events = session?.events ?? [];
+  // Safety messages already shown live during the session (always visible), de-duplicated.
+  const safetyWarnings = [
+    ...new Set(log.filter((l) => l.kind === 'safety').map((l) => l.messageKey)),
+  ];
   const e4 = engine.definition.expectedResults;
   // A provisional parameter changed a numeric result (e.g. residue or parallax), not just a threshold.
   const provisionalEffect = [...r.errorSummary.unresolved, ...r.errorSummary.recovered].some(
@@ -82,10 +101,30 @@ export function ReportView() {
   return (
     <section className="view view--report" aria-labelledby="report-title">
       {header}
-      <p className="report__label">
-        {t('ui.report.result_label')}:{' '}
-        <strong>{r.overall === null ? '—' : `${r.overall} / 100`}</strong>
-      </p>
+      <section className="report-summary" aria-label={t('ui.report.summary')}>
+        <div className="report-summary__overall">
+          <p className="report__label">
+            {t('ui.report.result_label')}:{' '}
+            <strong>{r.overall === null ? '—' : `${r.overall} / 100`}</strong>
+          </p>
+          <p className="report-summary__completion">{t(`ui.report.completion_${r.completion}`)}</p>
+        </div>
+        <ul className="score-tiles">
+          {r.categories.map((c) => (
+            <li key={c.category} className="score-tile">
+              <span className="score-tile__label">{t(`ui.report.category.${c.category}`)}</span>
+              <span className="score-tile__value">
+                {c.score === null ? t('ui.report.not_assessed') : `${c.score} / 100`}
+              </span>
+              {c.score !== null && (
+                <span className="meter" aria-hidden="true">
+                  <span className="meter__fill" style={{ width: `${c.score}%` }} />
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
       <p className="notice" role="note">
         {t(r.disclaimerKey)}
       </p>
@@ -227,6 +266,66 @@ export function ReportView() {
         )}
         {r.validity.purityRisks.length > 0 && (
           <p className="text-warning">{t('ui.canvas.warning')}</p>
+        )}
+      </section>
+
+      <section className="card" aria-labelledby="rep-actions">
+        <h2 id="rep-actions" className="card__title">
+          <Icon name="clipboard" /> {t('ui.report.actions')}
+        </h2>
+        <p className="hint-text">{t('ui.report.actions_help')}</p>
+        {events.length === 0 ? (
+          <p className="hint-text">{t('ui.log.empty')}</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="report-table report-table--actions">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">{t('ui.report.col_action')}</th>
+                  <th scope="col">{t('ui.report.col_outcome')}</th>
+                  <th scope="col">{t('ui.report.col_observations')}</th>
+                  <th scope="col">{t('ui.report.col_time')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((e) => (
+                  <tr key={e.seq} className={e.accepted ? undefined : 'is-rejected'}>
+                    <td>{e.seq}</td>
+                    <td>
+                      {t(`exp04.action.${e.actionType}`)}
+                      {e.actor === 'system' && (
+                        <span className="tag">{t('ui.log.actor.system')}</span>
+                      )}
+                    </td>
+                    <td>{t(e.accepted ? 'ui.log.accepted' : 'ui.log.rejected')}</td>
+                    <td>
+                      {[
+                        ...e.observations.map((o) => t(`exp04.observation.${o}`)),
+                        ...e.measurements.map(
+                          (mm) =>
+                            `${t(`exp04.measurement.${mm.id}`)}: ${formatQuantity(mm.quantity, locale)}`,
+                        ),
+                      ].join(' · ') || '—'}
+                    </td>
+                    <td>{t('ui.log.seconds', { seconds: formatSeconds(e.elapsedMs, locale) })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <h3>{t('ui.report.safety_warnings')}</h3>
+        {safetyWarnings.length === 0 ? (
+          <p className="hint-text">{t('ui.report.none')}</p>
+        ) : (
+          <ul className="warning-list">
+            {safetyWarnings.map((key) => (
+              <li key={key}>
+                <Icon name="alert" size={16} /> {t(key)}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

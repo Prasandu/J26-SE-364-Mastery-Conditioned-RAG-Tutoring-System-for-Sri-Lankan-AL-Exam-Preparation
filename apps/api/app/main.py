@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ValidationError
 
+from app.admin.routes import register_admin_routes
 from app.content import load_experiments
 from app.contracts import ContractRegistry
 from app.errors import ApiError, correlation_id_var, install_error_handlers, new_correlation_id
@@ -202,6 +203,9 @@ def create_app(
         sid: str, request: Request, who: Principal = Depends(principal)
     ) -> dict[str, Any]:
         return await lab(request).service.report(who, session_id(sid))
+
+    # Development-only practical administration (404 unless enabled and verified local).
+    register_admin_routes(app, lab, read_json)
 
     @app.post("/assistant/ask")
     async def ask_assistant(

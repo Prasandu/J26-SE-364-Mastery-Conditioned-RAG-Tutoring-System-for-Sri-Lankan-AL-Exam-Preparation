@@ -2,7 +2,7 @@
 
 Usage (repository root, rag environment):
   uv run --project apps/api --group rag python scripts/ingest/evaluate_generation.py \
-      [--provider openai|groq] [--model M ...] [--runs 2] [--max-cases N] [--track both] \
+      [--provider groq] [--subset m2-groq] [--model M ...] [--runs 2] [--track both] \
       [--price-input-per-mtok X --price-output-per-mtok Y] [--fresh] --confirm-live
 
 Without --confirm-live it prints the plan and a conservative token/cost estimate and sends
@@ -17,6 +17,10 @@ run, case). A 429 pauses the run (exit 3) and is never recorded as a quality res
 command to resume without repeating completed calls. Retrieval, chunking, embeddings, top-k,
 sources and gold labels are unchanged. Only aggregate metrics are meant for the committed report;
 the keys and request headers are never stored or printed.
+
+The default `m2-groq` subset is ten fixed cases (six supported bilingual cases and four
+English/Sinhala refusal or adversarial cases). Use `--subset full` only for the complete
+dataset; `--max-cases` remains an additional deterministic cap.
 """
 
 import argparse
@@ -50,7 +54,9 @@ from app.rag.generation_eval import (  # noqa: E402
     load_cases,
     oracle_evidence,
     public_row,
+    request_budget,
     run_case,
+    select_cases,
     summarize,
 )
 from app.rag.groq_provider import GroqGenerationProvider  # noqa: E402
@@ -99,9 +105,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--provider", choices=tuple(MODELS), default="openai")
+    parser.add_argument("--provider", choices=tuple(MODELS), default="groq")
     parser.add_argument("--model", action="append", help="repeatable; default: provider candidates")
     parser.add_argument("--runs", type=int, default=2)
+    parser.add_argument(
+        "--subset",
+        choices=("m2-groq", "full"),
+        default="m2-groq",
+        help="deterministic case set; full preserves the complete evaluation workload",
+    )
     parser.add_argument("--max-cases", type=int, default=None)
     parser.add_argument("--track", choices=("both", "oracle", "e2e"), default="both")
     parser.add_argument("--confirm-live", action="store_true")
@@ -114,6 +126,7 @@ def main() -> int:
     if unknown:
         parser.error(f"unknown {args.provider} model(s): {', '.join(unknown)}")
     tracks = ["oracle", "e2e"] if args.track == "both" else [args.track]
+    smoke_track = "e2e" if "e2e" in tracks else tracks[0]
 
     settings = Settings()
     secret = settings.groq_api_key if args.provider == "groq" else settings.openai_api_key
@@ -131,10 +144,14 @@ def main() -> int:
     repo.set_active(version.knowledge_version)
     retriever = Retriever(repo, E5LocalProvider(version.embedding_model, version.model_revision))
     gold = ROOT / "content" / "knowledge" / "gold"
-    cases = load_cases(gold / "retrieval-gold.v1.json", gold / "generation-adversarial.v1.json")
-    smoke_cases = [_case(cases, cid) for cid in SMOKE]  # always the full smoke set
-    if args.max_cases:
-        cases = cases[: args.max_cases]
+    all_cases = load_cases(
+        gold / "retrieval-gold.v1.json", gold / "generation-adversarial.v1.json"
+    )
+    try:
+        cases = select_cases(all_cases, args.subset, args.max_cases)
+    except ValueError as exc:
+        parser.error(str(exc))
+    smoke_cases = [c for c in cases if c.case_id in SMOKE]
     labels = {c.case_id: c.labels for c in cases}
     by_id = {c.chunk_id: c for c in chunks}
 
@@ -162,6 +179,21 @@ def main() -> int:
             )
         )
         for cid, t in model_cases
+    )
+    smoke_in = sum(
+        estimate_input_tokens(
+            GenerationRequest(
+                case.question,
+                case.language,
+                tuple(
+                    Evidence(c.chunk_id, c.heading, c.text)
+                    for c in plan[(case.case_id, smoke_track)]
+                ),
+                session,
+            )
+        )
+        for case in smoke_cases
+        if plan[(case.case_id, smoke_track)] and not _screened(cases, case.case_id)
     )
     print(f"Provider: {args.provider} (direct; failover is bypassed for evaluation)")
     print(
@@ -203,10 +235,15 @@ def main() -> int:
             f"output <= {est_out:,} tokens; cost "
             + (f"${estimate:.2f}" if estimate is not None else "n/a (pass --price-* per 1M)")
         )
+    budget = request_budget(len(cases), len(smoke_cases), tracks, args.runs, settings.llm_max_output_tokens)
     print(
-        f"Full run per model (no checkpoint): {len(SMOKE)} smoke + {len(model_cases) * args.runs}"
+        f"Full run per model (no checkpoint): <= {budget['requests']} requests "
+        f"({len(smoke_cases)} smoke + {len(model_cases) * args.runs} planned track calls)"
     )
-    print(f"Conservative input tokens per full run: <= {per_run_in * args.runs:,}")
+    print(
+        f"Conservative input tokens per full run: <= "
+        f"{smoke_in + per_run_in * args.runs:,} (including smoke)"
+    )
     if not args.confirm_live:
         print("Dry run: nothing was sent. Add --confirm-live (and the provider key) to run.")
         return 0
@@ -242,7 +279,7 @@ def main() -> int:
                 break
             if checkpoint.done(args.provider, model, track, run, case.case_id):
                 continue
-            ev = planned if planned is not None else evidence_for(case, "e2e")
+            ev = planned if planned is not None else evidence_for(case, smoke_track)
             row = run_case(
                 provider,
                 model=model,

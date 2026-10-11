@@ -21,6 +21,7 @@ from app.rag.generation import (
     build_generation_provider,
 )
 from app.rag.openai_provider import OpenAIGenerationProvider
+from app.rag.provider_errors import classify
 from app.rag.retrieval import Retriever
 from app.settings import ConfigurationError
 from tests.conftest import build_app, lab, load_fixture, make_settings, start
@@ -161,6 +162,32 @@ def test_request_is_stateless_tool_free_and_strict() -> None:
     assert fmt["schema"]["additionalProperties"] is False
     assert set(fmt["schema"]["required"]) == {"decision", "answer", "claims"}
     assert len(kwargs["input"]) == 1 and kwargs["input"][0]["role"] == "user"
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [("insufficient_quota", "quota_exhausted"), ("billing_hard_limit_reached", "quota_exhausted")],
+)
+def test_429_quota_errors_are_distinguished_without_provider_text(code: str, expected: str) -> None:
+    error = openai.RateLimitError(
+        "secret provider detail",
+        response=httpx.Response(429, request=REQ),
+        body={"error": {"code": code, "message": "do not log this"}},
+    )
+    failure = classify(error)
+    assert failure.kind == expected
+    assert "secret" not in str(failure)
+
+
+def test_429_without_quota_code_remains_transient_rate_limit() -> None:
+    error = openai.RateLimitError(
+        "secret provider detail",
+        response=httpx.Response(429, request=REQ),
+        body={"error": {"code": "rate_limit_exceeded", "message": "do not log this"}},
+    )
+    failure = classify(error)
+    assert failure.kind == "rate_limited"
+    assert failure.fallback_allowed
 
 
 def test_payload_contains_only_question_locale_public_state_and_selected_chunks() -> None:

@@ -17,6 +17,7 @@ from app.rag.generation import (
 _MODEL_UNAVAILABLE_CODES = frozenset(
     {"model_not_found", "model_decommissioned", "model_deprecated", "model_not_available"}
 )
+_QUOTA_CODES = frozenset({"insufficient_quota", "billing_hard_limit_reached", "quota_exceeded"})
 
 
 def retry_after_seconds(exc: Exception) -> float | None:
@@ -37,6 +38,21 @@ def retry_after_seconds(exc: Exception) -> float | None:
     return None
 
 
+def _provider_error_code(exc: Exception) -> str | None:
+    """Read only the structured provider error code; never retain provider text."""
+    code = getattr(exc, "code", None)
+    if isinstance(code, str):
+        return code.casefold()
+    body = getattr(exc, "body", None)
+    if isinstance(body, dict):
+        error = body.get("error")
+        if isinstance(error, dict):
+            code = error.get("code") or error.get("type")
+            if isinstance(code, str):
+                return code.casefold()
+    return None
+
+
 def classify(exc: Exception) -> GenerationFailure:
     """A typed failure whose `kind` decides whether failover may continue (FALLBACK_KINDS)."""
     if isinstance(exc, openai.APITimeoutError):
@@ -45,6 +61,8 @@ def classify(exc: Exception) -> GenerationFailure:
         # Connection refused/reset, or the transport ended without a response.
         return GenerationUnavailable("provider connection failed", kind="connection")
     if isinstance(exc, openai.RateLimitError):
+        if _provider_error_code(exc) in _QUOTA_CODES:
+            return GenerationUnavailable("provider quota exhausted", kind="quota_exhausted")
         return GenerationRateLimited("provider rate limit", retry_after=retry_after_seconds(exc))
     code = getattr(exc, "code", None)
     if isinstance(exc, openai.NotFoundError) or code in _MODEL_UNAVAILABLE_CODES:

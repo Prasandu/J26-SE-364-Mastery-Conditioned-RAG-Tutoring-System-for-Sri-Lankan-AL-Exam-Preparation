@@ -1,0 +1,32 @@
+@media print {
+  .app-header,
+  .session-nav,
+  .no-print,
+  .connection-banner,
+  .flow-steps {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .app-main {
+    padding: 0;
+    max-width: none;
+  }
+
+  .card,
+  .panel,
+  .report-summary,
+  .report__meta {
+    border-color: #999;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .score progress,
+  .meter {
+    display: none;
+  }
+}

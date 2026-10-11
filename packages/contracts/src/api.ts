@@ -21,6 +21,8 @@ export const ExperimentSummarySchema = z.strictObject({
   locales: z.array(LocaleSchema),
 });
 
+export type ExperimentSummary = z.infer<typeof ExperimentSummarySchema>;
+
 export const ExperimentDetailsSchema = z.strictObject({
   summary: ExperimentSummarySchema,
   /** Canonical, validated definition (public content). */
@@ -107,6 +109,17 @@ export const ApiErrorCodeSchema = z.enum([
   'verifier_timeout',
   'verifier_invalid_response',
   'assistant_unavailable',
+  'unsupported_media_type',
+  'document_invalid',
+  'document_encrypted',
+  'document_too_many_pages',
+  'document_no_text',
+  'extraction_timeout',
+  'extraction_failed',
+  'multiple_practicals',
+  'draft_version_conflict',
+  'review_transition_invalid',
+  'admin_storage_error',
   'assistant_timeout',
   'assistant_rate_limited',
   'assistant_invalid_response',

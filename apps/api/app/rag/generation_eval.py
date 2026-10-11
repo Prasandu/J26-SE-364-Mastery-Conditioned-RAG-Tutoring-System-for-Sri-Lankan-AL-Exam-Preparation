@@ -31,6 +31,22 @@ from app.rag.generation import (
     response_json_schema,
 )
 
+# Fixed M2 smoke-quality subset: six supported bilingual cases and four refusal cases.
+# Keep the full gold/adversarial datasets unchanged; this is only an execution selection.
+M2_GROQ_CASE_IDS = (
+    "mass-en",
+    "mass-si",
+    "funnel-en",
+    "funnel-si",
+    "mark-en",
+    "mark-si",
+    "kmno4-en",
+    "kmno4-si",
+    "false-premise-30g-en",
+    "hidden-state-errors-si",
+)
+EVALUATION_SUBSETS = {"m2-groq": M2_GROQ_CASE_IDS}
+
 #: Validation categories that mean the *model* produced unsupported or malformed content.
 CLAIM_SUPPORT_FAILURES = frozenset(
     {
@@ -93,6 +109,45 @@ def load_cases(gold_path: Path, adversarial_path: Path) -> list[Case]:
         for c in raw["cases"]
     ]
     return cases
+
+
+def select_cases(
+    cases: Sequence[Case],
+    subset: str = "full",
+    max_cases: int | None = None,
+) -> list[Case]:
+    """Select a deterministic execution subset without changing the source gold sets."""
+    if subset == "full":
+        selected = list(cases)
+    else:
+        try:
+            ids = EVALUATION_SUBSETS[subset]
+        except KeyError as exc:
+            raise ValueError(f"unknown evaluation subset: {subset}") from exc
+        by_id = {case.case_id: case for case in cases}
+        missing = [case_id for case_id in ids if case_id not in by_id]
+        if missing:
+            raise ValueError(f"subset {subset} is missing case(s): {', '.join(missing)}")
+        selected = [by_id[case_id] for case_id in ids]
+    if max_cases is not None:
+        if max_cases < 1:
+            raise ValueError("max_cases must be positive")
+        selected = selected[:max_cases]
+    return selected
+
+
+def request_budget(
+    case_count: int,
+    smoke_count: int,
+    tracks: Sequence[str],
+    runs: int,
+    max_output_tokens: int,
+) -> dict[str, int]:
+    """Return the conservative maximum request and output-token budget."""
+    if min(case_count, smoke_count, runs, max_output_tokens) < 0:
+        raise ValueError("budget inputs cannot be negative")
+    requests = smoke_count + case_count * len(tracks) * runs
+    return {"requests": requests, "output_tokens": requests * max_output_tokens}
 
 
 def oracle_evidence(

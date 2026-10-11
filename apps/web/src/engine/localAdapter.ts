@@ -14,6 +14,7 @@ import {
   type SimulationContext,
 } from '@vlab/simulation-core';
 import { EngineError, type EngineAdapter, type SubmitRequest } from './adapter';
+import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
 
 /**
@@ -163,6 +164,8 @@ export const createLocalEngineAdapter = (deps: LocalAdapterDeps = {}): EngineAda
       if (!result.ok) throw new EngineError('report_not_available', 409, false);
       return result.report;
     },
+
+    listExperiments: async () => [bundledCatalogEntry(ctx.definition)],
 
     // The grounded assistant needs the server's private knowledge base; offline it is unavailable.
     askAssistant: async () => {

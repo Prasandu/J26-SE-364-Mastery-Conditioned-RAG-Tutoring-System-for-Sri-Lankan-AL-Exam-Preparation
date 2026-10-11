@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import {
   ActionResultSchema,
+  AdminDraftDetailSchema,
+  AdminDraftSummarySchema,
+  AdminDraftUpdateRequestSchema,
+  AdminImportResultSchema,
+  AdminImportSchema,
+  AdminReviewRequestSchema,
+  AdminStatusSchema,
   AssistantAnswerSchema,
   AssistantAskRequestSchema,
   ActionSubmissionSchema,
@@ -52,6 +59,13 @@ export const SCHEMAS = {
   'api-health.v1.json': HealthSchema,
   'api-assistant-ask-request.v1.json': AssistantAskRequestSchema,
   'api-assistant-answer.v1.json': AssistantAnswerSchema,
+  'api-admin-status.v1.json': AdminStatusSchema,
+  'api-admin-draft-summary.v1.json': AdminDraftSummarySchema,
+  'api-admin-draft-detail.v1.json': AdminDraftDetailSchema,
+  'api-admin-import.v1.json': AdminImportSchema,
+  'api-admin-import-result.v1.json': AdminImportResultSchema,
+  'api-admin-draft-update-request.v1.json': AdminDraftUpdateRequestSchema,
+  'api-admin-review-request.v1.json': AdminReviewRequestSchema,
   'verifier-request.v1.json': VerifierRequestSchema,
   'verifier-response.v1.json': VerifierResponseSchema,
 } as const;

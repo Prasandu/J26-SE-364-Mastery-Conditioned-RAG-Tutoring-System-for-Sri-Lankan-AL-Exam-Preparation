@@ -1,0 +1,234 @@
+/* ---------- development admin ---------- */
+.admin-warning {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--warning-line);
+  border-left-width: 5px;
+  border-radius: var(--radius);
+  background: var(--warning-soft);
+  color: var(--ink-900);
+}
+
+.admin-warning .icon {
+  color: var(--warning);
+  margin-top: 0.15em;
+}
+
+.admin-tabs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.admin-tabs li + li {
+  margin-top: 0;
+}
+
+.nav-link:disabled {
+  color: var(--ink-300);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.stat-strip--admin {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.mode-options--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--brand-700);
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone--active {
+  border-color: var(--brand-600);
+  background: var(--brand-50);
+}
+
+/* The real file input is visually hidden; show its focus on the drop zone. */
+.dropzone:has(+ input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.dropzone__title {
+  font-weight: 650;
+  font-size: var(--text-lg);
+}
+
+.requirements {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--text-sm);
+}
+
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.upload-progress p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.badge--draft,
+.badge--muted {
+  background: var(--surface-2);
+  color: var(--ink-700);
+  border: 1px solid var(--line);
+}
+
+.badge--needs_review,
+.badge--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badge--content_approved {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.badge--archived {
+  background: var(--canvas);
+  color: var(--ink-500);
+  text-decoration: line-through;
+}
+
+.admin-table td {
+  vertical-align: middle;
+}
+
+.admin-review__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.admin-review__head h2 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-1);
+}
+
+.admin-review__meta {
+  margin: 0;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.admin-field.is-missing > textarea,
+.admin-field.is-missing > input {
+  border-color: var(--warning-line);
+  background: var(--warning-soft);
+}
+
+.admin-field__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-field__head > label {
+  font-weight: 650;
+}
+
+.admin-field__review {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.admin-field__pages {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-700);
+}
+
+.admin-field__pages input {
+  max-width: 14rem;
+}
+
+.admin-field__issue {
+  display: flex;
+  gap: var(--space-1);
+  align-items: flex-start;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--warning);
+}
+
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-actions .button {
+  width: 100%;
+}
+
+.warning-list li.is-blocking {
+  background: var(--danger-soft);
+}
+
+.simulation-card {
+  border-left: 5px solid var(--line-strong);
+}
+
+@media (max-width: 760px) {
+  .mode-options--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-tabs ul {
+    border-radius: var(--radius);
+    width: 100%;
+  }
+
+  .admin-field__review {
+    margin-left: 0;
+  }
+}

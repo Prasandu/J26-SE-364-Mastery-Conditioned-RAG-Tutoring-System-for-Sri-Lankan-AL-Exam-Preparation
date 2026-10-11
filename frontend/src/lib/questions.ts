@@ -42,3 +42,17 @@ function walk(
 export function isMcq(item: Answerable): boolean {
   return item.mode === "mcq" && (item.question.options?.length ?? 0) > 0;
 }
+
+/** The option labels this paper uses, e.g. 1..5 or A..E. */
+export function optionLabels(paper: PaperDetail): string[] {
+  for (const item of answerableQuestions(paper)) {
+    if (item.question.options?.length) {
+      return item.question.options.map((option) => option.label);
+    }
+  }
+  return [];
+}
+
+export function hasMcq(paper: PaperDetail): boolean {
+  return paper.sections.some((section) => section.answer_mode === "mcq");
+}

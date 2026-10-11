@@ -32,7 +32,7 @@ export function PaperDetail() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/" className="text-sm text-teal-700 hover:underline">
+        <Link to="/" className="text-sm text-brand-700 hover:underline">
           &larr; All papers
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>

@@ -40,6 +40,20 @@ class ReviewItemOut(BaseModel):
     marker: str | None
 
 
+class ReviewScriptOut(BaseModel):
+    """One submitted script a teacher can mark, with how far they have got."""
+
+    attempt_id: uuid.UUID
+    student_ref: str
+    paper_id: int
+    paper_title: str
+    submitted_at: datetime | None
+    total_points: int
+    reviewed_points: int
+    machine_score: float | None
+    max_score: float
+
+
 class ReviewDecisionIn(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 

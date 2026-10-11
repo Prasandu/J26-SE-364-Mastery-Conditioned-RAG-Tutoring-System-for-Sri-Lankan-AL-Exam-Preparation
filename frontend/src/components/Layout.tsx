@@ -1,26 +1,24 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-import { BackendStatus } from "./BackendStatus";
+import { Backdrop } from "./Backdrop";
+import { Footer } from "./Footer";
+import { NavBar } from "./NavBar";
 
 export function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="font-semibold tracking-tight">
-              A/L Chemistry Assessment
-            </Link>
-            <Link to="/review" className="text-sm text-slate-500 hover:text-teal-700">
-              Teacher review
-            </Link>
-          </div>
-          <BackendStatus />
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
+    <div className="relative flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <Backdrop />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:shadow"
+      >
+        Skip to content
+      </a>
+      <NavBar />
+      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }

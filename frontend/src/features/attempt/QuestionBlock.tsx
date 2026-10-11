@@ -40,7 +40,7 @@ export function QuestionBlock({
       <legend className="sr-only">Question {label}</legend>
 
       <div className="flex gap-3">
-        <span className="mt-0.5 w-12 shrink-0 font-mono text-sm text-teal-700">{label}</span>
+        <span className="mt-0.5 w-12 shrink-0 font-mono text-sm text-brand-700">{label}</span>
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap text-sm text-slate-800">{question.text}</p>
           {question.max_marks !== null && (

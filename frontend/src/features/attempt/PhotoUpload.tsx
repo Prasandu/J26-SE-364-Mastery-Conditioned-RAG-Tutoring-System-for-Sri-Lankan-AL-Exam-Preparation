@@ -5,6 +5,9 @@ import { ApiError } from "@/api/client";
 import type { AnswerOut } from "@/api/types";
 import { Button } from "@/components/Button";
 import { ErrorBox } from "@/components/ErrorBox";
+import type { Step } from "@/components/Steps";
+import { Steps } from "@/components/Steps";
+import { spell, useElapsed } from "@/hooks/useElapsed";
 
 interface Props {
   attemptId: string;
@@ -25,6 +28,7 @@ export function PhotoUpload({ attemptId, questionId, disabled, onRead }: Props) 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState(0);
+  const seconds = useElapsed(busy);
 
   async function send(file: File) {
     if (!IMAGE_TYPES.includes(file.type)) {
@@ -70,7 +74,7 @@ export function PhotoUpload({ attemptId, questionId, disabled, onRead }: Props) 
           disabled={disabled || busy}
           onClick={() => input.current?.click()}
         >
-          {busy ? "Reading your handwriting..." : "Upload a photo of your answer"}
+          {busy ? "Reading..." : "Upload a photo of your answer"}
         </Button>
         {pages > 0 && (
           <span className="text-xs text-slate-500">
@@ -79,9 +83,30 @@ export function PhotoUpload({ attemptId, questionId, disabled, onRead }: Props) 
         )}
       </div>
 
+      {busy && (
+        <div className="rounded-xl bg-slate-50 p-4">
+          <Steps steps={readingSteps(seconds)} />
+          <p className="mt-3 text-xs text-slate-500">
+            Reading handwriting takes longer than a typed answer, often 10 to 20 seconds.
+          </p>
+        </div>
+      )}
+
       {error && <ErrorBox message={error} hint={hintFor(error)} />}
     </div>
   );
+}
+
+function readingSteps(seconds: number): Step[] {
+  return [
+    {
+      label: "Photo sent",
+      detail: seconds > 0 ? `${spell(seconds)} so far` : undefined,
+      state: seconds >= 1 ? "done" : "doing",
+    },
+    { label: "Reading your handwriting", state: seconds >= 1 ? "doing" : "waiting" },
+    { label: "Putting the text in the box for you to check", state: "waiting" },
+  ];
 }
 
 function hintFor(message: string): string | undefined {

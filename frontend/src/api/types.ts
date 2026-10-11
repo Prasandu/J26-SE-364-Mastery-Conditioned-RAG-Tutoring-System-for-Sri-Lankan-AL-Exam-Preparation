@@ -172,3 +172,30 @@ export interface Agreement {
   blind_checker_vs_teacher: MarkerAgreement;
   blind_ai_vs_teacher: MarkerAgreement;
 }
+
+export interface ReviewScript {
+  attempt_id: string;
+  student_ref: string;
+  paper_id: number;
+  paper_title: string;
+  submitted_at: string | null;
+  total_points: number;
+  reviewed_points: number;
+  machine_score: number | null;
+  max_score: number;
+}
+
+export interface SheetAnswer {
+  question_id: number;
+  label: string;
+  option: string | null;
+  state: "filled" | "blank" | "unsure";
+  already: string | null;
+}
+
+export interface SheetRead {
+  read_by: string;
+  questions_found: number;
+  options_found: number;
+  answers: SheetAnswer[];
+}

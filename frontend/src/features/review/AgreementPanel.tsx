@@ -75,7 +75,7 @@ function Row({ label, value }: { label: string; value: MarkerAgreement }) {
     <tr>
       <td className="py-2 text-slate-700">{label}</td>
       <td className="py-2 text-right tabular-nums text-slate-500">{value.judged}</td>
-      <td className="py-2 text-right tabular-nums text-teal-700">{value.agree}</td>
+      <td className="py-2 text-right tabular-nums text-brand-700">{value.agree}</td>
       <td className="py-2 text-right tabular-nums text-rose-700">{value.disagree}</td>
       <td className="py-2 text-right font-medium tabular-nums">
         {value.agreement_pct === null ? "-" : `${value.agreement_pct.toFixed(1)}%`}

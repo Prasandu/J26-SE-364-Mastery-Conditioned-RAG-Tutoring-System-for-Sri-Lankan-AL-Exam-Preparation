@@ -1,5 +1,12 @@
 import { request } from "./client";
-import type { Agreement, PointStatus, ReviewDecision, ReviewItem, ReviewedPoint } from "./types";
+import type {
+  Agreement,
+  PointStatus,
+  ReviewDecision,
+  ReviewItem,
+  ReviewScript,
+  ReviewedPoint,
+} from "./types";
 import { readTeacherKey } from "@/lib/teacher";
 
 // Every review endpoint needs the teacher key.
@@ -37,4 +44,14 @@ export function decidePoint(resultId: number, decision: ReviewDecision): Promise
     body: decision,
     headers: headers(),
   });
+}
+
+export function reviewScripts(paperId?: number, signal?: AbortSignal): Promise<ReviewScript[]> {
+  const query = paperId === undefined ? "" : `?paper_id=${paperId}`;
+  return request<ReviewScript[]>(`/review/scripts${query}`, { headers: headers(), signal });
+}
+
+/** Every marking point of one script, decided or not. */
+export function scriptPoints(attemptId: string, signal?: AbortSignal): Promise<ReviewItem[]> {
+  return request<ReviewItem[]>(`/review/attempts/${attemptId}`, { headers: headers(), signal });
 }

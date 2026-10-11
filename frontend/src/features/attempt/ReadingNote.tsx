@@ -19,7 +19,7 @@ export function ReadingNote({ answer }: { answer: AnswerOut }) {
         Anything marked <span className="font-mono">[?]</span> could not be read.
       </p>
       {answer.corrected_by_student && (
-        <p className="mt-1 text-teal-700">You have corrected this transcription.</p>
+        <p className="mt-1 text-brand-700">You have corrected this transcription.</p>
       )}
     </div>
   );

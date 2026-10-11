@@ -10,8 +10,10 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
 import { Spinner } from "@/components/Spinner";
-import { answerableQuestions, isMcq } from "@/lib/questions";
+import { answerableQuestions, hasMcq, isMcq, optionLabels } from "@/lib/questions";
 
+import { AnswerSheetUpload } from "./AnswerSheetUpload";
+import { MarkingProgress } from "./MarkingProgress";
 import { Progress } from "./Progress";
 import { QuestionBlock } from "./QuestionBlock";
 import { ResultList } from "./ResultList";
@@ -39,13 +41,11 @@ export function AttemptPage() {
   const [submitting, setSubmitting] = useState(false);
   const inFlight = useRef(0);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function load() {
+  const reload = useCallback(
+    async (signal?: AbortSignal) => {
       try {
-        const loaded = await getAttempt(attemptId, controller.signal);
-        const itsPaper = await getPaper(loaded.paper_id, controller.signal);
+        const loaded = await getAttempt(attemptId, signal);
+        const itsPaper = await getPaper(loaded.paper_id, signal);
         setAttempt(loaded);
         setPaper(itsPaper);
         const answered = loaded.questions.filter((question) => question.answer);
@@ -65,15 +65,19 @@ export function AttemptPage() {
           ),
         );
       } catch (cause) {
-        if (!controller.signal.aborted) {
+        if (!signal?.aborted) {
           setLoadError(cause instanceof ApiError ? cause.message : String(cause));
         }
       }
-    }
+    },
+    [attemptId],
+  );
 
-    void load();
+  useEffect(() => {
+    const controller = new AbortController();
+    void reload(controller.signal);
     return () => controller.abort();
-  }, [attemptId]);
+  }, [reload]);
 
   const send = useCallback(
     async (questionId: number, answer: AnswerInput) => {
@@ -169,7 +173,7 @@ export function AttemptPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to={`/papers/${paper.id}`} className="text-sm text-teal-700 hover:underline">
+        <Link to={`/papers/${paper.id}`} className="text-sm text-brand-700 hover:underline">
           &larr; Back to the paper
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>
@@ -180,18 +184,16 @@ export function AttemptPage() {
         </p>
       </div>
 
-      {locked ? (
+      {marking ? (
+        <MarkingProgress attempt={attempt} />
+      ) : locked ? (
         <Card>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="font-medium">Result</h2>
-            {marking ? (
-              <Spinner label="Marking your written answers..." />
-            ) : (
-              <p className="text-2xl font-semibold tabular-nums">
-                {attempt.score ?? "-"}{" "}
-                <span className="text-base font-normal text-slate-400">/ {attempt.max_score}</span>
-              </p>
-            )}
+            <h2 className="text-lg font-medium tracking-tight">Result</h2>
+            <p className="text-3xl font-semibold tabular-nums text-brand-700">
+              {attempt.score ?? "-"}{" "}
+              <span className="text-base font-normal text-slate-400">/ {attempt.max_score}</span>
+            </p>
           </div>
           <div className="mt-4">
             <ResultList attempt={attempt} />
@@ -212,6 +214,14 @@ export function AttemptPage() {
               </div>
             </div>
           </Card>
+
+          {hasMcq(paper) && (
+            <AnswerSheetUpload
+              attemptId={attemptId}
+              optionLabels={optionLabels(paper)}
+              onSaved={() => void reload()}
+            />
+          )}
 
           <Card>
             {items.map((item, index) => {

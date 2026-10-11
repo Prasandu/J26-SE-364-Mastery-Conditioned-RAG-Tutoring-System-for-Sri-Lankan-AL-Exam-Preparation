@@ -10,7 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import PointStatus
-from app.schemas.review import AgreementOut, ReviewDecisionIn, ReviewedPointOut, ReviewItemOut
+from app.schemas.review import (
+    AgreementOut,
+    ReviewDecisionIn,
+    ReviewedPointOut,
+    ReviewItemOut,
+    ReviewScriptOut,
+)
 from app.security import require_teacher
 from app.services import review
 
@@ -32,6 +38,17 @@ def review_queue(
     return [review.to_review_item(result) for result in review.review_queue(
         db, paper_id=paper_id, status=status, limit=limit, offset=offset
     )]  # fmt: skip
+
+
+@router.get("/scripts", response_model=list[ReviewScriptOut])
+def review_scripts(
+    paper_id: int | None = None,
+    limit: int = Query(default=50, ge=1, le=review.MAX_QUEUE_PAGE),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """Submitted scripts a teacher can mark right through, with how far they have got."""
+    return review.review_scripts(db, paper_id=paper_id, limit=limit, offset=offset)
 
 
 @router.get("/attempts/{attempt_id}", response_model=list[ReviewItemOut])

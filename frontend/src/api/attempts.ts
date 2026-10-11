@@ -1,5 +1,5 @@
 import { request } from "./client";
-import type { AnswerInput, AnswerOut, Attempt } from "./types";
+import type { AnswerInput, AnswerOut, Attempt, SheetRead } from "./types";
 
 export function startAttempt(
   paperId: number,
@@ -44,5 +44,22 @@ export function uploadAnswerImage(
   return request<AnswerOut>(`/attempts/${attemptId}/answers/${questionId}/images`, {
     method: "POST",
     form,
+  });
+}
+
+export function readAnswerSheet(attemptId: string, file: File): Promise<SheetRead> {
+  const form = new FormData();
+  form.append("file", file);
+  return request<SheetRead>(`/attempts/${attemptId}/answer-sheet`, { method: "POST", form });
+}
+
+/** Save several MCQ answers at once, after the student has checked them. */
+export function saveAnswers(
+  attemptId: string,
+  answers: { question_id: number; mcq_option: string }[],
+): Promise<Attempt> {
+  return request<Attempt>(`/attempts/${attemptId}/answers`, {
+    method: "PUT",
+    body: { answers },
   });
 }

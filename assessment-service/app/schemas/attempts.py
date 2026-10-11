@@ -111,3 +111,39 @@ class AttemptOut(BaseModel):
     submitted_at: datetime | None
     marked_at: datetime | None
     questions: list[QuestionResultOut]
+
+
+class SheetAnswerOut(BaseModel):
+    """One row of a read answer sheet, lined up with a real question."""
+
+    question_id: int
+    label: str  # the question as the paper numbers it, e.g. "7"
+    option: str | None  # what the reader saw, empty when it could not tell
+    state: str  # filled, blank or unsure
+    already: str | None  # what this attempt has saved for the question already
+
+
+class SheetReadOut(BaseModel):
+    """What a photographed answer sheet says. Nothing is saved until the student agrees."""
+
+    read_by: str  # "answer sheet" (our own layout) or "detected grid"
+    questions_found: int
+    options_found: int
+    answers: list[SheetAnswerOut]
+
+    @property
+    def filled(self) -> int:
+        return sum(1 for a in self.answers if a.option)
+
+
+class BulkAnswerIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_id: int
+    mcq_option: str = Field(min_length=1, max_length=20)
+
+
+class BulkAnswersIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answers: list[BulkAnswerIn] = Field(min_length=1, max_length=200)

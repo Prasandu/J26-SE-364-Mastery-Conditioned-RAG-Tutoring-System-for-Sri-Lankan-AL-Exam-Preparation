@@ -49,7 +49,7 @@ function QuestionResultRow({ question }: { question: QuestionResult }) {
 
   return (
     <div className="flex gap-3">
-      <span className="w-12 shrink-0 font-mono text-sm text-teal-700">{question.label}</span>
+      <span className="w-12 shrink-0 font-mono text-sm text-brand-700">{question.label}</span>
 
       <div className="min-w-0 flex-1 space-y-2">
         {mcq ? (

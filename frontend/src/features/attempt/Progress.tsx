@@ -19,7 +19,7 @@ export function Progress({ answered, total }: Props) {
         aria-valuemax={total}
       >
         <div
-          className="h-full rounded-full bg-teal-500 transition-[width]"
+          className="h-full rounded-full bg-brand-400 transition-[width]"
           style={{ width: `${percent}%` }}
         />
       </div>

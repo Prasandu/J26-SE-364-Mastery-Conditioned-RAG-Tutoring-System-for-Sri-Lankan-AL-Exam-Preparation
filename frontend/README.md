@@ -44,10 +44,13 @@ src/
     review.ts       review queue, teacher decisions, agreement
   features/         one folder per area of the app
     papers/         browse a paper and its questions
-    attempt/        start, answer, photo upload, submit, see the result
+    attempt/        start, answer, photo upload, answer sheet upload,
+                    marking progress, submit, see the result
     review/         teacher review queue and marker agreement
   components/       small reusable pieces, no API calls inside
-  hooks/            reusable React logic (useApi)
+                    Layout, NavBar, Footer, Hero, Card, Button, Badge,
+                    Steps (what is happening during a wait), Spinner, ErrorBox
+  hooks/            reusable React logic (useApi, useElapsed)
   lib/              plain helpers, no React inside
 tests/              Vitest + React Testing Library
 ```
@@ -59,6 +62,18 @@ Rules:
 - `lib/` has no React imports, so it is easy to unit test.
 - `api/types.ts` must match `assessment-service/app/schemas/`. If the backend changes,
   change that file first.
+
+## Waiting states
+
+Anything the person waits for shows named stages and, where possible, a real count,
+never a bare spinner:
+
+- **marking** - a live bar of marking points decided, the stages being worked through,
+  and the time so far. After 90 seconds it says the AI marker may be busy.
+- **reading a photo** - the three steps the server takes, with a note on how long
+  handwriting usually takes.
+
+`components/Steps.tsx` holds both pieces. Reach for it whenever a new wait appears.
 
 ## Checks before committing
 

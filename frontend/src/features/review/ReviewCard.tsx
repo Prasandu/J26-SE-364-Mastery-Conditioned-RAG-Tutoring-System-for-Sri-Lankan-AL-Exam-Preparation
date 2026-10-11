@@ -70,7 +70,7 @@ export function ReviewCard({ item, busy, onDecide }: Props) {
           onChange={(event) => setComment(event.target.value)}
           maxLength={2000}
           placeholder="Comment for the student (optional)"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
         />
         <div className="flex flex-wrap items-center gap-3">
           <Button disabled={busy} onClick={() => onDecide(true, comment, peeked)}>

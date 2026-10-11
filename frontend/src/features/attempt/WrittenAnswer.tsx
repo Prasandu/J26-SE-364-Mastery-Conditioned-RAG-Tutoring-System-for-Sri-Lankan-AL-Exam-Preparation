@@ -54,7 +54,7 @@ export function WrittenAnswer({ value, disabled, questionId, onSave }: Props) {
       maxLength={20000}
       placeholder="Write your answer here"
       aria-label="Your answer"
-      className="w-full resize-y rounded-lg border border-slate-300 p-3 font-mono text-sm leading-relaxed focus:border-teal-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
+      className="w-full resize-y rounded-lg border border-slate-300 p-3 font-mono text-sm leading-relaxed focus:border-brand-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
     />
   );
 }

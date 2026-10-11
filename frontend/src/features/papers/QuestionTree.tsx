@@ -16,7 +16,7 @@ export function QuestionTree({ questions, parentLabel = "" }: Props) {
         return (
           <li key={question.id}>
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 shrink-0 font-mono text-sm text-teal-700">{label}</span>
+              <span className="mt-0.5 shrink-0 font-mono text-sm text-brand-700">{label}</span>
               <div className="min-w-0 flex-1">
                 <p className="whitespace-pre-wrap text-sm text-slate-800">{question.text}</p>
 

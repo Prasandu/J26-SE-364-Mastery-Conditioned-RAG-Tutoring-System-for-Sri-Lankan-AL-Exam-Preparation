@@ -85,7 +85,7 @@ def get_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
 
 def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: AnswerIn) -> Answer:
     """Create or replace the answer to one question."""
-    attempt = _get_in_progress(db, attempt_id)
+    attempt = get_in_progress(db, attempt_id)
     question = _answerable_question(attempt, question_id)
     _check_answer_kind(question, data)
 
@@ -114,7 +114,7 @@ def add_answer_image(
     reader: AnswerReader,
 ) -> Answer:
     """Save a photo of a handwritten answer and read it into text the student can correct."""
-    attempt = _get_in_progress(db, attempt_id)
+    attempt = get_in_progress(db, attempt_id)
     question = _answerable_question(attempt, question_id)
     if question.section.answer_mode == AnswerMode.MCQ:
         raise ContentValidationError(
@@ -156,7 +156,7 @@ def _differs(confirmed: str, extracted: str) -> bool:
 
 
 def submit_attempt(db: Session, attempt_id: uuid.UUID, cross_check: bool = False) -> Attempt:
-    attempt = _get_in_progress(db, attempt_id)
+    attempt = get_in_progress(db, attempt_id)
     attempt.status = AttemptStatus.SUBMITTED
     attempt.submitted_at = utcnow()
     mark_attempt(attempt, cross_check=cross_check)
@@ -246,7 +246,7 @@ def _question_result(question: Question, answer: Answer | None, submitted: bool)
     )
 
 
-def _get_in_progress(db: Session, attempt_id: uuid.UUID) -> Attempt:
+def get_in_progress(db: Session, attempt_id: uuid.UUID) -> Attempt:
     attempt = get_attempt(db, attempt_id)
     if attempt.status != AttemptStatus.IN_PROGRESS:
         raise ConflictError("This attempt is already submitted")

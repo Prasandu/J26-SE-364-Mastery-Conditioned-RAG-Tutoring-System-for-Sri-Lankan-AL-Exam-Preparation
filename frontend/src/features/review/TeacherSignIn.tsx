@@ -45,7 +45,7 @@ export function TeacherSignIn({ initialRef, onReady }: Props) {
             onChange={(event) => setTeacherRef(event.target.value)}
             maxLength={64}
             placeholder="e.g. T01"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
           />
         </div>
 
@@ -59,7 +59,7 @@ export function TeacherSignIn({ initialRef, onReady }: Props) {
             value={key}
             onChange={(event) => setKey(event.target.value)}
             autoComplete="off"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-teal-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-brand-500 focus:outline-none"
           />
         </div>
 

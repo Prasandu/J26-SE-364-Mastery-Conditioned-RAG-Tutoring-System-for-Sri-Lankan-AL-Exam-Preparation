@@ -9,10 +9,18 @@ from app.ai.judge import AnswerJudge
 from app.api.deps import get_file_store, get_judge, get_reader, get_session_factory
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.schemas.attempts import AnswerIn, AnswerOut, AttemptCreate, AttemptOut
-from app.services import attempts
+from app.schemas.attempts import (
+    AnswerIn,
+    AnswerOut,
+    AttemptCreate,
+    AttemptOut,
+    BulkAnswersIn,
+    SheetReadOut,
+)
+from app.services import attempts, sheets
 from app.services.attempts import SessionFactory
 from app.services.marking import has_pending
+from app.services.omr.reader import SheetError
 from app.services.reader import AnswerReader
 from app.services.storage import FileStore
 
@@ -77,6 +85,32 @@ async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
     if not image:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The uploaded file is empty")
     return image
+
+
+@router.post("/{attempt_id}/answer-sheet", response_model=SheetReadOut)
+async def read_answer_sheet(
+    attempt_id: uuid.UUID,
+    file: UploadFile = File(description="A photo of the filled MCQ answer sheet"),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    """Read a photographed MCQ answer sheet. Nothing is saved.
+
+    The student checks what was read and sends the answers they agree with to
+    PUT .../answers, so a misread bubble never becomes a mark on its own.
+    """
+    image = await _read_upload(file, settings.max_upload_mb)
+    try:
+        return sheets.read_answer_sheet(db, attempt_id, image)
+    except SheetError as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from error
+
+
+@router.put("/{attempt_id}/answers", response_model=AttemptOut)
+def save_answers(attempt_id: uuid.UUID, body: BulkAnswersIn, db: Session = Depends(get_db)):
+    """Save several MCQ answers at once, as confirmed from an answer sheet."""
+    sheets.save_sheet_answers(db, attempt_id, body)
+    return attempts.to_attempt_out(attempts.get_attempt(db, attempt_id))
 
 
 @router.post("/{attempt_id}/submit", response_model=AttemptOut)

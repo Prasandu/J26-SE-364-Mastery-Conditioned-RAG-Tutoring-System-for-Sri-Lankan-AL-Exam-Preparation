@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+/* The project palette. Five given colours, with four steps filled in between them
+   so there is a shade for every job. One place: a change here lands everywhere.
+
+     #001B48  deepest navy     brand-900
+     #02457A  dark blue        brand-600  buttons, link text
+     #018ABE  bright blue      brand-400  highlights, progress, selected bubbles
+     #97CADB  light blue       brand-200  rings and borders
+     #D6E8EE  palest blue      brand-50   tinted backgrounds
+
+   Buttons use the dark blue rather than the bright one on purpose: white text on
+   #018ABE is only about 4:1 against white, which is too low for small text, while
+   #02457A is about 10:1. */
+@theme {
+  --color-brand-50: #d6e8ee;
+  --color-brand-100: #c3dee9;
+  --color-brand-200: #97cadb;
+  --color-brand-300: #6bb6cf;
+  --color-brand-400: #018abe;
+  --color-brand-500: #0279a4;
+  --color-brand-600: #02457a;
+  --color-brand-700: #013963;
+  --color-brand-800: #012a52;
+  --color-brand-900: #001b48;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Respect a reduced-motion setting: animation is decoration, not information. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A visible focus ring for keyboard users, on every control. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}

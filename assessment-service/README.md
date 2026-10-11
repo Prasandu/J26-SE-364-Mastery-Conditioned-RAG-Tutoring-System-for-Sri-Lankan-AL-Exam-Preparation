@@ -316,6 +316,27 @@ Three files, all openable in Excel:
 
 `results/` holds student marks, so keep it out of git.
 
+## MCQ answer sheets
+
+A printable bubble sheet, and reading a photo of a filled one. Plain OpenCV: no AI, no
+daily limit, works offline.
+
+```
+python -m app.answer_sheet make 4                       sheet for paper 4 (PDF)
+python -m app.answer_sheet make 4 --student S001        id already printed
+python -m app.answer_sheet make 4 --out sheets/p4.png   PNG instead
+
+python -m app.answer_sheet read photo.jpg --paper 4     what the photo says
+```
+
+How the reading works: find the four black corner squares, warp the photo flat, then
+measure how dark each bubble is. A bubble counts as filled only if it is clearly darker
+than the paper **and** clearly darker than the next bubble, so two marks come back as
+`unsure` rather than a guess.
+
+Printing: A4, 100% scale, no "fit to page". Photograph the whole sheet from above with
+all four corner squares visible.
+
 ## Tests and code quality
 
 ```powershell

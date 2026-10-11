@@ -28,6 +28,7 @@ from app.schemas.review import (
     MarkerAgreement,
     ReviewDecisionIn,
     ReviewItemOut,
+    ReviewScriptOut,
 )
 from app.services.marking import question_with_context, refresh_scores
 
@@ -59,6 +60,44 @@ def review_queue(
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
     return db.scalars(stmt).all()
+
+
+def review_scripts(
+    db: Session, *, paper_id: int | None = None, limit: int = 50, offset: int = 0
+) -> list[ReviewScriptOut]:
+    """Submitted scripts a teacher can mark, oldest first, with how many points are done.
+
+    This is for marking a whole script point by point, not only the points the machine
+    could not settle. Agreement can only be measured on points a teacher also judged,
+    and the interesting cases are the ones the machine was confidently wrong about.
+    """
+    stmt = (
+        select(Attempt)
+        .where(Attempt.status != AttemptStatus.IN_PROGRESS)
+        .order_by(Attempt.submitted_at, Attempt.id)
+        .limit(min(limit, MAX_QUEUE_PAGE))
+        .offset(offset)
+    )
+    if paper_id is not None:
+        stmt = stmt.where(Attempt.paper_id == paper_id)
+
+    scripts = []
+    for attempt in db.scalars(stmt):
+        results = [r for answer in attempt.answers for r in answer.point_results]
+        scripts.append(
+            ReviewScriptOut(
+                attempt_id=attempt.id,
+                student_ref=attempt.student_ref,
+                paper_id=attempt.paper_id,
+                paper_title=attempt.paper.title,
+                submitted_at=attempt.submitted_at,
+                total_points=len(results),
+                reviewed_points=sum(r.teacher_awarded is not None for r in results),
+                machine_score=attempt.score,
+                max_score=attempt.max_score,
+            )
+        )
+    return scripts
 
 
 def get_point(db: Session, result_id: int) -> PointResult:

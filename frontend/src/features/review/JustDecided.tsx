@@ -36,7 +36,7 @@ export function JustDecided({ decisions }: { decisions: Decided[] }) {
           const agreed = decision.aiAwarded === decision.teacherAwarded;
           return (
             <li key={decision.id} className="flex flex-wrap items-center gap-3 py-2">
-              <span className="w-20 font-mono text-teal-700">
+              <span className="w-20 font-mono text-brand-700">
                 {decision.question} {decision.code}
               </span>
               <span className="text-slate-600">

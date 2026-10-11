@@ -1,0 +1,622 @@
+{
+  "subject": "chemistry",
+  "curriculum": "NIE Sri Lanka G.C.E. A/L",
+  "units": [
+    {
+      "id": "chem-u1",
+      "code": "Unit 01",
+      "name": "Atomic Structure",
+      "grade_level": "12",
+      "description": "Subatomic particles, quantum numbers, electronic configurations, and ionization energies.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u1-subatomic-particles",
+          "name": "Subatomic particles",
+          "topics": [
+            { "id": "chem-u1-protons", "name": "Protons" },
+            { "id": "chem-u1-neutrons", "name": "Neutrons" },
+            { "id": "chem-u1-electrons", "name": "Electrons" }
+          ]
+        },
+        {
+          "id": "chem-u1-quantum-numbers",
+          "name": "Quantum numbers",
+          "topics": [
+            { "id": "chem-u1-principal-quantum-number", "name": "Principal quantum number" },
+            { "id": "chem-u1-azimuthal-quantum-number", "name": "Azimuthal quantum number" },
+            { "id": "chem-u1-magnetic-quantum-number", "name": "Magnetic quantum number" },
+            { "id": "chem-u1-spin-quantum-number", "name": "Spin quantum number" }
+          ]
+        },
+        {
+          "id": "chem-u1-electronic-configurations",
+          "name": "Electronic configurations",
+          "topics": [
+            { "id": "chem-u1-orbitals", "name": "Orbitals and electron shells" },
+            { "id": "chem-u1-configuration-writing", "name": "Writing electronic configurations" }
+          ]
+        },
+        {
+          "id": "chem-u1-ionization-energies",
+          "name": "Ionization energies",
+          "topics": [
+            { "id": "chem-u1-first-ionization-energy", "name": "First ionization energy" },
+            { "id": "chem-u1-successive-ionization-energies", "name": "Successive ionization energies" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u2",
+      "code": "Unit 02",
+      "name": "Structure and Bonding",
+      "grade_level": "12",
+      "description": "Ionic, covalent, and metallic bonding, intermolecular forces, and molecular shapes.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u2-ionic-bonding",
+          "name": "Ionic bonding",
+          "topics": [
+            { "id": "chem-u2-ionic-bond-formation", "name": "Ionic bond formation" },
+            { "id": "chem-u2-ionic-lattices", "name": "Ionic structures" }
+          ]
+        },
+        {
+          "id": "chem-u2-covalent-bonding",
+          "name": "Covalent bonding",
+          "topics": [
+            { "id": "chem-u2-covalent-bond-formation", "name": "Covalent bond formation" },
+            { "id": "chem-u2-covalent-structures", "name": "Covalent molecular structures" }
+          ]
+        },
+        {
+          "id": "chem-u2-metallic-bonding",
+          "name": "Metallic bonding",
+          "topics": [
+            { "id": "chem-u2-metallic-model", "name": "Metallic bonding model" },
+            { "id": "chem-u2-metallic-properties", "name": "Properties of metallic structures" }
+          ]
+        },
+        {
+          "id": "chem-u2-intermolecular-forces",
+          "name": "Intermolecular forces",
+          "topics": [
+            { "id": "chem-u2-intermolecular-types", "name": "Types of intermolecular forces" },
+            { "id": "chem-u2-intermolecular-effects", "name": "Effects of intermolecular forces" }
+          ]
+        },
+        {
+          "id": "chem-u2-molecular-shapes",
+          "name": "Shapes of molecules",
+          "topics": [
+            { "id": "chem-u2-electron-pair-repulsion", "name": "Electron-pair repulsion" },
+            { "id": "chem-u2-common-molecular-shapes", "name": "Common molecular shapes" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u3",
+      "code": "Unit 03",
+      "name": "Chemical Calculations",
+      "grade_level": "12",
+      "description": "The mole concept, stoichiometry, volumetric analysis, and concentration calculations.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u3-mole-concept",
+          "name": "Mole concept",
+          "topics": [
+            { "id": "chem-u3-amount-of-substance", "name": "Amount of substance" },
+            { "id": "chem-u3-molar-mass", "name": "Molar mass and particle number" }
+          ]
+        },
+        {
+          "id": "chem-u3-stoichiometry",
+          "name": "Stoichiometry",
+          "topics": [
+            { "id": "chem-u3-equation-ratios", "name": "Reacting ratios from equations" },
+            { "id": "chem-u3-limiting-reagents", "name": "Limiting reagents and yields" }
+          ]
+        },
+        {
+          "id": "chem-u3-volumetric-analysis",
+          "name": "Volumetric analysis",
+          "topics": [
+            { "id": "chem-u3-titration-calculations", "name": "Titration calculations" },
+            { "id": "chem-u3-volumetric-methods", "name": "Volumetric analytical methods" }
+          ]
+        },
+        {
+          "id": "chem-u3-concentration",
+          "name": "Concentration calculations",
+          "topics": [
+            { "id": "chem-u3-molar-concentration", "name": "Molar concentration" },
+            { "id": "chem-u3-dilution", "name": "Solution dilution calculations" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u4",
+      "code": "Unit 04",
+      "name": "Gaseous State of Matter",
+      "grade_level": "12",
+      "description": "The ideal gas equation, Dalton's law, and the kinetic theory of gases.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u4-ideal-gas-equation",
+          "name": "Ideal gas equation",
+          "topics": [
+            { "id": "chem-u4-gas-variables", "name": "Gas variables and relationships" },
+            { "id": "chem-u4-ideal-gas-calculations", "name": "Ideal gas calculations" }
+          ]
+        },
+        {
+          "id": "chem-u4-daltons-law",
+          "name": "Dalton's law",
+          "topics": [
+            { "id": "chem-u4-partial-pressure", "name": "Partial pressures" },
+            { "id": "chem-u4-gas-mixtures", "name": "Pressure in gas mixtures" }
+          ]
+        },
+        {
+          "id": "chem-u4-kinetic-theory",
+          "name": "Kinetic theory of gases",
+          "topics": [
+            { "id": "chem-u4-kinetic-model", "name": "Kinetic model assumptions" },
+            { "id": "chem-u4-kinetic-temperature", "name": "Particle motion and temperature" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u5",
+      "code": "Unit 05",
+      "name": "Energetics",
+      "grade_level": "12",
+      "description": "Enthalpy changes, Hess's Law, Born-Haber cycles, entropy, and Gibbs free energy.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u5-enthalpy",
+          "name": "Enthalpy changes",
+          "topics": [
+            { "id": "chem-u5-enthalpy-measurement", "name": "Measuring enthalpy changes" },
+            { "id": "chem-u5-enthalpy-types", "name": "Types of enthalpy change" }
+          ]
+        },
+        {
+          "id": "chem-u5-hess-law",
+          "name": "Hess's Law",
+          "topics": [
+            { "id": "chem-u5-hess-cycles", "name": "Enthalpy cycles" },
+            { "id": "chem-u5-hess-calculations", "name": "Hess's Law calculations" }
+          ]
+        },
+        {
+          "id": "chem-u5-born-haber",
+          "name": "Born-Haber cycles",
+          "topics": [
+            { "id": "chem-u5-born-haber-steps", "name": "Steps in a Born-Haber cycle" },
+            { "id": "chem-u5-lattice-enthalpy", "name": "Lattice enthalpy calculations" }
+          ]
+        },
+        {
+          "id": "chem-u5-entropy",
+          "name": "Entropy",
+          "topics": [
+            { "id": "chem-u5-entropy-change", "name": "Entropy changes" },
+            { "id": "chem-u5-entropy-prediction", "name": "Predicting entropy change" }
+          ]
+        },
+        {
+          "id": "chem-u5-gibbs-free-energy",
+          "name": "Gibbs free energy",
+          "topics": [
+            { "id": "chem-u5-gibbs-equation", "name": "Gibbs free-energy relationship" },
+            { "id": "chem-u5-spontaneity", "name": "Spontaneity and temperature" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u6",
+      "code": "Unit 06",
+      "name": "Chemistry of s, p, and d Block Elements",
+      "grade_level": "12-13",
+      "description": "Periodic trends, group properties, transition elements, and complex compounds.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u6-periodic-trends",
+          "name": "Periodic trends",
+          "topics": [
+            { "id": "chem-u6-atomic-radius", "name": "Atomic and ionic radii" },
+            { "id": "chem-u6-periodic-properties", "name": "Periodic property trends" }
+          ]
+        },
+        {
+          "id": "chem-u6-group-properties",
+          "name": "Group properties",
+          "topics": [
+            { "id": "chem-u6-s-block", "name": "s-block element chemistry" },
+            { "id": "chem-u6-p-block", "name": "p-block element chemistry" }
+          ]
+        },
+        {
+          "id": "chem-u6-transition-elements",
+          "name": "Transition elements",
+          "topics": [
+            { "id": "chem-u6-transition-properties", "name": "Properties of transition elements" },
+            { "id": "chem-u6-transition-reactions", "name": "Reactions of transition elements" }
+          ]
+        },
+        {
+          "id": "chem-u6-complex-compounds",
+          "name": "Complex compounds",
+          "topics": [
+            { "id": "chem-u6-complex-formation", "name": "Formation of complex compounds" },
+            { "id": "chem-u6-complex-structures", "name": "Structures of complex compounds" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u7",
+      "code": "Unit 07",
+      "name": "Basic Concepts of Organic Chemistry",
+      "grade_level": "12",
+      "description": "Nomenclature, isomerism, reaction intermediates, and electronic effects.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u7-nomenclature",
+          "name": "Nomenclature",
+          "topics": [
+            { "id": "chem-u7-functional-groups", "name": "Functional groups" },
+            { "id": "chem-u7-organic-naming", "name": "Naming organic compounds" }
+          ]
+        },
+        {
+          "id": "chem-u7-isomerism",
+          "name": "Isomerism",
+          "topics": [
+            { "id": "chem-u7-structural-isomerism", "name": "Structural isomerism" },
+            { "id": "chem-u7-stereoisomerism", "name": "Stereoisomerism" }
+          ]
+        },
+        {
+          "id": "chem-u7-reaction-intermediates",
+          "name": "Reaction intermediates",
+          "topics": [
+            { "id": "chem-u7-carbocations", "name": "Carbocations" },
+            { "id": "chem-u7-carbanions", "name": "Carbanions and radicals" }
+          ]
+        },
+        {
+          "id": "chem-u7-electronic-effects",
+          "name": "Electronic effects",
+          "topics": [
+            { "id": "chem-u7-inductive-effect", "name": "Inductive effect" },
+            { "id": "chem-u7-resonance-effect", "name": "Resonance and electronic effects" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u8",
+      "code": "Unit 08",
+      "name": "Hydrocarbons and Halohydrocarbons",
+      "grade_level": "12-13",
+      "description": "Alkanes, alkenes, alkynes, benzene, and halogenoalkanes.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u8-alkanes",
+          "name": "Alkanes",
+          "topics": [
+            { "id": "chem-u8-alkane-structure", "name": "Alkane structure and naming" },
+            { "id": "chem-u8-alkane-reactions", "name": "Reactions of alkanes" }
+          ]
+        },
+        {
+          "id": "chem-u8-alkenes",
+          "name": "Alkenes",
+          "topics": [
+            { "id": "chem-u8-alkene-structure", "name": "Alkene structure and naming" },
+            { "id": "chem-u8-alkene-reactions", "name": "Reactions of alkenes" }
+          ]
+        },
+        {
+          "id": "chem-u8-alkynes",
+          "name": "Alkynes",
+          "topics": [
+            { "id": "chem-u8-alkyne-structure", "name": "Alkyne structure and naming" },
+            { "id": "chem-u8-alkyne-reactions", "name": "Reactions of alkynes" }
+          ]
+        },
+        {
+          "id": "chem-u8-benzene",
+          "name": "Benzene",
+          "topics": [
+            { "id": "chem-u8-benzene-structure", "name": "Benzene structure" },
+            { "id": "chem-u8-benzene-reactions", "name": "Reactions of benzene" }
+          ]
+        },
+        {
+          "id": "chem-u8-halogenoalkanes",
+          "name": "Halogenoalkanes",
+          "topics": [
+            { "id": "chem-u8-halogenoalkane-structure", "name": "Halogenoalkane structure and naming" },
+            { "id": "chem-u8-halogenoalkane-reactions", "name": "Reactions of halogenoalkanes" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u9",
+      "code": "Unit 09",
+      "name": "Oxygen Containing Organic Compounds",
+      "grade_level": "13",
+      "description": "Alcohols, carbonyl compounds, carboxylic acids, and their derivatives.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u9-alcohols",
+          "name": "Alcohols",
+          "topics": [
+            { "id": "chem-u9-alcohol-structure", "name": "Alcohol structure and classification" },
+            { "id": "chem-u9-alcohol-reactions", "name": "Reactions of alcohols" }
+          ]
+        },
+        {
+          "id": "chem-u9-carbonyl-compounds",
+          "name": "Carbonyl compounds",
+          "topics": [
+            { "id": "chem-u9-aldehydes", "name": "Aldehydes" },
+            { "id": "chem-u9-ketones", "name": "Ketones" }
+          ]
+        },
+        {
+          "id": "chem-u9-carboxylic-acids",
+          "name": "Carboxylic acids",
+          "topics": [
+            { "id": "chem-u9-acid-properties", "name": "Properties of carboxylic acids" },
+            { "id": "chem-u9-acid-reactions", "name": "Reactions of carboxylic acids" }
+          ]
+        },
+        {
+          "id": "chem-u9-acid-derivatives",
+          "name": "Carboxylic acid derivatives",
+          "topics": [
+            { "id": "chem-u9-esters", "name": "Esters" },
+            { "id": "chem-u9-acid-derivative-reactions", "name": "Reactions of carboxylic acid derivatives" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u10",
+      "code": "Unit 10",
+      "name": "Nitrogen Containing Organic Compounds",
+      "grade_level": "13",
+      "description": "Amines, nitro compounds, diazonium salts, amino acids, and proteins.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u10-amines",
+          "name": "Amines",
+          "topics": [
+            { "id": "chem-u10-amine-structure", "name": "Amine structure and classification" },
+            { "id": "chem-u10-amine-reactions", "name": "Reactions of amines" }
+          ]
+        },
+        {
+          "id": "chem-u10-nitro-compounds",
+          "name": "Nitro compounds",
+          "topics": [
+            { "id": "chem-u10-nitro-structure", "name": "Nitro compound structure" },
+            { "id": "chem-u10-nitro-reactions", "name": "Reactions of nitro compounds" }
+          ]
+        },
+        {
+          "id": "chem-u10-diazonium-salts",
+          "name": "Diazonium salts",
+          "topics": [
+            { "id": "chem-u10-diazonium-formation", "name": "Formation of diazonium salts" },
+            { "id": "chem-u10-diazonium-reactions", "name": "Reactions of diazonium salts" }
+          ]
+        },
+        {
+          "id": "chem-u10-amino-acids",
+          "name": "Amino acids",
+          "topics": [
+            { "id": "chem-u10-amino-acid-structure", "name": "Amino acid structure" },
+            { "id": "chem-u10-amino-acid-properties", "name": "Amino acid properties" }
+          ]
+        },
+        {
+          "id": "chem-u10-proteins",
+          "name": "Proteins",
+          "topics": [
+            { "id": "chem-u10-protein-structure", "name": "Protein structure" },
+            { "id": "chem-u10-protein-properties", "name": "Protein properties" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u11",
+      "code": "Unit 11",
+      "name": "Chemical Kinetics",
+      "grade_level": "13",
+      "description": "Reaction rates, rate equations, activation energy, and catalysts.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u11-reaction-rates",
+          "name": "Rate of reaction",
+          "topics": [
+            { "id": "chem-u11-rate-measurement", "name": "Measuring reaction rates" },
+            { "id": "chem-u11-rate-factors", "name": "Factors affecting reaction rates" }
+          ]
+        },
+        {
+          "id": "chem-u11-rate-equations",
+          "name": "Rate equations",
+          "topics": [
+            { "id": "chem-u11-rate-law", "name": "Rate laws and orders of reaction" },
+            { "id": "chem-u11-rate-constants", "name": "Rate constants" }
+          ]
+        },
+        {
+          "id": "chem-u11-activation-energy",
+          "name": "Activation energy",
+          "topics": [
+            { "id": "chem-u11-energy-profiles", "name": "Reaction energy profiles" },
+            { "id": "chem-u11-activation-calculations", "name": "Activation energy calculations" }
+          ]
+        },
+        {
+          "id": "chem-u11-catalysts",
+          "name": "Catalysts",
+          "topics": [
+            { "id": "chem-u11-catalyst-action", "name": "Catalyst action" },
+            { "id": "chem-u11-catalyst-effects", "name": "Catalyst effects on reaction rates" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u12",
+      "code": "Unit 12",
+      "name": "Chemical Equilibrium",
+      "grade_level": "13",
+      "description": "Reversible reactions, Kc, Kp, Le Chatelier's principle, ionic equilibrium, and buffers.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u12-reversible-reactions",
+          "name": "Reversible reactions",
+          "topics": [
+            { "id": "chem-u12-dynamic-equilibrium", "name": "Dynamic equilibrium" },
+            { "id": "chem-u12-equilibrium-conditions", "name": "Conditions for equilibrium" }
+          ]
+        },
+        {
+          "id": "chem-u12-equilibrium-constants",
+          "name": "Equilibrium constants",
+          "topics": [
+            { "id": "chem-u12-kc", "name": "Kc calculations" },
+            { "id": "chem-u12-kp", "name": "Kp calculations" }
+          ]
+        },
+        {
+          "id": "chem-u12-le-chatelier",
+          "name": "Le Chatelier's principle",
+          "topics": [
+            { "id": "chem-u12-equilibrium-concentration", "name": "Concentration changes" },
+            { "id": "chem-u12-equilibrium-pressure-temperature", "name": "Pressure and temperature changes" }
+          ]
+        },
+        {
+          "id": "chem-u12-ionic-equilibrium",
+          "name": "Ionic equilibrium",
+          "topics": [
+            { "id": "chem-u12-acid-base-equilibria", "name": "Acid-base equilibria" },
+            { "id": "chem-u12-ionic-equilibrium-calculations", "name": "Ionic equilibrium calculations" }
+          ]
+        },
+        {
+          "id": "chem-u12-buffer-solutions",
+          "name": "Buffer solutions",
+          "topics": [
+            { "id": "chem-u12-buffer-action", "name": "Buffer action" },
+            { "id": "chem-u12-buffer-calculations", "name": "Buffer calculations" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u13",
+      "code": "Unit 13",
+      "name": "Electrochemistry",
+      "grade_level": "13",
+      "description": "Electrode potentials, electrochemical cells, electrolysis, and commercial cells.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u13-electrode-potentials",
+          "name": "Electrode potentials",
+          "topics": [
+            { "id": "chem-u13-standard-electrode-potentials", "name": "Standard electrode potentials" },
+            { "id": "chem-u13-cell-potential-calculations", "name": "Cell potential calculations" }
+          ]
+        },
+        {
+          "id": "chem-u13-electrochemical-cells",
+          "name": "Electrochemical cells",
+          "topics": [
+            { "id": "chem-u13-cell-components", "name": "Cell components and notation" },
+            { "id": "chem-u13-cell-reactions", "name": "Cell reactions" }
+          ]
+        },
+        {
+          "id": "chem-u13-electrolysis",
+          "name": "Electrolysis",
+          "topics": [
+            { "id": "chem-u13-electrolysis-products", "name": "Electrolysis products" },
+            { "id": "chem-u13-electrolysis-calculations", "name": "Electrolysis calculations" }
+          ]
+        },
+        {
+          "id": "chem-u13-commercial-cells",
+          "name": "Commercial cells",
+          "topics": [
+            { "id": "chem-u13-primary-cells", "name": "Primary commercial cells" },
+            { "id": "chem-u13-secondary-cells", "name": "Secondary commercial cells" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chem-u14",
+      "code": "Unit 14",
+      "name": "Industrial Chemistry and Environmental Pollution",
+      "grade_level": "13",
+      "description": "Industrial manufacturing processes, polymers, and environmental chemistry.",
+      "exam_weight": 0,
+      "topics": [
+        {
+          "id": "chem-u14-industrial-processes",
+          "name": "Industrial manufacturing processes",
+          "topics": [
+            { "id": "chem-u14-cement", "name": "Cement manufacture" },
+            { "id": "chem-u14-sulfuric-acid", "name": "Sulfuric acid manufacture" },
+            { "id": "chem-u14-ammonia", "name": "Ammonia manufacture" }
+          ]
+        },
+        {
+          "id": "chem-u14-polymers",
+          "name": "Polymers",
+          "topics": [
+            { "id": "chem-u14-polymer-formation", "name": "Polymer formation" },
+            { "id": "chem-u14-polymer-properties", "name": "Polymer properties and uses" }
+          ]
+        },
+        {
+          "id": "chem-u14-environmental-chemistry",
+          "name": "Environmental chemistry",
+          "topics": [
+            { "id": "chem-u14-environmental-pollution", "name": "Environmental pollution" },
+            { "id": "chem-u14-pollution-control", "name": "Pollution control" }
+          ]
+        }
+      ]
+    }
+  ]
+}

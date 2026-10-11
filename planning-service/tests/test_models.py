@@ -1,0 +1,28 @@
+from app import models
+from app.db import Base
+
+
+def test_all_p1_models_use_planning_schema() -> None:
+    expected_tables = {
+        "availability_slots",
+        "learner_topic_state",
+        "predictions",
+        "profile_embeddings",
+        "raw_events",
+        "replan_log",
+        "study_plans",
+        "study_tasks",
+        "topic_evidence",
+        "topics",
+    }
+
+    assert set(Base.metadata.tables) == {f"planning.{table}" for table in expected_tables}
+    assert models.ProfileEmbedding.__table__.c.embedding.type.dim == 16
+    assert "grade_level" in models.Topic.__table__.c
+    assert "description" in models.Topic.__table__.c
+
+
+def test_topic_evidence_is_idempotent_per_event_and_topic() -> None:
+    evidence = models.TopicEvidence.__table__
+
+    assert any(constraint.name == "uq_topic_evidence_event_topic" for constraint in evidence.constraints)

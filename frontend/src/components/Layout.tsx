@@ -7,9 +7,14 @@ export function Layout() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" className="font-semibold tracking-tight">
-            A/L Chemistry Assessment
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="font-semibold tracking-tight">
+              A/L Chemistry Assessment
+            </Link>
+            <Link to="/review" className="text-sm text-slate-500 hover:text-teal-700">
+              Teacher review
+            </Link>
+          </div>
           <BackendStatus />
         </div>
       </header>

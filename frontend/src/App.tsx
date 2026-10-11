@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { AttemptPage } from "@/features/attempt/AttemptPage";
 import { PaperDetail } from "@/features/papers/PaperDetail";
 import { PaperList } from "@/features/papers/PaperList";
+import { ReviewPage } from "@/features/review/ReviewPage";
 
 export function App() {
   return (
@@ -12,6 +13,7 @@ export function App() {
         <Route index element={<PaperList />} />
         <Route path="papers/:paperId" element={<PaperDetail />} />
         <Route path="attempts/:attemptId" element={<AttemptPage />} />
+        <Route path="review" element={<ReviewPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

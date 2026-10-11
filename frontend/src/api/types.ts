@@ -111,3 +111,60 @@ export interface AnswerInput {
   mcq_option?: string | null;
   text?: string | null;
 }
+
+// Teacher review: points the machine was not confident about.
+
+export interface ReviewItem {
+  id: number;
+  attempt_id: string;
+  student_ref: string;
+  submitted_at: string | null;
+  paper_title: string;
+  section: string;
+  question: string;
+  question_text: string;
+  model_answer: string | null;
+  code: string;
+  description: string;
+  marks: number;
+  student_text: string | null;
+  student_mcq_option: string | null;
+  status: PointStatus;
+  checker_awarded: boolean | null;
+  ai_awarded: boolean | null;
+  machine_evidence: string | null;
+  machine_reason: string | null;
+  confidence: number | null;
+  marker: string | null;
+}
+
+export interface ReviewDecision {
+  awarded: boolean;
+  teacher_ref: string;
+  comment?: string | null;
+}
+
+export interface ReviewedPoint {
+  id: number;
+  status: PointStatus;
+  awarded: number;
+  method: MarkingMethod | null;
+  teacher_awarded: boolean | null;
+  teacher_comment: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+}
+
+export interface MarkerAgreement {
+  judged: number;
+  agree: number;
+  disagree: number;
+  agreement_pct: number | null;
+}
+
+export interface Agreement {
+  reviewed_points: number;
+  checker_vs_teacher: MarkerAgreement;
+  ai_vs_teacher: MarkerAgreement;
+  checker_vs_ai: MarkerAgreement;
+}

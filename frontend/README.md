@@ -41,10 +41,11 @@ src/
     types.ts        types that match the backend schemas
     papers.ts       /papers, /health
     attempts.ts     start, save an answer, submit
+    review.ts       review queue, teacher decisions, agreement
   features/         one folder per area of the app
     papers/         browse a paper and its questions
     attempt/        start, answer, submit, see the result
-    review/         teacher review (later step)
+    review/         teacher review queue and marker agreement
   components/       small reusable pieces, no API calls inside
   hooks/            reusable React logic (useApi)
   lib/              plain helpers, no React inside
@@ -61,9 +62,15 @@ Rules:
 
 ## Checks before committing
 
-```powershell
-npm run lint     # ESLint, must be clean
-npx tsc -b       # TypeScript, must be clean
-npm test         # Vitest
-npm run build    # must succeed
+One command, works in cmd, PowerShell and bash:
+
 ```
+npm run check
+```
+
+It runs ESLint, TypeScript, Vitest, the production build and `npm audit`, and stops at
+the first failure. To run one on its own: `npm run lint`, `npx tsc -b`, `npm test`,
+`npm run build`.
+
+Note: `;` does not chain commands in cmd.exe. Use `npm run check`, or `&&` between
+commands.

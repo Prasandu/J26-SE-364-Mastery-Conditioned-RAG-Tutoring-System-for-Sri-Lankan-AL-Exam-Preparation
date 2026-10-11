@@ -19,7 +19,13 @@ from app.db import SessionLocal
 from app.errors import DomainError
 from app.schemas.admin import TopicIn
 from app.services.syllabus import as_topic_rows, parse_syllabus, read_pdf_text
-from app.services.topics import create_topic, rename_topic, topics_by_code
+from app.services.topics import (
+    create_topic,
+    rename_topic,
+    set_topic_content,
+    topic_contents,
+    topics_by_code,
+)
 
 DEFAULT_OUT = Path("drafts/syllabus.json")
 
@@ -65,9 +71,23 @@ def _read(args) -> None:
     except OSError as error:
         sys.exit(f"Could not write {args.out}: {error}")
 
-    print(f"{len(units)} units, {len(rows) - len(units)} sub-topics -> {args.out}\n")
+    bullets = sum(len(row.get("contents", [])) for row in rows)
+    thin = [row["code"] for row in rows if row["parent_code"] and not row.get("contents")]
+
+    print(
+        f"{len(units)} units, {len(rows) - len(units)} sub-topics, {bullets} content bullets -> {args.out}\n"
+    )
     for unit in units:
-        print(f"  {unit.code}  {unit.name}  ({unit.periods} periods, {len(unit.sub_topics)} levels)")
+        covered = sum(1 for sub in unit.sub_topics if sub.contents)
+        print(
+            f"  {unit.code}  {unit.name}  ({unit.periods} periods, "
+            f"{covered}/{len(unit.sub_topics)} levels with content)"
+        )
+
+    if thin:
+        print(f"\n{len(thin)} levels have no content: {', '.join(thin)}")
+        print("Their bullets sit in another column of the PDF and could not be matched.")
+        print("Add them by hand if you want questions on those grounded in the syllabus.")
     print("\nRead the file and fix anything odd, then load it.")
 
 
@@ -83,8 +103,12 @@ def _load(args) -> None:
         existing = topics_by_code(db)
         fresh = [row for row in rows if row.code not in existing]
         renamed = [r for r in rows if r.code in existing and existing[r.code].name != r.name]
+        recontented = [
+            r for r in rows if r.code in existing and topic_contents(existing[r.code]) != r.contents
+        ]
         if not args.update:
             renamed = []
+            recontented = []
 
         _say_plan(rows, fresh, renamed, update=args.update)
         if args.dry_run:
@@ -96,6 +120,10 @@ def _load(args) -> None:
             for row in renamed:
                 rename_topic(db, row.code, row.name)
             print(f"Renamed {len(renamed)} topics.")
+        if recontented:
+            for row in recontented:
+                set_topic_content(db, row.code, row.contents)
+            print(f"Updated what {len(recontented)} topics cover.")
 
 
 def _say_plan(rows: list[TopicIn], fresh: list[TopicIn], renamed: list[TopicIn], *, update: bool) -> None:

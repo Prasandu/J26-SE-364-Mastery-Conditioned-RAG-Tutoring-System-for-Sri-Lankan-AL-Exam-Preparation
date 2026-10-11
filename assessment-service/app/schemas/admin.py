@@ -26,6 +26,7 @@ class TopicIn(_Input):
     code: str = Field(pattern=r"^[A-Z0-9_]{1,30}$", examples=["STOICH"])
     name: Title
     parent_code: str | None = None
+    contents: list[str] = []  # what the syllabus says this topic covers
 
 
 # Papers

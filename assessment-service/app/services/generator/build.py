@@ -42,7 +42,12 @@ class Generated:
     dropped: list[str] = field(default_factory=list)
 
 
-def generate(blueprint: Blueprint, author: QuestionAuthor, topic_lines: list[str]) -> Generated:
+def generate(
+    blueprint: Blueprint,
+    author: QuestionAuthor,
+    topic_lines: list[str],
+    examples: dict[AnswerMode, list[str]] | None = None,
+) -> Generated:
     """Write every section of the paper, then assemble the draft."""
     sections: list[SectionIn] = []
     entries: list[QuestionSchemeIn] = []
@@ -57,6 +62,7 @@ def generate(blueprint: Blueprint, author: QuestionAuthor, topic_lines: list[str
                 marks_each=plan.marks / plan.count,
                 topics=topic_lines,
                 avoid=asked,
+                examples=(examples or {}).get(plan.answer_mode),
             )
         )
         usable = []

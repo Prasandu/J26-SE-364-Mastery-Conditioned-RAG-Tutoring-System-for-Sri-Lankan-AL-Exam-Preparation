@@ -21,6 +21,7 @@ from app.services.generator.blueprint import (
     problems,
 )
 from app.services.generator.build import generate
+from app.services.generator.grounding import material_for
 from app.services.papers import create_paper
 from app.services.schemes import create_scheme
 from app.services.topics import topics_by_code
@@ -49,8 +50,7 @@ def write(db: Session, data: GenerateIn, author: QuestionAuthor) -> GeneratedOut
     if found := problems(blueprint):
         raise ContentValidationError("The paper cannot be generated", found)
 
-    topic_lines = [f"{code} {known[code].name}" for code in data.topic_codes]
-    written = generate(blueprint, author, topic_lines)
+    written = generate(blueprint, author, *material_for(db, data.topic_codes, blueprint, known))
 
     paper = create_paper(db, written.paper)
     scheme = create_scheme(db, paper.id, written.scheme)

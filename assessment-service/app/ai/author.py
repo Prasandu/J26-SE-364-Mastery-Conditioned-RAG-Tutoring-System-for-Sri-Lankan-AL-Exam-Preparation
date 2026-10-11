@@ -61,7 +61,8 @@ You write practice questions for the Sri Lankan G.C.E. Advanced Level Chemistry 
 following the 2017 National Institute of Education syllabus.
 
 Rules:
-1. Stay inside the topics you are given. Do not ask about anything outside them.
+1. Ask only about the syllabus content you are given. Anything outside it is wrong, even if
+   it is correct chemistry.
 2. Match the real examination in style, difficulty and wording.
 3. Write a model answer for every question, and the marking points that go with it.
 4. Marking points split the question into separately earned marks. Each one says what earns it,
@@ -75,6 +76,10 @@ Rules:
 7. Chemistry must be correct: formulas, charges, state symbols, units and significant figures.
    Write plainly: H2SO4, SO4^2-, mol dm-3, 2.00 x 10^-3, -> for a reaction arrow.
 8. Do not repeat a question you have already written in this paper.
+9. Where real past questions are shown, follow their style, difficulty and the way their
+   marks are split. Do not copy them.
+9. Where real past questions are shown, follow their style, difficulty and the way their
+   marks are split. Do not copy them.
 """
 
 
@@ -85,6 +90,7 @@ def build_brief(
     marks_each: float,
     topics: list[str],
     avoid: list[str],
+    examples: list[str] | None = None,
 ) -> str:
     """The instructions for one section of the paper."""
     kinds = {
@@ -98,8 +104,10 @@ def build_brief(
     sections = {
         "WRITE": f"{count} {kinds[answer_mode]}",
         "MARKS PER QUESTION": f"{marks_each:g}",
-        "SYLLABUS TOPICS (stay inside these)": "\n".join(f"- {topic}" for topic in topics),
+        "SYLLABUS CONTENT (ask only about these)": "\n".join(topics),
     }
+    if examples:
+        sections["REAL PAST QUESTIONS (match this style and mark structure)"] = "\n\n".join(examples)
     if avoid:
         sections["ALREADY ASKED (do not repeat)"] = "\n".join(f"- {text}" for text in avoid)
     return "\n\n".join(f"## {title}\n{body}" for title, body in sections.items())

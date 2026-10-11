@@ -62,6 +62,9 @@ class Topic(Base):
     code: Mapped[str] = mapped_column(String(30), unique=True)
     name: Mapped[str] = mapped_column(String(200))
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("topics.id"), index=True)
+    # What the syllabus says this topic covers, one bullet per line. Used to keep a
+    # generated question inside the syllabus instead of wherever the model wanders.
+    content: Mapped[str | None] = mapped_column(Text)
 
 
 class Paper(Base):

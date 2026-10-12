@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -21,6 +22,17 @@ class StudyTask(Base):
     __tablename__ = "study_tasks"
     __table_args__ = (
         CheckConstraint("duration_min > 0", name="ck_study_tasks_duration_positive"),
+        CheckConstraint(
+            "actual_duration_min IS NULL OR "
+            "(actual_duration_min >= 0 AND actual_duration_min <= duration_min)",
+            name="ck_study_tasks_actual_duration",
+        ),
+        CheckConstraint(
+            "(score_before IS NULL AND score_after IS NULL) OR "
+            "(score_before IS NOT NULL AND score_after IS NOT NULL AND "
+            "score_before >= 0 AND score_before <= 1 AND score_after >= 0 AND score_after <= 1)",
+            name="ck_study_tasks_score_range",
+        ),
         CheckConstraint(
             "status IN ('planned', 'completed', 'partial', 'missed')",
             name="ck_study_tasks_status",
@@ -50,6 +62,9 @@ class StudyTask(Base):
         ForeignKey("planning.study_tasks.id", ondelete="SET NULL"),
         nullable=True,
     )
+    actual_duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_before: Mapped[float | None] = mapped_column(Float, nullable=True)
+    score_after: Mapped[float | None] = mapped_column(Float, nullable=True)
 
 
 class ReplanLog(Base):

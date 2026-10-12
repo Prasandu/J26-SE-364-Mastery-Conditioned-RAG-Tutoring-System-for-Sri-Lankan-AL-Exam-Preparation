@@ -26,3 +26,13 @@ def test_topic_evidence_is_idempotent_per_event_and_topic() -> None:
     evidence = models.TopicEvidence.__table__
 
     assert any(constraint.name == "uq_topic_evidence_event_topic" for constraint in evidence.constraints)
+
+
+def test_task_outcome_columns_and_constraints_are_defined() -> None:
+    tasks = models.StudyTask.__table__
+
+    assert {"actual_duration_min", "score_before", "score_after"}.issubset(tasks.c.keys())
+    assert {
+        "ck_study_tasks_actual_duration",
+        "ck_study_tasks_score_range",
+    }.issubset({constraint.name for constraint in tasks.constraints})

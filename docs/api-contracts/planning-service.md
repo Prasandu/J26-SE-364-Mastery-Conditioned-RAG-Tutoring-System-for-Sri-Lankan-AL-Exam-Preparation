@@ -95,3 +95,137 @@ with `ASSESSMENT_SERVICE_API_KEY`.
 
 The pull adapter reports upstream network, response, and event-validation
 failures as 502 errors; it does not silently accept malformed upstream data.
+
+## Student study plans
+
+Plan endpoints require a Supabase Auth bearer token. The authenticated JWT
+subject is the student identity; clients cannot create or access plans for
+another student by supplying a `student_id`.
+
+### POST `/api/v1/plans`
+
+Creates a manual or predicted plan. The exam date must be in the future.
+Availability windows use weekday numbers where Monday is `0` and Sunday is
+`6`, and use local wall-clock `HH:MM` values. Windows on the same weekday may
+not overlap. Session lengths are limited to 15-180 minutes; daily caps are
+limited to 15-600 minutes. Fixed commitments must have timezone-aware,
+non-overlapping timestamps.
+
+```json
+{
+  "mode": "manual",
+  "exam_date": "2026-12-20",
+  "target_grade": "A",
+  "topics": ["chem-u3-mole-concept", "chem-u12-kc"],
+  "availability_windows": [
+    {"weekday": 1, "start_time": "16:00:00", "end_time": "18:00:00"},
+    {"weekday": 5, "start_time": "09:00:00", "end_time": "11:00:00"}
+  ],
+  "max_session_minutes": 60,
+  "max_daily_minutes": 180,
+  "timezone": "Asia/Colombo",
+  "preferred_times": ["16:00:00"],
+  "fixed_commitments": [
+    {
+      "label": "Tuition",
+      "start_at": "2026-10-13T18:00:00+05:30",
+      "end_at": "2026-10-13T19:00:00+05:30"
+    }
+  ],
+  "priorities": [
+    {"topic_id": "chem-u3-mole-concept", "priority": 0.8}
+  ]
+}
+```
+
+Manual plans require at least one known topic and build priorities only from
+those selected topics. Omitted manual topic priority values default to `0.5`.
+Predicted plans use the authenticated student's stored mastery/weak-topic
+state; an optional `topics` list filters that state. Predicted plans without
+stored mastery data return 409. Client-provided priorities do not override
+predicted priorities.
+
+Returns **201 Created** with the plan ID, mode, exam date, target grade, and
+stored constraints. Creation and subsequent constraint edits are recorded in
+`replan_log`.
+
+### GET `/api/v1/plans` and GET `/api/v1/plans/{plan_id}`
+
+Lists the authenticated student's plans or returns one owned plan. A missing
+or other student's plan returns 404.
+
+### PUT `/api/v1/plans/{plan_id}`
+
+Replaces the plan configuration using the same request shape as POST. Topic,
+date, mode, availability, preference, timezone, fixed-commitment, and priority
+constraints are validated again. Actual changes are recorded with before/after
+values in `replan_log`.
+
+### POST `/api/v1/plans/{plan_id}/generate`
+
+Generates and persists a schedule for an owned plan. Availability weekday
+windows are interpreted in the plan's IANA `timezone` (default
+`Asia/Colombo`). Sessions do not overlap one another or fixed commitments,
+respect the plan's session and daily limits, and end before the exam date.
+Only replaceable future `planned` tasks inside the requested horizon are
+replaced; historical and outcome-recorded tasks are retained.
+
+```json
+{"horizon_days": 14}
+```
+
+`horizon_days` is 1-56 and defaults to 14. The response contains the scheduled
+tasks plus `infeasible`, `shortfall_minutes`, and `unscheduled_minutes`, so
+clients can distinguish a complete plan from one constrained by availability.
+No saved availability windows returns 422.
+
+### POST `/api/v1/tasks/{task_id}/status`
+
+Records an outcome for an owned, still-planned task. The `status` is required;
+`actual_duration_min` is optional except that a partial task requires a
+positive value. A completed task without actual minutes counts its planned
+duration; a missed task counts zero. Optional `score_before` and `score_after`
+must be supplied together and each must be between 0 and 1.
+
+```json
+{
+  "status": "partial",
+  "actual_duration_min": 25,
+  "score_before": 0.45,
+  "score_after": 0.6
+}
+```
+
+Missed tasks schedule their full duration again; partial tasks schedule only
+the remaining duration. The affected topic receives a temporary priority
+boost, and generated replacement work links to the source task with
+`replanned_from`. Infeasible remaining work is reported in the returned
+schedule. Repeating an outcome update returns 409.
+
+### POST `/api/v1/plans/{plan_id}/weekly-replan`
+
+Reviews the previous seven days and generates the next seven days. The
+response reports planned/completed minutes, adherence, average recorded score
+change, count of created topic predictions, and the new schedule. Mastery is
+refreshed from newly ingested evidence. Predictions use the transparent
+`weekly-rule-based-v1` mastery estimate; they are not outputs from a trained
+model. Predicted-mode plan priorities are refreshed, while manual priorities
+are preserved. The action is written to `replan_log`.
+
+### Scheduling and outcome errors
+
+| Status | Meaning |
+| --- | --- |
+| 401 | Missing or invalid bearer token |
+| 404 | Plan/task does not exist or is not owned by the authenticated student |
+| 409 | Task already has an outcome, or outcome duration conflicts with plan |
+| 422 | Invalid outcome fields or plan has no saved availability windows |
+
+### Plan errors
+
+| Status | Meaning |
+| --- | --- |
+| 401 | Missing or invalid bearer token |
+| 404 | Plan does not exist or is not owned by the authenticated student |
+| 409 | Predicted mode requested but no stored mastery data is available |
+| 422 | Invalid plan configuration or unknown topic ID |

@@ -47,6 +47,39 @@ for request and response examples.
 The optional `ASSESSMENT_SERVICE_URL` enables `PullEvidenceSource`, which
 expects the assessment-service read endpoint documented in the API contract.
 
+## Study plans
+
+Authenticated students can create and manage plans with:
+
+- `POST /api/v1/plans` — create a manual or predicted plan.
+- `GET /api/v1/plans` and `GET /api/v1/plans/{plan_id}` — list or retrieve owned plans.
+- `PUT /api/v1/plans/{plan_id}` — replace a plan and audit any constraint changes.
+
+These routes use the Supabase bearer token subject as the student identity.
+Plan validation covers future exam dates, topic IDs, non-overlapping weekly
+availability, bounded session lengths, and timezone-aware fixed commitments.
+Plans use `Asia/Colombo` by default; set `timezone` to another IANA timezone
+when availability is entered in a different local time zone.
+
+## Scheduling and weekly review
+
+- `POST /api/v1/plans/{plan_id}/generate` — materialize up to 56 days of
+  schedule from recurring availability, commitments, priorities, session and
+  daily limits. The response includes `infeasible`, `shortfall_minutes`, and
+  per-topic `unscheduled_minutes` when all requested study time cannot fit.
+- `POST /api/v1/tasks/{task_id}/status` — record a task as `completed`,
+  `partial`, or `missed`, with optional actual minutes and paired before/after
+  score values. Missed work is replanned in full; partial work is replanned
+  only for its remaining minutes.
+- `POST /api/v1/plans/{plan_id}/weekly-replan` — summarize the preceding
+  seven days, refresh mastery from newly ingested evidence, create explicitly
+  rule-based topic predictions, and generate the next seven days.
+
+These endpoints require a Supabase Auth bearer token. Replanned tasks point to
+their original task through `replanned_from`; replan actions are recorded in
+`replan_log`. Run `alembic upgrade head` after updating to add the nullable
+task outcome tracking columns.
+
 ## Mastery calculations
 
 P3 mastery calculations are deterministic pure functions in
@@ -56,6 +89,11 @@ recency-weighted, while consistency and evidence coverage temper the mastery
 estimate. Weak-topic scores also account for score trend, error rate, revision
 staleness, exam importance, and reported confidence.
 
+P4 priority, activity selection, and SM-2-style revision scheduling are pure
+functions in `app/services/priority.py`. Priority explanations return the
+component that most influences each score; activity selection handles new,
+weak, improving, mastered, and repeatedly missed topics.
+
 ## Checks
 
 ```powershell
@@ -64,9 +102,7 @@ ruff check .
 pytest
 ```
 
-The database models and feature endpoints will be added in subsequent
-development steps. The P1 model tables are created by the initial Alembic
-migration. The migration enables the PostgreSQL `vector` extension for the
+The initial Alembic migration creates the planning schema tables. The migration enables the PostgreSQL `vector` extension for the
 16-dimensional profile embeddings; ensure the Supabase project permits that
 extension before applying it.
 

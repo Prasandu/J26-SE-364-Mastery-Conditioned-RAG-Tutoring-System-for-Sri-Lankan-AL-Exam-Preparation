@@ -276,13 +276,19 @@ export interface GeneratedPaper {
 export type SchemeStatus =
   "draft" | "validation_failed" | "validated" | "approved" | "published" | "retired";
 
+export type SchemeSource = "official" | "teacher" | "generated";
+
 export interface SchemeSummary {
   id: number;
   version: number;
-  source: "official" | "teacher" | "generated";
+  source: SchemeSource;
   status: SchemeStatus;
   created_at: string;
   published_at: string | null;
+  validated_at: string | null;
+  checked_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
 }
 
 export interface SchemeValidationOut {
@@ -294,6 +300,47 @@ export interface SchemeValidationOut {
   needs_teacher: string[];
   notes: string[];
   summary: string;
+}
+
+// Admin content management
+
+export interface AdminPaperSummary extends PaperSummary {
+  created_at: string;
+  published_at: string | null;
+  created_by: string | null;
+  marking_schemes: SchemeSummary[];
+}
+
+export interface AdminPaperDetail extends PaperDetail {
+  created_at: string;
+  published_at: string | null;
+  created_by: string | null;
+  grounded_in: Record<string, unknown>[];
+  marking_schemes: SchemeSummary[];
+}
+
+export interface PapersPageOut {
+  items: AdminPaperSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export type SuggestionStatus = "pending" | "approved" | "rejected";
+
+export interface TopicSuggestion {
+  id: number;
+  question_id: number;
+  suggested_codes: string[];
+  confidence: number | null;
+  reason: string | null;
+  model: string;
+  question_text: string;
+  status: SuggestionStatus;
+  approved_codes: string[] | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  created_at: string;
 }
 
 export interface PracticeLimits {

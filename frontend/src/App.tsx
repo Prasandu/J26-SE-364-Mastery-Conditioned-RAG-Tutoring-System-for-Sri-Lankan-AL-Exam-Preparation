@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { Layout } from "@/components/Layout";
 import { About } from "@/features/About";
+import { AdminPage } from "@/features/admin/AdminPage";
 import { GeneratePage } from "@/features/generate/GeneratePage";
 import { HistoryPage } from "@/features/history/HistoryPage";
 import { PracticePage } from "@/features/practice/PracticePage";
@@ -21,6 +22,7 @@ export function App() {
         <Route path="review" element={<ReviewPage />} />
         <Route path="practice" element={<PracticePage />} />
         <Route path="generate" element={<GeneratePage />} />
+        <Route path="admin/*" element={<AdminPage />} />
         <Route path="about" element={<About />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

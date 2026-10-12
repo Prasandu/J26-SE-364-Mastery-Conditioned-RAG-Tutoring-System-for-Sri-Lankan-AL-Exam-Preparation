@@ -7,7 +7,7 @@ check before it is published, so a misread question can never become a live pape
 from collections.abc import Sequence
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.ai.vision import Image, VisionModel
 
@@ -29,6 +29,23 @@ class ExtractedQuestion(BaseModel):
     options: list[ExtractedOption] = []  # MCQ only
     sub_questions: list["ExtractedQuestion"] = []
     has_figure: bool = False  # a diagram, graph or structure the text cannot carry
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_malformed_sub_questions(cls, data: Any) -> Any:
+        """The model is told to stop nesting at 3 levels (see PAPER_PROMPT rule 3),
+        but on a dense page it still sometimes replaces a too-deep sub_questions entry
+        with a bare string or number (a stray list marker like "1" or "label") instead
+        of leaving it out. That used to fail the whole page. One malformed item is not
+        worth losing every question on the page over, so it is dropped here instead -
+        the surrounding text still carries whatever that item said, per the same rule.
+        """
+        if not isinstance(data, dict):
+            return data
+        subs = data.get("sub_questions")
+        if isinstance(subs, list):
+            data = {**data, "sub_questions": [sub for sub in subs if isinstance(sub, dict)]}
+        return data
 
 
 class ExtractedPaper(BaseModel):

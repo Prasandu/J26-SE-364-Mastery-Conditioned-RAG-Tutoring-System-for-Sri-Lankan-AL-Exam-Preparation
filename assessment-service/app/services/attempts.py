@@ -20,7 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.ai.judge import AnswerJudge
-from app.errors import ConflictError, ContentValidationError, NotFoundError
+from app.errors import ConflictError, ContentValidationError, NotFoundError, ProviderError
 from app.models import (
     Answer,
     AnswerImage,
@@ -194,7 +194,15 @@ def add_answer_image(
             "Unsupported image", [f"Send one of: {', '.join(sorted(CONTENT_TYPES))}"]
         )
 
-    result = reader.read(ReadRequest(image=image, content_type=content_type, question=question.text))
+    try:
+        result = reader.read(ReadRequest(image=image, content_type=content_type, question=question.text))
+    except Exception as error:  # network, quota, a busy model, or a reply that is not valid JSON
+        # The provider's own exception text can hold request internals, so it is
+        # logged here, server-side only, and never put in the message the student sees.
+        logger.exception("Handwriting reader failed for attempt %s, question %s", attempt_id, question_id)
+        raise ProviderError(
+            "The handwriting reader is busy right now. Try again in a moment, or type the answer instead."
+        ) from error
 
     answer = next((a for a in attempt.answers if a.question_id == question_id), None)
     if answer is None:

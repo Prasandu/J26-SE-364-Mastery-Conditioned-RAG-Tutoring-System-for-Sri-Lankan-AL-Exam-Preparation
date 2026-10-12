@@ -8,6 +8,11 @@ Three files, because they answer different questions:
 - summary.csv   the headline agreement figures, already worked out.
 
 Only submitted attempts are included: an attempt still being answered has no marks.
+
+Column changes are additive only: a new column is always appended at the end of its
+file, never inserted or renamed, so a script already written against points.csv does
+not break. See docs/export-columns.md for what every column means and when it was
+added.
 """
 
 import csv
@@ -19,7 +24,16 @@ from io import StringIO
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Answer, Attempt, AttemptStatus, MarkingPoint, PointResult, PointStatus, Question
+from app.models import (
+    Answer,
+    Attempt,
+    AttemptStatus,
+    MarkingPoint,
+    PointResult,
+    PointStatus,
+    Question,
+    SchemeSource,
+)
 
 POINT_COLUMNS = [
     "attempt_id",
@@ -48,6 +62,12 @@ POINT_COLUMNS = [
     "read_by_model",
     "reading_confidence",
     "corrected_by_student",
+    # Appended, not inserted - see the module docstring.
+    "question_id",
+    "point_result_id",
+    "reviewed_at",
+    "scheme_source",
+    "topics",
 ]
 
 ATTEMPT_COLUMNS = [
@@ -66,6 +86,7 @@ ATTEMPT_COLUMNS = [
     "points_needing_review",
     "submitted_at",
     "marked_at",
+    "scheme_source",
 ]
 
 SUMMARY_COLUMNS = ["comparison", "scope", "judged", "agree", "disagree", "agreement_pct"]
@@ -74,6 +95,17 @@ MARKER_PAIRS = [
     ("chemistry checker vs teacher", "checker_awarded", "teacher_awarded"),
     ("AI judge vs teacher", "ai_awarded", "teacher_awarded"),
     ("chemistry checker vs AI judge", "checker_awarded", "ai_awarded"),
+]
+
+# "Official-scheme and AI-generated-scheme results are reported separately": an
+# official past-paper scheme is evidence; a generated one is a draft a teacher
+# approved. Folding them into one figure would hide which is which. "teacher" (a
+# scheme typed in by hand, not from an official source) is its own slice too, rather
+# than silently merged into "official".
+SOURCE_SCOPES = [
+    (SchemeSource.OFFICIAL, "official scheme"),
+    (SchemeSource.TEACHER, "teacher scheme"),
+    (SchemeSource.GENERATED, "generated scheme"),
 ]
 
 
@@ -103,10 +135,13 @@ def submitted_points(paper_id: int | None = None) -> Select[tuple[PointResult]]:
         .where(Attempt.status != AttemptStatus.IN_PROGRESS)
         .order_by(Attempt.submitted_at, PointResult.id)
         # Every row of the export reads the answer, its attempt, its paper, its
-        # question and the marking point. Left lazy that is a query per row.
+        # question (and that question's topics), and the marking point's scheme.
+        # Left lazy, that is a query per row - exactly what the large-export test
+        # below guards against.
         .options(
             selectinload(PointResult.answer).selectinload(Answer.attempt),
             selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.section),
+            selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.topics),
             selectinload(PointResult.point).selectinload(MarkingPoint.scheme),
         )
     )
@@ -147,6 +182,11 @@ def point_rows(db: Session, paper_id: int | None = None) -> list[dict]:
                 "read_by_model": answer.reader or "",
                 "reading_confidence": _or_blank(answer.reading_confidence),
                 "corrected_by_student": answer.corrected_by_student,
+                "question_id": question.id,
+                "point_result_id": result.id,
+                "reviewed_at": _when(result.reviewed_at),
+                "scheme_source": result.point.scheme.source.value,
+                "topics": ";".join(topic.code for topic in question.topics),
             }
         )
     return rows
@@ -157,7 +197,10 @@ def attempt_rows(db: Session, paper_id: int | None = None) -> list[dict]:
         select(Attempt)
         .where(Attempt.status != AttemptStatus.IN_PROGRESS)
         .order_by(Attempt.started_at)
-        .options(selectinload(Attempt.answers).selectinload(Answer.point_results))
+        .options(
+            selectinload(Attempt.answers).selectinload(Answer.point_results),
+            selectinload(Attempt.scheme),
+        )
     )
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
@@ -182,20 +225,39 @@ def attempt_rows(db: Session, paper_id: int | None = None) -> list[dict]:
                 "points_needing_review": sum(r.status == PointStatus.NEEDS_REVIEW for r in results),
                 "submitted_at": _when(attempt.submitted_at),
                 "marked_at": _when(attempt.marked_at),
+                "scheme_source": attempt.scheme.source.value,
             }
         )
     return rows
 
 
 def comparisons(db: Session, paper_id: int | None = None) -> list[Comparison]:
-    """Agreement between each pair of markers, over all reviewed points and blind ones only."""
+    """Agreement between each pair of markers.
+
+    Three groupings, because they answer different questions:
+
+    - all reviewed / blind only       every reviewed point, and the fair subset of it
+    - official / teacher / generated  the same two figures again, kept apart by where
+                                       the marking scheme came from. An official
+                                       past-paper scheme is evidence; a scheme a model
+                                       wrote is a draft a teacher approved - mixing
+                                       their agreement figures into one number would
+                                       hide which is which.
+    """
     reviewed = [r for r in db.scalars(submitted_points(paper_id)) if r.teacher_awarded is not None]
+    # Compared with False, not falsy: a NULL means the decision predates blind review
+    # and cannot be claimed as one. See app/services/review.py for the same rule.
     blind = [r for r in reviewed if r.teacher_saw_machine is False]
 
     out = []
     for name, left, right in MARKER_PAIRS:
         out.append(_compare(name, "all reviewed", reviewed, left, right))
         out.append(_compare(name, "blind only", blind, left, right))
+
+    for source, scope in SOURCE_SCOPES:
+        from_source = [r for r in reviewed if r.point.scheme.source == source]
+        for name, left, right in MARKER_PAIRS:
+            out.append(_compare(name, scope, from_source, left, right))
     return out
 
 

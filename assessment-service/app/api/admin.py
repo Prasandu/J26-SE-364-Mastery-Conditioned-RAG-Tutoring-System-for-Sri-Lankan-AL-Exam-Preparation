@@ -5,20 +5,28 @@ Every route needs the X-Admin-Key header (see app/security.py).
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
-from app.ai import build_author, build_critic, build_embedding_model
+from app.ai import build_author, build_classifier, build_critic, build_embedding_model
 from app.ai.author import QuestionAuthor
+from app.ai.classify import TopicClassifier
 from app.ai.critic import QuestionCritic
 from app.ai.judge import AnswerJudge
 from app.api.deps import get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import PaperKind
-from app.schemas.admin import MarkingSchemeIn, PaperIn, TopicIn
+from app.models import ContentStatus, PaperKind, SuggestionStatus
+from app.schemas.admin import MarkingSchemeIn, PaperIn, QuestionTopicsIn, TopicIn
 from app.schemas.attempts import AttemptOut
-from app.schemas.content import AdminPaperSummary, MarkingSchemeOut, PaperDetail, SchemeSummary, TopicOut
+from app.schemas.content import (
+    AdminPaperDetail,
+    MarkingSchemeOut,
+    PapersPageOut,
+    QuestionOut,
+    SchemeSummary,
+    TopicOut,
+)
 from app.schemas.generate import (
     GeneratedOut,
     GenerateIn,
@@ -26,8 +34,9 @@ from app.schemas.generate import (
     SchemeValidationOut,
     ShapeOut,
 )
+from app.schemas.topics import ClassifyIn, DecideSuggestionIn, TopicSuggestionOut
 from app.security import require_admin
-from app.services import attempts, papers, schemes, topics
+from app.services import attempts, export, papers, schemes, topics, topics_classify
 from app.services.generator import api as generator
 from app.services.generator import practice
 
@@ -97,27 +106,38 @@ def create_topic(data: TopicIn, db: Session = Depends(get_db)):
 # Papers
 
 
-@router.get("/papers", response_model=list[AdminPaperSummary])
-def list_papers(kind: PaperKind | None = None, year: int | None = None, db: Session = Depends(get_db)):
-    """All papers, drafts included, with their marking scheme versions."""
-    return papers.list_papers(db, kind=kind, year=year)
+@router.get("/papers", response_model=PapersPageOut)
+def list_papers(
+    search: str | None = None,
+    kind: PaperKind | None = None,
+    year: int | None = None,
+    status_: ContentStatus | None = Query(default=None, alias="status"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=papers.DEFAULT_PAGE_SIZE, ge=1, le=papers.MAX_PAGE_SIZE),
+    db: Session = Depends(get_db),
+):
+    """Every paper, drafts included, searchable by title and paginated."""
+    items, total = papers.search_papers(
+        db, search=search, kind=kind, year=year, status=status_, page=page, page_size=page_size
+    )
+    return PapersPageOut(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.post("/papers", response_model=PaperDetail, status_code=status.HTTP_201_CREATED)
+@router.post("/papers", response_model=AdminPaperDetail, status_code=status.HTTP_201_CREATED)
 def create_paper(data: PaperIn, db: Session = Depends(get_db)):
     """Create a draft paper with all its sections and questions."""
-    return papers.to_paper_detail(papers.create_paper(db, data))
+    return papers.to_admin_paper_detail(papers.create_paper(db, data))
 
 
-@router.get("/papers/{paper_id}", response_model=PaperDetail)
+@router.get("/papers/{paper_id}", response_model=AdminPaperDetail)
 def get_paper(paper_id: int, db: Session = Depends(get_db)):
-    return papers.to_paper_detail(papers.get_paper(db, paper_id))
+    return papers.to_admin_paper_detail(papers.get_paper(db, paper_id))
 
 
-@router.put("/papers/{paper_id}", response_model=PaperDetail)
+@router.put("/papers/{paper_id}", response_model=AdminPaperDetail)
 def replace_paper(paper_id: int, data: PaperIn, db: Session = Depends(get_db)):
     """Replace a draft paper. Not allowed once it has marking schemes or is published."""
-    return papers.to_paper_detail(papers.replace_paper(db, paper_id, data))
+    return papers.to_admin_paper_detail(papers.replace_paper(db, paper_id, data))
 
 
 @router.delete("/papers/{paper_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -125,10 +145,16 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db)) -> None:
     papers.delete_paper(db, paper_id)
 
 
-@router.post("/papers/{paper_id}/publish", response_model=PaperDetail)
+@router.post("/papers/{paper_id}/publish", response_model=AdminPaperDetail)
 def publish_paper(paper_id: int, db: Session = Depends(get_db)):
     """Make the paper visible to students. Needs a published marking scheme."""
-    return papers.to_paper_detail(papers.publish_paper(db, paper_id))
+    return papers.to_admin_paper_detail(papers.publish_paper(db, paper_id))
+
+
+@router.patch("/questions/{question_id}/topics", response_model=QuestionOut)
+def set_question_topics(question_id: int, data: QuestionTopicsIn, db: Session = Depends(get_db)):
+    """Retag one question. Works regardless of its paper's status."""
+    return papers.question_out(papers.set_question_topics(db, question_id, data.topics))
 
 
 # Marking schemes
@@ -213,6 +239,80 @@ def publish_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
 def retire_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
     """Withdraw a published scheme. Marks already given still point at it."""
     return schemes.to_scheme_out(schemes.retire_scheme(db, paper_id, version))
+
+
+# Topic classification
+
+
+@router.post("/topics/classify", response_model=list[TopicSuggestionOut])
+def classify_topics(
+    data: ClassifyIn,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    """Ask the model to suggest topics for questions that have none.
+
+    Safe to call again: a question that already has a suggestion waiting for review
+    is skipped, so an interrupted run can simply be repeated.
+    """
+    classifier: TopicClassifier | None = build_classifier(settings)
+    if classifier is None:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "No AI model is configured. Set AI_API_KEY in .env."
+        )
+    return topics_classify.classify_questions(db, classifier, data.question_ids)
+
+
+@router.get("/topics/suggestions", response_model=list[TopicSuggestionOut])
+def list_suggestions(
+    status_: SuggestionStatus | None = Query(default=None, alias="status"), db: Session = Depends(get_db)
+):
+    return topics_classify.list_suggestions(db, status=status_)
+
+
+@router.post("/topics/suggestions/{suggestion_id}/approve", response_model=TopicSuggestionOut)
+def approve_suggestion(suggestion_id: int, data: DecideSuggestionIn, db: Session = Depends(get_db)):
+    """Apply the suggestion - or, if codes is given, only the ones a reviewer kept."""
+    return topics_classify.approve_suggestion(db, suggestion_id, data.decided_by, data.codes)
+
+
+@router.post("/topics/suggestions/{suggestion_id}/reject", response_model=TopicSuggestionOut)
+def reject_suggestion(suggestion_id: int, data: DecideSuggestionIn, db: Session = Depends(get_db)):
+    return topics_classify.reject_suggestion(db, suggestion_id, data.decided_by)
+
+
+# Exports
+#
+# Admin-only: a points export carries student refs and teachers' own names, which a
+# public or even a teacher-level route must not hand out. See docs/export-columns.md
+# for what every column means.
+
+
+@router.get("/export/points.csv")
+def export_points(paper_id: int | None = Query(default=None, ge=1), db: Session = Depends(get_db)):
+    return _csv_response("points.csv", export.POINT_COLUMNS, export.point_rows(db, paper_id))
+
+
+@router.get("/export/attempts.csv")
+def export_attempts(paper_id: int | None = Query(default=None, ge=1), db: Session = Depends(get_db)):
+    return _csv_response("attempts.csv", export.ATTEMPT_COLUMNS, export.attempt_rows(db, paper_id))
+
+
+@router.get("/export/summary.csv")
+def export_summary(paper_id: int | None = Query(default=None, ge=1), db: Session = Depends(get_db)):
+    return _csv_response("summary.csv", export.SUMMARY_COLUMNS, export.summary_rows(db, paper_id))
+
+
+def _csv_response(filename: str, columns: list[str], rows: list[dict]) -> Response:
+    # utf-8-sig: Excel only reads a CSV's Chemistry notation (², ₂, °, etc.) correctly
+    # with the UTF-8 byte order mark present. A JSON response never gets one - this
+    # encoding is for this one CSV download path only.
+    body = export.to_csv(columns, rows).encode("utf-8-sig")
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # Attempts

@@ -11,6 +11,7 @@ build, so swapping a provider never touches a service.
 """
 
 from app.ai.author import QuestionAuthor, gemini_author, openai_compatible_author
+from app.ai.classify import TopicClassifier, openai_compatible_classifier
 from app.ai.critic import QuestionCritic, gemini_critic, openai_compatible_critic
 from app.ai.embeddings import EmbeddingModel, gemini_embedding
 from app.ai.judge import (
@@ -80,6 +81,23 @@ def build_critic(settings: Settings) -> QuestionCritic | None:
     if needs_key and not settings.ai_api_key:
         return None
     return openai_compatible_critic(settings.ai_api_key, base_url, settings.ai_model or default_model)
+
+
+def build_classifier(settings: Settings) -> TopicClassifier | None:
+    """The model that suggests syllabus topics for a question.
+
+    An evaluation task like judging, not an authoring one, so it follows AI_PROVIDER
+    the same way build_judge does - Groq's openai/gpt-oss-120b in this project's own
+    .env. Gemini is not supported here: classification only needs plain structured
+    text output, and keeping it on the same provider as judging keeps one quota
+    shared between the two instead of two providers to configure.
+    """
+    if settings.ai_provider == ProviderName.GEMINI:
+        return None
+    base_url, default_model, needs_key = _openai_compatible_target(settings)
+    if needs_key and not settings.ai_api_key:
+        return None
+    return openai_compatible_classifier(settings.ai_api_key, base_url, settings.ai_model or default_model)
 
 
 def build_embedding_model(settings: Settings) -> EmbeddingModel | None:

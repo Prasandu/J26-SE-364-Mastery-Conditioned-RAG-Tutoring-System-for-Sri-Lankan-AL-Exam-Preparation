@@ -126,3 +126,10 @@ class MarkingSchemeIn(_Input):
     source: SchemeSource
     notes: str | None = None
     questions: list[QuestionSchemeIn] = Field(min_length=1)
+
+
+class QuestionTopicsIn(_Input):
+    """Retag one question. Metadata only - allowed on a question of any paper status,
+    published included, since it never touches marks or a marking scheme."""
+
+    topics: list[str] = []

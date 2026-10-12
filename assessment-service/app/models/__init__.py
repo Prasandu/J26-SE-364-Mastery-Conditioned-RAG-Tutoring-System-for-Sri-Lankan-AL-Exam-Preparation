@@ -49,6 +49,7 @@ from app.models.scheme import (
     SchemeSource,
     SchemeStatus,
 )
+from app.models.topic_suggestion import SuggestionStatus, TopicSuggestion
 
 __all__ = [
     "EDITABLE",
@@ -82,6 +83,8 @@ __all__ = [
     "SchemeSource",
     "SchemeStatus",
     "Section",
+    "SuggestionStatus",
+    "TopicSuggestion",
     "Topic",
     "question_topics",
     "utcnow",

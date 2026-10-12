@@ -43,12 +43,28 @@ class SchemeSummary(_FromORM):
     status: SchemeStatus
     created_at: datetime
     published_at: datetime | None
+    # The rest of the scheme's history - when it was checked, which validators ran,
+    # who approved it. Admin-only, so safe to always include here.
+    validated_at: datetime | None
+    checked_by: str | None
+    approved_by: str | None
+    approved_at: datetime | None
 
 
 class AdminPaperSummary(PaperSummary):
     created_at: datetime
     published_at: datetime | None
+    created_by: str | None
     marking_schemes: list[SchemeSummary]
+
+
+class PapersPageOut(BaseModel):
+    """One page of the admin papers list."""
+
+    items: list[AdminPaperSummary]
+    total: int
+    page: int
+    page_size: int
 
 
 class QuestionOut(BaseModel):
@@ -73,6 +89,17 @@ class SectionOut(BaseModel):
 
 class PaperDetail(PaperSummary):
     sections: list[SectionOut]
+
+
+class AdminPaperDetail(PaperDetail):
+    """The same tree of questions, plus what only an admin needs: who made it, when,
+    and every marking scheme version with its full validation and approval history."""
+
+    created_at: datetime
+    published_at: datetime | None
+    created_by: str | None
+    grounded_in: list[dict[str, Any]]
+    marking_schemes: list[SchemeSummary]
 
 
 class MarkingPointOut(_FromORM):

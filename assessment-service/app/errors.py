@@ -30,3 +30,15 @@ class ConfigurationError(DomainError):
     """The .env settings do not make sense (e.g. a provider without its URL)."""
 
     status_code = 503
+
+
+class ProviderError(DomainError):
+    """An AI provider call failed at request time: a timeout, a dropped connection,
+    a rate limit, a 5xx from the provider itself. The provider was configured
+    correctly (that is ConfigurationError); it just failed this one time.
+
+    502, not 500: this service is reachable and working, the problem is the service
+    it called. The message given to the caller is always a short, safe one - never
+    the provider's own exception text, which can include request internals."""
+
+    status_code = 502

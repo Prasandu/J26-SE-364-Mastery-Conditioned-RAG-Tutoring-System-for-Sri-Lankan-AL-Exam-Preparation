@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ApiError } from "@/api/client";
 
@@ -6,6 +6,9 @@ interface ApiState<T> {
   data: T | null;
   error: string | null;
   loading: boolean;
+  /** Run the call again without waiting for `deps` to change, e.g. after an action
+   * elsewhere on the page has changed what the call would return. */
+  reload: () => void;
 }
 
 /**
@@ -15,7 +18,13 @@ interface ApiState<T> {
  * component disappears first, so a slow reply never sets state on a dead screen.
  */
 export function useApi<T>(call: (signal: AbortSignal) => Promise<T>, deps: unknown[]): ApiState<T> {
-  const [state, setState] = useState<ApiState<T>>({ data: null, error: null, loading: true });
+  const [state, setState] = useState<Omit<ApiState<T>, "reload">>({
+    data: null,
+    error: null,
+    loading: true,
+  });
+  const [tick, setTick] = useState(0);
+  const reload = useCallback(() => setTick((current) => current + 1), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -33,7 +42,7 @@ export function useApi<T>(call: (signal: AbortSignal) => Promise<T>, deps: unkno
 
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, tick]);
 
-  return state;
+  return { ...state, reload };
 }

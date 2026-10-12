@@ -140,7 +140,10 @@ function Generator({ onSignOut }: { onSignOut: () => void }) {
         </p>
       </Hero>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-3">
+        <Link to="/admin/papers">
+          <Button variant="secondary">Manage papers &amp; schemes</Button>
+        </Link>
         <Button
           variant="secondary"
           onClick={() => {

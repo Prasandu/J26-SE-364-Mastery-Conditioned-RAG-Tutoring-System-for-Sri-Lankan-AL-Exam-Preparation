@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.events import router as events_router
 from app.errors import register_error_handlers
 
 app = FastAPI(
@@ -18,6 +19,7 @@ app.add_middleware(
 )
 
 register_error_handlers(app)
+app.include_router(events_router)
 
 
 @app.get("/health", tags=["health"])

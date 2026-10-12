@@ -32,6 +32,30 @@ uvicorn app.main:app --host 127.0.0.1 --port 8083 --reload
 `GET /health` reports service health without querying the database. Open
 `/docs` locally to view the OpenAPI interface.
 
+## Ingest evidence
+
+Set `INGEST_API_KEY` and send the same value in the `X-API-Key` header to:
+
+- `POST /api/v1/events/assessment`
+- `POST /api/v1/events/module-completion`
+
+Unknown topic IDs return 422. Replaying an identical event ID is idempotent;
+reusing an ID for different event data returns 409. See
+[`../docs/api-contracts/planning-service.md`](../docs/api-contracts/planning-service.md)
+for request and response examples.
+
+The optional `ASSESSMENT_SERVICE_URL` enables `PullEvidenceSource`, which
+expects the assessment-service read endpoint documented in the API contract.
+
+## Mastery calculations
+
+P3 mastery calculations are deterministic pure functions in
+`app/services/mastery.py`; their tunable and normalized component weights live
+in `app/services/weights.py`. Assessment evidence is difficulty-adjusted and
+recency-weighted, while consistency and evidence coverage temper the mastery
+estimate. Weak-topic scores also account for score trend, error rate, revision
+staleness, exam importance, and reported confidence.
+
 ## Checks
 
 ```powershell
@@ -61,3 +85,15 @@ python -m scripts.seed_topics
 ```
 
 To use a different file, run `python -m scripts.seed_topics --file path\to\topics.json`.
+
+## Synthetic assessment events
+
+Generate 20 synthetic students with eight weekly papers each. Event payloads
+and hidden per-student topic abilities are written separately:
+
+```powershell
+python -m tools.mock_components --output-dir data\mock
+```
+
+The default random seed is 364; pass `--seed` to generate a different
+deterministic sample. Keep generated mock data out of version control.

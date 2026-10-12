@@ -22,6 +22,14 @@ class ConstraintViolation(PlanningError):
     status_code = 422
 
 
+class UpstreamServiceError(PlanningError):
+    status_code = 502
+
+
+class ServiceUnavailable(PlanningError):
+    status_code = 503
+
+
 async def planning_error_handler(
     request: Request,
     exc: PlanningError,

@@ -5,11 +5,12 @@ Every route needs the X-Admin-Key header (see app/security.py).
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.ai import build_author
+from app.ai import build_author, build_critic, build_embedding_model
 from app.ai.author import QuestionAuthor
+from app.ai.critic import QuestionCritic
 from app.ai.judge import AnswerJudge
 from app.api.deps import get_judge
 from app.config import Settings, get_settings
@@ -18,10 +19,17 @@ from app.models import PaperKind
 from app.schemas.admin import MarkingSchemeIn, PaperIn, TopicIn
 from app.schemas.attempts import AttemptOut
 from app.schemas.content import AdminPaperSummary, MarkingSchemeOut, PaperDetail, SchemeSummary, TopicOut
-from app.schemas.generate import GeneratedOut, GenerateIn, RatesOut, ShapeOut
+from app.schemas.generate import (
+    GeneratedOut,
+    GenerateIn,
+    RatesOut,
+    SchemeValidationOut,
+    ShapeOut,
+)
 from app.security import require_admin
 from app.services import attempts, papers, schemes, topics
 from app.services.generator import api as generator
+from app.services.generator import practice
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -29,6 +37,17 @@ SCHEME_PATH = "/papers/{paper_id}/marking-schemes/{version}"
 
 
 # Topics
+
+
+@router.delete("/practice-papers/{paper_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_practice_paper(paper_id: int, student_ref: str, db: Session = Depends(get_db)):
+    """Throw away a student's practice paper that nobody has answered.
+
+    Behind the admin key on purpose. The owner is identified by a student ref the
+    caller supplies, and refs are guessable, so as a public route this would let
+    anyone delete anyone else's paper. It opens up again once students sign in.
+    """
+    practice.delete_practice_paper(db, paper_id, student_ref)
 
 
 @router.get("/topics", response_model=list[TopicOut])
@@ -66,7 +85,8 @@ def generate_model_paper(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "No AI model is configured. Set a key in .env.",
         )
-    return generator.write(db, data, author)
+    critic: QuestionCritic | None = build_critic(settings)
+    return generator.write(db, data, author, settings, critic, build_embedding_model(settings))
 
 
 @router.post("/topics", response_model=TopicOut, status_code=status.HTTP_201_CREATED)
@@ -149,10 +169,50 @@ def copy_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
     return schemes.to_scheme_out(schemes.copy_scheme(db, paper_id, version))
 
 
+@router.post(SCHEME_PATH + "/validate", response_model=SchemeValidationOut)
+def validate_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
+    """Run the independent validators and record what they found.
+
+    The scheme becomes validated, or validation_failed if a deterministic check proved
+    something wrong. Findings only a teacher can settle are listed and do not fail it.
+    """
+    scheme, report = schemes.validate_scheme(db, paper_id, version)
+    return SchemeValidationOut(
+        version=scheme.version,
+        status=scheme.status,
+        checked_by=report.checks_run,
+        not_checked=report.checks_skipped,
+        errors=[str(finding) for finding in report.errors],
+        needs_teacher=[str(finding) for finding in report.for_teacher],
+        notes=[str(finding) for finding in report.notes],
+        summary=report.summary(),
+    )
+
+
+@router.post(SCHEME_PATH + "/approve", response_model=MarkingSchemeOut)
+def approve_scheme(
+    paper_id: int,
+    version: int,
+    approver: str = Query(min_length=1, max_length=64),
+    db: Session = Depends(get_db),
+):
+    """Sign this scheme off by name. Only a validated scheme can be approved."""
+    return schemes.to_scheme_out(schemes.approve_scheme(db, paper_id, version, approver))
+
+
 @router.post(SCHEME_PATH + "/publish", response_model=MarkingSchemeOut)
 def publish_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
-    """Lock this version. Checks that every question's points add up to its marks."""
+    """Lock this version. Checks that every question's points add up to its marks.
+
+    A generated scheme also has to have been validated first.
+    """
     return schemes.to_scheme_out(schemes.publish_scheme(db, paper_id, version))
+
+
+@router.post(SCHEME_PATH + "/retire", response_model=MarkingSchemeOut)
+def retire_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
+    """Withdraw a published scheme. Marks already given still point at it."""
+    return schemes.to_scheme_out(schemes.retire_scheme(db, paper_id, version))
 
 
 # Attempts

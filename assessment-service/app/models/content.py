@@ -81,6 +81,11 @@ class Paper(Base):
     # Who made it. Empty means it belongs to everyone: a past paper, or one an admin
     # published. A student's practice paper carries their own ref, so it stays theirs.
     created_by: Mapped[str | None] = mapped_column(String(64), index=True)
+    # Which resource passages were retrieved and shown to the model while writing this
+    # paper, [{"resource_code", "version", "page", "chunk_id"}, ...]. This is the
+    # system's own record of what it looked up - never the model's say-so about what
+    # it used, which is not something an AI reply can be trusted to report honestly.
+    grounded_in: Mapped[list[dict]] = mapped_column(JSON_DOC, default=list)
 
     sections: Mapped[list["Section"]] = relationship(
         back_populates="paper", order_by="Section.order_no", cascade=CASCADE_ALL

@@ -15,12 +15,13 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-from app.ai.judge import RETRY_ATTEMPTS, RETRY_STATUS_CODES, json_instruction
-
-# Reading a page takes longer than judging text.
-VISION_TIMEOUT_SECONDS = 180.0
-# A dense exam page can hold 6 questions with 5 long options each.
-MAX_OUTPUT_TOKENS = 32768
+from app.ai.tuning import (
+    MAX_OUTPUT_TOKENS,
+    RETRY_ATTEMPTS,
+    RETRY_STATUS_CODES,
+    VISION_TIMEOUT_SECONDS,
+    json_instruction,
+)
 
 
 @dataclass(frozen=True)

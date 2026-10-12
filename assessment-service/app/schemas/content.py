@@ -5,7 +5,15 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import AnswerMode, ContentStatus, PaperKind, PointType, RuleType, SchemeSource
+from app.models import (
+    AnswerMode,
+    ContentStatus,
+    PaperKind,
+    PointType,
+    RuleType,
+    SchemeSource,
+    SchemeStatus,
+)
 
 
 class _FromORM(BaseModel):
@@ -32,7 +40,7 @@ class SchemeSummary(_FromORM):
     id: int
     version: int
     source: SchemeSource
-    status: ContentStatus
+    status: SchemeStatus
     created_at: datetime
     published_at: datetime | None
 

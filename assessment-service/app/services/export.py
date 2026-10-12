@@ -17,9 +17,9 @@ from datetime import datetime
 from io import StringIO
 
 from sqlalchemy import Select, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.models import Answer, Attempt, AttemptStatus, PointResult, PointStatus
+from app.models import Answer, Attempt, AttemptStatus, MarkingPoint, PointResult, PointStatus, Question
 
 POINT_COLUMNS = [
     "attempt_id",
@@ -102,6 +102,13 @@ def submitted_points(paper_id: int | None = None) -> Select[tuple[PointResult]]:
         .join(Answer.attempt)
         .where(Attempt.status != AttemptStatus.IN_PROGRESS)
         .order_by(Attempt.submitted_at, PointResult.id)
+        # Every row of the export reads the answer, its attempt, its paper, its
+        # question and the marking point. Left lazy that is a query per row.
+        .options(
+            selectinload(PointResult.answer).selectinload(Answer.attempt),
+            selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.section),
+            selectinload(PointResult.point).selectinload(MarkingPoint.scheme),
+        )
     )
     return stmt if paper_id is None else stmt.where(Attempt.paper_id == paper_id)
 
@@ -146,7 +153,12 @@ def point_rows(db: Session, paper_id: int | None = None) -> list[dict]:
 
 
 def attempt_rows(db: Session, paper_id: int | None = None) -> list[dict]:
-    stmt = select(Attempt).where(Attempt.status != AttemptStatus.IN_PROGRESS).order_by(Attempt.started_at)
+    stmt = (
+        select(Attempt)
+        .where(Attempt.status != AttemptStatus.IN_PROGRESS)
+        .order_by(Attempt.started_at)
+        .options(selectinload(Attempt.answers).selectinload(Answer.point_results))
+    )
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
 

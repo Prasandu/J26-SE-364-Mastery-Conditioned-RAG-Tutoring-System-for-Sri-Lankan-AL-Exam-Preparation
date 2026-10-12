@@ -19,6 +19,13 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
+from app.ai.tuning import (
+    DETERMINISTIC_TEMPERATURE,
+    JUDGING_TIMEOUT_SECONDS,
+    RETRY_ATTEMPTS,
+    RETRY_STATUS_CODES,
+    json_instruction,
+)
 from app.config import ProviderName
 
 # What the judge is asked, and what it answers
@@ -80,13 +87,6 @@ Rules:
 """
 
 
-def json_instruction(shape: type[BaseModel]) -> str:
-    """Gemini is told the reply shape through its API; other providers are told in the prompt."""
-    return "Reply with JSON only, matching this JSON schema:\n" + json.dumps(
-        shape.model_json_schema(), indent=2
-    )
-
-
 JSON_INSTRUCTION = json_instruction(JudgeOutput)
 
 
@@ -102,10 +102,6 @@ def build_prompt(request: JudgeRequest) -> str:
 
 
 # Google Gemini
-
-# Busy (503), rate-limited (429) or temporary server errors: wait 2s, 4s, 8s, 16s and try again.
-RETRY_ATTEMPTS = 5
-RETRY_STATUS_CODES = [429, 500, 502, 503, 504]
 
 
 class GeminiJudge:
@@ -130,7 +126,7 @@ class GeminiJudge:
             contents=build_prompt(request),
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
-                temperature=0,  # same answer -> same decision, as far as possible
+                temperature=DETERMINISTIC_TEMPERATURE,  # same answer -> same decision
                 response_mime_type="application/json",
                 response_schema=JudgeOutput,
                 # We call no tools, so switch off automatic function calling (and its warning).
@@ -176,7 +172,7 @@ class OpenAICompatibleJudge:
             api_key=api_key or "not-needed",  # local services (Ollama) still want a value
             base_url=base_url,
             max_retries=RETRY_ATTEMPTS,  # the SDK retries 429 and 5xx with growing delays
-            timeout=120.0,
+            timeout=JUDGING_TIMEOUT_SECONDS,
         )
 
     def judge(self, request: JudgeRequest) -> list[PointVerdict]:
@@ -186,7 +182,7 @@ class OpenAICompatibleJudge:
                 {"role": "system", "content": f"{SYSTEM_PROMPT}\n{JSON_INSTRUCTION}"},
                 {"role": "user", "content": build_prompt(request)},
             ],
-            temperature=0,
+            temperature=DETERMINISTIC_TEMPERATURE,
             response_format={"type": "json_object"},
         )
         return JudgeOutput.model_validate_json(response.choices[0].message.content or "").verdicts

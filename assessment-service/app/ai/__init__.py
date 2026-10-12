@@ -2,13 +2,17 @@
 
 judge:  text models that judge a written answer
 author: text models that write questions and their marking points
+critic: text models that read back a question another model wrote
 vision: models that can see images (handwriting, past-paper pages)
+tuning: how every call is tuned (temperature, retries, timeouts)
 
 This file is the only place that reads the settings and decides which provider to
 build, so swapping a provider never touches a service.
 """
 
 from app.ai.author import QuestionAuthor, gemini_author, openai_compatible_author
+from app.ai.critic import QuestionCritic, gemini_critic, openai_compatible_critic
+from app.ai.embeddings import EmbeddingModel, gemini_embedding
 from app.ai.judge import (
     PROVIDERS,
     AnswerJudge,
@@ -56,6 +60,37 @@ def build_author(settings: Settings) -> QuestionAuthor | None:
     if needs_key and not settings.ai_api_key:
         return None
     return openai_compatible_author(settings.ai_api_key, base_url, settings.ai_model or default_model)
+
+
+def build_critic(settings: Settings) -> QuestionCritic | None:
+    """The model that critiques a generated question, or None when it is switched off.
+
+    Off by default: the deterministic validators cost nothing and prove more, and the
+    free quota is better spent writing questions than second-guessing them.
+    """
+    if not settings.verify_with_ai:
+        return None
+
+    if settings.ai_provider == ProviderName.GEMINI:
+        if not settings.gemini_api_key:
+            return None
+        return gemini_critic(settings.gemini_api_key, settings.gemini_model)
+
+    base_url, default_model, needs_key = _openai_compatible_target(settings)
+    if needs_key and not settings.ai_api_key:
+        return None
+    return openai_compatible_critic(settings.ai_api_key, base_url, settings.ai_model or default_model)
+
+
+def build_embedding_model(settings: Settings) -> EmbeddingModel | None:
+    """The model that turns text into vectors for resource retrieval.
+
+    Gemini only: Groq (the configured judge/author provider) has no embedding
+    endpoint, so this never follows ai_provider the way the judge and author do.
+    """
+    if not settings.gemini_api_key:
+        return None
+    return gemini_embedding(settings.gemini_api_key, settings.embedding_model, settings.embedding_dimensions)
 
 
 def build_reader(settings: Settings) -> AnswerReader | None:

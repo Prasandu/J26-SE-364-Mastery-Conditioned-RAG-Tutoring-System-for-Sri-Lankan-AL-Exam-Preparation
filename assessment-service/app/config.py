@@ -52,13 +52,35 @@ class Settings(BaseSettings):
     # Reading handwriting. Needs a model that can see images (Groq's cannot).
     vision_provider: ProviderName = ProviderName.GEMINI
     vision_model: str | None = None  # empty = the provider's default
+
+    # Resource retrieval (RAG). Always Gemini: Groq has no embedding endpoint.
+    # 768, not the model's default 3072, after measuring both (see docs/rag-resources.md).
+    embedding_model: str = "gemini-embedding-001"
+    embedding_dimensions: int = Field(default=768, gt=0, le=3072)
+    # Below this cosine similarity a passage is not relevant enough to ground a
+    # question with - excluded, not padded in as a low-quality result.
+    resource_min_similarity: float = Field(default=0.5, ge=0, le=1)
+    resource_passages_per_topic: int = Field(default=2, ge=0, le=10)
+    resources_dir: Path = Path("resources")  # original PDFs; never served to a browser
+    max_resource_upload_mb: float = Field(default=40.0, gt=0, le=200)
     upload_dir: Path = Path("uploads")
     max_upload_mb: float = Field(default=8.0, gt=0, le=50)
+
+    # Verifying a generated question. The deterministic validators always run; this
+    # only decides whether a second model is also asked to critique it, which costs
+    # another call per question out of the same small free quota.
+    verify_with_ai: bool = False
+    # How many times a section may be asked for again when questions are rejected.
+    # Bounded on purpose: a bad run must end with a clear error, not a loop.
+    generate_max_attempts: int = Field(default=2, ge=1, le=5)
 
     # Practice papers a student may generate per day. The AI quota is shared and
     # small, so one person cannot use it all up.
     practice_papers_per_day: int = Field(default=3, ge=0, le=50)
     practice_questions_at_once: int = Field(default=15, ge=1, le=60)
+    # A whole-service ceiling as well. The per student cap is keyed on a name the
+    # caller chooses, so on its own it stops an honest student, not a determined one.
+    practice_papers_per_day_total: int = Field(default=40, ge=0, le=1000)
 
     # Browsers only let these origins call the API. Comma separated, never "*",
     # because the admin and teacher keys travel in headers.

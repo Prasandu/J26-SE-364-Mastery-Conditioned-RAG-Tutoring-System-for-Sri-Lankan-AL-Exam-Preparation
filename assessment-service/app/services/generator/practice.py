@@ -18,6 +18,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai.author import QuestionAuthor
+from app.ai.critic import QuestionCritic
+from app.ai.embeddings import EmbeddingModel
 from app.config import Settings
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import Attempt, ContentStatus, Paper, utcnow
@@ -27,7 +29,7 @@ from app.services.generator.blueprint import build_blueprint, problems
 from app.services.generator.build import generate
 from app.services.generator.grounding import material_for
 from app.services.papers import create_paper, publish_paper
-from app.services.schemes import create_scheme, publish_scheme
+from app.services.schemes import create_scheme, publish_scheme, validate_scheme
 
 A_DAY = timedelta(days=1)
 
@@ -40,8 +42,22 @@ def made_today(db: Session, student_ref: str) -> int:
     )
 
 
+def made_today_in_total(db: Session) -> int:
+    """Every practice paper made today, whoever asked for it."""
+    return db.scalar(
+        select(func.count())
+        .select_from(Paper)
+        .where(Paper.created_by.is_not(None), Paper.created_at >= utcnow() - A_DAY)
+    )
+
+
 def make_practice_paper(
-    db: Session, data: PracticeIn, author: QuestionAuthor, settings: Settings
+    db: Session,
+    data: PracticeIn,
+    author: QuestionAuthor,
+    settings: Settings,
+    critic: QuestionCritic | None = None,
+    embedder: EmbeddingModel | None = None,
 ) -> GeneratedOut:
     """Write a practice paper for one student and open it for them straight away."""
     allowed = settings.practice_papers_per_day
@@ -53,6 +69,15 @@ def make_practice_paper(
         raise ConflictError(
             f"You have made {already} practice papers today, which is the limit of "
             f"{allowed}. Try again tomorrow."
+        )
+
+    # The per student cap is keyed on a name the caller picks, so it alone would not
+    # stop anyone from emptying a shared AI quota by using a different name each time.
+    budget = settings.practice_papers_per_day_total
+    if made_today_in_total(db) >= budget:
+        raise ConflictError(
+            f"{budget} practice papers have been made today, which is all this service "
+            "allows. Try again tomorrow."
         )
 
     known = check_topics(db, data.topic_codes)
@@ -67,14 +92,27 @@ def make_practice_paper(
             [f"{blueprint.questions} questions at once is more than the {most} allowed"],
         )
 
-    written = generate(blueprint, author, *material_for(db, data.topic_codes, blueprint, known))
+    written = generate(
+        blueprint,
+        author,
+        *material_for(db, data.topic_codes, blueprint, known, embedder),
+        critic=critic,
+        attempts=settings.generate_max_attempts,
+    )
 
     paper = create_paper(db, written.paper)
     paper.created_by = data.student_ref
+    paper.grounded_in = written.sources
     scheme = create_scheme(db, paper.id, written.scheme)
 
+    # Validate before publishing, not after. publish_scheme refuses a generated scheme
+    # that has not been through the validators, which is what stops a machine-written
+    # scheme marking a student by default.
+    validate_scheme(db, paper.id, scheme.version)
+
     # Published at once: the student made it to sit it, and no teacher is waiting to
-    # check it. They are told on screen that a machine wrote the questions.
+    # check it. It stays unapproved, and they are told on screen that a machine wrote
+    # the questions and that it may contain mistakes.
     publish_scheme(db, paper.id, scheme.version)
     publish_paper(db, paper.id)
 
@@ -85,6 +123,10 @@ def make_practice_paper(
         written_by=written.written_by,
         kept=written.kept,
         dropped=written.dropped,
+        attempts=written.attempts,
+        checked_by=written.checked_by,
+        needs_teacher=[str(finding) for finding in written.needs_teacher],
+        sources=written.sources,
         shape=shape_of(blueprint),
     )
 

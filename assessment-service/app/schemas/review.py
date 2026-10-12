@@ -27,7 +27,12 @@ class ReviewItemOut(BaseModel):
     description: str
     marks: float
 
-    student_text: str | None
+    student_text: str | None  # what the student confirmed, and what is marked
+    # Paper mode: what the machine read, kept beside the version the student agreed to,
+    # so a teacher can see whether a lost mark was the chemistry or the handwriting.
+    student_extracted_text: str | None
+    corrected_by_student: bool
+    read_by: str | None
     student_mcq_option: str | None
     student_graph: GraphIn | None
 
@@ -78,6 +83,20 @@ class ReviewedPointOut(BaseModel):
     reviewed_by: str | None
     reviewed_at: datetime | None
     teacher_saw_machine: bool | None
+    decisions: int = 0  # how many times this point has been reviewed
+
+
+class PointReviewOut(BaseModel):
+    """One entry in a marking point's review history."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    awarded: bool
+    comment: str | None
+    teacher_ref: str
+    saw_machine: bool | None
+    decided_at: datetime
 
 
 class MarkerAgreement(BaseModel):

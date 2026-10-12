@@ -127,7 +127,12 @@ export interface ReviewItem {
   code: string;
   description: string;
   marks: number;
-  student_text: string | null;
+  student_text: string | null; // what the student confirmed, and what is marked
+  // Paper mode: what the camera read before the student corrected it. A lost mark can
+  // be the chemistry or the handwriting, and the teacher has to see which.
+  student_extracted_text: string | null;
+  corrected_by_student: boolean;
+  read_by: string | null;
   student_mcq_option: string | null;
   status: PointStatus;
   checker_awarded: boolean | null;
@@ -154,6 +159,18 @@ export interface ReviewedPoint {
   teacher_comment: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
+  teacher_saw_machine: boolean | null; // null means the decision predates blind review
+  decisions: number; // how many times this point has been decided
+}
+
+/** One entry in a marking point's decision history, oldest first. */
+export interface PointReview {
+  id: number;
+  awarded: boolean;
+  comment: string | null;
+  teacher_ref: string;
+  saw_machine: boolean | null;
+  decided_at: string;
 }
 
 export interface MarkerAgreement {
@@ -247,8 +264,36 @@ export interface GeneratedPaper {
   title: string;
   written_by: string;
   kept: number;
-  dropped: string[];
+  dropped: string[]; // questions the checks rejected, with the reason
+  attempts: number; // how many times the model had to be asked
+  checked_by: string[]; // which validators ran
+  needs_teacher: string[]; // findings no check could settle; the paper is usable
   shape: Shape;
+}
+
+// The marking scheme lifecycle: draft -> validated -> approved -> published -> retired,
+// with validation_failed (and back) alongside draft/validated.
+export type SchemeStatus =
+  "draft" | "validation_failed" | "validated" | "approved" | "published" | "retired";
+
+export interface SchemeSummary {
+  id: number;
+  version: number;
+  source: "official" | "teacher" | "generated";
+  status: SchemeStatus;
+  created_at: string;
+  published_at: string | null;
+}
+
+export interface SchemeValidationOut {
+  version: number;
+  status: SchemeStatus;
+  checked_by: string[];
+  not_checked: string[];
+  errors: string[];
+  needs_teacher: string[];
+  notes: string[];
+  summary: string;
 }
 
 export interface PracticeLimits {

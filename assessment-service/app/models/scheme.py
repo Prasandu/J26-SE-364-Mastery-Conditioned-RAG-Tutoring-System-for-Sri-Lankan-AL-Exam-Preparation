@@ -17,13 +17,59 @@ from app.models.base import (
     text_enum,
     utcnow,
 )
-from app.models.content import ContentStatus, Paper, Question
+from app.models.content import Paper, Question
 
 
 class SchemeSource(StrEnum):
+    """Where the scheme came from. Reports keep these apart, and must: an official
+    past-paper scheme is evidence, a generated one is a draft until a teacher says
+    otherwise."""
+
     OFFICIAL = "official"
     TEACHER = "teacher"
     GENERATED = "generated"
+
+
+class SchemeStatus(StrEnum):
+    """How far a marking scheme has got.
+
+    draft             just written, nothing checked
+    validation_failed the validators found something definitely wrong
+    validated         the validators found nothing wrong, which is not the same as right
+    approved          a named person signed it off
+    published         in use for marking
+    retired           withdrawn, kept so old marks can still be traced
+
+    The first two values match ContentStatus, which is what this column held before,
+    so the rows already in the database keep their meaning.
+    """
+
+    DRAFT = "draft"
+    VALIDATION_FAILED = "validation_failed"
+    VALIDATED = "validated"
+    APPROVED = "approved"
+    PUBLISHED = "published"
+    RETIRED = "retired"
+
+
+# What may follow what. Publishing straight from a draft is allowed because a student's
+# own practice paper has no teacher waiting; what it is not allowed to do is skip
+# validation, which publish_scheme enforces separately.
+SCHEME_TRANSITIONS: dict[SchemeStatus, frozenset[SchemeStatus]] = {
+    SchemeStatus.DRAFT: frozenset(
+        {SchemeStatus.VALIDATED, SchemeStatus.VALIDATION_FAILED, SchemeStatus.PUBLISHED}
+    ),
+    SchemeStatus.VALIDATION_FAILED: frozenset({SchemeStatus.DRAFT, SchemeStatus.VALIDATED}),
+    SchemeStatus.VALIDATED: frozenset(
+        {SchemeStatus.APPROVED, SchemeStatus.VALIDATION_FAILED, SchemeStatus.PUBLISHED}
+    ),
+    SchemeStatus.APPROVED: frozenset({SchemeStatus.PUBLISHED, SchemeStatus.VALIDATED}),
+    SchemeStatus.PUBLISHED: frozenset({SchemeStatus.RETIRED}),
+    SchemeStatus.RETIRED: frozenset(),
+}
+
+# A scheme may still be edited while it is in one of these.
+EDITABLE = frozenset({SchemeStatus.DRAFT, SchemeStatus.VALIDATION_FAILED, SchemeStatus.VALIDATED})
 
 
 class PointType(StrEnum):
@@ -51,10 +97,28 @@ class MarkingScheme(Base):
     paper_id: Mapped[int] = mapped_column(ForeignKey(PAPER_FK, ondelete="CASCADE"))
     version: Mapped[int] = mapped_column(Integer, default=1)
     source: Mapped[SchemeSource] = mapped_column(text_enum(SchemeSource))
-    status: Mapped[ContentStatus] = mapped_column(text_enum(ContentStatus), default=ContentStatus.DRAFT)
+    status: Mapped[SchemeStatus] = mapped_column(text_enum(SchemeStatus), default=SchemeStatus.DRAFT)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # What the last verification pass found, kept so a rejection can be explained and
+    # a published scheme can be traced back to the checks it passed.
+    validation_reasons: Mapped[list[dict[str, Any]]] = mapped_column(JSON_DOC, default=list)
+    validated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    checked_by: Mapped[str | None] = mapped_column(String(200))  # which validators ran
+    approved_by: Mapped[str | None] = mapped_column(String(64))
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    @property
+    def is_official(self) -> bool:
+        """True only for a real past-paper scheme. A generated one never becomes this."""
+        return self.source == SchemeSource.OFFICIAL
+
+    @property
+    def needs_approval(self) -> bool:
+        """A machine wrote it and nobody has signed it off yet."""
+        return self.source == SchemeSource.GENERATED and self.approved_by is None
 
     paper: Mapped[Paper] = relationship(back_populates="marking_schemes")
     points: Mapped[list["MarkingPoint"]] = relationship(

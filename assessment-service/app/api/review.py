@@ -12,6 +12,7 @@ from app.db import get_db
 from app.models import PointStatus
 from app.schemas.review import (
     AgreementOut,
+    PointReviewOut,
     ReviewDecisionIn,
     ReviewedPointOut,
     ReviewItemOut,
@@ -61,6 +62,12 @@ def attempt_points(attempt_id: uuid.UUID, db: Session = Depends(get_db)):
 def agreement(paper_id: int | None = None, db: Session = Depends(get_db)):
     """How often the chemistry checker and the AI judge reached the same decision as a teacher."""
     return review.agreement(db, paper_id=paper_id)
+
+
+@router.get("/points/{result_id}/history", response_model=list[PointReviewOut])
+def point_history(result_id: int, db: Session = Depends(get_db)):
+    """Every decision made on one marking point, oldest first."""
+    return review.get_point(db, result_id).reviews
 
 
 @router.post("/points/{result_id}", response_model=ReviewedPointOut)

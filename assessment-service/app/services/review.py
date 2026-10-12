@@ -10,7 +10,7 @@ import uuid
 from collections.abc import Sequence
 
 from sqlalchemy import Select, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.errors import ConflictError, NotFoundError
 from app.models import (
@@ -19,6 +19,7 @@ from app.models import (
     AttemptStatus,
     MarkingMethod,
     PointResult,
+    PointReview,
     PointStatus,
     utcnow,
 )
@@ -77,6 +78,8 @@ def review_scripts(
         .order_by(Attempt.submitted_at, Attempt.id)
         .limit(min(limit, MAX_QUEUE_PAGE))
         .offset(offset)
+        # Each script counts its own marking points, which is a query each without this.
+        .options(selectinload(Attempt.answers).selectinload(Answer.point_results))
     )
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
@@ -110,8 +113,20 @@ def get_point(db: Session, result_id: int) -> PointResult:
 
 
 def record_decision(db: Session, result_id: int, decision: ReviewDecisionIn) -> PointResult:
-    """The teacher's decision is final and replaces whatever the machine decided."""
+    """The teacher's decision is final and replaces whatever the machine decided.
+
+    The earlier decision is not lost: every one is appended to point_reviews, so a
+    changed mind or a second marker can still be reported.
+    """
     result = get_point(db, result_id)
+    result.reviews.append(
+        PointReview(
+            awarded=decision.awarded,
+            comment=decision.comment,
+            teacher_ref=decision.teacher_ref,
+            saw_machine=decision.saw_machine,
+        )
+    )
     result.teacher_awarded = decision.awarded
     result.teacher_comment = decision.comment
     result.reviewed_by = decision.teacher_ref
@@ -134,7 +149,10 @@ def agreement(db: Session, *, paper_id: int | None = None) -> AgreementOut:
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
     reviewed = db.scalars(stmt).all()
-    blind = [r for r in reviewed if not r.teacher_saw_machine]
+    # Compared with False, not falsy: a NULL means the decision was made before blind
+    # review existed and cannot be claimed as one. Counting unknown as blind would
+    # quietly inflate the figure this project reports.
+    blind = [r for r in reviewed if r.teacher_saw_machine is False]
 
     return AgreementOut(
         reviewed_points=len(reviewed),
@@ -168,6 +186,9 @@ def to_review_item(result: PointResult) -> ReviewItemOut:
         description=result.point.description,
         marks=result.point.marks,
         student_text=answer.text,
+        student_extracted_text=answer.extracted_text,
+        corrected_by_student=answer.corrected_by_student,
+        read_by=answer.reader,
         student_mcq_option=answer.mcq_option,
         student_graph=GraphIn.model_validate(answer.data) if answer.data else None,
         status=result.status,

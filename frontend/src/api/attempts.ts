@@ -13,6 +13,12 @@ export function startAttempt(
   });
 }
 
+/** A student's own attempts, newest first, with the marks they were given. */
+export function myAttempts(studentRef: string, signal?: AbortSignal): Promise<Attempt[]> {
+  const query = new URLSearchParams({ student_ref: studentRef });
+  return request<Attempt[]>(`/attempts?${query}`, { signal });
+}
+
 export function getAttempt(attemptId: string, signal?: AbortSignal): Promise<Attempt> {
   return request<Attempt>(`/attempts/${attemptId}`, { signal });
 }

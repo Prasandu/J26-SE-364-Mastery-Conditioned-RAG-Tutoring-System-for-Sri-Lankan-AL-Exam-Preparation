@@ -3,6 +3,9 @@
 from sqlalchemy.orm import Session
 
 from app.ai.author import QuestionAuthor
+from app.ai.critic import QuestionCritic
+from app.ai.embeddings import EmbeddingModel
+from app.config import Settings
 from app.errors import ContentValidationError
 from app.schemas.generate import (
     GeneratedOut,
@@ -20,10 +23,10 @@ from app.services.generator.blueprint import (
     build_blueprint,
     problems,
 )
-from app.services.generator.build import generate
+from app.services.generator.build import DEFAULT_ATTEMPTS, generate
 from app.services.generator.grounding import material_for
 from app.services.papers import create_paper
-from app.services.schemes import create_scheme
+from app.services.schemes import create_scheme, validate_scheme
 from app.services.topics import topics_by_code
 
 
@@ -43,24 +46,54 @@ def plan(db: Session, data: GenerateIn) -> ShapeOut:
     return shape_of(build_blueprint(data.title, data.topic_codes, data.counts.as_modes()))
 
 
-def write(db: Session, data: GenerateIn, author: QuestionAuthor) -> GeneratedOut:
-    """Ask the model for the questions, then save a draft paper and a draft scheme."""
+def write(
+    db: Session,
+    data: GenerateIn,
+    author: QuestionAuthor,
+    settings: Settings | None = None,
+    critic: QuestionCritic | None = None,
+    embedder: EmbeddingModel | None = None,
+) -> GeneratedOut:
+    """Ask the model for the questions, verify them, then save two drafts.
+
+    The scheme is left for a teacher to approve. It is validated here so the findings
+    are stored with it, but nothing publishes it. `embedder` grounds the brief in
+    retrieved resource passages when one is configured; without it, nothing changes
+    from before resources existed.
+    """
     known = check_topics(db, data.topic_codes)
     blueprint = build_blueprint(data.title, data.topic_codes, data.counts.as_modes())
     if found := problems(blueprint):
         raise ContentValidationError("The paper cannot be generated", found)
 
-    written = generate(blueprint, author, *material_for(db, data.topic_codes, blueprint, known))
+    written = generate(
+        blueprint,
+        author,
+        *material_for(db, data.topic_codes, blueprint, known, embedder),
+        critic=critic,
+        attempts=settings.generate_max_attempts if settings else DEFAULT_ATTEMPTS,
+    )
 
     paper = create_paper(db, written.paper)
+    paper.grounded_in = written.sources
     scheme = create_scheme(db, paper.id, written.scheme)
+    validate_scheme(db, paper.id, scheme.version)
+    db.commit()
+    return _generated_out(paper, scheme.version, written, blueprint)
+
+
+def _generated_out(paper, version: int, written, blueprint) -> GeneratedOut:
     return GeneratedOut(
         paper_id=paper.id,
-        scheme_version=scheme.version,
+        scheme_version=version,
         title=paper.title,
         written_by=written.written_by,
         kept=written.kept,
         dropped=written.dropped,
+        attempts=written.attempts,
+        checked_by=written.checked_by,
+        needs_teacher=[str(finding) for finding in written.needs_teacher],
+        sources=written.sources,
         shape=shape_of(blueprint),
     )
 

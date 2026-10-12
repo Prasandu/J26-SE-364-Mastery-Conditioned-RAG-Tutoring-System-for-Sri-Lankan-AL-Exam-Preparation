@@ -1,6 +1,8 @@
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 
+import { DecisionHistory } from "./DecisionHistory";
+
 export interface Decided {
   id: number;
   question: string;
@@ -35,24 +37,29 @@ export function JustDecided({ decisions }: { decisions: Decided[] }) {
         {decisions.map((decision) => {
           const agreed = decision.aiAwarded === decision.teacherAwarded;
           return (
-            <li key={decision.id} className="flex flex-wrap items-center gap-3 py-2">
-              <span className="w-20 font-mono text-brand-700">
-                {decision.question} {decision.code}
-              </span>
-              <span className="text-slate-600">
-                you said <strong>{decision.teacherAwarded ? "award" : "do not award"}</strong>
-              </span>
-              {decision.aiAwarded === null ? (
-                <span className="text-slate-400">the AI did not judge this point</span>
-              ) : (
-                <>
-                  <span className="text-slate-600">
-                    AI said <strong>{decision.aiAwarded ? "award" : "do not award"}</strong>
-                  </span>
-                  <Badge tone={agreed ? "good" : "warn"}>{agreed ? "agreed" : "disagreed"}</Badge>
-                </>
-              )}
-              {!decision.blind && <Badge>looked first</Badge>}
+            <li key={decision.id} className="py-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="w-20 font-mono text-brand-700">
+                  {decision.question} {decision.code}
+                </span>
+                <span className="text-slate-600">
+                  you said <strong>{decision.teacherAwarded ? "award" : "do not award"}</strong>
+                </span>
+                {decision.aiAwarded === null ? (
+                  <span className="text-slate-400">the AI did not judge this point</span>
+                ) : (
+                  <>
+                    <span className="text-slate-600">
+                      AI said <strong>{decision.aiAwarded ? "award" : "do not award"}</strong>
+                    </span>
+                    <Badge tone={agreed ? "good" : "warn"}>{agreed ? "agreed" : "disagreed"}</Badge>
+                  </>
+                )}
+                {!decision.blind && <Badge>looked first</Badge>}
+              </div>
+              <div className="mt-1 pl-20">
+                <DecisionHistory resultId={decision.id} />
+              </div>
             </li>
           );
         })}

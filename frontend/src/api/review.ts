@@ -1,6 +1,7 @@
 import { request } from "./client";
 import type {
   Agreement,
+  PointReview,
   PointStatus,
   ReviewDecision,
   ReviewItem,
@@ -54,4 +55,12 @@ export function reviewScripts(paperId?: number, signal?: AbortSignal): Promise<R
 /** Every marking point of one script, decided or not. */
 export function scriptPoints(attemptId: string, signal?: AbortSignal): Promise<ReviewItem[]> {
   return request<ReviewItem[]>(`/review/attempts/${attemptId}`, { headers: headers(), signal });
+}
+
+/** Every decision made on one marking point, oldest first. */
+export function pointHistory(resultId: number, signal?: AbortSignal): Promise<PointReview[]> {
+  return request<PointReview[]>(`/review/points/${resultId}/history`, {
+    headers: headers(),
+    signal,
+  });
 }

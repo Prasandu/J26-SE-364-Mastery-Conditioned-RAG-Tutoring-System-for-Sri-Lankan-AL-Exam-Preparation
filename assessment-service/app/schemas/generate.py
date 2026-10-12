@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models import AnswerMode
+from app.models import AnswerMode, SchemeStatus
 from app.schemas.admin import Title
 
 
@@ -84,5 +84,25 @@ class GeneratedOut(BaseModel):
     title: str
     written_by: str
     kept: int
-    dropped: list[str]
+    dropped: list[str]  # questions the checks rejected, with the reason
+    attempts: int = 1  # how many times the model had to be asked
+    checked_by: list[str] = []  # which validators ran
+    # Findings no check could settle. The paper is usable; these need a person.
+    needs_teacher: list[str] = []
+    # Resource passages that were retrieved and shown to the model while writing this
+    # paper. The system's own record, not anything the model reported about itself.
+    sources: list[dict] = []
     shape: ShapeOut
+
+
+class SchemeValidationOut(BaseModel):
+    """What a validation pass found, and where it left the scheme."""
+
+    version: int
+    status: SchemeStatus
+    checked_by: list[str]  # validators that ran
+    not_checked: list[str]  # validators that could not run, so proved nothing
+    errors: list[str]  # proved wrong: the scheme is validation_failed
+    needs_teacher: list[str]  # nothing could be proved either way
+    notes: list[str]
+    summary: str

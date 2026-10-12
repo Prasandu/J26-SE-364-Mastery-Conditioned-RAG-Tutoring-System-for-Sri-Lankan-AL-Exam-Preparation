@@ -16,13 +16,18 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
-from app.ai.judge import RETRY_ATTEMPTS, RETRY_STATUS_CODES, json_instruction
-
-TIMEOUT_SECONDS = 180.0
-MAX_OUTPUT_TOKENS = 32768
-# Some variety is wanted here, unlike marking, where the same answer must always be
-# judged the same way.
-TEMPERATURE = 0.7
+from app.ai.tuning import (
+    AUTHORING_TEMPERATURE as TEMPERATURE,
+)
+from app.ai.tuning import (
+    AUTHORING_TIMEOUT_SECONDS as TIMEOUT_SECONDS,
+)
+from app.ai.tuning import (
+    MAX_OUTPUT_TOKENS,
+    RETRY_ATTEMPTS,
+    RETRY_STATUS_CODES,
+    json_instruction,
+)
 
 
 class WrittenOption(BaseModel):
@@ -35,6 +40,41 @@ class WrittenPoint(BaseModel):
     description: str = Field(description="What earns this mark, in the examiner's words")
     marks: float
     point_type: str = Field(description="mcq_key, concept, equation, formula, calculation or unit")
+    # The three below turn a point into something code can check and re-check. Without
+    # them a calculation can only ever be marked by the AI judge or by a person.
+    expected_value: float | None = Field(
+        default=None, description="calculation only: the numeric answer, e.g. 0.08"
+    )
+    expected_unit: str | None = Field(
+        default=None, description="calculation or unit: the unit, e.g. mol dm-3"
+    )
+    working: str | None = Field(
+        default=None,
+        description=(
+            "calculation only: the arithmetic that gives expected_value, numbers only, "
+            "e.g. '0.0200 * 0.100 / 0.0250'"
+        ),
+    )
+    alternatives: list[str] = Field(
+        default_factory=list, description="Other answers that earn this mark just as well"
+    )
+
+    def expected_dict(self) -> dict | None:
+        """What a checker needs, in the shape the marking scheme stores."""
+        expected = {
+            "value": self.expected_value,
+            "unit": (self.expected_unit or "").strip() or None,
+            "working": (self.working or "").strip() or None,
+        }
+        kept = {key: value for key, value in expected.items() if value is not None}
+        return kept or None
+
+
+class WrittenEcf(BaseModel):
+    """Error carried forward: this point may be awarded from the student's own earlier values."""
+
+    point: str = Field(description="The later point code, e.g. P3")
+    depends_on: list[str] = Field(description="The earlier point codes it follows from, e.g. ['P1']")
 
 
 class WrittenQuestion(BaseModel):
@@ -44,6 +84,9 @@ class WrittenQuestion(BaseModel):
     options: list[WrittenOption] = Field(default_factory=list, description="Multiple choice only")
     answer: str = Field(description="The full model answer")
     points: list[WrittenPoint]
+    carried_forward: list[WrittenEcf] = Field(
+        default_factory=list, description="Marks that follow from an earlier answer"
+    )
 
 
 class WrittenSection(BaseModel):
@@ -78,8 +121,19 @@ Rules:
 8. Do not repeat a question you have already written in this paper.
 9. Where real past questions are shown, follow their style, difficulty and the way their
    marks are split. Do not copy them.
-9. Where real past questions are shown, follow their style, difficulty and the way their
-   marks are split. Do not copy them.
+10. A question must contain every number needed to answer it. Never refer to a diagram,
+   graph, table or figure, because none can be shown.
+11. For a calculation point, give expected_value, expected_unit, and working: the
+   arithmetic that produces the value, numbers and operators only (no units, no words).
+   The working is recomputed, so it must agree with expected_value.
+12. For a unit point, give expected_unit.
+13. Where a later mark can be earned from the student's own earlier answer, say so in
+   carried_forward rather than making it depend on getting the earlier part right.
+14. RESOURCE PASSAGES, if given, are background to help you phrase the question and
+   check your chemistry - not a quotation to lift from, and not something to cite. Do
+   not name, quote, or refer to a source in the question, the answer, or any marking
+   point. Nothing you write is checked against a source after the fact, so never claim
+   a resource supports something it does not say.
 """
 
 
@@ -91,6 +145,7 @@ def build_brief(
     topics: list[str],
     avoid: list[str],
     examples: list[str] | None = None,
+    resources: list[str] | None = None,
 ) -> str:
     """The instructions for one section of the paper."""
     kinds = {
@@ -108,6 +163,8 @@ def build_brief(
     }
     if examples:
         sections["REAL PAST QUESTIONS (match this style and mark structure)"] = "\n\n".join(examples)
+    if resources:
+        sections["RESOURCE PASSAGES (background only - do not name or quote)"] = "\n\n".join(resources)
     if avoid:
         sections["ALREADY ASKED (do not repeat)"] = "\n".join(f"- {text}" for text in avoid)
     return "\n\n".join(f"## {title}\n{body}" for title, body in sections.items())

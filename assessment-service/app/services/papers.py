@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import (
     ContentStatus,
-    MarkingScheme,
     Paper,
     PaperKind,
     Question,
@@ -100,7 +99,7 @@ def publish_paper(db: Session, paper_id: int) -> Paper:
     return paper
 
 
-def ensure_draft(item: Paper | MarkingScheme, message: str) -> None:
+def ensure_draft(item: Paper, message: str) -> None:
     if item.status != ContentStatus.DRAFT:
         raise ConflictError(message)
 

@@ -43,6 +43,7 @@ npm-debug.log*
 data/raw/
 data/private/
 uploads/
+assessment-service/resources/
 samples/
 assessment-service/samples/
 drafts/

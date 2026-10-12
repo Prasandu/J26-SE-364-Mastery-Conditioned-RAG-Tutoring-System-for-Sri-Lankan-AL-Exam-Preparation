@@ -13,7 +13,7 @@ judge fails (no internet, quota), the points simply stay pending and can be retr
 
 import logging
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager
 
 from sqlalchemy import select
@@ -82,6 +82,8 @@ def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
 
 # Everything to_attempt_out reads. Without these the result is built one question at
 # a time, which is a round trip each: over two hundred for a fifty question paper.
+MAX_HISTORY = 100
+
 OUTPUT_LOADING = (
     selectinload(Attempt.answers).selectinload(Answer.point_results).selectinload(PointResult.point),
     selectinload(Attempt.answers).selectinload(Answer.images),
@@ -90,6 +92,22 @@ OUTPUT_LOADING = (
     .selectinload(Section.questions)
     .selectinload(Question.sub_questions, recursion_depth=3),
 )
+
+
+def list_attempts(db: Session, student_ref: str, limit: int = 50) -> Sequence[Attempt]:
+    """A student's own attempts, newest first.
+
+    Keyed on the student ref they give, like everything else until there is a real
+    sign-in. It shows only what that ref has done, never anyone else's work.
+    """
+    stmt = (
+        select(Attempt)
+        .where(Attempt.student_ref == student_ref)
+        .order_by(Attempt.started_at.desc())
+        .limit(min(limit, MAX_HISTORY))
+        .options(*OUTPUT_LOADING)
+    )
+    return db.scalars(stmt).all()
 
 
 def get_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:

@@ -2,7 +2,16 @@
 
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.ai.judge import AnswerJudge
@@ -85,6 +94,16 @@ async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
     if not image:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The uploaded file is empty")
     return image
+
+
+@router.get("", response_model=list[AttemptOut])
+def list_attempts(
+    student_ref: str,
+    limit: int = Query(default=50, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """A student's own attempts and results, newest first."""
+    return [attempts.to_attempt_out(a) for a in attempts.list_attempts(db, student_ref, limit)]
 
 
 @router.post("/{attempt_id}/answer-sheet", response_model=SheetReadOut)

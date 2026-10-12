@@ -145,6 +145,38 @@ class PointResult(Base):
 
     answer: Mapped[Answer] = relationship(back_populates="point_results")
     point: Mapped[MarkingPoint] = relationship()
+    reviews: Mapped[list["PointReview"]] = relationship(
+        back_populates="result", order_by="PointReview.id", cascade=CASCADE_ALL
+    )
+
+    @property
+    def decisions(self) -> int:
+        """How many times a teacher has decided this point."""
+        return len(self.reviews)
+
+
+class PointReview(Base):
+    """One teacher decision on one marking point, kept for good.
+
+    PointResult holds the decision that currently counts. This is the log behind it:
+    when a second teacher looks at the same point, or the same teacher changes their
+    mind, the earlier decision is still here to be reported.
+    """
+
+    __tablename__ = "point_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    point_result_id: Mapped[int] = mapped_column(
+        ForeignKey("point_results.id", ondelete="CASCADE"), index=True
+    )
+    awarded: Mapped[bool] = mapped_column(Boolean)
+    comment: Mapped[str | None] = mapped_column(Text)
+    teacher_ref: Mapped[str] = mapped_column(String(64), index=True)
+    # Nullable like the field it mirrors: an older decision cannot be called blind.
+    saw_machine: Mapped[bool | None] = mapped_column(Boolean)
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    result: Mapped["PointResult"] = relationship(back_populates="reviews")
 
 
 class AnswerImage(Base):

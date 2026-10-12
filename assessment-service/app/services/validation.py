@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from collections.abc import Hashable, Iterable, Iterator, Mapping
 from math import isclose
 
-from app.models import AnswerMode, ContentStatus, MarkingScheme, Paper, PointType, Question
+from app.models import AnswerMode, MarkingScheme, Paper, PointType, Question, SchemeStatus
 from app.schemas.admin import (
     AnyNOfRuleIn,
     EcfRuleIn,
@@ -100,7 +100,7 @@ def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_to
 
 def check_paper_ready(paper: Paper) -> list[str]:
     errors = _check_leaf_marks(paper)
-    if not any(scheme.status == ContentStatus.PUBLISHED for scheme in paper.marking_schemes):
+    if not any(scheme.status == SchemeStatus.PUBLISHED for scheme in paper.marking_schemes):
         errors.append("Publish a marking scheme for this paper first")
     return errors
 

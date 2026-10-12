@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.ai import build_author
+from app.ai import build_author, build_critic, build_embedding_model
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import PaperKind
@@ -76,13 +76,9 @@ def make_practice(
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "No AI model is configured. Set a key in .env."
         )
-    return practice.make_practice_paper(db, data, author, settings)
-
-
-@router.delete("/practice/{paper_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_practice(paper_id: int, student_ref: str, db: Session = Depends(get_db)):
-    """Throw away one of your own practice papers, if you have not answered it."""
-    practice.delete_practice_paper(db, paper_id, student_ref)
+    return practice.make_practice_paper(
+        db, data, author, settings, build_critic(settings), build_embedding_model(settings)
+    )
 
 
 @router.get("/{paper_id}", response_model=PaperDetail)

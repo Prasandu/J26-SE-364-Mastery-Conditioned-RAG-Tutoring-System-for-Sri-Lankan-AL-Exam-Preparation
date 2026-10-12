@@ -17,7 +17,7 @@ import { shapeFrom } from "@/lib/shape";
 import { readStudentRef, saveStudentRef } from "@/lib/student";
 
 import { PaperShape } from "../generate/PaperShape";
-import { TopicPicker } from "../generate/TopicPicker";
+import { TopicWizard } from "./TopicWizard";
 
 const NO_COUNTS: Counts = { mcq: 0, structured: 0, essay: 0 };
 
@@ -95,7 +95,7 @@ export function PracticePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <Hero eyebrow="Practice" title="Make a paper on what you want to practise">
         <p>
           Pick your topics and how many questions. It is written for you, marked the same way as any
@@ -105,16 +105,16 @@ export function PracticePage() {
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:items-start">
         <Card>
-          <SectionHeading hint={`${chosen.size} chosen`}>Topics</SectionHeading>
-          <TopicPicker topics={topics.data} chosen={chosen} onToggle={toggle} />
+          <SectionHeading hint={`${chosen.size} chosen`}>1. Topics</SectionHeading>
+          <TopicWizard topics={topics.data} chosen={chosen} onToggle={toggle} />
         </Card>
 
         <div className="space-y-5 lg:sticky lg:top-24">
           <Card>
-            <SectionHeading>Questions</SectionHeading>
+            <SectionHeading>2. Questions &amp; time</SectionHeading>
             <div className="space-y-3">
               <CountField
-                label="Multiple choice"
+                label="MCQ count"
                 hint="2.4 minutes each"
                 value={counts.mcq}
                 onChange={(mcq) => setCounts({ ...counts, mcq })}
@@ -138,7 +138,7 @@ export function PracticePage() {
             </div>
 
             {tooMany && limits.data && (
-              <p className="mt-3 text-sm text-amber-800">
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 {shape.questions} questions at once is too many. The most is{" "}
                 {limits.data.questions_at_once}.
               </p>
@@ -146,6 +146,7 @@ export function PracticePage() {
           </Card>
 
           <Card>
+            <SectionHeading>3. Your details</SectionHeading>
             <label htmlFor="student-ref" className="block text-sm text-slate-600">
               Your student id
             </label>

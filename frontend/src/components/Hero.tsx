@@ -1,19 +1,24 @@
 import type { ReactNode } from "react";
 
 interface Props {
-  eyebrow?: string;
-  title: string;
-  children?: ReactNode;
-  actions?: ReactNode;
-  aside?: ReactNode;
+  readonly eyebrow?: string;
+  readonly title: string;
+  readonly children?: ReactNode;
+  readonly actions?: ReactNode;
+  readonly aside?: ReactNode;
 }
 
-/** The banner at the top of a page: light glass, with room for a picture beside it. */
+/**
+ * The banner at the top of a page: light glass, with room for a picture beside it.
+ *
+ * Kept small on purpose - this introduces a page, it does not compete with the
+ * actual feature below it for the user's attention.
+ */
 export function Hero({ eyebrow, title, children, actions, aside }: Props) {
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/70 shadow-xl shadow-brand-900/5 backdrop-blur-xl">
       <div
-        className={`grid items-center gap-8 px-6 py-12 sm:px-12 sm:py-16 ${
+        className={`grid items-center gap-6 px-5 py-4 sm:px-7 sm:py-5 ${
           aside ? "lg:grid-cols-[1.1fr_0.9fr]" : ""
         }`}
       >
@@ -23,11 +28,11 @@ export function Hero({ eyebrow, title, children, actions, aside }: Props) {
               {eyebrow}
             </p>
           )}
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+          <h1 className="mt-1.5 text-xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-2xl">
             {title}
           </h1>
-          {children && <div className="mt-5 text-base/relaxed text-slate-600">{children}</div>}
-          {actions && <div className="mt-8 flex flex-wrap gap-3">{actions}</div>}
+          {children && <div className="mt-1.5 text-sm text-slate-600">{children}</div>}
+          {actions && <div className="mt-4 flex flex-wrap gap-3">{actions}</div>}
         </div>
         {aside}
       </div>

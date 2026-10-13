@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # Key for the /review endpoints used by teachers. Empty = teacher review is switched off.
     teacher_api_key: str | None = Field(default=None, min_length=16)
 
+    # Signs login tokens (see app/services/auth.py). Empty = /auth is switched off,
+    # same convention as the two keys above. A real deployment sets a long random
+    # value and never changes it without expecting every signed-in user to be logged
+    # out - changing it invalidates every token already issued.
+    jwt_secret: str | None = Field(default=None, min_length=32)
+    jwt_expires_minutes: int = Field(default=60 * 24, ge=1)  # a day, so a student is not logged out mid-paper
+
     # AI judge for written answers. Without a key, written answers stay "pending".
     ai_provider: ProviderName = ProviderName.GEMINI
     # AI decisions below this confidence go to teacher review instead of counting.

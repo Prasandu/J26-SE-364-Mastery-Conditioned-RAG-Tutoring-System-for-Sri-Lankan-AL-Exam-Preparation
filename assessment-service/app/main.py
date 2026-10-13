@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import admin, attempts, papers, resources, review
+from app.api import admin, attempts, auth, papers, resources, review
 from app.config import get_settings
 from app.errors import DomainError
 
@@ -26,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(papers.router)
 app.include_router(attempts.router)
 app.include_router(review.router)

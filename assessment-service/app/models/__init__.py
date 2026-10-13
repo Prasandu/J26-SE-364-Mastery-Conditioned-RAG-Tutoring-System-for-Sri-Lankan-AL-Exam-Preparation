@@ -50,6 +50,7 @@ from app.models.scheme import (
     SchemeStatus,
 )
 from app.models.topic_suggestion import SuggestionStatus, TopicSuggestion
+from app.models.users import User, UserRole
 
 __all__ = [
     "EDITABLE",
@@ -86,6 +87,8 @@ __all__ = [
     "SuggestionStatus",
     "TopicSuggestion",
     "Topic",
+    "User",
+    "UserRole",
     "question_topics",
     "utcnow",
 ]

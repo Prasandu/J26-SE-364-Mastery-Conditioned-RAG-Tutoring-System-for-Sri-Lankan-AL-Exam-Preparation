@@ -18,6 +18,7 @@ from app.ai.judge import AnswerJudge
 from app.api.deps import get_file_store, get_judge, get_reader, get_session_factory
 from app.config import Settings, get_settings
 from app.db import get_db
+from app.models import User, UserRole
 from app.schemas.attempts import (
     AnswerIn,
     AnswerOut,
@@ -26,6 +27,7 @@ from app.schemas.attempts import (
     BulkAnswersIn,
     SheetReadOut,
 )
+from app.security import require_role
 from app.services import attempts, sheets
 from app.services.attempts import SessionFactory
 from app.services.marking import has_pending
@@ -37,8 +39,15 @@ router = APIRouter(prefix="/attempts", tags=["attempts"])
 
 
 @router.post("", response_model=AttemptOut, status_code=status.HTTP_201_CREATED)
-def start_attempt(data: AttemptCreate, db: Session = Depends(get_db)):
-    """Start answering a published paper. Uses the latest published marking scheme."""
+def start_attempt(
+    data: AttemptCreate, db: Session = Depends(get_db), user: User = Depends(require_role(UserRole.STUDENT))
+):
+    """Start answering a published paper. Uses the latest published marking scheme.
+
+    student_ref always comes from the signed-in account, never the request body -
+    otherwise anyone could submit, and see results, as another student.
+    """
+    data.student_ref = user.email
     return attempts.to_attempt_out(attempts.start_attempt(db, data))
 
 
@@ -98,12 +107,12 @@ async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
 
 @router.get("", response_model=list[AttemptOut])
 def list_attempts(
-    student_ref: str,
     limit: int = Query(default=50, ge=1, le=100),
     db: Session = Depends(get_db),
+    user: User = Depends(require_role(UserRole.STUDENT)),
 ):
-    """A student's own attempts and results, newest first."""
-    return [attempts.to_attempt_out(a) for a in attempts.list_attempts(db, student_ref, limit)]
+    """The signed-in student's own attempts and results, newest first."""
+    return [attempts.to_attempt_out(a) for a in attempts.list_attempts(db, user.email, limit)]
 
 
 @router.post("/{attempt_id}/answer-sheet", response_model=SheetReadOut)

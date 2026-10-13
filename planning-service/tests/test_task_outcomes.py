@@ -206,7 +206,6 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
         error_rate=0.2,
         interval_days=3,
     )
-    created_predictions: list[object] = []
     generated: dict[str, object] = {}
 
     class FakeScalarResults:
@@ -238,9 +237,6 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
         def execute(self, _statement: object) -> FakeScalarResults:
             return FakeScalarResults([("chem-u1", 2)])
 
-        def add_all(self, records: list[object]) -> None:
-            created_predictions.extend(records)
-
         def add(self, _record: object) -> None:
             pass
 
@@ -265,6 +261,11 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
         )
 
     monkeypatch.setattr(task_outcomes, "recompute_for", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        task_outcomes,
+        "predict_student",
+        lambda *_args, **_kwargs: SimpleNamespace(topics=[object()]),
+    )
     monkeypatch.setattr(task_outcomes, "generate_plan_schedule", fake_generate)
     session = FakeSession()
     result = task_outcomes.weekly_replan(
@@ -278,8 +279,7 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
     assert result.completed_minutes == 40
     assert result.adherence == pytest.approx(2 / 3)
     assert result.average_score_change == pytest.approx(0.2)
-    assert result.predictions_created == 1
-    assert created_predictions[0].model_version == "weekly-rule-based-v1"
+    assert result.predictions_created == 2
     assert generated["horizon_days"] == 7
     assert plan.constraints["priorities"] == original_priorities
     assert session.committed

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.events import router as events_router
 from app.api.plans import router as plans_router
+from app.api.predictions import router as predictions_router
 from app.api.tasks import router as tasks_router
 from app.errors import register_error_handlers
 
@@ -23,6 +24,7 @@ app.add_middleware(
 register_error_handlers(app)
 app.include_router(events_router)
 app.include_router(plans_router)
+app.include_router(predictions_router)
 app.include_router(tasks_router)
 
 

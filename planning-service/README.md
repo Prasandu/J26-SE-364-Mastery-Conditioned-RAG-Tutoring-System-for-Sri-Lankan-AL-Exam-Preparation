@@ -25,9 +25,13 @@ service API secrets in `.env`. Do not commit `.env`.
 Apply migrations and start the service:
 
 ```powershell
-alembic upgrade head
-uvicorn app.main:app --host 127.0.0.1 --port 8083 --reload
+python -m alembic upgrade head
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8083 --reload
 ```
+
+On Windows, using `python -m` runs the installed package even if the
+`alembic.exe` and `uvicorn.exe` script directory is not on `PATH`.
+Alternatively, activate `.venv` first as shown above.
 
 `GET /health` reports service health without querying the database. Open
 `/docs` locally to view the OpenAPI interface.
@@ -72,8 +76,9 @@ when availability is entered in a different local time zone.
   score values. Missed work is replanned in full; partial work is replanned
   only for its remaining minutes.
 - `POST /api/v1/plans/{plan_id}/weekly-replan` — summarize the preceding
-  seven days, refresh mastery from newly ingested evidence, create explicitly
-  rule-based topic predictions, and generate the next seven days.
+  seven days, refresh mastery from new evidence, regenerate predictions with
+  XGBoost when available (otherwise use the labeled rule fallback), and
+  generate the next seven days.
 
 These endpoints require a Supabase Auth bearer token. Replanned tasks point to
 their original task through `replanned_from`; replan actions are recorded in
@@ -93,6 +98,49 @@ P4 priority, activity selection, and SM-2-style revision scheduling are pure
 functions in `app/services/priority.py`. Priority explanations return the
 component that most influences each score; activity selection handles new,
 weak, improving, mastered, and repeatedly missed topics.
+
+## Predictive engine (P8)
+
+The optional XGBoost engine predicts the next normalized topic score and
+probability that the topic is weak. `POST /api/v1/predictions/{student_id}`
+uses the authenticated student's evidence and task outcomes, persists its
+topic and overall predictions, and returns a confidence estimate plus the
+largest per-topic factors. The `{student_id}` path must match the authenticated
+student. If no trained model is registered or model loading/inference fails,
+the service logs the issue and returns a labeled deterministic rule-based
+estimate instead.
+
+Keep datasets under `planning-service/data/` and models under
+`planning-service/models/`; both paths are git-ignored. The trainer accepts:
+
+- OULAD `studentAssessment.csv` and its matching `assessments.csv`.
+- Topic evidence CSV with `student_id`, `topic_id`, `score`, `max_score`,
+  `observed_at` (and optional `difficulty`).
+- The JSONL assessment events written by `tools/mock_components.py`.
+- Optional task CSV with `student_id`, `topic_id`, `start_at`, `duration_min`,
+  and `status` (plus optional outcome fields).
+
+OULAD has no chemistry topic IDs, so an OULAD module/presentation pair is used
+as a coarse topic proxy; topic-specific synthetic or service data should be
+used for chemistry deployment. The trainer makes next-event samples, groups
+time splits by target timestamp to prevent temporal leakage, and reports
+XGBoost MAE/RMSE against global-mean and last-score baselines, plus weak-topic
+F1/AUC. AUC is `null` if the held-out set contains only one class.
+
+```powershell
+python -m pip install -r requirements.txt
+python -m tools.mock_components --output-dir data/mock --seed 364
+python -m app.ai.prediction.train --data-dir data --model-dir models --seed 364
+```
+
+The mock-data step is needed only when you do not already have OULAD CSVs or a
+topic-evidence CSV. It uses the checked-in topic catalogue and does not require
+a database or `.env`. `data/` is ignored by Git. Training with no supported
+input data exits with an actionable message rather than a traceback.
+
+Each training run writes immutable XGBoost JSON model files and metadata under
+a versioned directory, then updates `models/latest`. No student-level training
+or prediction data is sent to an external service.
 
 ## Checks
 

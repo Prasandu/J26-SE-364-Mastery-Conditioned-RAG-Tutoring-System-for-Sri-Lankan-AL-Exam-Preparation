@@ -1,13 +1,12 @@
+from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session
-
-from app.db import SessionLocal
-from app.models import Topic
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 DEFAULT_TOPICS_PATH = Path(__file__).resolve().parents[2] / "shared" / "contracts" / "topics.json"
 
@@ -158,6 +157,10 @@ def _parent_first_order(topics: dict[str, dict[str, Any]]) -> list[dict[str, Any
 
 
 def seed_topics(session: Session, topics: list[dict[str, Any]]) -> int:
+    from sqlalchemy.dialects.postgresql import insert
+
+    from app.models import Topic
+
     for topic in topics:
         statement = insert(Topic).values(**topic)
         statement = statement.on_conflict_do_update(
@@ -182,6 +185,8 @@ def main() -> None:
     parser.add_argument("--file", type=Path, default=DEFAULT_TOPICS_PATH)
     args = parser.parse_args()
     topics = load_topics(args.file)
+
+    from app.db import SessionLocal
 
     with SessionLocal() as session:
         count = seed_topics(session, topics)

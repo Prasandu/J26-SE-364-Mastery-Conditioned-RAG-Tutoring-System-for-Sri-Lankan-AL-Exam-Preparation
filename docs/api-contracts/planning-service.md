@@ -207,10 +207,70 @@ schedule. Repeating an outcome update returns 409.
 Reviews the previous seven days and generates the next seven days. The
 response reports planned/completed minutes, adherence, average recorded score
 change, count of created topic predictions, and the new schedule. Mastery is
-refreshed from newly ingested evidence. Predictions use the transparent
-`weekly-rule-based-v1` mastery estimate; they are not outputs from a trained
-model. Predicted-mode plan priorities are refreshed, while manual priorities
-are preserved. The action is written to `replan_log`.
+refreshed from newly ingested evidence. Predictions use the registered XGBoost
+models when available, with the same logged rule-based fallback as the
+prediction endpoint. Predicted-mode plan priorities are refreshed, while
+manual priorities are preserved. The action is written to `replan_log`.
+
+## Predictive engine
+
+### POST `/api/v1/predictions/{student_id}`
+
+Requires a Supabase bearer token. The path student ID must equal the JWT
+subject; predictions for another student return 404. No request body is
+required. The service uses the learner's assessment evidence, stored mastery
+state, and task outcomes. It returns one predicted normalized next score and
+weak-topic probability per observed topic, plus an exam-weighted overall score
+and grade (`A` >= 0.75, `B` >= 0.65, `C` >= 0.50, `S` >= 0.35, otherwise `F`).
+If no exam weights are configured, the overall score is the mean of topic
+predictions.
+
+```json
+{
+  "student_id": "student-123",
+  "model_version": "xgb-20261012T060000Z",
+  "prediction_source": "xgboost",
+  "overall_predicted_score": 0.71,
+  "overall_predicted_grade": "B",
+  "confidence": 0.63,
+  "topics": [
+    {
+      "topic_id": "chem-u3-mole-concept",
+      "predicted_score": 0.74,
+      "weak_probability": 0.22,
+      "confidence": 0.63,
+      "contributing_factors": [
+        {"feature": "last_score", "value": 0.7, "contribution": 0.08}
+      ]
+    }
+  ]
+}
+```
+
+The XGBoost regressor predicts the next normalized topic score and the
+classifier predicts the probability that the next score is below 0.5. Factor
+contributions are per-sample XGBoost contributions. If no versioned model is
+available or inference fails, response `prediction_source` is
+`rule-based`/`rule-based-fallback`, with `model_version` set to
+`rule-based-fallback-v1`; planning remains available and the condition is
+logged. Prediction rows are stored in `planning.predictions`.
+
+Train locally with `python -m app.ai.prediction.train --data-dir data
+--model-dir models --seed 364`. The trainer reads OULAD assessment CSVs,
+synthetic assessment event JSONL, or the documented normalized topic-evidence
+CSV format. Its time-aware chronological split reports MAE and RMSE against
+global-mean and last-score baselines, and F1/AUC for weak topics. OULAD module
+and presentation pairs are used only as coarse topic proxies because OULAD
+does not provide chemistry topic IDs. Dataset and model files remain local
+under git-ignored `planning-service/data/` and `planning-service/models/`.
+
+Prediction errors:
+
+| Status | Meaning |
+| --- | --- |
+| 401 | Missing or invalid bearer token |
+| 404 | Requested student does not match the authenticated student |
+| 422 | No assessment evidence exists for the student |
 
 ### Scheduling and outcome errors
 

@@ -1,15 +1,14 @@
-"""Task outcomes, schedule replanning, and weekly rule-based progress summaries."""
+"""Task outcomes, schedule replanning, and weekly prediction refreshes."""
 
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.errors import Conflict, NotFound
 from app.models import (
     LearnerTopicState,
-    Prediction,
     ReplanLog,
     StudyPlan,
     StudyTask,
@@ -24,6 +23,7 @@ from app.schemas.tasks import (
     WeeklyReplanResponse,
 )
 from app.services.mastery import recompute_for
+from app.services.predictions import predict_student
 from app.services.priority import compute_priority
 from app.services.scheduling import generate_plan_schedule
 
@@ -150,37 +150,20 @@ def weekly_replan(
         ).all()
     )
     recompute_for(session, student_id, sorted(new_evidence_topic_ids), as_of=analyzed_until)
+    session.flush()
 
     states = session.scalars(
         select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
     ).all()
-    evidence_counts = dict(
-        session.execute(
-            select(TopicEvidence.topic_id, func.count(TopicEvidence.id))
-            .where(TopicEvidence.student_id == student_id)
-            .group_by(TopicEvidence.topic_id)
-        ).all()
-    )
-    predictions = [
-        Prediction(
-            student_id=student_id,
-            topic_id=state.topic_id,
-            predicted_score=state.mastery,
-            confidence=min(1.0, evidence_counts.get(state.topic_id, 0) / 5),
-            contributing_factors={
-                "mastery": state.mastery,
-                "trend": state.trend,
-                "error_rate": state.error_rate,
-                "evidence_count": evidence_counts.get(state.topic_id, 0),
-                "source": "rule-based weekly mastery estimate",
-            },
-            model_version="weekly-rule-based-v1",
-        )
-        for state in states
-    ]
-    session.add_all(predictions)
     _refresh_predicted_priorities(session, plan, states, analyzed_until)
     session.flush()
+    predictions = predict_student(
+        session,
+        student_id,
+        student_id,
+        as_of=analyzed_until,
+        commit=False,
+    )
     schedule = generate_plan_schedule(
         session,
         student_id,
@@ -199,7 +182,7 @@ def weekly_replan(
                     "analyzed_until": analyzed_until.isoformat(),
                     "adherence": adherence,
                     "average_score_change": average_score_change,
-                    "predictions_created": len(predictions),
+                    "predictions_created": len(predictions.topics) + 1,
                     "next_week_tasks": len(schedule.tasks),
                     "infeasible": schedule.infeasible,
                 }
@@ -215,7 +198,7 @@ def weekly_replan(
         completed_minutes=completed_minutes,
         adherence=adherence,
         average_score_change=average_score_change,
-        predictions_created=len(predictions),
+        predictions_created=len(predictions.topics) + 1,
         schedule=schedule,
     )
 

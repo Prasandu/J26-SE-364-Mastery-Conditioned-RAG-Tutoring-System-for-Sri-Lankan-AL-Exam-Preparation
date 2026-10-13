@@ -59,3 +59,28 @@ class SchemeFromExtractionIn(BaseModel):
     mcq_marks: float | None = Field(default=None, gt=0)
     source: SchemeSource
     notes: str | None = None
+
+
+class AppendPaperQuestionsFromExtractionIn(BaseModel):
+    """More reviewed questions (from a later OCR session) for a section that
+    already exists - e.g. resuming an import after a daily AI quota resets. The
+    section's own answer_mode and other settings are read from the paper itself,
+    not resent, so they can never drift from what was already saved."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    questions: list[dict] = Field(min_length=1, description="extracted.questions, as reviewed")
+    marks_each: float | None = Field(default=None, gt=0)
+
+
+class AppendSchemeQuestionsFromExtractionIn(BaseModel):
+    """More reviewed scheme entries (from a later OCR session) for a scheme
+    version that already exists - the scheme-side half of resuming an import
+    after a daily AI quota resets."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    questions: list[dict] = Field(default_factory=list, description="extracted.questions, as reviewed")
+    mcq_answers: list[dict] = Field(default_factory=list, description="extracted.mcq_answers, as reviewed")
+    section_code: Code = Field(examples=["I", "II-A"])
+    mcq_marks: float | None = Field(default=None, gt=0)

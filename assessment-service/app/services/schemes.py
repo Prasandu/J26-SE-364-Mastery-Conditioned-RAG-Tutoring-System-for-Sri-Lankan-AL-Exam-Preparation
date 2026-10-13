@@ -41,7 +41,7 @@ from app.models import (
     SchemeStatus,
     utcnow,
 )
-from app.schemas.admin import MarkingSchemeIn
+from app.schemas.admin import MarkingSchemeIn, QuestionSchemeIn
 from app.schemas.content import (
     MarkingPointOut,
     MarkingRuleOut,
@@ -112,6 +112,56 @@ def replace_scheme(db: Session, paper_id: int, version: int, data: MarkingScheme
     db.flush()  # remove old rows first, so point codes can be reused
     _fill_scheme(scheme, data)
     # Whatever the validators said was about the content that has just been replaced.
+    scheme.status = SchemeStatus.DRAFT
+    scheme.validation_reasons = []
+    scheme.validated_at = None
+    scheme.checked_by = None
+    db.commit()
+    return scheme
+
+
+def append_to_scheme(
+    db: Session, paper_id: int, version: int, entries: list[QuestionSchemeIn]
+) -> MarkingScheme:
+    """Add more question entries to an existing editable scheme version,
+    continuing after whatever is already there - the scheme-side half of resuming
+    an OCR import split across several AI-quota-limited sessions (see
+    app.services.papers.append_questions for the paper side). A question that
+    already has points, rules or a model answer in this version is rejected
+    rather than silently duplicated; use replace_scheme to correct an entry.
+    """
+    scheme = get_scheme(db, paper_id, version)
+    ensure_editable(scheme, PUBLISHED_SCHEME_MESSAGE)
+
+    questions = question_lookup(scheme.paper)
+    data = MarkingSchemeIn(source=scheme.source, notes=scheme.notes, questions=entries)
+    if errors := check_scheme(data, questions):
+        raise ContentValidationError("The marking scheme has problems", errors)
+
+    already = {(e.question.section.code, e.question.full_label) for e in _entries(scheme)}
+    if overlap := [
+        entry for entry in entries if (entry.section, entry.question) in already
+    ]:
+        raise ContentValidationError(
+            "Cannot add these questions",
+            [
+                f"Section {entry.section} Q{entry.question} already has marking points in this version"
+                for entry in overlap
+            ],
+        )
+
+    for entry in entries:
+        question = questions[(entry.section, entry.question)]
+        for order, point in enumerate(entry.points):
+            scheme.points.append(MarkingPoint(question=question, order_no=order, **point.model_dump()))
+        for rule in entry.rules:
+            scheme.rules.append(
+                MarkingRule(question=question, rule_type=RuleType(rule.rule_type), params=rule.params)
+            )
+        if entry.model_answer:
+            scheme.model_answers.append(ModelAnswer(question=question, answer_text=entry.model_answer))
+
+    # Whatever the validators said was about the content that has just changed.
     scheme.status = SchemeStatus.DRAFT
     scheme.validation_reasons = []
     scheme.validated_at = None

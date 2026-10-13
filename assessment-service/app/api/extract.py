@@ -20,9 +20,11 @@ from app.ai.vision import VisionModel
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.errors import ContentValidationError
-from app.schemas.admin import MarkingSchemeIn, PaperIn
+from app.schemas.admin import MarkingSchemeIn, PaperIn, QuestionIn, QuestionSchemeIn
 from app.schemas.content import AdminPaperDetail, MarkingSchemeOut
 from app.schemas.extract import (
+    AppendPaperQuestionsFromExtractionIn,
+    AppendSchemeQuestionsFromExtractionIn,
     ExtractResultOut,
     FailedPageOut,
     PaperFromExtractionIn,
@@ -143,6 +145,66 @@ def create_scheme_from_extraction(
     except ValidationError as error:
         raise ContentValidationError("The marking scheme has problems", _messages(error)) from error
     return schemes.to_scheme_out(schemes.create_scheme(db, paper_id, body))
+
+
+@router.post(
+    "/papers/{paper_id}/sections/{section_code}/questions",
+    response_model=AdminPaperDetail,
+)
+def append_paper_questions_from_extraction(
+    paper_id: int,
+    section_code: str,
+    data: AppendPaperQuestionsFromExtractionIn,
+    db: Session = Depends(get_db),
+):
+    """Add more reviewed questions (from a later OCR session) to an existing
+    draft section - the paper-side half of resuming an import after a daily AI
+    quota resets. The section's answer_mode is read from the paper itself, so a
+    later session can never send one that disagrees with what is already there.
+    """
+    paper = papers.get_paper(db, paper_id)
+    section = next((s for s in paper.sections if s.code == section_code), None)
+    if section is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"This paper has no section '{section_code}'")
+
+    built = paper_section_from_extraction(
+        data.questions,
+        code=section_code,
+        title=section.title,
+        answer_mode=section.answer_mode,
+        marks_each=data.marks_each,
+    )
+    try:
+        questions = [QuestionIn.model_validate(q) for q in built["questions"]]
+    except ValidationError as error:
+        raise ContentValidationError("The questions have problems", _messages(error)) from error
+    return papers.to_admin_paper_detail(papers.append_questions(db, paper_id, section_code, questions))
+
+
+@router.post(
+    "/papers/{paper_id}/marking-schemes/{version}/questions",
+    response_model=MarkingSchemeOut,
+)
+def append_scheme_questions_from_extraction(
+    paper_id: int,
+    version: int,
+    data: AppendSchemeQuestionsFromExtractionIn,
+    db: Session = Depends(get_db),
+):
+    """Add more reviewed scheme entries (from a later OCR session) to an existing
+    editable scheme version - the scheme-side half of resuming an import after a
+    daily AI quota resets. See append_paper_questions_from_extraction above."""
+    built = scheme_from_extraction(
+        data.questions,
+        data.mcq_answers,
+        section_code=data.section_code,
+        mcq_marks=data.mcq_marks,
+    )
+    try:
+        entries = [QuestionSchemeIn.model_validate(q) for q in built["questions"]]
+    except ValidationError as error:
+        raise ContentValidationError("The marking scheme has problems", _messages(error)) from error
+    return schemes.to_scheme_out(schemes.append_to_scheme(db, paper_id, version, entries))
 
 
 def _messages(error: ValidationError) -> list[str]:

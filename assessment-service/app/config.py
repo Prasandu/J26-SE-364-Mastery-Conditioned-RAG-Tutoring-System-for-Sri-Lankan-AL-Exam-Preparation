@@ -67,6 +67,16 @@ class Settings(BaseSettings):
     vision_fallback_provider: ProviderName | None = None
     vision_fallback_model: str | None = None
 
+    # A second, independent backup - tried only if both the primary and the first
+    # fallback fail. Exists because a free tier's own limit can be too small for a
+    # whole page's structured output (seen on Groq's per-minute output-token cap on
+    # a dense exam page), not just unavailable outright. Its own key, since it is
+    # typically a different provider from AI_API_KEY above (e.g. an OpenRouter
+    # token, not a Groq one).
+    vision_fallback_2_provider: ProviderName | None = None
+    vision_fallback_2_model: str | None = None
+    vision_fallback_2_api_key: str | None = None
+
     # Resource retrieval (RAG). Always Gemini: Groq has no embedding endpoint.
     # 768, not the model's default 3072, after measuring both (see docs/rag-resources.md).
     embedding_model: str = "gemini-embedding-001"

@@ -114,10 +114,14 @@ def classify_questions(
     return created
 
 
-def list_suggestions(db: Session, *, status: SuggestionStatus | None = None) -> Sequence[TopicSuggestion]:
+def list_suggestions(
+    db: Session, *, status: SuggestionStatus | None = None, question_id: int | None = None
+) -> Sequence[TopicSuggestion]:
     stmt = select(TopicSuggestion).order_by(TopicSuggestion.id)
     if status is not None:
         stmt = stmt.where(TopicSuggestion.status == status)
+    if question_id is not None:
+        stmt = stmt.where(TopicSuggestion.question_id == question_id)
     return db.scalars(stmt).all()
 
 

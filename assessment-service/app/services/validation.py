@@ -98,6 +98,32 @@ def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_to
     return errors
 
 
+def check_new_questions(
+    section_code: str,
+    existing_labels: set[str],
+    new_questions: list[QuestionIn],
+    mode: AnswerMode,
+    known_topics: set[str],
+) -> list[str]:
+    """Checked when adding more questions to an existing draft section - e.g.
+    resuming an OCR import split across several AI-quota-limited sessions. Same
+    per-question rules check_paper runs, plus: a label already used in this
+    section is rejected instead of silently duplicated."""
+    labelled = list(_walk_input(new_questions))
+    errors = [
+        f"Section {section_code}: question '{label}' appears more than once"
+        for label in _duplicates(label for label, _ in labelled)
+    ]
+    if overlap := sorted(existing_labels & {label for label, _ in labelled}):
+        errors.append(
+            f"Section {section_code}: question(s) {', '.join(overlap)} already exist in this "
+            "section - use a different label, or edit the existing question instead"
+        )
+    for label, question in labelled:
+        errors += _check_question(_where(section_code, label), question, mode, known_topics)
+    return errors
+
+
 def check_paper_ready(paper: Paper) -> list[str]:
     errors = _check_leaf_marks(paper)
     if not any(scheme.status == SchemeStatus.PUBLISHED for scheme in paper.marking_schemes):

@@ -115,17 +115,10 @@ def build_reader(settings: Settings) -> AnswerReader | None:
     """The handwriting reader, or None when no vision model is configured.
 
     With a fallback provider set, a primary model that fails (busy, rate limited,
-    quota used up) falls through to the second one instead of failing the upload.
+    quota used up) falls through to the second one instead of failing the upload,
+    and from there to the second fallback (see build_second_fallback_vision_model).
     """
-    primary = build_vision_model(settings)
-    fallback = build_fallback_vision_model(settings)
-
-    readers: list[AnswerReader] = []
-    if primary is not None:
-        readers.append(VisionAnswerReader(primary))
-    if fallback is not None:
-        readers.append(VisionAnswerReader(fallback))
-
+    readers = [VisionAnswerReader(model) for model in _vision_models_in_order(settings)]
     if not readers:
         return None
     return readers[0] if len(readers) == 1 else FallbackReader(readers)
@@ -137,20 +130,24 @@ def build_vision_model(settings: Settings) -> VisionModel | None:
 
 
 def build_vision_model_with_fallback(settings: Settings) -> VisionModel | None:
-    """The configured vision model, falling back to the backup provider (if set)
+    """The configured vision model, falling back to the backup providers (if set)
     when the primary one is busy, rate limited or has used up its quota.
 
     Same resilience build_reader already gives the handwriting reader, but for any
     other caller of VisionModel.ask directly - e.g. the past-paper importer, which
     needs a plain VisionModel rather than an AnswerReader.
     """
-    primary = build_vision_model(settings)
-    fallback = build_fallback_vision_model(settings)
-
-    models = [model for model in (primary, fallback) if model is not None]
+    models = _vision_models_in_order(settings)
     if not models:
         return None
     return models[0] if len(models) == 1 else FallbackVisionModel(models)
+
+
+def _vision_models_in_order(settings: Settings) -> list[VisionModel]:
+    primary = build_vision_model(settings)
+    fallback = build_fallback_vision_model(settings)
+    second_fallback = build_second_fallback_vision_model(settings)
+    return [model for model in (primary, fallback, second_fallback) if model is not None]
 
 
 def build_fallback_vision_model(settings: Settings) -> VisionModel | None:
@@ -160,19 +157,46 @@ def build_fallback_vision_model(settings: Settings) -> VisionModel | None:
     return _build_vision_model(settings.vision_fallback_provider, settings.vision_fallback_model, settings)
 
 
+def build_second_fallback_vision_model(settings: Settings) -> VisionModel | None:
+    """A third vision model, tried only if both the primary and the first fallback
+    fail. Exists because a free tier's own limit can itself be too small for a
+    whole exam page's structured output (seen on Groq's per-minute output-token
+    cap), not just unavailable outright - a different provider's own key, set
+    separately from AI_API_KEY above (e.g. an OpenRouter token, not a Groq one).
+    Needs its own key even for a provider AI_API_KEY already covers: reusing that
+    key here would not add any real resilience, since it is the same quota the
+    first fallback already just used up.
+    """
+    if settings.vision_fallback_2_provider is None or not settings.vision_fallback_2_api_key:
+        return None
+    return _build_vision_model(
+        settings.vision_fallback_2_provider,
+        settings.vision_fallback_2_model,
+        settings,
+        api_key=settings.vision_fallback_2_api_key,
+    )
+
+
+_NO_OVERRIDE = object()  # distinguishes "use settings.ai_api_key" from "use this key, even if falsy"
+
+
 def _build_vision_model(
-    provider_name: ProviderName, model_override: str | None, settings: Settings
+    provider_name: ProviderName,
+    model_override: str | None,
+    settings: Settings,
+    api_key: str | None | object = _NO_OVERRIDE,
 ) -> VisionModel | None:
     if provider_name == ProviderName.GEMINI:
         if not settings.gemini_api_key:
             return None
         return gemini_vision(settings.gemini_api_key, model_override or settings.gemini_model)
 
+    key = settings.ai_api_key if api_key is _NO_OVERRIDE else api_key
     provider = _provider(provider_name, settings)
-    if provider.needs_key and not settings.ai_api_key:
+    if provider.needs_key and not key:
         return None
     base_url = settings.ai_base_url or provider.base_url
-    return openai_compatible_vision(settings.ai_api_key, base_url, model_override or provider.default_model)
+    return openai_compatible_vision(key, base_url, model_override or provider.default_model)
 
 
 def _provider(name: ProviderName, settings: Settings) -> Provider:

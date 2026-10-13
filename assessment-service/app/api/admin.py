@@ -17,7 +17,14 @@ from app.api.deps import get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import ContentStatus, PaperKind, SuggestionStatus
-from app.schemas.admin import MarkingSchemeIn, PaperIn, QuestionTopicsIn, TopicIn
+from app.schemas.admin import (
+    AppendQuestionsIn,
+    AppendSchemeQuestionsIn,
+    MarkingSchemeIn,
+    PaperIn,
+    QuestionTopicsIn,
+    TopicIn,
+)
 from app.schemas.attempts import AttemptOut
 from app.schemas.content import (
     AdminPaperDetail,
@@ -140,6 +147,16 @@ def replace_paper(paper_id: int, data: PaperIn, db: Session = Depends(get_db)):
     return papers.to_admin_paper_detail(papers.replace_paper(db, paper_id, data))
 
 
+@router.post("/papers/{paper_id}/sections/{section_code}/questions", response_model=AdminPaperDetail)
+def append_questions(
+    paper_id: int, section_code: str, data: AppendQuestionsIn, db: Session = Depends(get_db)
+):
+    """Add more questions to an existing draft section, continuing after whatever
+    is already there - for resuming an import split across several sessions
+    (e.g. a daily AI quota reset) without losing what was already saved."""
+    return papers.to_admin_paper_detail(papers.append_questions(db, paper_id, section_code, data.questions))
+
+
 @router.delete("/papers/{paper_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_paper(paper_id: int, db: Session = Depends(get_db)) -> None:
     papers.delete_paper(db, paper_id)
@@ -182,6 +199,16 @@ def get_scheme(paper_id: int, version: int, db: Session = Depends(get_db)):
 def replace_scheme(paper_id: int, version: int, data: MarkingSchemeIn, db: Session = Depends(get_db)):
     """Replace a draft version's content."""
     return schemes.to_scheme_out(schemes.replace_scheme(db, paper_id, version, data))
+
+
+@router.post(SCHEME_PATH + "/questions", response_model=MarkingSchemeOut)
+def append_scheme_questions(
+    paper_id: int, version: int, data: AppendSchemeQuestionsIn, db: Session = Depends(get_db)
+):
+    """Add more question entries to an existing editable scheme version,
+    continuing after whatever is already there - the scheme-side half of resuming
+    an import split across several sessions (see append_questions, above)."""
+    return schemes.to_scheme_out(schemes.append_to_scheme(db, paper_id, version, data.questions))
 
 
 @router.delete(SCHEME_PATH, status_code=status.HTTP_204_NO_CONTENT)
@@ -265,9 +292,11 @@ def classify_topics(
 
 @router.get("/topics/suggestions", response_model=list[TopicSuggestionOut])
 def list_suggestions(
-    status_: SuggestionStatus | None = Query(default=None, alias="status"), db: Session = Depends(get_db)
+    status_: SuggestionStatus | None = Query(default=None, alias="status"),
+    question_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
 ):
-    return topics_classify.list_suggestions(db, status=status_)
+    return topics_classify.list_suggestions(db, status=status_, question_id=question_id)
 
 
 @router.post("/topics/suggestions/{suggestion_id}/approve", response_model=TopicSuggestionOut)

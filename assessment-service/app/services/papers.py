@@ -22,7 +22,7 @@ from app.models import (
 from app.schemas.admin import PaperIn, QuestionIn
 from app.schemas.content import AdminPaperDetail, PaperDetail, PaperSummary, QuestionOut, SectionOut
 from app.services.topics import topics_by_code
-from app.services.validation import check_paper, check_paper_ready
+from app.services.validation import check_new_questions, check_paper, check_paper_ready
 
 DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE = 100
@@ -114,6 +114,33 @@ def replace_paper(db: Session, paper_id: int, data: PaperIn) -> Paper:
     paper.sections.clear()
     db.flush()  # remove the old questions before adding new ones
     _fill_paper(db, paper, data)
+    db.commit()
+    return paper
+
+
+def append_questions(db: Session, paper_id: int, section_code: str, questions: list[QuestionIn]) -> Paper:
+    """Add more questions to an existing draft section, continuing after whatever
+    is already there - for resuming an OCR import split across several sessions
+    (e.g. a daily AI quota) without losing what was already saved. The section's
+    own answer_mode and other settings are left exactly as they are.
+    """
+    paper = get_paper(db, paper_id)
+    ensure_draft(paper, "Published papers cannot be changed.")
+
+    section = next((s for s in paper.sections if s.code == section_code), None)
+    if section is None:
+        raise NotFoundError(f"This paper has no section '{section_code}'")
+
+    topics = topics_by_code(db)
+    existing_labels = {q.full_label for q in section.questions}
+    if errors := check_new_questions(
+        section_code, existing_labels, questions, section.answer_mode, set(topics)
+    ):
+        raise ContentValidationError("Cannot add these questions", errors)
+
+    top_level_orders = [q.order_no for q in section.questions if q.parent is None]
+    start_order = max(top_level_orders, default=-1) + 1
+    _add_questions(section, questions, parent=None, topics=topics, start_order=start_order)
     db.commit()
     return paper
 
@@ -227,16 +254,20 @@ def _fill_paper(db: Session, paper: Paper, data: PaperIn) -> None:
 
 
 def _add_questions(
-    section: Section, items: list[QuestionIn], parent: Question | None, topics: dict[str, Topic]
+    section: Section,
+    items: list[QuestionIn],
+    parent: Question | None,
+    topics: dict[str, Topic],
+    start_order: int = 0,
 ) -> None:
-    for order, item in enumerate(items):
+    for offset, item in enumerate(items):
         question = Question(
             parent=parent,
             label=item.label,
             text=item.text,
             max_marks=item.max_marks,
             options=[option.model_dump() for option in item.options] if item.options else None,
-            order_no=order,
+            order_no=start_order + offset,
             topics=[topics[code] for code in item.topics],
         )
         # SQLAlchemy only saves objects appended to a collection, not ones linked back.

@@ -55,6 +55,13 @@ class SectionIn(_Input):
     questions: list[QuestionIn] = Field(min_length=1)
 
 
+class AppendQuestionsIn(_Input):
+    """More questions for an existing draft section - see
+    app.services.papers.append_questions."""
+
+    questions: list[QuestionIn] = Field(min_length=1)
+
+
 class PaperIn(_Input):
     title: Title
     kind: PaperKind
@@ -125,6 +132,13 @@ class QuestionSchemeIn(_Input):
 class MarkingSchemeIn(_Input):
     source: SchemeSource
     notes: str | None = None
+    questions: list[QuestionSchemeIn] = Field(min_length=1)
+
+
+class AppendSchemeQuestionsIn(_Input):
+    """More question entries for an existing editable scheme version - see
+    app.services.schemes.append_to_scheme."""
+
     questions: list[QuestionSchemeIn] = Field(min_length=1)
 
 

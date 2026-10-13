@@ -35,6 +35,10 @@ class ReviewItemOut(BaseModel):
     read_by: str | None
     student_mcq_option: str | None
     student_graph: GraphIn | None
+    # A diagram or sketch the reader could not write out as text: the transcription
+    # above is not the whole answer, so the teacher is shown the photos themselves.
+    has_drawing: bool = False
+    image_ids: list[int] = []
 
     status: PointStatus
     checker_awarded: bool | None

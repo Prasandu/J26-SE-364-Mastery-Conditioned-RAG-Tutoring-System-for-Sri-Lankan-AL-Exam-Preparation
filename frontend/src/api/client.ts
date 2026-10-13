@@ -48,6 +48,28 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return (await response.json()) as T;
 }
 
+/**
+ * A file rather than JSON, e.g. a photo of an answer.
+ *
+ * Needed because the staff key travels in a header, so an <img src> cannot fetch
+ * one: the caller turns this blob into an object URL instead.
+ */
+export async function requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+  const { headers = {}, signal } = options;
+
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, { signal, headers });
+  } catch (cause) {
+    throw new ApiError(0, `Cannot reach the assessment service at ${BASE_URL}`, [String(cause)]);
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readError(response));
+  }
+  return response.blob();
+}
+
 async function readError(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as { detail?: unknown };

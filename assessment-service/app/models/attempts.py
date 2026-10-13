@@ -19,6 +19,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     Uuid,
+    false,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -103,6 +104,9 @@ class Answer(Base):
     reader: Mapped[str | None] = mapped_column(String(100))  # the vision model that read it
     reading_confidence: Mapped[float | None] = mapped_column(Float)
     corrected_by_student: Mapped[bool] = mapped_column(Boolean, default=False)
+    # The reader saw a diagram or sketch it could not write out as text, so the
+    # transcription alone is not enough to mark this answer - a teacher needs the photo.
+    has_drawing: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     score: Mapped[float | None] = mapped_column(Float)  # empty until every point is marked
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

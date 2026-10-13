@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.errors import ConflictError, NotFoundError
 from app.models import (
     Answer,
+    AnswerImage,
     Attempt,
     AttemptStatus,
     MarkingMethod,
@@ -191,6 +192,8 @@ def to_review_item(result: PointResult) -> ReviewItemOut:
         read_by=answer.reader,
         student_mcq_option=answer.mcq_option,
         student_graph=GraphIn.model_validate(answer.data) if answer.data else None,
+        has_drawing=answer.has_drawing,
+        image_ids=[image.id for image in answer.images],
         status=result.status,
         checker_awarded=result.checker_awarded,
         ai_awarded=result.ai_awarded,
@@ -208,6 +211,8 @@ def _submitted_points() -> Select[tuple[PointResult]]:
         .join(PointResult.answer)
         .join(Answer.attempt)
         .where(Attempt.status != AttemptStatus.IN_PROGRESS)
+        # Every item lists its answer's photos, which would otherwise be one query per point.
+        .options(selectinload(PointResult.answer).selectinload(Answer.images))
     )
 
 
@@ -229,3 +234,15 @@ def attempt_points(db: Session, attempt_id: uuid.UUID) -> Sequence[PointResult]:
     if not results:
         raise NotFoundError("No submitted attempt with that id")
     return results
+
+
+def answer_image(db: Session, image_id: int) -> AnswerImage:
+    """One photo of a submitted answer, for a teacher marking a drawing.
+
+    Only from a script the student has handed in: an attempt still being answered is
+    the student's own work in progress, not a teacher's to look at.
+    """
+    image = db.get(AnswerImage, image_id)
+    if image is None or image.answer.attempt.status == AttemptStatus.IN_PROGRESS:
+        raise NotFoundError("No photo with that id")
+    return image

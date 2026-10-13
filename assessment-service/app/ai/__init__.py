@@ -118,14 +118,16 @@ def build_reader(settings: Settings) -> AnswerReader | None:
     quota used up) falls through to the second one instead of failing the upload.
     """
     primary = build_vision_model(settings)
-    if primary is None:
-        return None
-    readers: list[AnswerReader] = [VisionAnswerReader(primary)]
-
     fallback = build_fallback_vision_model(settings)
+
+    readers: list[AnswerReader] = []
+    if primary is not None:
+        readers.append(VisionAnswerReader(primary))
     if fallback is not None:
         readers.append(VisionAnswerReader(fallback))
 
+    if not readers:
+        return None
     return readers[0] if len(readers) == 1 else FallbackReader(readers)
 
 

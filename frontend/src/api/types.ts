@@ -62,6 +62,9 @@ export interface AnswerOut {
   reader: string | null;
   reading_confidence: number | null;
   corrected_by_student: boolean;
+  // The reader found a drawing it could not write out as text. A teacher marks that
+  // from the photo, so the student is told not to try describing it themselves.
+  has_drawing: boolean;
   image_count: number;
   updated_at: string;
 }
@@ -134,6 +137,10 @@ export interface ReviewItem {
   corrected_by_student: boolean;
   read_by: string | null;
   student_mcq_option: string | null;
+  // A diagram the reader could not write out as text: the transcription is not the
+  // whole answer, so the teacher marks it from the photos themselves.
+  has_drawing: boolean;
+  image_ids: number[];
   status: PointStatus;
   checker_awarded: boolean | null;
   ai_awarded: boolean | null;

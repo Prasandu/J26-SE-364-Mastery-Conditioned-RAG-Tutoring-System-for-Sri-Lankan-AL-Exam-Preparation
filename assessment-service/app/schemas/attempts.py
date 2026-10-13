@@ -62,6 +62,9 @@ class AnswerOut(BaseModel):
     reader: str | None = None
     reading_confidence: float | None = None
     corrected_by_student: bool = False
+    # The reader saw a diagram it could not write out as text, so the text below is
+    # not the whole answer - a teacher marks it from the photo.
+    has_drawing: bool = False
     image_count: int = Field(default=0, validation_alias="images")
     updated_at: datetime
 

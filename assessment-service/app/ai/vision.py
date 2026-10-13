@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from app.ai.tuning import (
     MAX_OUTPUT_TOKENS,
+    OPENAI_COMPATIBLE_MAX_OUTPUT_TOKENS,
     RETRY_ATTEMPTS,
     RETRY_STATUS_CODES,
     VISION_TIMEOUT_SECONDS,
@@ -95,7 +96,7 @@ class OpenAICompatibleVision:
                 {"role": "user", "content": content},
             ],
             temperature=0,
-            max_completion_tokens=MAX_OUTPUT_TOKENS,
+            max_completion_tokens=OPENAI_COMPATIBLE_MAX_OUTPUT_TOKENS,
             response_format={"type": "json_object"},
         )
         return shape.model_validate_json(response.choices[0].message.content or "")

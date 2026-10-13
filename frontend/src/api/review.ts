@@ -1,4 +1,4 @@
-import { request } from "./client";
+import { request, requestBlob } from "./client";
 import type {
   Agreement,
   PointReview,
@@ -32,6 +32,11 @@ export function reviewQueue(filter: QueueFilter = {}, signal?: AbortSignal): Pro
   query.set("limit", String(filter.limit ?? 50));
 
   return request<ReviewItem[]>(`/review/queue?${query}`, { headers: headers(), signal });
+}
+
+/** One photo of a handwritten answer, for marking a drawing the reader could not read. */
+export function answerImage(imageId: number, signal?: AbortSignal): Promise<Blob> {
+  return requestBlob(`/review/images/${imageId}`, { headers: headers(), signal });
 }
 
 export function agreement(paperId?: number, signal?: AbortSignal): Promise<Agreement> {

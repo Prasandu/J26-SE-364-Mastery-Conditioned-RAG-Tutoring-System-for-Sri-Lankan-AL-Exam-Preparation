@@ -33,6 +33,10 @@ JUDGING_TIMEOUT_SECONDS = 120.0
 AUTHORING_TIMEOUT_SECONDS = 180.0
 VISION_TIMEOUT_SECONDS = 180.0
 MAX_OUTPUT_TOKENS = 32768
+# Some OpenAI-compatible providers reject a request above this, even with a much
+# larger context window (seen on Groq's qwen3.8-27b, capped at 16384) - comfortably
+# more than a single handwritten answer or a critique ever needs.
+OPENAI_COMPATIBLE_MAX_OUTPUT_TOKENS = 16384
 
 
 def json_instruction(shape: type[BaseModel]) -> str:

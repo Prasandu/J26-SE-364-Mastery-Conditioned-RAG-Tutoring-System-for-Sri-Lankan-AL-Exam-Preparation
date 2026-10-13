@@ -15,11 +15,12 @@ of times, so a bad run ends with a clear error instead of looping.
 The result is always a draft. An AI wrote the scheme, so a teacher approves it.
 """
 
+import logging
 from dataclasses import dataclass, field
 
 from app.ai.author import QuestionAuthor, WrittenQuestion, build_brief
 from app.ai.critic import QuestionCritic
-from app.errors import ContentValidationError
+from app.errors import ContentValidationError, ProviderError
 from app.models import AnswerMode, PointType
 from app.schemas.admin import (
     EcfRuleIn,
@@ -37,6 +38,8 @@ from app.services.verify.checks import duplicate_of
 from app.services.verify.facts import from_written
 from app.services.verify.pipeline import verify_question
 from app.services.verify.report import Finding, Severity, VerificationReport
+
+logger = logging.getLogger(__name__)
 
 MCQ_OPTIONS = 5
 MCQ_KEY_CODE = "K"
@@ -163,17 +166,25 @@ def _write_round(
 ) -> list[WrittenQuestion]:
     """Ask for the questions still missing from this section, and check what comes back."""
     wanted = plan.count - len(kept)
-    written = author.write(
-        build_brief(
-            answer_mode=plan.answer_mode.value,
-            count=wanted,
-            marks_each=plan.marks / plan.count,
-            topics=topic_lines,
-            avoid=asked,
-            examples=(examples or {}).get(plan.answer_mode),
-            resources=resource_lines,
-        )
+    brief = build_brief(
+        answer_mode=plan.answer_mode.value,
+        count=wanted,
+        marks_each=plan.marks / plan.count,
+        topics=topic_lines,
+        avoid=asked,
+        examples=(examples or {}).get(plan.answer_mode),
+        resources=resource_lines,
     )
+    try:
+        written = author.write(brief)
+    except Exception as error:  # network, quota, a busy model, or a reply that is not valid JSON
+        # The provider's own message can carry request internals, so it is logged
+        # here and the caller gets a fixed, safe one it can act on.
+        logger.exception("Question author failed for section %s", plan.title)
+        raise ProviderError(
+            "The question writer is busy right now. Try again in a moment, "
+            "or ask for fewer questions."
+        ) from error
 
     accepted = []
     for question in written.questions[:wanted]:

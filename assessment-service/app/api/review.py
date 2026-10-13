@@ -5,9 +5,10 @@ Every route needs the X-Teacher-Key header (see app/security.py).
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_file_store
 from app.db import get_db
 from app.models import PointStatus
 from app.schemas.review import (
@@ -20,6 +21,7 @@ from app.schemas.review import (
 )
 from app.security import require_teacher
 from app.services import review
+from app.services.storage import FileStore
 
 router = APIRouter(prefix="/review", tags=["review"], dependencies=[Depends(require_teacher)])
 
@@ -56,6 +58,27 @@ def review_scripts(
 def attempt_points(attempt_id: uuid.UUID, db: Session = Depends(get_db)):
     """Every marking point of one submitted attempt, for double-marking a whole script."""
     return [review.to_review_item(result) for result in review.attempt_points(db, attempt_id)]
+
+
+@router.get("/images/{image_id}")
+def answer_photo(
+    image_id: int,
+    db: Session = Depends(get_db),
+    store: FileStore = Depends(get_file_store),
+):
+    """One photo of a handwritten answer.
+
+    A diagram point is sent to a teacher precisely because no machine can mark a
+    drawing - so the teacher has to be able to see the drawing, not only what the
+    reader managed to put into words.
+    """
+    image = review.answer_image(db, image_id)
+    return Response(
+        content=store.load(image.storage_key),
+        media_type=image.content_type,
+        # A student's own work: never cached by a proxy or left in the browser's cache.
+        headers={"Cache-Control": "private, no-store"},
+    )
 
 
 @router.get("/agreement", response_model=AgreementOut)

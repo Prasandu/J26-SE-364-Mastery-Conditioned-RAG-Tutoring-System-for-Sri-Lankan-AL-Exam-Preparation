@@ -18,6 +18,13 @@ export function ReadingNote({ answer }: { answer: AnswerOut }) {
         <strong>Please read it through and fix anything it got wrong</strong> before you submit.
         Anything marked <span className="font-mono">[?]</span> could not be read.
       </p>
+      {answer.has_drawing && (
+        <p className="mt-1">
+          Your answer has a drawing in it. Leave the{" "}
+          <span className="font-mono">[drawing: ...]</span> line as it is - a teacher marks the
+          drawing from your photo, so you do not have to describe it yourself.
+        </p>
+      )}
       {answer.corrected_by_student && (
         <p className="mt-1 text-brand-700">You have corrected this transcription.</p>
       )}

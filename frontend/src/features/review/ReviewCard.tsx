@@ -7,6 +7,7 @@ import { Card } from "@/components/Card";
 import { marks } from "@/lib/format";
 
 import { MachineOpinion } from "./MachineOpinion";
+import { AnswerPhotos } from "./AnswerPhotos";
 import { MachineReading } from "./MachineReading";
 
 interface Props {
@@ -61,6 +62,7 @@ export function ReviewCard({ item, busy, onDecide }: Props) {
         </div>
 
         <MachineReading item={item} />
+        <AnswerPhotos item={item} />
       </dl>
 
       <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">

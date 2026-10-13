@@ -24,6 +24,7 @@ from app.ai.tuning import (
 )
 from app.ai.tuning import (
     MAX_OUTPUT_TOKENS,
+    OPENAI_COMPATIBLE_MAX_OUTPUT_TOKENS,
     RETRY_ATTEMPTS,
     RETRY_STATUS_CODES,
     json_instruction,
@@ -220,6 +221,10 @@ class OpenAICompatibleAuthor:
             model=self._model,
             temperature=TEMPERATURE,
             response_format={"type": "json_object"},
+            # A whole section of questions with their marking points is a lot of JSON.
+            # Without this the provider applies its own, much smaller default and the
+            # reply stops mid-document, which it reports as a failed generation.
+            max_completion_tokens=OPENAI_COMPATIBLE_MAX_OUTPUT_TOKENS,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT + "\n" + json_instruction(WrittenSection)},
                 {"role": "user", "content": brief},

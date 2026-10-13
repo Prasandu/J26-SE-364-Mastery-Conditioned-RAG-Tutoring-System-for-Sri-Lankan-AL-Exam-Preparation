@@ -220,6 +220,9 @@ def add_answer_image(
     answer.extracted_text = "\n\n".join(pages)
     answer.text = answer.extracted_text  # a draft the student may still correct
     answer.corrected_by_student = False
+    # One page with a drawing is enough: the answer as a whole cannot be marked from
+    # its text alone, however many other pages transcribed cleanly.
+    answer.has_drawing = answer.has_drawing or result.has_drawing
     answer.reader = reader.name
     answer.reading_confidence = result.confidence
     attempt.mode = AttemptMode.PAPER

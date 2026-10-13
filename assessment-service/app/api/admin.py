@@ -6,6 +6,7 @@ Every route needs the X-Admin-Key header (see app/security.py).
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai import build_author, build_classifier, build_critic, build_embedding_model
@@ -16,7 +17,7 @@ from app.ai.judge import AnswerJudge
 from app.api.deps import get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import ContentStatus, PaperKind, SuggestionStatus
+from app.models import ContentStatus, PaperKind, SuggestionStatus, User, UserRole
 from app.schemas.admin import (
     AppendQuestionsIn,
     AppendSchemeQuestionsIn,
@@ -26,6 +27,7 @@ from app.schemas.admin import (
     TopicIn,
 )
 from app.schemas.attempts import AttemptOut
+from app.schemas.auth import AdminUserCreateIn, AdminUserOut
 from app.schemas.content import (
     AdminPaperDetail,
     MarkingSchemeOut,
@@ -43,13 +45,60 @@ from app.schemas.generate import (
 )
 from app.schemas.topics import ClassifyIn, DecideSuggestionIn, TopicSuggestionOut
 from app.security import require_admin
-from app.services import attempts, export, papers, schemes, topics, topics_classify
+from app.services import attempts, auth, export, papers, schemes, topics, topics_classify
 from app.services.generator import api as generator
 from app.services.generator import practice
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
 SCHEME_PATH = "/papers/{paper_id}/marking-schemes/{version}"
+
+
+# Users
+
+
+@router.post("/users", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED)
+def create_user(data: AdminUserCreateIn, db: Session = Depends(get_db)):
+    return auth.create_admin_user(db, data)
+
+
+@router.get("/users", response_model=list[AdminUserOut])
+def list_users(db: Session = Depends(get_db)):
+    return db.scalars(select(User).order_by(User.created_at.desc(), User.id.desc())).all()
+
+
+@router.patch("/users/{user_id}/role", response_model=AdminUserOut)
+def update_user_role(user_id: int, role: UserRole, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No user with that id")
+    if user.role == UserRole.ADMIN and role != UserRole.ADMIN and user.is_active:
+        active_admins = db.scalar(
+            select(func.count()).select_from(User).where(User.role == UserRole.ADMIN, User.is_active.is_(True))
+        )
+        if active_admins <= 1:
+            raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be demoted")
+    user.role = role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/users/{user_id}/status", response_model=AdminUserOut)
+def update_user_status(user_id: int, is_active: bool, db: Session = Depends(get_db)):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No user with that id")
+    if user.role == UserRole.ADMIN and user.is_active and not is_active:
+        active_admins = db.scalar(
+            select(func.count()).select_from(User).where(User.role == UserRole.ADMIN, User.is_active.is_(True))
+        )
+        if active_admins <= 1:
+            raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be deactivated")
+    user.is_active = is_active
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 # Topics
@@ -166,6 +215,13 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db)) -> None:
 def publish_paper(paper_id: int, db: Session = Depends(get_db)):
     """Make the paper visible to students. Needs a published marking scheme."""
     return papers.to_admin_paper_detail(papers.publish_paper(db, paper_id))
+
+
+@router.post("/papers/{paper_id}/copy", response_model=AdminPaperDetail, status_code=status.HTTP_201_CREATED)
+def copy_paper(paper_id: int, db: Session = Depends(get_db)):
+    """New draft paper with the same sections and questions, ready to be edited -
+    the way to correct a published paper (its marking schemes are not copied)."""
+    return papers.to_admin_paper_detail(papers.copy_paper(db, paper_id))
 
 
 @router.patch("/questions/{question_id}/topics", response_model=QuestionOut)

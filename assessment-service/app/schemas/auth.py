@@ -1,5 +1,7 @@
 """Shapes for registering, logging in, and reading back who is signed in."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models import UserRole
@@ -11,6 +13,9 @@ class RegisterIn(BaseModel):
     email: EmailStr
     name: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=8, max_length=200)
+
+class AdminUserCreateIn(RegisterIn):
+    role: UserRole = UserRole.STUDENT
 
 
 class LoginIn(BaseModel):
@@ -33,6 +38,11 @@ class UserOut(BaseModel):
     email: str
     name: str
     role: UserRole
+
+
+class AdminUserOut(UserOut):
+    is_active: bool
+    created_at: datetime
 
 
 class ProfileUpdateIn(BaseModel):

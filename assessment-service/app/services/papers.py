@@ -145,6 +145,51 @@ def append_questions(db: Session, paper_id: int, section_code: str, questions: l
     return paper
 
 
+def copy_paper(db: Session, paper_id: int) -> Paper:
+    """A new draft paper with the same sections and questions, ready to be edited
+    - the way to correct a published paper without touching the original, the
+    same idea app.services.schemes.copy_scheme already gives marking schemes.
+    The original stays published and unchanged, so every mark already given
+    against it stays traceable to exactly what a student saw. Its marking
+    schemes are not copied - add a new one to the copy separately.
+    """
+    return create_paper(db, to_paper_in(get_paper(db, paper_id)))
+
+
+def to_paper_in(paper: Paper) -> PaperIn:
+    """The stored paper in the same shape an admin sends, e.g. to copy it."""
+    return PaperIn.model_validate(
+        {
+            "title": paper.title,
+            "kind": paper.kind,
+            "year": paper.year,
+            "subject": paper.subject,
+            "sections": [
+                {
+                    "code": section.code,
+                    "title": section.title,
+                    "answer_mode": section.answer_mode,
+                    "choose_count": section.choose_count,
+                    "instructions": section.instructions,
+                    "questions": [_question_in(q) for q in section.questions if q.parent is None],
+                }
+                for section in paper.sections
+            ],
+        }
+    )
+
+
+def _question_in(question: Question) -> dict:
+    return {
+        "label": question.label,
+        "text": question.text,
+        "max_marks": question.max_marks,
+        "options": question.options,
+        "topics": [topic.code for topic in question.topics],
+        "sub_questions": [_question_in(sub) for sub in question.sub_questions],
+    }
+
+
 def delete_paper(db: Session, paper_id: int) -> None:
     paper = get_paper(db, paper_id)
     ensure_draft(paper, "Published papers cannot be deleted.")

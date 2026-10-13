@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.errors import ConflictError
 from app.models import User, UserRole
-from app.schemas.auth import ChangePasswordIn, ProfileUpdateIn, RegisterIn
+from app.schemas.auth import AdminUserCreateIn, ChangePasswordIn, ProfileUpdateIn, RegisterIn
 
 ROLE_RANK = {UserRole.STUDENT: 0, UserRole.TEACHER: 1, UserRole.ADMIN: 2}
 
@@ -75,7 +75,6 @@ def decode_token(token: str, settings: Settings) -> TokenPayload:
             status.HTTP_401_UNAUTHORIZED, "Session expired or invalid, please log in again"
         ) from error
 
-
 def register_user(db: Session, data: RegisterIn) -> User:
     """A public signup always creates a student - see app/models/users.py for why."""
     email = normalize_email(data.email)
@@ -87,6 +86,37 @@ def register_user(db: Session, data: RegisterIn) -> User:
         name=data.name.strip(),
         password_hash=hash_password(data.password),
         role=UserRole.STUDENT,
+    )
+    db.add(user)
+    db.commit()
+    return user
+
+
+def create_admin_user(db: Session, data: AdminUserCreateIn) -> User:
+    email = normalize_email(data.email)
+    if db.scalar(select(User).where(User.email == email)) is not None:
+        raise ConflictError("An account with that email already exists")
+
+    user = User(
+        email=email,
+        name=data.name.strip(),
+        password_hash=hash_password(data.password),
+        role=data.role,
+    )
+    db.add(user)
+    db.commit()
+    return user
+
+def create_admin_user(db: Session, data: AdminUserCreateIn) -> User:
+    email = normalize_email(data.email)
+    if db.scalar(select(User).where(User.email == email)) is not None:
+        raise ConflictError("An account with that email already exists")
+
+    user = User(
+        email=email,
+        name=data.name.strip(),
+        password_hash=hash_password(data.password),
+        role=data.role,
     )
     db.add(user)
     db.commit()

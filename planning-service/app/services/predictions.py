@@ -16,6 +16,7 @@ from app.ai.prediction.features import (
     confidence_for,
     rule_based_prediction,
 )
+from app.ai.prediction.hybrid import build_hybrid_prediction
 from app.ai.prediction.model import predict as predict_with_model
 from app.ai.prediction.registry import load_latest
 from app.config import settings
@@ -103,6 +104,7 @@ def predict_student(
         topic_features.append((topic_id, features))
 
     model_outputs = None
+    hybrid_active = bool(settings.hybrid_model_enabled and model_pair is not None)
     if model_pair:
         try:
             model_outputs = [
@@ -113,6 +115,10 @@ def predict_student(
             model_pair = None
             model_version = _MODEL_VERSION
             source = "rule-based-fallback"
+            hybrid_active = False
+    if hybrid_active:
+        source = "hybrid"
+        model_version = f"{model_version}-hybrid"
 
     responses: list[TopicPrediction] = []
     prediction_rows: list[Prediction] = []
@@ -123,6 +129,25 @@ def predict_student(
             factors = _fallback_factors(features)
         else:
             score, weak_probability, factors = model_outputs[index]
+            if hybrid_active:
+                history = [
+                    (
+                        float(row["score"]) / float(row["max_score"])
+                        if row.get("max_score")
+                        else float(row["score"])
+                    )
+                    for row in sorted(
+                        evidence_by_topic.get(topic_id, []),
+                        key=lambda item: item["observed_at"],
+                    )
+                ]
+                if history:
+                    score = build_hybrid_prediction(
+                        score,
+                        history,
+                        enabled=True,
+                        weight=settings.hybrid_model_stacking_weight,
+                    )
 
         confidence = confidence_for(features)
         response = TopicPrediction(

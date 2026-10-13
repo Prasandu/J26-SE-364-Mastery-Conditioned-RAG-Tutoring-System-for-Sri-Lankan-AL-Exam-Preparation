@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     model_dir: Path = Path("models")
     assessment_service_url: AnyHttpUrl | None = None
     assessment_service_api_key: str | None = None
+    hybrid_model_enabled: bool = False
+    hybrid_model_stacking_weight: float = 0.35
+    hybrid_model_max_history: int = 24
 
     model_config = SettingsConfigDict(
         env_file=".env",

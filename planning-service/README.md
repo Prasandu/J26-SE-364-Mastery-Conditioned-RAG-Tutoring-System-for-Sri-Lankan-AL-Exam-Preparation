@@ -142,6 +142,25 @@ Each training run writes immutable XGBoost JSON model files and metadata under
 a versioned directory, then updates `models/latest`. No student-level training
 or prediction data is sent to an external service.
 
+## Hybrid Bi-LSTM (P9)
+
+The service can optionally blend the XGBoost next-score estimate with a small
+Bi-LSTM-style sequence model over each student's topic score history. The hybrid
+path uses a deterministic stacked-score blend and remains behind the
+`HYBRID_MODEL_ENABLED` flag so the service keeps working with the plain XGBoost
+or rule-based fallback when the optional neural path is disabled.
+
+```powershell
+$env:HYBRID_MODEL_ENABLED = "true"
+$env:HYBRID_MODEL_STACKING_WEIGHT = "0.35"
+```
+
+When enabled, the model compares the XGBoost score with the recent score history
+and returns a blended estimate while preserving the same confidence and factor
+outputs. The comparison table is provided by
+`app/ai/prediction/hybrid.py` and reports baseline, XGBoost, Bi-LSTM, and
+hybrid metrics for local evaluation runs.
+
 ## Checks
 
 ```powershell

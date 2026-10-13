@@ -24,7 +24,7 @@ from app.ai.judge import (
 from app.ai.vision import VisionModel, gemini_vision, openai_compatible_vision
 from app.config import ProviderName, Settings
 from app.errors import ConfigurationError
-from app.services.reader import AnswerReader, VisionAnswerReader
+from app.services.reader import AnswerReader, FallbackReader, VisionAnswerReader
 
 
 def build_judge(settings: Settings) -> AnswerJudge | None:
@@ -112,25 +112,48 @@ def build_embedding_model(settings: Settings) -> EmbeddingModel | None:
 
 
 def build_reader(settings: Settings) -> AnswerReader | None:
-    """The handwriting reader, or None when no vision model is configured."""
-    model = build_vision_model(settings)
-    return VisionAnswerReader(model) if model else None
+    """The handwriting reader, or None when no vision model is configured.
+
+    With a fallback provider set, a primary model that fails (busy, rate limited,
+    quota used up) falls through to the second one instead of failing the upload.
+    """
+    primary = build_vision_model(settings)
+    if primary is None:
+        return None
+    readers: list[AnswerReader] = [VisionAnswerReader(primary)]
+
+    fallback = build_fallback_vision_model(settings)
+    if fallback is not None:
+        readers.append(VisionAnswerReader(fallback))
+
+    return readers[0] if len(readers) == 1 else FallbackReader(readers)
 
 
 def build_vision_model(settings: Settings) -> VisionModel | None:
     """The configured model that can see images, or None when no key is set."""
-    if settings.vision_provider == ProviderName.GEMINI:
+    return _build_vision_model(settings.vision_provider, settings.vision_model, settings)
+
+
+def build_fallback_vision_model(settings: Settings) -> VisionModel | None:
+    """The backup vision model, or None when no fallback provider is configured."""
+    if settings.vision_fallback_provider is None:
+        return None
+    return _build_vision_model(settings.vision_fallback_provider, settings.vision_fallback_model, settings)
+
+
+def _build_vision_model(
+    provider_name: ProviderName, model_override: str | None, settings: Settings
+) -> VisionModel | None:
+    if provider_name == ProviderName.GEMINI:
         if not settings.gemini_api_key:
             return None
-        return gemini_vision(settings.gemini_api_key, settings.vision_model or settings.gemini_model)
+        return gemini_vision(settings.gemini_api_key, model_override or settings.gemini_model)
 
-    provider = _provider(settings.vision_provider, settings)
+    provider = _provider(provider_name, settings)
     if provider.needs_key and not settings.ai_api_key:
         return None
     base_url = settings.ai_base_url or provider.base_url
-    return openai_compatible_vision(
-        settings.ai_api_key, base_url, settings.vision_model or provider.default_model
-    )
+    return openai_compatible_vision(settings.ai_api_key, base_url, model_override or provider.default_model)
 
 
 def _provider(name: ProviderName, settings: Settings) -> Provider:

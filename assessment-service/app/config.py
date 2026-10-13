@@ -49,9 +49,16 @@ class Settings(BaseSettings):
     ai_model: str | None = None  # empty = the provider's default model
     ai_base_url: str | None = None  # only needed when ai_provider=custom
 
-    # Reading handwriting. Needs a model that can see images (Groq's cannot).
+    # Reading handwriting. Needs a model that can see images.
     vision_provider: ProviderName = ProviderName.GEMINI
     vision_model: str | None = None  # empty = the provider's default
+
+    # Backup reader, tried only if the primary one fails (busy, rate limited, quota
+    # used up) - an upload then still succeeds instead of failing outright.
+    # None = no fallback. A provider's own default model is rarely vision-capable
+    # (e.g. Groq's is a text model), so set VISION_FALLBACK_MODEL explicitly too.
+    vision_fallback_provider: ProviderName | None = None
+    vision_fallback_model: str | None = None
 
     # Resource retrieval (RAG). Always Gemini: Groq has no embedding endpoint.
     # 768, not the model's default 3072, after measuring both (see docs/rag-resources.md).

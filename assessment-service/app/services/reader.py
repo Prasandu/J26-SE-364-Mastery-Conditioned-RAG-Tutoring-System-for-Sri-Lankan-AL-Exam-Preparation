@@ -73,3 +73,31 @@ class VisionAnswerReader:
             images=[Image(request.image, request.content_type)],
             shape=ReadResult,
         )
+
+
+class FallbackReader:
+    """Tries each reader in turn, moving to the next only if one raises.
+
+    Built for a primary vision model that is often rate limited (a free-tier daily
+    quota): the student's upload still succeeds, read by whichever reader actually
+    answered, instead of failing just because the first one was busy.
+    """
+
+    def __init__(self, readers: list[AnswerReader]) -> None:
+        if not readers:
+            raise ValueError("FallbackReader needs at least one reader")
+        self._readers = readers
+        self.name = readers[0].name  # updated to whichever reader last succeeded
+
+    def read(self, request: ReadRequest) -> ReadResult:
+        last_error: Exception | None = None
+        for reader in self._readers:
+            try:
+                result = reader.read(request)
+            except Exception as error:  # try the next reader instead of failing outright
+                last_error = error
+                continue
+            self.name = reader.name
+            return result
+        assert last_error is not None  # readers is never empty, so this always ran at least once
+        raise last_error

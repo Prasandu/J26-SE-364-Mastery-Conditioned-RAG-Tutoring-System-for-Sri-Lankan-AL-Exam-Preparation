@@ -1,0 +1,192 @@
+"""Admin endpoint: read a scanned past paper or marking scheme page range into a
+draft a person reviews and corrects before anything is created.
+
+Nothing here writes to the database. The same reading as app/import_pdf.py's CLI
+pipeline, returned to the browser instead of written to a file - that CLI remains
+the better tool for a large, multi-file import (many sections, resumable across
+days against a daily quota); this is the one-PDF-at-a-time path for the admin UI.
+"""
+
+import tempfile
+from pathlib import Path
+from typing import Literal
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
+
+from app.ai import build_vision_model_with_fallback
+from app.ai.vision import VisionModel
+from app.config import Settings, get_settings
+from app.db import get_db
+from app.errors import ContentValidationError
+from app.schemas.admin import MarkingSchemeIn, PaperIn
+from app.schemas.content import AdminPaperDetail, MarkingSchemeOut
+from app.schemas.extract import (
+    ExtractResultOut,
+    FailedPageOut,
+    PaperFromExtractionIn,
+    SchemeFromExtractionIn,
+)
+from app.security import require_admin
+from app.services import papers, schemes
+from app.services.drafts import paper_section_from_extraction, scheme_from_extraction
+from app.services.extractor import READ_ERRORS, ContentExtractor
+from app.services.pdf import page_count, parse_pages, render_pages
+
+router = APIRouter(prefix="/admin/extract", tags=["extract"], dependencies=[Depends(require_admin)])
+
+BATCH_SIZE = 2  # more pages in one request means less context per page - matches app/import_pdf.py
+MAX_UPLOAD_MB = 40  # scanned page images add up; matches resources' own ceiling
+
+
+@router.post("", response_model=ExtractResultOut)
+async def extract(
+    file: UploadFile = File(description="The scanned PDF"),
+    pages: str = Form(description='Page numbers to read, e.g. "2-5" or "1,3,5"'),
+    kind: Literal["paper", "scheme"] = Form(...),
+    hint: str | None = Form(default=None, max_length=300, description="e.g. a subject or year"),
+    settings: Settings = Depends(get_settings),
+):
+    model = build_vision_model_with_fallback(settings)
+    if model is None:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "No vision model is configured. Set a key in .env."
+        )
+    pdf_bytes = await _read_upload(file)
+    try:
+        page_numbers = parse_pages(pages)
+    except ValueError as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(error)) from None
+
+    # delete=False: the with block closes the handle before pdfium opens the same
+    # path, then the file is removed in the finally below. On Windows a second
+    # handle can't open a file NamedTemporaryFile is still holding open for
+    # writing, which pdfium reports as "File access error".
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(pdf_bytes)
+        path = Path(tmp.name)
+    try:
+        total_pages = page_count(path)
+        out_of_range = [n for n in page_numbers if not 1 <= n <= total_pages]
+        if out_of_range:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                f"This PDF has {total_pages} pages; asked for {out_of_range}",
+            )
+        pages_read, notes, failed, extracted = _read_all(model, kind, path, page_numbers, hint)
+    finally:
+        path.unlink(missing_ok=True)
+
+    return ExtractResultOut(
+        model=model.name,
+        page_count=total_pages,
+        pages_read=pages_read,
+        notes=notes,
+        failed=failed,
+        extracted=extracted,
+    )
+
+
+@router.post("/papers", response_model=AdminPaperDetail, status_code=status.HTTP_201_CREATED)
+def create_paper_from_extraction(data: PaperFromExtractionIn, db: Session = Depends(get_db)):
+    """Turn a reviewed extraction into a real draft paper, one section.
+
+    Reuses app.services.drafts.paper_section_from_extraction - the exact same
+    per-question transform the CLI's plan-based pipeline uses - then the same
+    papers.create_paper every other way of creating a paper goes through. A paper
+    with more than one section still needs the CLI's plan file for now.
+    """
+    section = paper_section_from_extraction(
+        data.questions,
+        code=data.section_code,
+        title=data.section_title,
+        answer_mode=data.answer_mode,
+        choose_count=data.choose_count,
+        instructions=data.instructions,
+        marks_each=data.marks_each,
+    )
+    try:
+        body = PaperIn.model_validate(
+            {
+                "title": data.title,
+                "kind": data.kind,
+                "year": data.year,
+                "subject": data.subject,
+                "sections": [section],
+            }
+        )
+    except ValidationError as error:
+        raise ContentValidationError("The paper has problems", _messages(error)) from error
+    return papers.to_admin_paper_detail(papers.create_paper(db, body))
+
+
+@router.post(
+    "/papers/{paper_id}/marking-schemes", response_model=MarkingSchemeOut, status_code=status.HTTP_201_CREATED
+)
+def create_scheme_from_extraction(
+    paper_id: int, data: SchemeFromExtractionIn, db: Session = Depends(get_db)
+):
+    """Turn a reviewed scheme extraction into the next draft version, the same way
+    create_paper_from_extraction does for a paper - see its docstring."""
+    try:
+        body = MarkingSchemeIn.model_validate(
+            scheme_from_extraction(
+                data.questions,
+                data.mcq_answers,
+                section_code=data.section_code,
+                mcq_marks=data.mcq_marks,
+                source=data.source,
+                notes=data.notes,
+            )
+        )
+    except ValidationError as error:
+        raise ContentValidationError("The marking scheme has problems", _messages(error)) from error
+    return schemes.to_scheme_out(schemes.create_scheme(db, paper_id, body))
+
+
+def _messages(error: ValidationError) -> list[str]:
+    return [f"{'.'.join(str(part) for part in issue['loc'])}: {issue['msg']}" for issue in error.errors()]
+
+
+def _read_all(
+    model: VisionModel, kind: str, path: Path, page_numbers: list[int], hint: str | None
+) -> tuple[list[int], list[str], list[FailedPageOut], dict]:
+    extractor = ContentExtractor(model)
+    read = extractor.read_paper if kind == "paper" else extractor.read_scheme
+    merged: dict = {"questions": [], "notes": []}
+    if kind == "scheme":
+        merged["mcq_answers"] = []
+
+    pages_read: list[int] = []
+    failed: list[FailedPageOut] = []
+    for batch in _batches(page_numbers, BATCH_SIZE):
+        images = render_pages(path, batch)
+        try:
+            result = read(images, hint)
+        except READ_ERRORS as error:
+            failed.append(FailedPageOut(pages=batch, error=str(error)))
+            continue
+        pages_read.extend(batch)
+        data = result.model_dump()
+        merged["questions"].extend(data["questions"])
+        merged["notes"].extend(data["notes"])
+        if kind == "scheme":
+            merged["mcq_answers"].extend(data["mcq_answers"])
+
+    notes = merged.pop("notes")
+    return pages_read, notes, failed, merged
+
+
+def _batches(pages: list[int], size: int) -> list[list[int]]:
+    return [pages[i : i + size] for i in range(0, len(pages), size)]
+
+
+async def _read_upload(file: UploadFile) -> bytes:
+    limit = MAX_UPLOAD_MB * 1024 * 1024
+    data = await file.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, f"The PDF must be under {MAX_UPLOAD_MB} MB")
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "The uploaded file is empty")
+    return data

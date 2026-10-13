@@ -21,7 +21,7 @@ from app.ai.judge import (
     gemini_judge,
     openai_compatible_judge,
 )
-from app.ai.vision import VisionModel, gemini_vision, openai_compatible_vision
+from app.ai.vision import FallbackVisionModel, VisionModel, gemini_vision, openai_compatible_vision
 from app.config import ProviderName, Settings
 from app.errors import ConfigurationError
 from app.services.reader import AnswerReader, FallbackReader, VisionAnswerReader
@@ -134,6 +134,23 @@ def build_reader(settings: Settings) -> AnswerReader | None:
 def build_vision_model(settings: Settings) -> VisionModel | None:
     """The configured model that can see images, or None when no key is set."""
     return _build_vision_model(settings.vision_provider, settings.vision_model, settings)
+
+
+def build_vision_model_with_fallback(settings: Settings) -> VisionModel | None:
+    """The configured vision model, falling back to the backup provider (if set)
+    when the primary one is busy, rate limited or has used up its quota.
+
+    Same resilience build_reader already gives the handwriting reader, but for any
+    other caller of VisionModel.ask directly - e.g. the past-paper importer, which
+    needs a plain VisionModel rather than an AnswerReader.
+    """
+    primary = build_vision_model(settings)
+    fallback = build_fallback_vision_model(settings)
+
+    models = [model for model in (primary, fallback) if model is not None]
+    if not models:
+        return None
+    return models[0] if len(models) == 1 else FallbackVisionModel(models)
 
 
 def build_fallback_vision_model(settings: Settings) -> VisionModel | None:

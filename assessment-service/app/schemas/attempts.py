@@ -12,9 +12,9 @@ class AttemptCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     paper_id: int
-    student_ref: str = Field(
-        min_length=1, max_length=64, description="Student id (until shared login exists)"
-    )
+    # Always overwritten server-side from the signed-in account before this is used
+    # (see POST /attempts) - whatever a caller sends here is ignored.
+    student_ref: str = Field(default="", max_length=64)
 
 
 class GraphIn(BaseModel):

@@ -1,15 +1,15 @@
-"""Register, log in, and promote an account's role (admin only)."""
+"""Register, log in, manage your own profile, and promote an account's role (admin only)."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.errors import NotFoundError
 from app.models import User, UserRole
-from app.schemas.auth import LoginIn, RegisterIn, TokenOut, UserOut
+from app.schemas.auth import ChangePasswordIn, LoginIn, ProfileUpdateIn, RegisterIn, TokenOut, UserOut
 from app.security import current_user, require_role
-from app.services.auth import authenticate_user, create_token, register_user
+from app.services.auth import authenticate_user, change_password, create_token, register_user, update_profile
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -30,6 +30,21 @@ def login(data: LoginIn, db: Session = Depends(get_db), settings: Settings = Dep
 def me(user: User = Depends(current_user)):
     """Who the current token belongs to - the frontend uses this to restore a session."""
     return user
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(
+    data: ProfileUpdateIn, db: Session = Depends(get_db), user: User = Depends(current_user)
+):
+    """Change your own name. Not email or role - see ProfileUpdateIn."""
+    return update_profile(db, user, data)
+
+
+@router.post("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_my_password(
+    data: ChangePasswordIn, db: Session = Depends(get_db), user: User = Depends(current_user)
+):
+    change_password(db, user, data)
 
 
 @router.post("/users/{user_id}/role", response_model=UserOut)

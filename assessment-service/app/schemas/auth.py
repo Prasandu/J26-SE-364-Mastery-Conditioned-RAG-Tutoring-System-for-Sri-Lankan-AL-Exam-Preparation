@@ -33,3 +33,19 @@ class UserOut(BaseModel):
     email: str
     name: str
     role: UserRole
+
+
+class ProfileUpdateIn(BaseModel):
+    """Changing your own name. Not email or role - email is the login id (changing
+    it is a bigger, separate decision), and role can only be set by an admin."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=100)
+
+
+class ChangePasswordIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)

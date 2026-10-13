@@ -35,7 +35,9 @@ class PracticeIn(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     title: Title
-    student_ref: str = Field(min_length=1, max_length=64)
+    # Always overwritten server-side from the signed-in account (see POST
+    # /papers/practice) - whatever a caller sends here is ignored.
+    student_ref: str = Field(default="", max_length=64)
     topic_codes: list[str] = Field(min_length=1, max_length=30)
     counts: CountsIn
 

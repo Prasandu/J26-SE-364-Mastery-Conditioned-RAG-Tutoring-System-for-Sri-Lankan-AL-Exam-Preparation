@@ -40,7 +40,9 @@ router = APIRouter(prefix="/attempts", tags=["attempts"])
 
 @router.post("", response_model=AttemptOut, status_code=status.HTTP_201_CREATED)
 def start_attempt(
-    data: AttemptCreate, db: Session = Depends(get_db), user: User = Depends(require_role(UserRole.STUDENT))
+    data: AttemptCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(UserRole.STUDENT)),  # noqa: B008
 ):
     """Start answering a published paper. Uses the latest published marking scheme.
 
@@ -109,7 +111,7 @@ async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
 def list_attempts(
     limit: int = Query(default=50, ge=1, le=100),
     db: Session = Depends(get_db),
-    user: User = Depends(require_role(UserRole.STUDENT)),
+    user: User = Depends(require_role(UserRole.STUDENT)),  # noqa: B008
 ):
     """The signed-in student's own attempts and results, newest first."""
     return [attempts.to_attempt_out(a) for a in attempts.list_attempts(db, user.email, limit)]

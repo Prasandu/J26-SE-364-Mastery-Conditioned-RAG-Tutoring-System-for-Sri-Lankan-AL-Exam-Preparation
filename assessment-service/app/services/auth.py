@@ -21,11 +21,17 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.errors import ConflictError
 from app.models import User, UserRole
-from app.schemas.auth import RegisterIn
+from app.schemas.auth import ChangePasswordIn, ProfileUpdateIn, RegisterIn
 
 ROLE_RANK = {UserRole.STUDENT: 0, UserRole.TEACHER: 1, UserRole.ADMIN: 2}
 
 WRONG_CREDENTIALS = "Wrong email or password"
+
+# bcrypt's cost factor: deliberately slow, so a stolen hash is expensive to brute
+# force. tests/conftest.py lowers this for the test process only (many tests log a
+# user in, and 12 rounds would add real minutes to the suite) - production always
+# uses this default.
+BCRYPT_ROUNDS = 12
 
 
 def normalize_email(email: str) -> str:
@@ -33,7 +39,7 @@ def normalize_email(email: str) -> str:
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(BCRYPT_ROUNDS)).decode()
 
 
 def verify_password(password: str, password_hash: str) -> bool:
@@ -92,3 +98,20 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     if user is None or not user.is_active or not verify_password(password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CREDENTIALS)
     return user
+
+
+def update_profile(db: Session, user: User, data: ProfileUpdateIn) -> User:
+    """Just the name - see ProfileUpdateIn for why email and role are not here."""
+    user.name = data.name.strip()
+    db.commit()
+    return user
+
+
+def change_password(db: Session, user: User, data: ChangePasswordIn) -> None:
+    """The current password is required even though the caller is already signed
+    in: the token alone is not proof the person at the keyboard is still the
+    account owner (a shared computer, a left-open tab)."""
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Current password is wrong")
+    user.password_hash = hash_password(data.new_password)
+    db.commit()

@@ -5,6 +5,7 @@ reply shape through its API; other providers are told in the prompt.
 """
 
 import base64
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
@@ -23,6 +24,8 @@ from app.ai.tuning import (
     VISION_TIMEOUT_SECONDS,
     json_instruction,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -100,6 +103,35 @@ class OpenAICompatibleVision:
             response_format={"type": "json_object"},
         )
         return shape.model_validate_json(response.choices[0].message.content or "")
+
+
+class FallbackVisionModel:
+    """Tries each vision model in turn, moving to the next only if one raises.
+
+    Same idea as app.services.reader.FallbackReader, but at the raw VisionModel
+    level so any caller of VisionModel.ask (the handwriting reader, the past-paper
+    importer) gets the same resilience to a busy or rate-limited primary model.
+    """
+
+    def __init__(self, models: list[VisionModel]) -> None:
+        if not models:
+            raise ValueError("FallbackVisionModel needs at least one model")
+        self._models = models
+        self.name = models[0].name  # updated to whichever model last succeeded
+
+    def ask[T: BaseModel](self, *, system: str, user: str, images: Sequence[Image], shape: type[T]) -> T:
+        last_error: Exception | None = None
+        for model in self._models:
+            try:
+                result = model.ask(system=system, user=user, images=images, shape=shape)
+            except Exception as error:  # try the next model instead of failing outright
+                logger.warning("Vision model %r failed, trying the next one: %s", model.name, error)
+                last_error = error
+                continue
+            self.name = model.name
+            return result
+        assert last_error is not None  # models is never empty, so this always ran at least once
+        raise last_error
 
 
 @lru_cache

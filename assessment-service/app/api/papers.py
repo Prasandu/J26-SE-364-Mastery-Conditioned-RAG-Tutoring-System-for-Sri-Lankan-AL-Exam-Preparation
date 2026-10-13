@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from app.ai import build_author, build_critic, build_embedding_model
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import PaperKind
+from app.models import PaperKind, User, UserRole
 from app.schemas.content import PaperDetail, PaperSummary, TopicOut
 from app.schemas.generate import GeneratedOut, PracticeIn, PracticeLimitsOut, RatesOut, ShapeOut
+from app.security import optional_user, require_role
 from app.services import papers, topics
 from app.services.generator import api as generator
 from app.services.generator import practice
@@ -21,11 +22,12 @@ router = APIRouter(prefix="/papers", tags=["papers"])
 def list_papers(
     kind: PaperKind | None = None,
     year: int | None = None,
-    student_ref: str | None = None,
     db: Session = Depends(get_db),
+    user: User | None = Depends(optional_user),
 ):
-    """Published papers, plus this student's own practice papers if a ref is given."""
-    return papers.list_papers(db, kind=kind, year=year, published_only=True, student_ref=student_ref)
+    """Published papers, plus this student's own practice papers if signed in."""
+    ref = user.email if user else None
+    return papers.list_papers(db, kind=kind, year=year, published_only=True, student_ref=ref)
 
 
 @router.get("/practice/topics", response_model=list[TopicOut])
@@ -36,14 +38,14 @@ def practice_topics(db: Session = Depends(get_db)):
 
 @router.get("/practice/limits", response_model=PracticeLimitsOut)
 def practice_limits(
-    student_ref: str,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
+    user: User = Depends(require_role(UserRole.STUDENT)),  # noqa: B008
 ):
-    """How many practice papers this student may still make today."""
+    """How many practice papers the signed-in student may still make today."""
     return PracticeLimitsOut(
         per_day=settings.practice_papers_per_day,
-        made_today=practice.made_today(db, student_ref),
+        made_today=practice.made_today(db, user.email),
         questions_at_once=settings.practice_questions_at_once,
     )
 
@@ -65,12 +67,14 @@ def make_practice(
     data: PracticeIn,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
+    user: User = Depends(require_role(UserRole.STUDENT)),  # noqa: B008
 ):
-    """Make a practice paper for one student and open it for them straight away.
+    """Make a practice paper for the signed-in student and open it straight away.
 
     A machine writes the questions and the marking scheme, and nobody checks the
     chemistry before the student sits it. The screen says so.
     """
+    data.student_ref = user.email
     author = build_author(settings)
     if author is None:
         raise HTTPException(

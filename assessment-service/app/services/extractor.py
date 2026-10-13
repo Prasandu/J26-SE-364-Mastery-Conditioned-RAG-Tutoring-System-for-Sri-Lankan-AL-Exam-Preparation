@@ -7,7 +7,10 @@ check before it is published, so a misread question can never become a live pape
 from collections.abc import Sequence
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+import httpx
+import openai
+from google.genai import errors as genai_errors
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from app.ai.vision import Image, VisionModel
 
@@ -15,6 +18,11 @@ CHEMISTRY_NOTATION = (
     "Write chemistry in plain standard notation: H2SO4, SO4^2-, Ca^2+, NaOH(aq), -> for a "
     "reaction arrow, <=> for an equilibrium, 2.00 x 10^-3 for powers of ten, mol dm-3 for units."
 )
+
+# A busy or refusing model, a dropped connection, or a reply that is not valid JSON -
+# shared by app/import_pdf.py (the CLI, file-based pipeline) and app/api/extract.py
+# (the same reading, returned to the browser instead of written to a file).
+READ_ERRORS = (genai_errors.APIError, openai.APIError, httpx.HTTPError, ValidationError)
 
 
 class ExtractedOption(BaseModel):

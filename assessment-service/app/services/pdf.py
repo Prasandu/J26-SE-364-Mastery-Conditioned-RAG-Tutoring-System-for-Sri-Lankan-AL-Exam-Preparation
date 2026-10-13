@@ -12,8 +12,10 @@ import pypdfium2 as pdfium
 from app.ai.vision import Image
 
 PNG = "image/png"
-# Scanned A4 at scale 2 is about 1190x1684, which is readable without being huge.
-DEFAULT_SCALE = 2.0
+# Scanned A4 at scale 3 is about 1786x2523 (~214 DPI) - small print, subscripts and
+# superscripts in chemistry notation need this; scale 2 (~143 DPI) was too soft for
+# the vision model to read those reliably.
+DEFAULT_SCALE = 3.0
 
 
 def page_count(path: Path) -> int:

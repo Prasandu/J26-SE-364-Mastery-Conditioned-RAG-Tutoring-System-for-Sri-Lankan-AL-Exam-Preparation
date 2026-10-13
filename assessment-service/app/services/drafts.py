@@ -127,6 +127,44 @@ def _section(plan: SectionPlan) -> dict[str, Any]:
     }
 
 
+# Straight from one reviewed extraction (app/api/extract.py's admin UI path), with
+# no plan file or draft files on disk - the same per-question transform as above
+# (_question/_option), just given the extracted questions directly instead of
+# reading them from a file.
+
+
+def paper_section_from_extraction(
+    questions: list[dict[str, Any]],
+    *,
+    code: str,
+    title: str,
+    answer_mode: AnswerMode,
+    choose_count: int | None = None,
+    instructions: str | None = None,
+    marks_each: float | None = None,
+    shared_options: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    """One SectionIn's worth of a PaperIn body."""
+    plan = SectionPlan(
+        code=code,
+        title=title,
+        answer_mode=answer_mode,
+        choose_count=choose_count,
+        instructions=instructions,
+        marks_each=marks_each,
+        shared_options=shared_options or [],
+        drafts=[Path(".")],  # never read - _question only uses plan.options_for/marks_each, not .drafts
+    )
+    return {
+        "code": plan.code,
+        "title": plan.title,
+        "answer_mode": plan.answer_mode,
+        "choose_count": plan.choose_count,
+        "instructions": plan.instructions,
+        "questions": [_question(question, plan) for question in questions],
+    }
+
+
 def _question(extracted: dict[str, Any], plan: SectionPlan) -> dict[str, Any]:
     subs = [_question(sub, plan) for sub in extracted.get("sub_questions") or []]
     options = [_option(option) for option in extracted.get("options") or []]
@@ -204,6 +242,22 @@ def build_scheme(plan: SchemePlan) -> MarkingSchemeIn:
     return MarkingSchemeIn.model_validate(
         {"source": plan.source, "notes": plan.notes, "questions": questions}
     )
+
+
+def scheme_from_extraction(
+    questions: list[dict[str, Any]],
+    mcq_answers: list[dict[str, Any]],
+    *,
+    section_code: str,
+    mcq_marks: float | None = None,
+    source: SchemeSource = SchemeSource.OFFICIAL,
+    notes: str | None = None,
+) -> dict[str, Any]:
+    """A MarkingSchemeIn body straight from one reviewed extraction - see
+    paper_section_from_extraction for why no plan or draft files are needed here."""
+    section = SchemeSectionPlan(code=section_code, mcq_marks=mcq_marks, drafts=[Path(".")])
+    points = _answer_key(section, mcq_answers) + _marked_questions(section, questions)
+    return {"source": source, "notes": notes, "questions": points}
 
 
 def _answer_key(section: SchemeSectionPlan, answers: list[dict[str, Any]]) -> list[dict[str, Any]]:

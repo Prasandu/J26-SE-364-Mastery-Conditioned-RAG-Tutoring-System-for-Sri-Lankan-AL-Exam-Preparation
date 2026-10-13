@@ -17,28 +17,21 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import httpx
-import openai
-from google.genai import errors as genai_errors
-from pydantic import ValidationError
-
-from app.ai import build_vision_model
+from app.ai import build_vision_model_with_fallback
 from app.config import get_settings
 from app.services.drafts import draft_problems
-from app.services.extractor import ContentExtractor
+from app.services.extractor import READ_ERRORS, ContentExtractor
 from app.services.pdf import page_count, parse_pages, render_pages
 
 PAGES_PER_REQUEST = 2  # more pages in one request means less context per page
 QUOTA_EXHAUSTED = 429
 FAILURE_NOTE = "could not be read"  # how older drafts recorded failures in notes
-# A busy or refusing model, a dropped connection, or a reply that is not valid JSON.
-READ_ERRORS = (genai_errors.APIError, openai.APIError, httpx.HTTPError, ValidationError)
 
 
 def main() -> None:
     args = _parse_args()
     settings = get_settings()
-    model = build_vision_model(settings)
+    model = build_vision_model_with_fallback(settings)
     if model is None:
         sys.exit(f"No API key for VISION_PROVIDER={settings.vision_provider}. Add it to .env first.")
 

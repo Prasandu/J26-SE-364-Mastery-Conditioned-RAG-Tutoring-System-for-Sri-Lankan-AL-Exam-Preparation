@@ -36,7 +36,8 @@ export function RequireAuth({ role, children }: { readonly role?: Role; readonly
     const roleParam = role ? `&role=${role}` : "";
     return <Navigate to={`/login?next=${next}${roleParam}`} replace />;
   }
-  if (role && !hasRole(user.role, role)) {
+  const allowed = role === "student" ? user.role === "student" : !role || hasRole(user.role, role);
+  if (!allowed) {
     return (
       <ErrorBox
         message={`This page needs a ${role} account`}

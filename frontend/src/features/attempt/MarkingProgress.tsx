@@ -21,6 +21,12 @@ export function MarkingProgress({ attempt }: { attempt: Attempt }) {
   const decided = points.filter((point) => point.status !== "pending").length;
   const written = attempt.questions.filter((q) => q.answer?.text).length;
   const instant = points.filter((point) => point.method === "rule").length;
+  // Every point has a verdict, but some of those verdicts are "needs_review" - the
+  // AI/checker was not confident enough to decide on its own, so a teacher does.
+  // This is not slow; it is finished as far as this page can take it by itself, so
+  // it will never move past this on its own and should say so, not look stuck.
+  const forTeacher = points.filter((point) => point.status === "needs_review").length;
+  const needsTeacher = decided === points.length && forTeacher > 0;
 
   const steps: Step[] = [
     {
@@ -40,10 +46,13 @@ export function MarkingProgress({ attempt }: { attempt: Attempt }) {
         : "nothing written to mark",
       state: decided < points.length ? "doing" : "done",
     },
-    {
-      label: "Your score",
-      state: "waiting",
-    },
+    needsTeacher
+      ? {
+          label: "Your score",
+          detail: `${forTeacher} marking ${forTeacher === 1 ? "point needs" : "points need"} a teacher to check them first`,
+          state: "doing",
+        }
+      : { label: "Your score", state: "waiting" },
   ];
 
   return (
@@ -54,7 +63,9 @@ export function MarkingProgress({ attempt }: { attempt: Attempt }) {
       </div>
 
       <p className="mt-1 text-sm text-slate-600">
-        You can leave this page open. It finishes on its own, usually in under a minute.
+        {needsTeacher
+          ? "The machine checked everything it could on its own. What's left needs a teacher's eyes."
+          : "You can leave this page open. It finishes on its own, usually in under a minute."}
       </p>
 
       {points.length > 0 && (
@@ -67,11 +78,20 @@ export function MarkingProgress({ attempt }: { attempt: Attempt }) {
         <Steps steps={steps} />
       </div>
 
-      {seconds > SLOW_AFTER_SECONDS && (
+      {needsTeacher ? (
         <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-          This is taking longer than usual. The AI marker may be busy. Your answers are safe either
-          way, so you can come back to this page later.
+          {forTeacher === 1 ? "One marking point was" : `${forTeacher} marking points were`} not confident
+          enough to decide automatically, so they're waiting in a teacher's review queue - not stuck,
+          just not done yet. You'll see your score here as soon as that's checked; you don't need to
+          keep this page open.
         </p>
+      ) : (
+        seconds > SLOW_AFTER_SECONDS && (
+          <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+            This is taking longer than usual. The AI marker may be busy. Your answers are safe either
+            way, so you can come back to this page later.
+          </p>
+        )
       )}
     </Card>
   );

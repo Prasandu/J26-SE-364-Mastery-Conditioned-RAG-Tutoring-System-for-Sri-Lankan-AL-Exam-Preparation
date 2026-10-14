@@ -43,6 +43,7 @@ class ReviewItemOut(BaseModel):
     status: PointStatus
     checker_awarded: bool | None
     ai_awarded: bool | None
+    teacher_awarded: bool | None
     machine_evidence: str | None
     machine_reason: str | None
     confidence: float | None

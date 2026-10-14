@@ -20,13 +20,9 @@ interface Props {
 }
 
 /**
- * Marking one script right through, point by point.
- *
- * Unlike the queue, this shows every point, including the ones the machine was sure
- * about. Those are the interesting ones: a point the machine got confidently wrong
- * never reaches the queue, so it would never be found.
+ * Marking the eligible AI-review points for one submitted script.
  */
-export function ScriptMarker({ script, onBack, onDecided }: Props) {
+export function ScriptMarker({ script, onBack, onDecided }: Readonly<Props>) {
   const [points, setPoints] = useState<ReviewItem[] | null>(null);
   const [done, setDone] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +31,14 @@ export function ScriptMarker({ script, onBack, onDecided }: Props) {
   useEffect(() => {
     const controller = new AbortController();
     scriptPoints(script.attempt_id, controller.signal)
-      .then(setPoints)
+      .then((loaded) => {
+        setPoints(loaded);
+        setDone(
+          Object.fromEntries(
+            loaded.filter((point) => point.teacher_awarded !== null).map((point) => [point.id, true]),
+          ),
+        );
+      })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) {
           setError(cause instanceof ApiError ? cause.message : String(cause));
@@ -80,7 +83,7 @@ export function ScriptMarker({ script, onBack, onDecided }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <button type="button" onClick={onBack} className="text-sm text-brand-700 hover:underline">
-            &larr; All scripts
+            &larr; AI review scripts
           </button>
           <h2 className="mt-1 font-medium">
             {script.student_ref}{" "}
@@ -96,7 +99,7 @@ export function ScriptMarker({ script, onBack, onDecided }: Props) {
         <Card>
           <div className="flex flex-wrap items-center gap-3">
             <Badge tone="good">script finished</Badge>
-            <p className="text-slate-600">Every point of this script has been marked. Thank you.</p>
+            <p className="text-slate-600">Every eligible AI-review point has been marked.</p>
             <Button className="ml-auto" onClick={onBack}>
               Next script
             </Button>

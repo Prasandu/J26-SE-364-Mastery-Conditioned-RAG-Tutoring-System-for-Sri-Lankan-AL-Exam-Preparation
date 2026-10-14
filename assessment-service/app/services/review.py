@@ -44,6 +44,7 @@ def review_queue(
     *,
     paper_id: int | None = None,
     status: PointStatus | None = None,
+    min_confidence: float = 0.7,
     limit: int = 50,
     offset: int = 0,
 ) -> Sequence[PointResult]:
@@ -54,7 +55,7 @@ def review_queue(
     chosen = PointResult.status == status if status else PointResult.status.in_(UNRESOLVED)
     stmt = (
         _submitted_points()
-        .where(chosen)
+        .where(chosen, _ai_reviewable(min_confidence))
         .order_by(Attempt.submitted_at, PointResult.id)
         .limit(min(limit, MAX_QUEUE_PAGE))
         .offset(offset)
@@ -65,7 +66,12 @@ def review_queue(
 
 
 def review_scripts(
-    db: Session, *, paper_id: int | None = None, limit: int = 50, offset: int = 0
+    db: Session,
+    *,
+    paper_id: int | None = None,
+    min_confidence: float = 0.7,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[ReviewScriptOut]:
     """Submitted scripts a teacher can mark, oldest first, with how many points are done.
 
@@ -87,7 +93,15 @@ def review_scripts(
 
     scripts = []
     for attempt in db.scalars(stmt):
-        results = [r for answer in attempt.answers for r in answer.point_results]
+        results = [
+            r
+            for answer in attempt.answers
+            for r in answer.point_results
+            if _is_ai_reviewable(r, min_confidence)
+            and (r.status in UNRESOLVED or r.teacher_awarded is not None)
+        ]
+        if not results:
+            continue
         scripts.append(
             ReviewScriptOut(
                 attempt_id=attempt.id,
@@ -197,6 +211,7 @@ def to_review_item(result: PointResult) -> ReviewItemOut:
         status=result.status,
         checker_awarded=result.checker_awarded,
         ai_awarded=result.ai_awarded,
+        teacher_awarded=result.teacher_awarded,
         machine_evidence=result.evidence,
         machine_reason=result.reason,
         confidence=result.confidence,
@@ -216,6 +231,22 @@ def _submitted_points() -> Select[tuple[PointResult]]:
     )
 
 
+def _ai_reviewable(min_confidence: float):
+    return (
+        (PointResult.ai_awarded.is_(None))
+        | (PointResult.confidence.is_(None))
+        | (PointResult.confidence < min_confidence)
+    )
+
+
+def _is_ai_reviewable(result: PointResult, min_confidence: float) -> bool:
+    return (
+        result.ai_awarded is None
+        or result.confidence is None
+        or result.confidence < min_confidence
+    )
+
+
 def _compare(results: Sequence[PointResult], left: str, right: str) -> MarkerAgreement:
     both = [r for r in results if getattr(r, left) is not None and getattr(r, right) is not None]
     agree = sum(getattr(r, left) == getattr(r, right) for r in both)
@@ -227,9 +258,15 @@ def _compare(results: Sequence[PointResult], left: str, right: str) -> MarkerAgr
     )
 
 
-def attempt_points(db: Session, attempt_id: uuid.UUID) -> Sequence[PointResult]:
-    """Every marking point of one attempt, so a teacher can double-mark the whole script."""
-    stmt = _submitted_points().where(Attempt.id == attempt_id).order_by(PointResult.id)
+def attempt_points(
+    db: Session, attempt_id: uuid.UUID, *, min_confidence: float = 0.7
+) -> Sequence[PointResult]:
+    """Unresolved AI-review points of one submitted attempt."""
+    stmt = _submitted_points().where(
+        Attempt.id == attempt_id,
+        _ai_reviewable(min_confidence),
+        (PointResult.status.in_(UNRESOLVED) | PointResult.teacher_awarded.is_not(None)),
+    ).order_by(PointResult.id)
     results = db.scalars(stmt).all()
     if not results:
         raise NotFoundError("No submitted attempt with that id")

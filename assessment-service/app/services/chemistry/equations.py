@@ -41,8 +41,13 @@ _DIGITS = re.compile(r"\d+")
 _COEFFICIENT = re.compile(r"^(\d+)\s*(?=[A-Za-z(\[])")
 _STATE = re.compile(r"\((?:" + "|".join(STATE_SYMBOLS) + r")\)", re.I)
 _CHARGE = re.compile(r"\^(\d*)([+-])")
-_WORD = re.compile(r"[A-Za-z][A-Za-z0-9()\[\]^+*.-]*")
+_WORD = re.compile(r"\[?[A-Za-z][A-Za-z0-9()\[\]^+*.-]*")
 _RUN_OF_LOWER = re.compile(r"[a-z]{2,}")
+# "the Al-O bond", "a C-H bond is..." - a hyphen is not valid formula syntax (a
+# charge is "^2-", a bond is never written this way), so chained short element-shaped
+# pieces joined by one is read as naming a bond in prose, not writing a formula.
+_BOND_NOTATION = re.compile(r"^[A-Za-z]{1,2}(-[A-Za-z]{1,2})+$")
+_TRAILING_CHARGE = re.compile(r"\^\d*-$")
 
 # A "+" between two species, not the one inside a charge. A charge is hidden behind a
 # marker with its sign spelled as a letter first, so every "+" left over separates two
@@ -211,9 +216,12 @@ def unreadable_formulas(text: str) -> list[str]:
     """
     bad = []
     for word in _WORD.findall(text):
-        # Sentence punctuation only. Brackets are part of the formula: stripping the
-        # ")" off "H2O(l)" would leave an unbalanced bracket and condemn a good formula.
-        candidate = word.strip(".,;:-")
+        # Sentence punctuation only. Brackets are usually part of the formula - but a
+        # formula named in passing inside a sentence, e.g. "the oxide ion (O^2-) is...",
+        # picks up that sentence's own closing ")" too, since the word continues
+        # through it. Dropping an unmatched trailing closer first undoes exactly that,
+        # without touching a real bracket pair like "H2O(l)".
+        candidate = _drop_unmatched_closers(_strip_sentence_punctuation(word))
         if not _could_be_formula(candidate) or _looks_like_prose(candidate):
             continue
         if _species(candidate) is None:
@@ -221,16 +229,50 @@ def unreadable_formulas(text: str) -> list[str]:
     return bad
 
 
+def _strip_sentence_punctuation(word: str) -> str:
+    """Trailing ".", ",", ";", ":" or "-" from the sentence around it - but not a "-"
+    that is itself the sign of a trailing anionic charge, e.g. the one ending "^2-"
+    in "the sulfate ion (SO4^2-)."."""
+    while word and word[-1] in ".,;:-":
+        if word[-1] == "-" and _TRAILING_CHARGE.search(word):
+            break
+        word = word[:-1]
+    return word
+
+
+def _drop_unmatched_closers(word: str) -> str:
+    """Strip a ")" or "]" off the end that has no opener earlier in the same word."""
+    while word and word[-1] in ")]":
+        opener = "(" if word[-1] == ")" else "["
+        if word.count(opener) >= word.count(word[-1]):
+            break
+        word = word[:-1]
+    return word
+
+
 def _could_be_formula(word: str) -> bool:
-    """Worth checking at all: starts with a capital and has a digit or a small letter."""
-    if len(word) < 2 or not word[0].isupper():
+    """Worth checking at all: starts with a capital and has a digit or a small letter.
+
+    A complex-ion formula can start with "[" instead (e.g. "[Al(OH)4]^-") - the
+    shape is judged on what follows it, same as for any other formula.
+    """
+    body = word[1:] if word.startswith("[") else word
+    if len(body) < 2 or not body[0].isupper():
         return False
-    return any(character.isdigit() or character.islower() for character in word[1:])
+    return any(character.isdigit() or character.islower() for character in body[1:])
 
 
 def _looks_like_prose(word: str) -> bool:
-    """An ordinary word such as "Calculate", rather than a formula."""
+    """An ordinary word, short ("By", "An") or long ("Calculate"), rather than a
+    formula. A short word cannot show the run of lower-case letters a longer one
+    would, so it is judged prose on sight instead - a real one or two-letter element
+    (Na, Cl, Fe...) still passes on its own merits when actually checked, so nothing
+    is lost by not separately flagging the ones that are not."""
+    if _BOND_NOTATION.match(word):
+        return True
     letters = re.sub(r"[^A-Za-z]", "", _STATE.sub("", word))
+    if len(letters) <= 2:
+        return True
     return bool(_RUN_OF_LOWER.search(letters))
 
 

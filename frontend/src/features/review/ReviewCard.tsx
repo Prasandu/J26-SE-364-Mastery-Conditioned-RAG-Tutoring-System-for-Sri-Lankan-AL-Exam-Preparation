@@ -5,6 +5,7 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { marks } from "@/lib/format";
+import { reviewReason } from "@/lib/reviewReason";
 
 import { MachineOpinion } from "./MachineOpinion";
 import { AnswerPhotos } from "./AnswerPhotos";
@@ -25,6 +26,7 @@ interface Props {
 export function ReviewCard({ item, busy, onDecide }: Props) {
   const [comment, setComment] = useState("");
   const [peeked, setPeeked] = useState(false);
+  const reason = reviewReason(item);
 
   return (
     <Card>
@@ -34,6 +36,7 @@ export function ReviewCard({ item, busy, onDecide }: Props) {
         </span>
         <Badge>{item.code}</Badge>
         <Badge tone="good">{marks(item.marks)}</Badge>
+        {reason && <Badge tone={reason.code === "ai_not_run" ? "neutral" : "warn"}>{reason.label}</Badge>}
         <span className="ml-auto text-slate-400">student {item.student_ref}</span>
       </div>
 

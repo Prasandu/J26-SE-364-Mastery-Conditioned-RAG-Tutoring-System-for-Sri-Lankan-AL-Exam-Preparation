@@ -27,7 +27,7 @@ export function NavBar() {
   const links: NavItem[] = [
     { to: "/", label: "Home", end: true },
     { to: "/papers", label: "Papers", end: false },
-    { to: "/practice", label: "Practice", end: false },
+    ...(!user || user.role === "student" ? [{ to: "/practice", label: "Practice", end: false }] : []),
     ...(!user || user.role === "student" ? [{ to: "/my-results", label: "My results", end: false }] : []),
     ...(!user || hasRole(user.role, "teacher") ? [{ to: "/review", label: "Teacher review", end: false }] : []),
     ...(user && hasRole(user.role, "admin") ? [{ to: "/admin", label: "Admin dashboard", end: false }] : []),

@@ -1,41 +1,15 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
-import type { Role } from "@/api/types";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
 import { useAuth } from "@/hooks/useAuth";
-import { hasRole } from "@/lib/role";
-
-/**
- * Where to send a signed-in user back to, if they were sent here to sign in first.
- *
- * Only honours `next` when the account that just signed in can actually use that
- * page (see RequireAuth's `role` param, above) - otherwise home, not a page this
- * account will immediately be refused. This matters most right after signing out
- * of a protected page and signing back in as a different role: without this check,
- * whoever logs in next would be sent straight back into a page that was never
- * theirs.
- */
-function returnTo(search: string, signedInRole: Role): string {
-  const params = new URLSearchParams(search);
-  const next = params.get("next");
-  if (!next) {
-    return "/";
-  }
-  const neededRole = params.get("role") as Role | null;
-  if (neededRole && !hasRole(signedInRole, neededRole)) {
-    return "/";
-  }
-  return next;
-}
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,8 +20,8 @@ export function LoginPage() {
     setBusy(true);
     setProblem(null);
     try {
-      const signedIn = await login(email, password);
-      navigate(returnTo(location.search, signedIn.role), { replace: true });
+      await login(email, password);
+      navigate("/", { replace: true });
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
       setBusy(false);

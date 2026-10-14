@@ -155,6 +155,7 @@ export interface ReviewItem {
   status: PointStatus;
   checker_awarded: boolean | null;
   ai_awarded: boolean | null;
+  teacher_awarded: boolean | null;
   machine_evidence: string | null;
   machine_reason: string | null;
   confidence: number | null;

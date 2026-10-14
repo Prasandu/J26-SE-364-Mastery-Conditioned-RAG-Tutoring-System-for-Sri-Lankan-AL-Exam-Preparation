@@ -28,6 +28,12 @@ The planning screens are available at `/planning/setup`, `/planning/plan`, and
 authenticated bearer token; planning routes prompt for Supabase email/password
 sign-in when no session is available.
 
+The planning setup uses the shared syllabus topic tree and validates future
+exam dates, topic selection, session limits, and non-overlapping weekly
+availability before submission. The plan screen supports calendar/list views,
+task outcome updates, schedule regeneration, and a notice describing sessions
+that were moved or added.
+
 ## Checks
 
 ```sh

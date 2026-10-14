@@ -1,6 +1,6 @@
 """Admin endpoints: ingest, embed, publish and search trusted Chemistry resources.
 
-Every route needs the X-Admin-Key header (see app/security.py). A resource's original
+Every route needs a signed-in admin account (see app/security.py). A resource's original
 PDF and its extracted text are never exposed by any other route - search here is the
 only way to read a chunk's text back, and it is behind the same key.
 """

@@ -1,8 +1,9 @@
 """Real user accounts: the team's shared login.
 
-Replaces two things at once, stage by stage (see app/security.py and
-app/services/auth.py): the shared ADMIN_API_KEY / TEACHER_API_KEY in .env, and the
-free-text student_ref a student could previously type as anyone.
+Replaces two things (see app/security.py and app/services/auth.py): the shared
+ADMIN_API_KEY / TEACHER_API_KEY .env keys staff routes used before this existed
+(removed - see app/security.py), and the free-text student_ref a student could
+previously type as anyone.
 
 A role is a tier, not an independent permission set: ADMIN can do everything TEACHER
 can, which can do everything STUDENT can (see ROLE_RANK in app/services/auth.py).

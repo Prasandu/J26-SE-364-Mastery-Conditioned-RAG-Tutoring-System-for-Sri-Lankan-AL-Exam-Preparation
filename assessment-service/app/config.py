@@ -28,17 +28,25 @@ class Settings(BaseSettings):
     app_name: str = "Assessment Service"
     app_env: str = "development"
     database_url: str = "sqlite:///./assessment.db"
-    # Key for the /admin endpoints. Empty = admin endpoints are switched off.
-    admin_api_key: str | None = Field(default=None, min_length=16)
-    # Key for the /review endpoints used by teachers. Empty = teacher review is switched off.
-    teacher_api_key: str | None = Field(default=None, min_length=16)
 
     # Signs login tokens (see app/services/auth.py). Empty = /auth is switched off,
-    # same convention as the two keys above. A real deployment sets a long random
-    # value and never changes it without expecting every signed-in user to be logged
-    # out - changing it invalidates every token already issued.
+    # and with it every /admin and /review route, which now need a real signed-in
+    # account of the right role - there is no shared-key fallback any more. A real
+    # deployment sets a long random value and never changes it without expecting
+    # every signed-in user to be logged out - changing it invalidates every token
+    # already issued.
     jwt_secret: str | None = Field(default=None, min_length=32)
     jwt_expires_minutes: int = Field(default=60 * 24, ge=1)  # a day, so a student is not logged out mid-paper
+
+    # The /integration routes: read-only endpoints the other three components of
+    # this group project (J26-SE-364) call to get a student's marks, topic
+    # performance and error categories from this one. Not a human login - each
+    # teammate's own service holds one of these keys, so a key can be revoked for
+    # one component without affecting the others. Empty = that component's calls
+    # are rejected (see app/security.py's require_integration_caller).
+    integration_key_component1: str | None = Field(default=None, min_length=16)  # Virtual Chem. Laboratory
+    integration_key_component3: str | None = Field(default=None, min_length=16)  # Analytics & Exam Planning
+    integration_key_component4: str | None = Field(default=None, min_length=16)  # AI Cognitive Support
 
     # AI judge for written answers. Without a key, written answers stay "pending".
     ai_provider: ProviderName = ProviderName.GEMINI

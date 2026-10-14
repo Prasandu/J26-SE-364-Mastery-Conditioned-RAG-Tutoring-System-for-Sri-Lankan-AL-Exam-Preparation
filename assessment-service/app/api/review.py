@@ -1,6 +1,6 @@
 """Teacher endpoints: the review queue, a teacher's decision, and marker agreement (FR9).
 
-Every route needs the X-Teacher-Key header (see app/security.py).
+Every route needs a signed-in teacher (or admin) account (see app/security.py).
 """
 
 import uuid

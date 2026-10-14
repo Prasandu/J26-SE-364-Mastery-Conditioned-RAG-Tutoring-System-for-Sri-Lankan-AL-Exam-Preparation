@@ -1,6 +1,6 @@
 """Admin endpoints: manage topics, papers and versioned marking schemes (FR11), retry AI marking.
 
-Every route needs the X-Admin-Key header (see app/security.py).
+Every route needs a signed-in admin account (see app/security.py).
 """
 
 import uuid

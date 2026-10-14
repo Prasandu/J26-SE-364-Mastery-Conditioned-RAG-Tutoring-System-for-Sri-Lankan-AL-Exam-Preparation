@@ -47,6 +47,17 @@ export interface Health {
   env: string;
 }
 
+export type UserRole = "student" | "teacher" | "admin";
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+}
+
 // Attempts: one student answering one paper.
 
 export type AttemptMode = "digital" | "paper";
@@ -354,4 +365,75 @@ export interface PracticeLimits {
   per_day: number;
   made_today: number;
   questions_at_once: number;
+}
+
+export type Role = "student" | "teacher" | "admin";
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export interface TokenOut {
+  access_token: string;
+  token_type: string;
+  role: Role;
+}
+
+// Resource books (RAG)
+
+export type ResourceStatus = "draft" | "published" | "retired";
+
+export interface ResourceSummary {
+  id: number;
+  code: string;
+  version: number;
+  title: string;
+  subject: string;
+  topic_code: string | null;
+  status: ResourceStatus;
+  page_count: number;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ThinPage {
+  page: number;
+  quality: "good" | "thin" | "empty";
+  chars: number;
+}
+
+export interface IngestResult {
+  resource: ResourceSummary | null; // null when the file was unchanged
+  created: boolean;
+  chunks_created: number;
+  chunks_reused: number;
+  thin_pages: ThinPage[];
+}
+
+export interface EmbedResult {
+  embedded: number;
+  still_pending: number;
+  failures: string[];
+}
+
+// Reading a scanned PDF into a paper or marking scheme draft
+
+export interface FailedPage {
+  pages: number[];
+  error: string;
+}
+
+export interface ExtractResult {
+  model: string;
+  page_count: number;
+  pages_read: number[];
+  notes: string[];
+  failed: FailedPage[];
+  extracted: {
+    questions: Record<string, unknown>[];
+    mcq_answers?: Record<string, unknown>[];
+  };
 }

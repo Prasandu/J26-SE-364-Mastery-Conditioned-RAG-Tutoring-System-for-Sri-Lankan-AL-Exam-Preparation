@@ -1,66 +1,36 @@
-import { useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
-import { Button } from "@/components/Button";
-import { readAdminKey, saveAdminKey } from "@/lib/teacher";
+import { useAuth } from "@/hooks/useAuth";
 
-import { AdminSignIn } from "./AdminSignIn";
+import { AdminDashboard } from "./AdminDashboard";
+import { AdminLayout } from "./AdminLayout";
+import { GeneratePage } from "../generate/GeneratePage";
+import { ImportPage } from "./ImportPage";
 import { PaperDetailPage } from "./PaperDetailPage";
 import { PapersListPage } from "./PapersListPage";
+import { ResourcesPage } from "./ResourcesPage";
 import { SuggestionsPage } from "./SuggestionsPage";
+import { UsersPage } from "./UsersPage";
 
-const TABS = [
-  { to: "/admin/papers", label: "Papers", end: false },
-  { to: "/admin/suggestions", label: "Topic suggestions", end: false },
-];
-
-/** Content management: browse and search papers, manage marking schemes, tag
- * topics, review AI topic suggestions. Everything here needs the admin key. */
+/**
+ * Content management: a workspace of its own (see AdminLayout), not a page inside
+ * the student/teacher site. Gated by RequireAuth role="admin" in App.tsx.
+ */
 export function AdminPage() {
-  const [signedIn, setSignedIn] = useState(() => readAdminKey() !== "");
-
-  if (!signedIn) {
-    return <AdminSignIn onReady={() => setSignedIn(true)} />;
-  }
+  const { logout } = useAuth();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex gap-2" aria-label="Admin sections">
-          {TABS.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              end={tab.end}
-              className={({ isActive }) =>
-                `rounded-full px-4 py-2 text-sm transition ${
-                  isActive
-                    ? "bg-brand-600 font-medium text-white"
-                    : "text-slate-600 hover:bg-slate-100"
-                }`
-              }
-            >
-              {tab.label}
-            </NavLink>
-          ))}
-        </nav>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            saveAdminKey("");
-            setSignedIn(false);
-          }}
-        >
-          Sign out
-        </Button>
-      </div>
-
+    <AdminLayout onSignOut={logout}>
       <Routes>
-        <Route index element={<PapersListPage />} />
+        <Route index element={<AdminDashboard />} />
         <Route path="papers" element={<PapersListPage />} />
         <Route path="papers/:paperId" element={<PaperDetailPage />} />
         <Route path="suggestions" element={<SuggestionsPage />} />
+        <Route path="resources" element={<ResourcesPage />} />
+        <Route path="import" element={<ImportPage />} />
+        <Route path="generate" element={<GeneratePage />} />
+        <Route path="users" element={<UsersPage />} />
       </Routes>
-    </div>
+    </AdminLayout>
   );
 }

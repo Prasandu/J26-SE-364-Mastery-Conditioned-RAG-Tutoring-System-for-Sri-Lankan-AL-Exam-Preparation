@@ -1,6 +1,18 @@
 // The only place that calls fetch. Everything else goes through request().
 
+import { readToken } from "@/lib/auth";
+
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8001").replace(/\/$/, "");
+
+// Attached to every request when the caller is signed in, same as the admin/teacher
+// keys are attached explicitly per call - nearly everything student-facing wants
+// this, so it lives here instead of being repeated at every call site. A caller's
+// own `headers` still wins if it sets Authorization itself (e.g. a second, specific
+// login in a test).
+function withAuth(headers: Record<string, string>): Record<string, string> {
+  const token = readToken();
+  return token ? { Authorization: `Bearer ${token}`, ...headers } : headers;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -24,6 +36,7 @@ interface RequestOptions {
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, form, headers = {}, signal } = options;
+  const withToken = withAuth(headers);
 
   let response: Response;
   try {
@@ -31,7 +44,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       method,
       signal,
       // Never set Content-Type for FormData: the browser adds the multipart boundary.
-      headers: body ? { "Content-Type": "application/json", ...headers } : headers,
+      headers: body ? { "Content-Type": "application/json", ...withToken } : withToken,
       body: form ?? (body ? JSON.stringify(body) : undefined),
     });
   } catch (cause) {

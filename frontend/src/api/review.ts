@@ -6,14 +6,7 @@ import type {
   ReviewDecision,
   ReviewItem,
   ReviewScript,
-  ReviewedPoint,
-} from "./types";
-import { readTeacherKey } from "@/lib/teacher";
-
-// Every review endpoint needs the teacher key.
-function headers(): Record<string, string> {
-  return { "X-Teacher-Key": readTeacherKey() };
-}
+  ReviewedPoint } from "./types";
 
 interface QueueFilter {
   paperId?: number;
@@ -31,41 +24,37 @@ export function reviewQueue(filter: QueueFilter = {}, signal?: AbortSignal): Pro
   }
   query.set("limit", String(filter.limit ?? 50));
 
-  return request<ReviewItem[]>(`/review/queue?${query}`, { headers: headers(), signal });
+  return request<ReviewItem[]>(`/review/queue?${query}`, { signal });
 }
 
 /** One photo of a handwritten answer, for marking a drawing the reader could not read. */
 export function answerImage(imageId: number, signal?: AbortSignal): Promise<Blob> {
-  return requestBlob(`/review/images/${imageId}`, { headers: headers(), signal });
+  return requestBlob(`/review/images/${imageId}`, { signal });
 }
 
 export function agreement(paperId?: number, signal?: AbortSignal): Promise<Agreement> {
   const query = paperId === undefined ? "" : `?paper_id=${paperId}`;
-  return request<Agreement>(`/review/agreement${query}`, { headers: headers(), signal });
+  return request<Agreement>(`/review/agreement${query}`, { signal });
 }
 
 export function decidePoint(resultId: number, decision: ReviewDecision): Promise<ReviewedPoint> {
   return request<ReviewedPoint>(`/review/points/${resultId}`, {
     method: "POST",
-    body: decision,
-    headers: headers(),
-  });
+    body: decision });
 }
 
 export function reviewScripts(paperId?: number, signal?: AbortSignal): Promise<ReviewScript[]> {
   const query = paperId === undefined ? "" : `?paper_id=${paperId}`;
-  return request<ReviewScript[]>(`/review/scripts${query}`, { headers: headers(), signal });
+  return request<ReviewScript[]>(`/review/scripts${query}`, { signal });
 }
 
 /** Every marking point of one script, decided or not. */
 export function scriptPoints(attemptId: string, signal?: AbortSignal): Promise<ReviewItem[]> {
-  return request<ReviewItem[]>(`/review/attempts/${attemptId}`, { headers: headers(), signal });
+  return request<ReviewItem[]>(`/review/attempts/${attemptId}`, { signal });
 }
 
 /** Every decision made on one marking point, oldest first. */
 export function pointHistory(resultId: number, signal?: AbortSignal): Promise<PointReview[]> {
   return request<PointReview[]>(`/review/points/${resultId}/history`, {
-    headers: headers(),
-    signal,
-  });
+    signal });
 }

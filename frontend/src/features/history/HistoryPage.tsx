@@ -9,49 +9,35 @@ import { EmptyState, ErrorBox } from "@/components/ErrorBox";
 import { Hero } from "@/components/Hero";
 import { Spinner } from "@/components/Spinner";
 import { useApi } from "@/hooks/useApi";
-import { readStudentRef } from "@/lib/student";
+import { useAuth } from "@/hooks/useAuth";
 
 import { AttemptRow } from "./AttemptRow";
 
-/** Every paper this student has attempted, newest first, with what it scored. */
+/** Every paper the signed-in student has attempted, newest first, with what it scored.
+ *
+ * Gated by RequireAuth(role="student") in App.tsx, so a user is always signed in here.
+ */
 export function HistoryPage() {
-  const studentRef = readStudentRef();
+  const { user } = useAuth();
 
-  const load = useCallback(
-    async (signal: AbortSignal) => {
-      // An attempt carries a paper id, not a title, so the paper list supplies the names.
-      const [attempts, papers] = await Promise.all([
-        myAttempts(studentRef, signal),
-        myPapers(studentRef, signal),
-      ]);
-      return { attempts, papers };
-    },
-    [studentRef],
-  );
+  const load = useCallback(async (signal: AbortSignal) => {
+    // An attempt carries a paper id, not a title, so the paper list supplies the names.
+    const [attempts, papers] = await Promise.all([myAttempts(signal), myPapers(signal)]);
+    return { attempts, papers };
+  }, []);
 
-  const { data, error, loading } = useApi(load, [studentRef]);
-
-  if (studentRef === "") {
-    return (
-      <div className="space-y-8">
-        <Header />
-        <EmptyState title="No student number on this device yet">
-          Open a paper and start an attempt. Your results then collect here.
-        </EmptyState>
-      </div>
-    );
-  }
+  const { data, error, loading } = useApi(load, []);
 
   return (
     <div className="space-y-8">
-      <Header studentRef={studentRef} />
+      <Header email={user?.email} />
 
       {loading && <Spinner label="Loading your attempts..." />}
       {error && <ErrorBox message={error} />}
 
       {data?.attempts.length === 0 && (
         <EmptyState title="You have not attempted a paper yet">
-          <Link to="/" className="text-brand-700 underline">
+          <Link to="/papers" className="text-brand-700 underline">
             Choose a paper
           </Link>{" "}
           to make a start.
@@ -73,16 +59,16 @@ export function HistoryPage() {
   );
 }
 
-function Header({ studentRef }: { studentRef?: string }) {
+function Header({ email }: { readonly email?: string }) {
   return (
     <Hero eyebrow="My results" title="Everything you have attempted">
       <p>
         Open any attempt to see the marks point by point, including anything a teacher checked by
         hand.
-        {studentRef && (
+        {email && (
           <>
             {" "}
-            These are the attempts saved under <strong>{studentRef}</strong>.
+            Signed in as <strong>{email}</strong>.
           </>
         )}
       </p>

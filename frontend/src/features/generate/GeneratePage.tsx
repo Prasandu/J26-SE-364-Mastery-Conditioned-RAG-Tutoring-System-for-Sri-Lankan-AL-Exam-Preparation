@@ -14,7 +14,6 @@ import { Steps } from "@/components/Steps";
 import { useApi } from "@/hooks/useApi";
 import { spell, useElapsed } from "@/hooks/useElapsed";
 import { shapeFrom } from "@/lib/shape";
-import { readAdminKey, saveAdminKey } from "@/lib/teacher";
 
 import { CheckPaper } from "./CheckPaper";
 import { PaperShape } from "./PaperShape";
@@ -22,16 +21,9 @@ import { TopicPicker } from "./TopicPicker";
 
 const NO_COUNTS: Counts = { mcq: 0, structured: 0, essay: 0 };
 
+/** Gated by RequireAuth role="admin" in App.tsx (this page only ever renders
+ * inside AdminPage's routes, which that wraps). */
 export function GeneratePage() {
-  const [signedIn, setSignedIn] = useState(() => readAdminKey() !== "");
-
-  if (!signedIn) {
-    return <AdminSignIn onReady={() => setSignedIn(true)} />;
-  }
-  return <Generator onSignOut={() => setSignedIn(false)} />;
-}
-
-function Generator({ onSignOut }: { onSignOut: () => void }) {
   const topics = useApi(listTopics, []);
   const rates = useApi(generatorRates, []);
 
@@ -62,12 +54,7 @@ function Generator({ onSignOut }: { onSignOut: () => void }) {
     return <Spinner label="Loading the syllabus..." />;
   }
   if (topics.error || rates.error || !topics.data || !rates.data) {
-    return (
-      <ErrorBox
-        message={topics.error ?? rates.error ?? "Could not load the syllabus"}
-        hint="A wrong admin key gives 401. Sign out and try again."
-      />
-    );
+    return <ErrorBox message={topics.error ?? rates.error ?? "Could not load the syllabus"} />;
   }
 
   const shape = shapeFrom(counts, rates.data);
@@ -144,15 +131,6 @@ function Generator({ onSignOut }: { onSignOut: () => void }) {
         <Link to="/admin/papers">
           <Button variant="secondary">Manage papers &amp; schemes</Button>
         </Link>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            saveAdminKey("");
-            onSignOut();
-          }}
-        >
-          Sign out
-        </Button>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:items-start">
@@ -306,50 +284,5 @@ function hintFor(message: string): string | undefined {
   if (message.includes("Nothing usable")) {
     return "Try fewer questions at once, or pick more topics to draw from.";
   }
-  if (message.includes("401")) {
-    return "The admin key is wrong. Sign out and enter it again.";
-  }
   return undefined;
-}
-
-function AdminSignIn({ onReady }: { onReady: () => void }) {
-  const [key, setKey] = useState("");
-
-  return (
-    <Card className="mx-auto max-w-md">
-      <SectionHeading>Make a model paper</SectionHeading>
-      <p className="text-sm text-slate-500">
-        The key is the <code className="font-mono">ADMIN_API_KEY</code> from the service settings.
-        It is forgotten when you close this tab.
-      </p>
-
-      <form
-        className="mt-5 space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (key.trim()) {
-            saveAdminKey(key.trim());
-            onReady();
-          }
-        }}
-      >
-        <div className="space-y-1">
-          <label htmlFor="admin-key" className="block text-sm text-slate-600">
-            Admin key
-          </label>
-          <input
-            id="admin-key"
-            type="password"
-            autoComplete="off"
-            value={key}
-            onChange={(event) => setKey(event.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-brand-500 focus:outline-none"
-          />
-        </div>
-        <Button type="submit" className="w-full">
-          Continue
-        </Button>
-      </form>
-    </Card>
-  );
 }

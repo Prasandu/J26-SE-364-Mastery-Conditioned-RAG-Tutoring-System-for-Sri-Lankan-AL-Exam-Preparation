@@ -1,22 +1,17 @@
 import { request } from "./client";
 import type { AnswerInput, AnswerOut, Attempt, SheetRead } from "./types";
 
-export function startAttempt(
-  paperId: number,
-  studentRef: string,
-  signal?: AbortSignal,
-): Promise<Attempt> {
+export function startAttempt(paperId: number, signal?: AbortSignal): Promise<Attempt> {
   return request<Attempt>("/attempts", {
     method: "POST",
-    body: { paper_id: paperId, student_ref: studentRef },
+    body: { paper_id: paperId },
     signal,
   });
 }
 
-/** A student's own attempts, newest first, with the marks they were given. */
-export function myAttempts(studentRef: string, signal?: AbortSignal): Promise<Attempt[]> {
-  const query = new URLSearchParams({ student_ref: studentRef });
-  return request<Attempt[]>(`/attempts?${query}`, { signal });
+/** The signed-in student's own attempts, newest first, with the marks they were given. */
+export function myAttempts(signal?: AbortSignal): Promise<Attempt[]> {
+  return request<Attempt[]>("/attempts", { signal });
 }
 
 export function getAttempt(attemptId: string, signal?: AbortSignal): Promise<Attempt> {

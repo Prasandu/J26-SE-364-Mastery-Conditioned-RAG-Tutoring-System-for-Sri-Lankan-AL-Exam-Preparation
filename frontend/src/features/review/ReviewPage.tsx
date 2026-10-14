@@ -8,7 +8,8 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
 import { Spinner } from "@/components/Spinner";
-import { readTeacherKey, readTeacherRef, saveTeacherKey } from "@/lib/teacher";
+import { useAuth } from "@/hooks/useAuth";
+import { readTeacherRef } from "@/lib/teacher";
 
 import { AgreementPanel } from "./AgreementPanel";
 import type { Decided } from "./JustDecided";
@@ -16,12 +17,13 @@ import { JustDecided } from "./JustDecided";
 import { ReviewCard } from "./ReviewCard";
 import { ScriptList } from "./ScriptList";
 import { ScriptMarker } from "./ScriptMarker";
-import { TeacherSignIn } from "./TeacherSignIn";
 
 type Tab = "scripts" | "queue";
 
+/** Gated by RequireAuth role="teacher" in App.tsx - a signed-in account of at
+ * least teacher rank is guaranteed by the time this renders. */
 export function ReviewPage() {
-  const [signedIn, setSignedIn] = useState(() => readTeacherKey() !== "");
+  const { user, logout } = useAuth();
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [scripts, setScripts] = useState<ReviewScript[]>([]);
   const [stats, setStats] = useState<Agreement | null>(null);
@@ -55,14 +57,10 @@ export function ReviewPage() {
   }, []);
 
   useEffect(() => {
-    if (!signedIn) {
-      setLoading(false);
-      return;
-    }
     const controller = new AbortController();
     void load(controller.signal);
     return () => controller.abort();
-  }, [signedIn, load]);
+  }, [load]);
 
   const refreshStats = useCallback(async () => {
     try {
@@ -106,19 +104,6 @@ export function ReviewPage() {
     }
   }
 
-  function signOut() {
-    saveTeacherKey("");
-    setSignedIn(false);
-    setItems([]);
-    setScripts([]);
-    setStats(null);
-    setDecided([]);
-    setOpen(null);
-  }
-
-  if (!signedIn) {
-    return <TeacherSignIn initialRef={readTeacherRef()} onReady={() => setSignedIn(true)} />;
-  }
   if (loading) {
     return <Spinner label="Loading the review queue..." />;
   }
@@ -129,17 +114,15 @@ export function ReviewPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Teacher review</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Signed in as {readTeacherRef() || "teacher"}.
+            Signed in as {user?.name ?? readTeacherRef() ?? "teacher"}.
           </p>
         </div>
-        <Button variant="secondary" onClick={signOut}>
+        <Button variant="secondary" onClick={logout}>
           Sign out
         </Button>
       </div>
 
-      {error && (
-        <ErrorBox message={error} hint="A wrong teacher key gives 401. Sign out and try again." />
-      )}
+      {error && <ErrorBox message={error} />}
 
       {stats && <AgreementPanel data={stats} />}
 

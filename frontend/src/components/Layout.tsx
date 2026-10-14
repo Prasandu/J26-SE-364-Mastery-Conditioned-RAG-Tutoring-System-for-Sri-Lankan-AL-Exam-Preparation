@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 
 import { Backdrop } from "./Backdrop";
+import { BackButton } from "./BackButton";
 import { Footer } from "./Footer";
 import { NavBar } from "./NavBar";
 
@@ -16,6 +17,7 @@ export function Layout() {
       </a>
       <NavBar />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <BackButton />
         <Outlet />
       </main>
       <Footer />

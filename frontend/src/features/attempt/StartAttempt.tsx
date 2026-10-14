@@ -1,32 +1,35 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { startAttempt } from "@/api/attempts";
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
 import { ErrorBox } from "@/components/ErrorBox";
-import { readStudentRef, saveStudentRef } from "@/lib/student";
+import { useAuth } from "@/hooks/useAuth";
 
-/** Asks who is answering, then creates the attempt and opens it. */
-export function StartAttempt({ paperId }: { paperId: number }) {
+/** Starts the attempt as the signed-in student, or asks them to sign in first. */
+export function StartAttempt({ paperId }: { readonly paperId: number }) {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [studentRef, setStudentRef] = useState(readStudentRef);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
-  async function start(event: React.FormEvent) {
-    event.preventDefault();
-    const trimmed = studentRef.trim();
-    if (!trimmed) {
-      setError("Type your student id first");
-      return;
-    }
+  if (!user) {
+    return (
+      <Link
+        to={`/login?next=${encodeURIComponent(`/papers/${paperId}`)}`}
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-brand-600/25 hover:bg-brand-700"
+      >
+        Sign in to start this attempt
+      </Link>
+    );
+  }
 
+  async function start() {
     setStarting(true);
     setError(null);
     try {
-      const attempt = await startAttempt(paperId, trimmed);
-      saveStudentRef(trimmed);
+      const attempt = await startAttempt(paperId);
       navigate(`/attempts/${attempt.id}`);
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : String(cause));
@@ -35,24 +38,11 @@ export function StartAttempt({ paperId }: { paperId: number }) {
   }
 
   return (
-    <form onSubmit={start} className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <label htmlFor="student-ref" className="text-sm text-slate-600">
-          Student id
-        </label>
-        <input
-          id="student-ref"
-          value={studentRef}
-          onChange={(event) => setStudentRef(event.target.value)}
-          maxLength={64}
-          placeholder="e.g. S001"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-        />
-        <Button type="submit" disabled={starting}>
-          {starting ? "Starting..." : "Start attempt"}
-        </Button>
-      </div>
+    <div className="space-y-3">
+      <Button onClick={() => void start()} disabled={starting}>
+        {starting ? "Starting..." : "Start this attempt"}
+      </Button>
       {error && <ErrorBox message={error} />}
-    </form>
+    </div>
   );
 }

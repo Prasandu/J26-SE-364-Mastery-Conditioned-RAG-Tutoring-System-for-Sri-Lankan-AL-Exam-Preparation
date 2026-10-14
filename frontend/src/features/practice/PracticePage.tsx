@@ -12,9 +12,9 @@ import { Spinner } from "@/components/Spinner";
 import type { Step } from "@/components/Steps";
 import { Steps } from "@/components/Steps";
 import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/hooks/useAuth";
 import { spell, useElapsed } from "@/hooks/useElapsed";
 import { shapeFrom } from "@/lib/shape";
-import { readStudentRef, saveStudentRef } from "@/lib/student";
 
 import { PaperShape } from "../generate/PaperShape";
 import { TopicWizard } from "./TopicWizard";
@@ -29,18 +29,15 @@ const topicList = (signal: AbortSignal) => request<Topic[]>("/papers/practice/to
  * Unlike the admin generator, this one publishes straight away: the student made it
  * to sit it now, and there is no teacher waiting to check it. So the warning about
  * machine written questions is on the screen, not buried in a tick box.
+ *
+ * Gated by RequireAuth(role="student") in App.tsx, so a user is always signed in here.
  */
 export function PracticePage() {
   const navigate = useNavigate();
-  const [studentRef, setStudentRef] = useState(readStudentRef);
+  const { user } = useAuth();
   const topics = useApi(topicList, []);
   const rates = useApi(practiceRates, []);
-
-  const loadLimits = useCallback(
-    (signal: AbortSignal) => practiceLimits(studentRef || "anonymous", signal),
-    [studentRef],
-  );
-  const limits = useApi(loadLimits, [studentRef]);
+  const limits = useApi(practiceLimits, []);
 
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [counts, setCounts] = useState<Counts>(NO_COUNTS);
@@ -72,18 +69,14 @@ export function PracticePage() {
   const shape = shapeFrom(counts, rates.data);
   const left = limits.data ? limits.data.per_day - limits.data.made_today : null;
   const tooMany = limits.data ? shape.questions > limits.data.questions_at_once : false;
-  const ready =
-    chosen.size > 0 && shape.questions > 0 && studentRef.trim() !== "" && !tooMany && left !== 0;
+  const ready = chosen.size > 0 && shape.questions > 0 && !tooMany && left !== 0;
 
   async function make() {
     setBusy(true);
     setProblem(null);
-    const ref = studentRef.trim();
-    saveStudentRef(ref);
     try {
       const made = await makePractice({
         title: title(chosen, topics.data ?? []),
-        student_ref: ref,
         topic_codes: [...chosen],
         counts,
       });
@@ -147,17 +140,9 @@ export function PracticePage() {
 
           <Card>
             <SectionHeading>3. Your details</SectionHeading>
-            <label htmlFor="student-ref" className="block text-sm text-slate-600">
-              Your student id
-            </label>
-            <input
-              id="student-ref"
-              value={studentRef}
-              onChange={(event) => setStudentRef(event.target.value)}
-              maxLength={64}
-              placeholder="e.g. S001"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-            />
+            <p className="text-sm text-slate-600">
+              Signed in as <strong>{user?.email}</strong>.
+            </p>
 
             {left !== null && (
               <p className="mt-2 text-xs text-slate-500">

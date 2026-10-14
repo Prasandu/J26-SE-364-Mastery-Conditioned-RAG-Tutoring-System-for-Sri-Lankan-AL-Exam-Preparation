@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 import { Backdrop } from "./Backdrop";
 import { BackButton } from "./BackButton";
@@ -6,6 +6,8 @@ import { Footer } from "./Footer";
 import { NavBar } from "./NavBar";
 
 export function Layout() {
+  const { pathname } = useLocation();
+
   return (
     <div className="relative flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <Backdrop />
@@ -17,7 +19,7 @@ export function Layout() {
       </a>
       <NavBar />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-        <BackButton />
+        {pathname !== "/practice" && <BackButton />}
         <Outlet />
       </main>
       <Footer />

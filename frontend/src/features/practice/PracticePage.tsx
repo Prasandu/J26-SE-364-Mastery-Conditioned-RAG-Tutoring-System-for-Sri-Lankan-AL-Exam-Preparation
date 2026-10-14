@@ -7,12 +7,10 @@ import type { Counts, Topic } from "@/api/types";
 import { Button } from "@/components/Button";
 import { Card, SectionHeading } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
-import { Hero } from "@/components/Hero";
 import { Spinner } from "@/components/Spinner";
 import type { Step } from "@/components/Steps";
 import { Steps } from "@/components/Steps";
 import { useApi } from "@/hooks/useApi";
-import { useAuth } from "@/hooks/useAuth";
 import { spell, useElapsed } from "@/hooks/useElapsed";
 import { shapeFrom } from "@/lib/shape";
 
@@ -34,7 +32,6 @@ const topicList = (signal: AbortSignal) => request<Topic[]>("/papers/practice/to
  */
 export function PracticePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const topics = useApi(topicList, []);
   const rates = useApi(practiceRates, []);
   const limits = useApi(practiceLimits, []);
@@ -89,16 +86,12 @@ export function PracticePage() {
 
   return (
     <div className="space-y-5">
-      <Hero eyebrow="Practice" title="Make a paper on what you want to practise">
-        <p>
-          Pick your topics and how many questions. It is written for you, marked the same way as any
-          other paper, and only you can see it.
-        </p>
-      </Hero>
-
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:items-start">
         <Card>
-          <SectionHeading hint={`${chosen.size} chosen`}>1. Topics</SectionHeading>
+          <SectionHeading hint={`${chosen.size} selected`}>1. Choose topics</SectionHeading>
+          <p className="mb-3 text-sm text-slate-500">
+            Select a main topic, then choose specific parts if you want to focus your practice.
+          </p>
           <TopicWizard topics={topics.data} chosen={chosen} onToggle={toggle} />
         </Card>
 
@@ -138,25 +131,16 @@ export function PracticePage() {
             )}
           </Card>
 
-          <Card>
-            <SectionHeading>3. Your details</SectionHeading>
-            <p className="text-sm text-slate-600">
-              Signed in as <strong>{user?.email}</strong>.
-            </p>
+          <Card className="p-4">
+            <Button disabled={!ready || busy} onClick={() => void make()} className="w-full">
+              {busy ? "Writing..." : "Make my paper"}
+            </Button>
 
-            {left !== null && (
-              <p className="mt-2 text-xs text-slate-500">
-                {left > 0
-                  ? `${left} more practice ${left === 1 ? "paper" : "papers"} today`
-                  : "You have used today's practice papers. Try again tomorrow."}
+            {left === 0 && (
+              <p className="mt-2 text-center text-xs text-slate-500">
+                You have used today&apos;s practice papers. Try again tomorrow.
               </p>
             )}
-
-            <div className="mt-4">
-              <Button disabled={!ready || busy} onClick={() => void make()} className="w-full">
-                {busy ? "Writing..." : "Make my paper"}
-              </Button>
-            </div>
 
             {busy && (
               <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -167,11 +151,6 @@ export function PracticePage() {
               </div>
             )}
 
-            <p className="mt-4 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
-              <strong>A computer writes these questions.</strong> Nobody checks them first, so one
-              may be wrong or have more than one right answer. Use them for practice, not as a model
-              of the real examination.
-            </p>
           </Card>
 
           {problem && <ErrorBox message={problem} hint={hintFor(problem)} />}

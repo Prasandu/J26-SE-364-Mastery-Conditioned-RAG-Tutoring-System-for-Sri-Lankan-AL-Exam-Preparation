@@ -9,8 +9,7 @@ interface Props {
 }
 
 /**
- * The syllabus as two short steps instead of one long accordion: pick main
- * topics first, then narrow into their parts in a popup, only if you want to.
+ * Pick broad topics first, then optionally choose specific parts in a small dialog.
  */
 export function TopicWizard({ topics, chosen, onToggle }: Props) {
   const [openUnit, setOpenUnit] = useState<Topic | null>(null);
@@ -50,7 +49,7 @@ export function TopicWizard({ topics, chosen, onToggle }: Props) {
                   onClick={() => setOpenUnit(unit)}
                   className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700 hover:bg-brand-100"
                 >
-                  {picked > 0 ? `${picked} parts` : "Choose parts"}
+                  {picked > 0 ? `${picked} selected` : "Choose specific parts"}
                 </button>
               )}
             </li>
@@ -108,8 +107,8 @@ function SubtopicPopup({
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">Narrow down (optional)</p>
-            <p className="text-sm font-medium text-slate-800">{unit.name}</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">Optional focus</p>
+            <p className="text-sm font-medium text-slate-800">Choose parts of {unit.name}</p>
           </div>
           <button
             type="button"

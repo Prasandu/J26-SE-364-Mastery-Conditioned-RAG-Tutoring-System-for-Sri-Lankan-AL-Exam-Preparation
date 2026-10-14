@@ -2,6 +2,10 @@ import { Route, Routes } from "react-router-dom";
 import AttemptPage from "./features/attempt/AttemptPage";
 import NotFoundPage from "./features/NotFoundPage";
 import PapersPage from "./features/papers/PapersPage";
+import PlanningDashboardPage from "./features/planning/DashboardPage";
+import PlanningLayout from "./features/planning/PlanningLayout";
+import PlanningPage from "./features/planning/PlanPage";
+import PlanningSetupPage from "./features/planning/SetupPage";
 import ReviewPage from "./features/review/ReviewPage";
 
 export default function App() {
@@ -11,6 +15,12 @@ export default function App() {
       <Route path="/papers" element={<PapersPage />} />
       <Route path="/attempt" element={<AttemptPage />} />
       <Route path="/review" element={<ReviewPage />} />
+      <Route path="/planning" element={<PlanningLayout />}>
+        <Route index element={<PlanningDashboardPage />} />
+        <Route path="setup" element={<PlanningSetupPage />} />
+        <Route path="plan" element={<PlanningPage />} />
+        <Route path="dashboard" element={<PlanningDashboardPage />} />
+      </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

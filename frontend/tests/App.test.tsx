@@ -27,4 +27,19 @@ describe("App routes", () => {
       screen.getByRole("heading", { name: "Page not found" }),
     ).toBeInTheDocument();
   });
+
+  it("protects the planning routes with the Supabase sign-in screen", () => {
+    render(
+      <MemoryRouter initialEntries={["/planning/setup"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Sign in to continue" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Supabase is not configured/),
+    ).toBeInTheDocument();
+  });
 });

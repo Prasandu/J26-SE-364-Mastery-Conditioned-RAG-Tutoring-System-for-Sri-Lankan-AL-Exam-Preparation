@@ -17,6 +17,9 @@ export default function PapersPage() {
         <Link className="text-brand underline" to="/review">
           Teacher review
         </Link>
+        <Link className="text-brand underline" to="/planning/dashboard">
+          Study planning
+        </Link>
       </nav>
     </main>
   );

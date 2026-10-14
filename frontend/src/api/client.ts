@@ -13,8 +13,9 @@ export class ApiError extends Error {
 export async function request<T>(
   path: string,
   init: RequestInit = {},
+  baseUrl = apiBaseUrl,
 ): Promise<T> {
-  const response = await fetch(new URL(path, apiBaseUrl), {
+  const response = await fetch(new URL(path, baseUrl), {
     ...init,
     headers: {
       Accept: "application/json",

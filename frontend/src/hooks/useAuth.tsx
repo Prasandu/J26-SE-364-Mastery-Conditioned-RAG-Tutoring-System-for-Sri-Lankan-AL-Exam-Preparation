@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 
 import { login as apiLogin, me, register as apiRegister } from "@/api/auth";
 import type { AuthUser } from "@/api/types";
-import { clearSession, readToken, saveSession } from "@/lib/auth";
+import { clearSession, consumeSignedOut, markSignedOut, readToken, saveSession } from "@/lib/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean; // restoring a session from a saved token, on first load only
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>; // re-reads /auth/me, e.g. after the profile page changes the name
@@ -33,7 +33,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       return;
     }
     me()
-      .then(setUser)
+      .then((restored) => {
+        consumeSignedOut(); // a restored session is not "just signed out" - don't let a stale flag affect it
+        setUser(restored);
+      })
       .catch(() => clearSession())
       .finally(() => setLoading(false));
   }, []);
@@ -41,7 +44,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const token = await apiLogin(email, password);
     saveSession(token.access_token, token.role);
-    setUser(await me());
+    const signedIn = await me();
+    consumeSignedOut(); // signing in again clears any leftover sign-out flag
+    setUser(signedIn);
+    return signedIn;
   }, []);
 
   const register = useCallback(
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    markSignedOut();
     clearSession();
     setUser(null);
   }, []);

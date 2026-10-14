@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/hooks/useAuth";
 import { hasRole } from "@/lib/role";
@@ -140,9 +140,20 @@ function getInitials(name: string): string {
 /** Sign in / register, or the signed-in account with a way to sign out. */
 function AccountArea() {
   const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (loading) {
     return null;
+  }
+
+  // Home, not just clearing the session in place - otherwise signing out from a
+  // protected page (e.g. an attempt's results) leaves you on that same URL,
+  // which RequireAuth immediately bounces to /login?next=<that page>. Whoever
+  // then signs in next - even a different role - would get sent straight back
+  // into a page that was never theirs.
+  function signOut() {
+    logout();
+    navigate("/", { replace: true });
   }
 
   if (!user) {
@@ -185,7 +196,7 @@ function AccountArea() {
       </NavLink>
       <button
         type="button"
-        onClick={logout}
+        onClick={signOut}
         className="group flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-xs hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition-all whitespace-nowrap shrink-0"
         title="Sign out"
       >
@@ -211,9 +222,16 @@ function AccountArea() {
 
 function MobileAccountArea({ onNavigate }: { readonly onNavigate: () => void }) {
   const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (loading) {
     return null;
+  }
+
+  function signOut() {
+    logout();
+    navigate("/", { replace: true });
+    onNavigate();
   }
 
   if (!user) {
@@ -261,10 +279,7 @@ function MobileAccountArea({ onNavigate }: { readonly onNavigate: () => void }) 
       </NavLink>
       <button
         type="button"
-        onClick={() => {
-          logout();
-          onNavigate();
-        }}
+        onClick={signOut}
         className="flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"
       >
         <svg viewBox="0 0 20 20" fill="none" className="size-4" aria-hidden="true">

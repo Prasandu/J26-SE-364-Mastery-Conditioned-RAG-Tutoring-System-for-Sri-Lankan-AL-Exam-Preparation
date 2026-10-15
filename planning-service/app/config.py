@@ -7,7 +7,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     database_url: str
-    supabase_jwt_secret: str
+    supabase_jwt_secret: str = ""
+    supabase_url: str = ""
+    supabase_jwks_url: str = ""
     ingest_api_key: str
     model_dir: Path = Path("models")
     assessment_service_url: AnyHttpUrl | None = None

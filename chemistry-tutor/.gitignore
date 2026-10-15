@@ -17,6 +17,9 @@
 **/uploads/
 *.db
 
+# Copyrighted NIE textbook PDFs (keep on disk, not in git)
+support-service/knowledge/sources/*.pdf
+
 # OS
 .DS_Store
 Thumbs.db

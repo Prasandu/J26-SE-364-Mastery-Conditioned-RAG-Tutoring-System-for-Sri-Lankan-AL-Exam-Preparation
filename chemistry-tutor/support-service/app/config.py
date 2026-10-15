@@ -5,10 +5,11 @@ class Settings(BaseSettings):
     app_name: str = "Chemistry Tutor API"
     environment: str = "development"
 
-    # Supabase (filled in later step)
+    # Supabase
     supabase_url: str = ""
     supabase_key: str = ""
     db_schema: str = "support"
+    database_url: str = ""
 
     # LLM provider (filled in later step)
     llm_provider: str = "groq"

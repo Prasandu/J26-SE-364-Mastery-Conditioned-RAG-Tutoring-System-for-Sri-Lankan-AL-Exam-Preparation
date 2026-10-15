@@ -19,8 +19,12 @@ python -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 ```
 
-Set `DATABASE_URL` to a PostgreSQL connection URL and fill in the JWT and
-service API secrets in `.env`. Do not commit `.env`.
+Set `DATABASE_URL` to a PostgreSQL connection URL and fill in the service API
+secrets in `.env`. For Supabase authentication, set `SUPABASE_URL` to your
+project URL or set `SUPABASE_JWKS_URL` to its signing-keys endpoint
+(`https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json`). The
+service prefers JWKS verification; `SUPABASE_JWT_SECRET` is only used as the
+legacy HS256 fallback when no JWKS URL is configured. Do not commit `.env`.
 
 Apply migrations and start the service:
 
@@ -200,3 +204,57 @@ python -m tools.mock_components --output-dir data\mock
 
 The default random seed is 364; pass `--seed` to generate a different
 deterministic sample. Keep generated mock data out of version control.
+
+## Evaluation and demo
+
+The evaluation script compares the service's adaptive priority calculation
+against an equal-allocation static timetable and a lowest-mark-first heuristic.
+It runs a deterministic, synthetic cohort of 50 students through the production
+scheduler and prints a Markdown results table:
+
+```powershell
+python -m scripts.evaluate --teacher-ranking data\teacher-ranking.csv --output data\table-2.md
+```
+
+The supplied teacher-ranking CSV must contain one row per topic with
+`topic_id,rank`; lower rank means higher teacher priority. An optional
+`exam_weight` column accepts values from 0 to 1 and defaults to 0.7. The table
+reports schedule feasibility violations, simulated adherence, missed tasks in
+each strategy's top-priority quartile, expected-score proxy MAE/RMSE, and
+Spearman priority agreement with the teacher ranking. This is a reproducible
+synthetic comparison, **not** a real-student study or a trained model
+evaluation. "Feasibility violations" counts schedules that cannot fit all
+requested study time plus any generated task that violates an availability,
+session, daily-cap, overlap, or exam-deadline constraint. Missed high-priority
+tasks are uncompleted scheduled tasks for topics in that student's
+top-priority quartile. Include the synthetic-data caveat with any reported
+results.
+
+The API demo creates a plan, generates a schedule, marks its first task missed,
+then displays the re-plan response and dashboard summary. Start the service,
+apply migrations, and seed the topic catalogue first. Set a valid Supabase
+student access token and comma-separated seeded topic IDs:
+
+```powershell
+$env:PLANNING_ACCESS_TOKEN = "<student-access-token>"
+$env:PLANNING_DEMO_TOPIC_IDS = "topic-id-1,topic-id-2"
+python -m scripts.demo
+```
+
+`PLANNING_API_URL` may be set to override the default
+`http://127.0.0.1:8083`. The demo creates a real plan and records a missed task
+for the authenticated student.
+
+## Docker Compose
+
+Copy `.env.example` to `.env`, configure the planning database and secrets,
+then start the API from the repository root:
+
+```powershell
+Copy-Item planning-service\.env.example planning-service\.env
+docker compose -f infra\docker-compose.yml up --build
+```
+
+The container applies Alembic migrations before starting the API on port 8083.
+It connects to the configured PostgreSQL/Supabase database; the compose file
+does not create a separate database.

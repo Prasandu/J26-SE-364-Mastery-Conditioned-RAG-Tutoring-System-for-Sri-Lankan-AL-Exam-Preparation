@@ -1,4 +1,5 @@
 import hmac
+from functools import lru_cache
 from typing import Annotated
 
 import jwt
@@ -8,6 +9,41 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _jwks_url() -> str:
+    if settings.supabase_jwks_url:
+        return settings.supabase_jwks_url
+    if settings.supabase_url:
+        return f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+    return ""
+
+
+@lru_cache(maxsize=4)
+def _get_jwks_client(url: str) -> jwt.PyJWKClient:
+    return jwt.PyJWKClient(url, cache_keys=True)
+
+
+def decode_supabase_token(token: str) -> dict:
+    jwks_url = _jwks_url()
+    if jwks_url:
+        signing_key = _get_jwks_client(jwks_url).get_signing_key_from_jwt(token).key
+        return jwt.decode(
+            token,
+            signing_key,
+            algorithms=["ES256", "RS256"],
+            audience="authenticated",
+            options={"require": ["exp", "sub", "aud"]},
+        )
+    if settings.supabase_jwt_secret:
+        return jwt.decode(
+            token,
+            settings.supabase_jwt_secret,
+            algorithms=["HS256"],
+            audience="authenticated",
+            options={"require": ["exp", "sub", "aud"]},
+        )
+    raise RuntimeError("Supabase JWT verification is not configured.")
 
 
 def get_student_id(
@@ -22,20 +58,24 @@ def get_student_id(
             detail="Bearer token required.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if not settings.supabase_jwt_secret:
+    try:
+        claims = decode_supabase_token(credentials.credentials)
+    except RuntimeError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Supabase JWT verification is not configured.",
-        )
-
-    try:
-        claims = jwt.decode(
-            credentials.credentials,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-            options={"require": ["exp", "sub", "aud"]},
-        )
+            detail=str(exc),
+        ) from exc
+    except jwt.PyJWKClientConnectionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not retrieve Supabase signing keys.",
+        ) from exc
+    except jwt.PyJWKClientError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired bearer token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
     except jwt.InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

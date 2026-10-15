@@ -1,0 +1,18 @@
+services:
+  planning-service:
+    build:
+      context: ../planning-service
+      dockerfile: Dockerfile
+    env_file:
+      - ../planning-service/.env
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8083/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3

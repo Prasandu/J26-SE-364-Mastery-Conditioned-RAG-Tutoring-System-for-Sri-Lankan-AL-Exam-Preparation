@@ -34,6 +34,12 @@ availability before submission. The plan screen supports calendar/list views,
 task outcome updates, schedule regeneration, and a notice describing sessions
 that were moved or added.
 
+The planning dashboard uses Recharts for adherence, mastery, and grade
+visualizations. It relies on the API's data-availability flags and shows
+"Not enough data yet" instead of presenting fallback values as learner results.
+The dated mastery line chart uses weekly snapshots calculated from assessment
+evidence.
+
 ## Checks
 
 ```sh

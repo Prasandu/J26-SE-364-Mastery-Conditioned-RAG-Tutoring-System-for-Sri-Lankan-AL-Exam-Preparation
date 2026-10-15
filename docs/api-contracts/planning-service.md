@@ -212,6 +212,26 @@ models when available, with the same logged rule-based fallback as the
 prediction endpoint. Predicted-mode plan priorities are refreshed, while
 manual priorities are preserved. The action is written to `replan_log`.
 
+## Dashboard and what-if estimate
+
+### GET `/api/v1/dashboard`
+
+Returns dashboard metrics for the authenticated learner. `has_exam_plan`,
+`has_adherence_data`, `has_mastery_data`, and `has_prediction` indicate whether
+each metric has an underlying source record. When no mastery state exists,
+`mastery_trend` and `weak_topics` are empty arrays; consumers should display an
+empty state rather than treat fallback score fields as observed results.
+`mastery_trend` contains current per-topic mastery and stored trend signals.
+`mastery_history` contains weekly mastery snapshots recomputed from assessment
+evidence through each week; sparse evidence may result in no chartable trend.
+
+### POST `/api/v1/whatif`
+
+Accepts `extra_hours_per_week` and/or `mastery_gain` and returns projected
+normalized score, grade, and target gap. The response is an estimate, and the
+projected score is never below the current score. Clients should offer this
+projection only when `has_prediction` is true.
+
 ## Predictive engine
 
 ### POST `/api/v1/predictions/{student_id}`

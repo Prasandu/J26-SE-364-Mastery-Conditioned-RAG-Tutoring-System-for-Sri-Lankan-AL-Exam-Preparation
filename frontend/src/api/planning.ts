@@ -124,6 +124,13 @@ export interface DashboardTopicTrend {
   trend: number;
 }
 
+export interface DashboardMasteryHistoryPoint {
+  week_start: string;
+  topic_id: string;
+  topic_name: string | null;
+  mastery: number;
+}
+
 export interface WeakTopic {
   topic_id: string;
   topic_name: string | null;
@@ -134,9 +141,13 @@ export interface WeakTopic {
 
 export interface DashboardResponse {
   exam_countdown_days: number;
+  has_exam_plan: boolean;
   adherence: number;
   adherence_pct: number;
+  has_adherence_data: boolean;
   mastery_trend: DashboardTopicTrend[];
+  mastery_history: DashboardMasteryHistoryPoint[];
+  has_mastery_data: boolean;
   weak_topics: WeakTopic[];
   predicted_grade: string;
   target_grade: string;
@@ -145,6 +156,7 @@ export interface DashboardResponse {
   predicted_score: number;
   readiness_score: number;
   current_prediction: number;
+  has_prediction: boolean;
 }
 
 export interface WhatIfInput {

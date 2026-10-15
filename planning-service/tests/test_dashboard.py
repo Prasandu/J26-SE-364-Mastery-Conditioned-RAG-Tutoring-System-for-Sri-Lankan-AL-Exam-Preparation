@@ -48,6 +48,7 @@ class FakeDashboardSession:
         self.predictions = [
             SimpleNamespace(student_id="student-1", topic_id=None, predicted_score=0.71),
         ]
+        self.evidence = []
 
     def scalars(self, statement):
         sql = str(statement)
@@ -59,6 +60,8 @@ class FakeDashboardSession:
             return FakeResults(self.topics)
         if "learner_topic_state" in sql:
             return FakeResults(self.states)
+        if "topic_evidence" in sql:
+            return FakeResults(self.evidence)
         if "predictions" in sql:
             return FakeResults(self.predictions)
         return FakeResults([])
@@ -75,6 +78,56 @@ def test_dashboard_summary_has_required_fields() -> None:
     assert response.target_grade == "A"
     assert response.readiness_score > 0.0
     assert response.weak_topics
+    assert response.has_exam_plan
+    assert response.has_adherence_data
+    assert response.has_mastery_data
+    assert response.has_prediction
+
+
+def test_empty_dashboard_marks_unavailable_metrics_without_placeholder_topics() -> None:
+    class EmptySession:
+        def scalars(self, _statement):
+            return FakeResults([])
+
+    response = get_dashboard(EmptySession(), "student-empty")
+
+    assert not response.has_exam_plan
+    assert not response.has_adherence_data
+    assert not response.has_mastery_data
+    assert not response.has_prediction
+    assert response.mastery_trend == []
+    assert response.mastery_history == []
+    assert response.weak_topics == []
+
+
+def test_dashboard_builds_weekly_mastery_history_from_assessment_evidence() -> None:
+    session = FakeDashboardSession()
+    session.evidence = [
+        SimpleNamespace(
+            topic_id="chem-1",
+            score=4,
+            max_score=10,
+            difficulty=0.5,
+            confidence=0.8,
+            observed_at=datetime(2026, 10, 1, tzinfo=UTC),
+        ),
+        SimpleNamespace(
+            topic_id="chem-1",
+            score=9,
+            max_score=10,
+            difficulty=0.5,
+            confidence=0.9,
+            observed_at=datetime(2026, 10, 12, tzinfo=UTC),
+        ),
+    ]
+
+    response = get_dashboard(session, "student-1", as_of=datetime(2026, 10, 14, tzinfo=UTC))
+
+    assert [point.week_start for point in response.mastery_history] == [
+        "2026-09-28",
+        "2026-10-12",
+    ]
+    assert response.mastery_history[0].mastery != response.mastery_history[1].mastery
 
 
 def test_what_if_projection_never_drops_below_current_prediction() -> None:

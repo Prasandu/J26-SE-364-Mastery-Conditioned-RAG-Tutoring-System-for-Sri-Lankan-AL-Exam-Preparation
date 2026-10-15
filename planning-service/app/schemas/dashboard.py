@@ -15,6 +15,15 @@ class DashboardTopicTrend(BaseModel):
     trend: float = 0.0
 
 
+class DashboardMasteryHistoryPoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    week_start: str
+    topic_id: str
+    topic_name: str | None = None
+    mastery: float
+
+
 class WeakTopic(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -29,9 +38,13 @@ class DashboardResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     exam_countdown_days: int
+    has_exam_plan: bool
     adherence: float
     adherence_pct: float
+    has_adherence_data: bool
     mastery_trend: list[DashboardTopicTrend]
+    mastery_history: list[DashboardMasteryHistoryPoint]
+    has_mastery_data: bool
     weak_topics: list[WeakTopic]
     predicted_grade: str
     target_grade: str
@@ -40,6 +53,7 @@ class DashboardResponse(BaseModel):
     predicted_score: float
     readiness_score: float
     current_prediction: float
+    has_prediction: bool
 
 
 class WhatIfInput(BaseModel):

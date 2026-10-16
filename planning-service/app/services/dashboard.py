@@ -18,7 +18,13 @@ from app.schemas.dashboard import DashboardResponse, WhatIfInput, WhatIfResponse
 from app.services.mastery import EvidenceObservation, compute_mastery
 
 
-def get_dashboard(session, student_id: str, *, as_of: datetime | None = None) -> DashboardResponse:
+def get_dashboard(
+    session,
+    student_id: str,
+    *,
+    as_of: datetime | None = None,
+    prediction_score: float | None = None,
+) -> DashboardResponse:
     now = (as_of or datetime.now(UTC)).astimezone(UTC)
     plans = _all(session, select(StudyPlan).where(StudyPlan.student_id == student_id))
     plan = _latest_plan(plans)
@@ -72,8 +78,12 @@ def get_dashboard(session, student_id: str, *, as_of: datetime | None = None) ->
         history_by_topic[row.topic_id].append(row)
     mastery_history = _build_mastery_history(history_by_topic, topics_by_id, now)
 
-    has_prediction = _has_overall_prediction(session, student_id)
-    current_prediction = _current_prediction_score(session, student_id)
+    has_prediction = prediction_score is not None or _has_overall_prediction(session, student_id)
+    current_prediction = (
+        _clamp(float(prediction_score))
+        if prediction_score is not None
+        else _current_prediction_score(session, student_id)
+    )
     target_grade = (plan.target_grade if plan is not None else "B")
     current_grade = _grade_for(current_prediction)
     target_score = _grade_target_score(target_grade)

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.dashboard import router as dashboard_router
+from app.api.demo import router as demo_router
 from app.api.events import router as events_router
 from app.api.plans import router as plans_router
 from app.api.predictions import router as predictions_router
@@ -24,6 +25,7 @@ app.add_middleware(
 
 register_error_handlers(app)
 app.include_router(dashboard_router)
+app.include_router(demo_router)
 app.include_router(events_router)
 app.include_router(plans_router)
 app.include_router(predictions_router)

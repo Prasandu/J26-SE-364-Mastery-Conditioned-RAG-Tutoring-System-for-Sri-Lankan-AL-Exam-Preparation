@@ -104,3 +104,8 @@ def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Ke
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key.",
         )
+
+
+def require_demo_mode() -> None:
+    if not settings.demo_mode:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found.")

@@ -292,6 +292,80 @@ Prediction errors:
 | 404 | Requested student does not match the authenticated student |
 | 422 | No assessment evidence exists for the student |
 
+## Demo endpoints
+
+The Postman-only demo endpoints are disabled unless `DEMO_MODE=true`. Every
+demo request also requires the planning service's `X-API-Key` (`INGEST_API_KEY`);
+they do not accept or require a student bearer token. Configure
+`DEMO_STUDENT_IDS` as a comma-separated allow-list. Requests for students
+outside that list return 403, and demo routes return 404 when demo mode is
+disabled. The seeded demo IDs are Nimal
+(`c75c747b-a322-4bd3-9d03-6a2d3c95d916`), Pasindu
+(`614f0cf0-bd67-461d-9958-0bd24adbce04`), and Uvindu
+(`06a92599-4296-4896-9a95-0272b932e517`).
+
+### GET `/api/v1/demo/students/{student_id}/summary`
+
+Returns mastery and trend for each observed topic (including each topic's
+parent/sub-topic relationship), the five weakest topics and explanations,
+rule-based or trained-model overall and per-topic predictions, target gap,
+and exam countdown. It calls the existing prediction and dashboard services;
+assessment evidence must exist before predictions can be calculated.
+
+### POST `/api/v1/demo/students/{student_id}/plan`
+
+Creates a predicted-mode plan and immediately generates its tasks. The
+`weekly_availability` entries use Monday `0` through Sunday `6` and local
+wall-clock times. `max_session_minutes` (default 60), `max_daily_minutes`
+(default 180), `timezone` (default `Asia/Colombo`), and `horizon_days`
+(default 14) are optional.
+
+```json
+{
+  "exam_date": "2026-12-20",
+  "target_grade": "A",
+  "weekly_availability": [
+    {"weekday": 1, "start_time": "16:00:00", "end_time": "18:00:00"},
+    {"weekday": 5, "start_time": "09:00:00", "end_time": "11:00:00"}
+  ],
+  "max_session_minutes": 60,
+  "horizon_days": 14
+}
+```
+
+The response contains the created plan and generated schedule. Predicted-mode
+plan creation requires stored mastery data, and schedule infeasibility and
+unscheduled minutes are returned rather than hidden.
+
+### POST `/api/v1/demo/tasks/{task_id}/status`
+
+Accepts the normal task outcome body (`completed`, `partial`, or `missed`) and
+returns the recorded outcome plus `replan_result`, which contains the tasks
+moved/generated and why remaining minutes were rescheduled.
+
+### POST `/api/v1/demo/students/{student_id}/replan`
+
+Runs the existing weekly progress review and next-week schedule refresh for
+the student's most recently updated plan. Returns its metrics, generated
+schedule, moved tasks, and the replan reason.
+
+### DELETE `/api/v1/demo/students/{student_id}`
+
+Deletes only the selected student's rows from planning tables, including
+evidence, events, mastery, predictions, plans, tasks, availability, and replan
+logs. Shared curriculum topics are retained. The response reports deleted
+row counts by table.
+
+Demo endpoint errors:
+
+| Status | Meaning |
+| --- | --- |
+| 401 | Missing or invalid `X-API-Key` |
+| 403 | Student ID is not in `DEMO_STUDENT_IDS` |
+| 404 | Demo mode is disabled, or the requested plan/task does not exist |
+| 409 | Predicted plan creation requires stored mastery data, or task outcome conflicts |
+| 422 | Missing assessment evidence or invalid request |
+
 ### Scheduling and outcome errors
 
 | Status | Meaning |

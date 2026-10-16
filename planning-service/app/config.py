@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_jwks_url: str = ""
     ingest_api_key: str
+    demo_mode: bool = False
+    demo_student_ids: str = ""
     model_dir: Path = Path("models")
     assessment_service_url: AnyHttpUrl | None = None
     assessment_service_api_key: str | None = None
@@ -24,6 +26,10 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
+
+    @property
+    def allowed_demo_student_ids(self) -> set[str]:
+        return {student_id.strip() for student_id in self.demo_student_ids.split(",") if student_id.strip()}
 
 
 @lru_cache

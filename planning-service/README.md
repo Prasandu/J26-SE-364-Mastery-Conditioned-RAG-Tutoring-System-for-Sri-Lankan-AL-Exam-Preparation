@@ -193,7 +193,44 @@ python -m scripts.seed_topics
 
 To use a different file, run `python -m scripts.seed_topics --file path\to\topics.json`.
 
-## Synthetic assessment events
+## Generated demo and training datasets
+
+`scripts/demo_students.json` defines the three named demo personas, the
+synthetic cohort size, seed, and fixed reference date. Generate the Component
+2 assessment JSONL, Component 1 completion JSONL, per-student teacher
+rankings, XGBoost-compatible topic-score history, and the Pasindu low/high
+mark demo events with:
+
+```powershell
+python -m scripts.generate_datasets
+python -m scripts.generate_datasets --seed 42
+python -m scripts.generate_datasets --dry-run
+```
+
+The default writes only to the git-ignored `data/generated/` directory.
+`--dry-run` prints per-file record counts without writing output. Synthetic
+students use `S001`-style labels alongside deterministic UUIDs derived from
+the seed; no synthetic names, emails, or index numbers are generated.
+Assessment event IDs use a fixed UUID namespace, making replays idempotent. Results use only
+assessable topic IDs from `../shared/contracts/topics.json`. That catalogue
+does not currently contain standalone oxidation-number or balancing-reaction
+IDs, so the Pasindu profile proxies these areas with its closest allowed
+calculation/redox topics.
+
+`training_scores.csv` is directly discoverable by the prediction trainer as
+topic evidence (`score`, `max_score`, `observed_at`, and `difficulty`), with a
+JSON `features` column retained for analysis. To train from these datasets,
+use:
+
+```powershell
+python -m app.ai.prediction.train --data-dir data\generated --model-dir models --seed 364
+```
+
+Generated scores are simulated with hidden per-topic ability, paper
+difficulty, and seeded noise. They are for repeatable demos and development,
+not real-student evidence or evaluation.
+
+## Legacy synthetic assessment events
 
 Generate 20 synthetic students with eight weekly papers each. Event payloads
 and hidden per-student topic abilities are written separately:
@@ -216,14 +253,16 @@ scheduler and prints a Markdown results table:
 python -m scripts.evaluate --teacher-ranking data\teacher-ranking.csv --output data\table-2.md
 ```
 
-The supplied teacher-ranking CSV must contain one row per topic with
-`topic_id,rank`; lower rank means higher teacher priority. An optional
-`exam_weight` column accepts values from 0 to 1 and defaults to 0.7. The table
-reports schedule feasibility violations, simulated adherence, missed tasks in
-each strategy's top-priority quartile, expected-score proxy MAE/RMSE, and
-Spearman priority agreement with the teacher ranking. This is a reproducible
-synthetic comparison, **not** a real-student study or a trained model
-evaluation. "Feasibility violations" counts schedules that cannot fit all
+The supplied teacher-ranking CSV may contain one row per topic with
+`topic_id,rank`, or per-student rows with `student_id,topic_id,rank`; lower
+rank means higher teacher priority. Per-student rankings are averaged by topic
+for the priority-agreement metric. An optional `exam_weight` column accepts
+values from 0 to 1 and defaults to 0.7. The table reports schedule feasibility
+violations, simulated adherence, missed tasks in each strategy's
+top-priority quartile, expected-score proxy MAE/RMSE, and Spearman priority
+agreement with the teacher ranking. This is a reproducible synthetic
+comparison, **not** a real-student study or a trained model evaluation.
+"Feasibility violations" counts schedules that cannot fit all
 requested study time plus any generated task that violates an availability,
 session, daily-cap, overlap, or exam-deadline constraint. Missed high-priority
 tasks are uncompleted scheduled tasks for topics in that student's

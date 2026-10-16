@@ -46,17 +46,21 @@ class Metrics:
 
 
 def read_teacher_ranking(path: Path) -> list[Topic]:
-    """Read global teacher priority ranks from topic_id,rank[,exam_weight] CSV."""
+    """Read global or per-student topic ranks and aggregate teacher priorities."""
     try:
         with path.open(encoding="utf-8-sig", newline="") as source:
             reader = csv.DictReader(source)
             if not reader.fieldnames or not {"topic_id", "rank"}.issubset(reader.fieldnames):
                 raise ValueError("CSV headers must include topic_id and rank.")
-            topics: list[Topic] = []
+            student_column = "student_id" in reader.fieldnames
+            rankings: dict[str, dict[str, Topic]] = {}
             for line_number, row in enumerate(reader, start=2):
                 topic_id = (row.get("topic_id") or "").strip()
                 if not topic_id:
                     raise ValueError(f"line {line_number}: topic_id cannot be empty.")
+                student_id = (row.get("student_id") or "").strip() if student_column else "global"
+                if student_column and not student_id:
+                    raise ValueError(f"line {line_number}: student_id cannot be empty.")
                 try:
                     rank = float(row["rank"])
                     exam_weight = float(row.get("exam_weight") or 0.7)
@@ -66,18 +70,35 @@ def read_teacher_ranking(path: Path) -> list[Topic]:
                     raise ValueError(
                         f"line {line_number}: rank must be positive and exam_weight must be 0..1."
                     )
-                topics.append(Topic(topic_id, rank, exam_weight))
+                group = rankings.setdefault(student_id, {})
+                if topic_id in group:
+                    raise ValueError(
+                        f"CSV contains duplicate topic_id {topic_id!r} for student {student_id!r}."
+                    )
+                group[topic_id] = Topic(topic_id, rank, exam_weight)
     except OSError as exc:
         raise ValueError(f"Cannot read teacher ranking CSV {path}: {exc}") from exc
 
-    if len(topics) < 2:
+    if not rankings:
         raise ValueError("Teacher ranking CSV must contain at least two topics.")
-    ids = [topic.topic_id for topic in topics]
-    if len(set(ids)) != len(ids):
-        raise ValueError("Teacher ranking CSV contains duplicate topic_id values.")
-    if len({topic.teacher_rank for topic in topics}) < 2:
-        raise ValueError("Teacher ranking must contain at least two distinct ranks.")
-    return topics
+    for student_id, topics in rankings.items():
+        if len(topics) < 2:
+            raise ValueError(f"Teacher ranking for {student_id!r} must contain at least two topics.")
+        if len({topic.teacher_rank for topic in topics.values()}) < 2:
+            raise ValueError(f"Teacher ranking for {student_id!r} must contain at least two distinct ranks.")
+
+    topic_ranks: dict[str, list[Topic]] = {}
+    for topics in rankings.values():
+        for topic in topics.values():
+            topic_ranks.setdefault(topic.topic_id, []).append(topic)
+    return [
+        Topic(
+            topic_id,
+            sum(item.teacher_rank for item in values) / len(values),
+            sum(item.exam_weight for item in values) / len(values),
+        )
+        for topic_id, values in sorted(topic_ranks.items())
+    ]
 
 
 def evaluate(topics: list[Topic], *, seed: int = 364) -> dict[str, Metrics]:

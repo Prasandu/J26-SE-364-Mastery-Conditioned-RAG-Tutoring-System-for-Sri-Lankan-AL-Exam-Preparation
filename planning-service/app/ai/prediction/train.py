@@ -29,6 +29,7 @@ def load_training_rows(data_dir: Path) -> tuple[list[dict[str, Any]], list[dict[
         raise ValueError(f"data path is not a directory: {data_dir}")
     evidence: list[dict[str, Any]] = []
     tasks: list[dict[str, Any]] = []
+    has_generated_training_csv = any(path.name == "training_scores.csv" for path in data_dir.rglob("*.csv"))
     for path in sorted(data_dir.rglob("*")):
         if not path.is_file():
             continue
@@ -43,7 +44,11 @@ def load_training_rows(data_dir: Path) -> tuple[list[dict[str, Any]], list[dict[
                 evidence.extend(rows)
             elif {"student_id", "topic_id", "start_at", "duration_min", "status"} <= headers:
                 tasks.extend(rows)
-        elif path.suffix.lower() == ".jsonl" and path.name != "hidden_abilities.jsonl":
+        elif (
+            path.suffix.lower() == ".jsonl"
+            and path.name not in {"hidden_abilities.jsonl", "completion_events.jsonl"}
+            and not (path.name == "assessment_events.jsonl" and has_generated_training_csv)
+        ):
             evidence.extend(_mock_event_rows(path))
     if not evidence:
         raise ValueError(
@@ -107,6 +112,21 @@ def _mock_event_rows(path: Path) -> list[dict[str, Any]]:
             event = json.loads(line)
             occurred_at = event.get("occurred_at")
             student_id = event.get("student_id")
+            submitted_at = event.get("submitted_at")
+            results = event.get("results")
+            if submitted_at and student_id and isinstance(results, list):
+                rows.extend(
+                    {
+                        "student_id": student_id,
+                        "topic_id": item["topic_id"],
+                        "score": item["marks_awarded"],
+                        "max_score": item["marks_total"],
+                        "difficulty": item["difficulty"],
+                        "observed_at": submitted_at,
+                    }
+                    for item in results
+                )
+                continue
             if not occurred_at or not student_id:
                 raise ValueError(f"{path}:{line_number} is missing student_id or occurred_at")
             for item in event.get("evidence", []):

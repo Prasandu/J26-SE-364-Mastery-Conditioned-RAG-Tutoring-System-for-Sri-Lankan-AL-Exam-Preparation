@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.schemas.dashboard import DashboardResponse, WhatIfInput, WhatIfResponse
 from app.services.mastery import EvidenceObservation, compute_mastery
+from app.services.predictions import MINIMUM_ASSESSED_TOPICS
 
 
 def get_dashboard(
@@ -92,6 +93,7 @@ def get_dashboard(
     readiness_score = current_prediction
 
     return DashboardResponse(
+        minimum_assessed_topics=MINIMUM_ASSESSED_TOPICS,
         exam_countdown_days=exam_countdown_days,
         has_exam_plan=plan is not None,
         adherence=adherence,

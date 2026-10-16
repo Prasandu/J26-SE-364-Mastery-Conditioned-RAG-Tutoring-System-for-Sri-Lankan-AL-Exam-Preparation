@@ -175,6 +175,7 @@ def test_schedule_and_weekly_replan_routes_are_registered() -> None:
     paths = app.openapi()["paths"]
 
     assert "/api/v1/plans/{plan_id}/generate" in paths
+    assert "/api/v1/plans/{plan_id}/schedule" in paths
     assert "/api/v1/plans/{plan_id}/weekly-replan" in paths
     assert "/api/v1/tasks/{task_id}/status" in paths
 

@@ -31,6 +31,7 @@ from app.schemas.predictions import (
 LOGGER = logging.getLogger(__name__)
 _MODEL_VERSION = "rule-based-fallback-v1"
 _GRADE_BANDS = ((0.75, "A"), (0.65, "B"), (0.50, "C"), (0.35, "S"), (0.0, "F"))
+MINIMUM_ASSESSED_TOPICS = 1
 
 
 def predict_student(
@@ -60,8 +61,10 @@ def predict_student(
                 "observed_at": row.observed_at,
             }
         )
-    if not evidence_by_topic:
-        raise ConstraintViolation("At least one assessment event is required before prediction.")
+    if len(evidence_by_topic) < MINIMUM_ASSESSED_TOPICS:
+        raise ConstraintViolation(
+            f"At least {MINIMUM_ASSESSED_TOPICS} assessed topic is required before prediction."
+        )
 
     tasks = session.scalars(select(StudyTask).where(StudyTask.student_id == authenticated_student_id)).all()
     tasks_by_topic: dict[str, list[dict]] = defaultdict(list)

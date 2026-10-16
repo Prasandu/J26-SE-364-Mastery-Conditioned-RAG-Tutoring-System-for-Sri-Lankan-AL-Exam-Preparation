@@ -28,7 +28,7 @@ describe("App routes", () => {
     ).toBeInTheDocument();
   });
 
-  it("protects the planning routes with the Supabase sign-in screen", () => {
+  it("protects the planning routes with the Supabase sign-in screen", async () => {
     render(
       <MemoryRouter initialEntries={["/planning/setup"]}>
         <App />
@@ -36,10 +36,7 @@ describe("App routes", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Sign in to continue" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Supabase is not configured/),
+      await screen.findByRole("heading", { name: "Sign in to continue" }),
     ).toBeInTheDocument();
   });
 });

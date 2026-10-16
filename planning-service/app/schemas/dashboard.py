@@ -37,6 +37,7 @@ class WeakTopic(BaseModel):
 class DashboardResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    minimum_assessed_topics: int
     exam_countdown_days: int
     has_exam_plan: bool
     adherence: float

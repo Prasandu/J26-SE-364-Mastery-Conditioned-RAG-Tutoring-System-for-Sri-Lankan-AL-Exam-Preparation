@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   Cell,
@@ -45,7 +46,11 @@ function heatColor(mastery: number): string {
   return "bg-rose-300 text-rose-950";
 }
 
-function EmptyData({ children = "Not enough data yet." }: { children?: string }) {
+function EmptyData({
+  children = "Not enough data yet.",
+}: {
+  children?: ReactNode;
+}) {
   return (
     <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
       {children}
@@ -405,8 +410,9 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
           ) : (
             <div className="mt-3">
               <EmptyData>
-                Not enough data yet. Complete an assessment to receive a
-                prediction.
+                Not enough data yet. A prediction needs at least{" "}
+                {dashboard.minimum_assessed_topics} assessed{" "}
+                {dashboard.minimum_assessed_topics === 1 ? "topic" : "topics"}.
               </EmptyData>
             </div>
           )}

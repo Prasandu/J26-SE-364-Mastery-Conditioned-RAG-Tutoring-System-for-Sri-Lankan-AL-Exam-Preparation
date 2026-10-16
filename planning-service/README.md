@@ -230,6 +230,35 @@ Generated scores are simulated with hidden per-topic ability, paper
 difficulty, and seeded noise. They are for repeatable demos and development,
 not real-student evidence or evaluation.
 
+## Load generated events through the API
+
+Start planning-service on port 8083, configure `INGEST_API_KEY` in
+`planning-service/.env`, and enable demo mode with the persona IDs in
+`DEMO_STUDENT_IDS` if using `--reset`. Then load all generated students or
+just named personas:
+
+```powershell
+python -m scripts.seed_demo --dry-run
+python -m scripts.seed_demo
+python -m scripts.seed_demo --students nimal,pasindu,uvindu --reset
+```
+
+The loader maps Component 2 paper results to the planning assessment endpoint
+and Component 1 completion records to the module-completion endpoint. It
+submits in batches, displays progress, retries transient network/server
+failures, and reports accepted, duplicate, and rejected event counts. It
+loads event payloads and validates them before contacting the API; `--dry-run`
+stops without network requests. `--reset` deletes only the selected demo
+persona rows via the demo deletion endpoint and then reloads their events.
+`--batch-size`, `--retries`, `--data-dir`, `--config`, `--env-file`, and
+`--base-url` can override defaults. `PLANNING_API_URL` also overrides the
+default API URL.
+
+The planning models and migration define student IDs as plain strings, not
+foreign keys to `auth.users`. Validated persona UUIDs can therefore be
+ingested without creating Supabase Auth users; referenced topic IDs still
+must exist in `planning.topics`.
+
 ## Legacy synthetic assessment events
 
 Generate 20 synthetic students with eight weekly papers each. Event payloads

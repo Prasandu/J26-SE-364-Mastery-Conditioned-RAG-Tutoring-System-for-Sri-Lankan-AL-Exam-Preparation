@@ -1,9 +1,11 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
+import app.api.dashboard as dashboard_api
 from app.api.dashboard import router
-from app.schemas.dashboard import WhatIfInput
+from app.schemas.dashboard import DashboardResponse, WhatIfInput
 from app.services.dashboard import get_dashboard, project_what_if
+from app.services.predictions import MINIMUM_ASSESSED_TOPICS
 
 
 class FakeResults:
@@ -100,6 +102,23 @@ def test_empty_dashboard_marks_unavailable_metrics_without_placeholder_topics() 
     assert response.weak_topics == []
 
 
+def test_on_demand_prediction_does_not_require_an_exam_plan() -> None:
+    class EmptySession:
+        def scalars(self, _statement):
+            return FakeResults([])
+
+    response = get_dashboard(
+        EmptySession(),
+        "student-without-plan",
+        prediction_score=0.72,
+    )
+
+    assert response.has_prediction
+    assert not response.has_exam_plan
+    assert response.predicted_score == 0.72
+    assert response.target_grade == "B"
+
+
 def test_dashboard_builds_weekly_mastery_history_from_assessment_evidence() -> None:
     session = FakeDashboardSession()
     session.evidence = [
@@ -145,3 +164,70 @@ def test_dashboard_endpoint_has_routes() -> None:
 
     assert "/api/v1/dashboard" in endpoints
     assert "/api/v1/whatif" in endpoints
+
+
+def test_dashboard_generates_prediction_when_minimum_assessed_topics_exist(
+    monkeypatch,
+) -> None:
+    class EvidenceSession:
+        def scalar(self, _statement):
+            return MINIMUM_ASSESSED_TOPICS
+
+    prediction = SimpleNamespace(overall_predicted_score=0.77)
+    calls = {}
+    monkeypatch.setattr(dashboard_api, "predict_student", lambda *_args: prediction)
+
+    def fake_dashboard(_session, student_id, *, prediction_score=None):
+        calls.update(student_id=student_id, prediction_score=prediction_score)
+        return SimpleNamespace(has_prediction=True)
+
+    monkeypatch.setattr(dashboard_api, "get_dashboard", fake_dashboard)
+
+    response = dashboard_api.dashboard_overview(EvidenceSession(), "student-1")
+
+    assert response.has_prediction
+    assert calls == {"student_id": "student-1", "prediction_score": 0.77}
+
+
+def test_dashboard_does_not_predict_below_minimum_evidence(monkeypatch) -> None:
+    class EvidenceSession:
+        def scalar(self, _statement):
+            return MINIMUM_ASSESSED_TOPICS - 1
+
+    calls = {"predictions": 0, "dashboard": 0}
+
+    def fail_if_called(*_args):
+        calls["predictions"] += 1
+        raise AssertionError("prediction should not run below the evidence threshold")
+
+    def fake_dashboard(_session, student_id):
+        calls["dashboard"] += 1
+        return DashboardResponse(
+            minimum_assessed_topics=MINIMUM_ASSESSED_TOPICS,
+            exam_countdown_days=0,
+            has_exam_plan=False,
+            adherence=0,
+            adherence_pct=0,
+            has_adherence_data=False,
+            mastery_trend=[],
+            mastery_history=[],
+            has_mastery_data=False,
+            weak_topics=[],
+            predicted_grade="C",
+            target_grade="B",
+            gap_to_target=-0.15,
+            grade_gap_to_target=-0.15,
+            predicted_score=0.5,
+            readiness_score=0.5,
+            current_prediction=0.5,
+            has_prediction=False,
+        )
+
+    monkeypatch.setattr(dashboard_api, "predict_student", fail_if_called)
+    monkeypatch.setattr(dashboard_api, "get_dashboard", fake_dashboard)
+
+    response = dashboard_api.dashboard_overview(EvidenceSession(), "student-1")
+
+    assert not response.has_prediction
+    assert response.minimum_assessed_topics == 1
+    assert calls == {"predictions": 0, "dashboard": 1}

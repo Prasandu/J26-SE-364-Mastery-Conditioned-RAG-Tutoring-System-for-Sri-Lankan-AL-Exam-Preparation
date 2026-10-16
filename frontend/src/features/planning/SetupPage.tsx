@@ -4,6 +4,8 @@ import catalogue from "../../../../shared/contracts/topics.json";
 import { ApiError } from "../../api/client";
 import {
   createPlan,
+  getPlans,
+  replacePlan,
   type AvailabilityWindow,
   type PlanInput,
 } from "../../api/planning";
@@ -127,7 +129,17 @@ export default function PlanningSetupPage() {
     };
 
     try {
-      await createPlan(data);
+      const { plans } = await getPlans();
+      const latestPlan = plans[0];
+      if (latestPlan) {
+        const confirmed = window.confirm(
+          "You already have a study plan. Replace your latest plan with these settings?",
+        );
+        if (!confirmed) return;
+        await replacePlan(latestPlan.id, data);
+      } else {
+        await createPlan(data);
+      }
       navigate("/planning/plan");
     } catch (cause) {
       setError(
@@ -350,7 +362,7 @@ export default function PlanningSetupPage() {
           disabled={saving}
           type="submit"
         >
-          {saving ? "Saving plan..." : "Create my plan"}
+          {saving ? "Saving plan..." : "Save my plan"}
         </button>
       </form>
     </section>

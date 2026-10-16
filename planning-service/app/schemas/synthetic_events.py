@@ -51,6 +51,8 @@ class Component2AssessmentEvent(BaseModel):
 class Component1CompletionEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    event_id: str | None = None
+    student_id: str | None = None
     topic_id: TopicId
     status: Literal["completed"]
     completed_at: datetime

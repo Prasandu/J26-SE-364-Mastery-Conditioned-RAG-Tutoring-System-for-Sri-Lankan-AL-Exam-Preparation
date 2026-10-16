@@ -136,6 +136,31 @@ def generate_and_commit_schedule(
     return response
 
 
+def get_plan_schedule(session: Session, student_id: str, plan_id: Any) -> ScheduleResponse:
+    plan = _owned_plan(session, student_id, plan_id)
+    tasks = session.scalars(
+        select(StudyTask)
+        .where(
+            StudyTask.plan_id == plan.id,
+            StudyTask.student_id == student_id,
+        )
+        .order_by(StudyTask.start_at, StudyTask.id)
+    ).all()
+    priorities = {
+        item["topic_id"]: float(item["priority"])
+        for item in plan.constraints.get("priorities", [])
+    }
+    return ScheduleResponse(
+        tasks=[
+            _scheduled_response(task, priorities.get(task.topic_id, 0))
+            for task in tasks
+        ],
+        infeasible=False,
+        shortfall_minutes=0,
+        unscheduled_minutes={},
+    )
+
+
 def _ranked_topics(
     session: Session,
     student_id: str,

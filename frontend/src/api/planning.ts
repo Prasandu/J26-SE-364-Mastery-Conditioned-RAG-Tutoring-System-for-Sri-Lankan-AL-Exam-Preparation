@@ -140,6 +140,7 @@ export interface WeakTopic {
 }
 
 export interface DashboardResponse {
+  minimum_assessed_topics: number;
   exam_countdown_days: number;
   has_exam_plan: boolean;
   adherence: number;
@@ -185,8 +186,25 @@ export function createPlan(data: PlanInput) {
   });
 }
 
+export function replacePlan(planId: string, data: PlanInput) {
+  return planningRequest<PlanResponse>(
+    `/api/v1/plans/${encodeURIComponent(planId)}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+}
+
 export function getPlans() {
   return planningRequest<PlanListResponse>("/api/v1/plans");
+}
+
+export function getSchedule(planId: string) {
+  return planningRequest<ScheduleResponse>(
+    `/api/v1/plans/${encodeURIComponent(planId)}/schedule`,
+  );
 }
 
 export function generateSchedule(planId: string, horizonDays = 14) {

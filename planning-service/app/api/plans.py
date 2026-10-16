@@ -9,7 +9,7 @@ from app.schemas.plans import PlanInput, PlanListResponse, PlanResponse
 from app.schemas.tasks import GenerateScheduleRequest, ScheduleResponse, WeeklyReplanResponse
 from app.security import get_student_id
 from app.services.plans import create_plan, get_plan, list_plans, update_plan
-from app.services.scheduling import generate_and_commit_schedule
+from app.services.scheduling import generate_and_commit_schedule, get_plan_schedule
 from app.services.task_outcomes import weekly_replan
 
 router = APIRouter(prefix="/api/v1/plans", tags=["plans"])
@@ -34,6 +34,15 @@ def get_student_plan(
     student_id: StudentId,
 ) -> PlanResponse:
     return PlanResponse.model_validate(get_plan(session, student_id, plan_id))
+
+
+@router.get("/{plan_id}/schedule", response_model=ScheduleResponse)
+def get_student_plan_schedule(
+    plan_id: UUID,
+    session: DbSession,
+    student_id: StudentId,
+) -> ScheduleResponse:
+    return get_plan_schedule(session, student_id, plan_id)
 
 
 @router.put("/{plan_id}", response_model=PlanResponse)

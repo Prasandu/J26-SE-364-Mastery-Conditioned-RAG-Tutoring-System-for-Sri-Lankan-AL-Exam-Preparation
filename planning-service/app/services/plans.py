@@ -44,7 +44,9 @@ def create_plan(session: Session, student_id: str, data: PlanInput) -> dict[str,
 
 def list_plans(session: Session, student_id: str) -> list[dict[str, Any]]:
     plans = session.scalars(
-        select(StudyPlan).where(StudyPlan.student_id == student_id).order_by(StudyPlan.updated_at.desc())
+        select(StudyPlan)
+        .where(StudyPlan.student_id == student_id)
+        .order_by(StudyPlan.created_at.desc(), StudyPlan.id.desc())
     ).all()
     return [_plan_response(plan) for plan in plans]
 

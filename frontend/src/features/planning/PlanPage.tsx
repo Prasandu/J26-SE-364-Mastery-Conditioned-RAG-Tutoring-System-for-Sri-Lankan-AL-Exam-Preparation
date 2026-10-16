@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import { ApiError } from "../../api/client";
 import {
   generateSchedule,
   getPlans,
+  getSchedule,
   updateTaskStatus,
   type PlanResponse,
   type ScheduleResponse,
@@ -151,9 +153,14 @@ function TaskCard({
 }
 
 export default function PlanningPage() {
+  const { session, loading: authLoading } = useAuth();
+  const studentId = session?.user.id;
   const [plans, setPlans] = useState<PlanResponse[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [generating, setGenerating] = useState(false);
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   const [partialMinutes, setPartialMinutes] = useState<Record<string, number>>(
@@ -163,26 +170,90 @@ export default function PlanningPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState<string[]>([]);
 
-  const loadPlans = useCallback(async () => {
+  useEffect(() => {
+    let active = true;
+    if (authLoading) {
+      setLoading(true);
+      return () => {
+        active = false;
+      };
+    }
+    if (!studentId) {
+      setPlans([]);
+      setSelectedPlanId("");
+      setSchedule(null);
+      setError("Sign in to load your study plans.");
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
     setLoading(true);
     setError("");
-    try {
-      const response = await getPlans();
-      setPlans(response.plans);
-    } catch (cause) {
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Please check the planning service connection and try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    setPlans([]);
+    setSelectedPlanId("");
+    setSchedule(null);
+    void getPlans()
+      .then((response) => {
+        if (active) {
+          setPlans(response.plans);
+          setSelectedPlanId(response.plans[0]?.id ?? "");
+        }
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(
+            cause instanceof ApiError
+              ? cause.message
+              : "Please check the planning service connection and try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, reloadKey, studentId]);
+
+  const currentPlan =
+    plans.find((plan) => plan.id === selectedPlanId) ?? plans[0];
 
   useEffect(() => {
-    void loadPlans();
-  }, [loadPlans]);
+    let active = true;
+    if (authLoading || loading || !currentPlan) {
+      setSchedule(null);
+      setScheduleLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setSchedule(null);
+    setScheduleLoading(true);
+    setError("");
+    void getSchedule(currentPlan.id)
+      .then((response) => {
+        if (active) setSchedule(response);
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(
+            cause instanceof ApiError
+              ? cause.message
+              : "Saved study sessions could not be loaded.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setScheduleLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, currentPlan, loading]);
 
   async function regenerate(plan: PlanResponse) {
     setGenerating(true);
@@ -254,14 +325,18 @@ export default function PlanningPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return <LoadingState label="Loading your study plans..." />;
   }
   if (error && plans.length === 0) {
-    return <ErrorState message={error} onRetry={() => void loadPlans()} />;
+    return (
+      <ErrorState
+        message={error}
+        onRetry={() => setReloadKey((current) => current + 1)}
+      />
+    );
   }
 
-  const currentPlan = plans[0];
   const tasks = schedule?.tasks ?? [];
   const groupedTasks = tasks.reduce<Record<string, ScheduledTask[]>>(
     (groups, task) => {
@@ -294,6 +369,30 @@ export default function PlanningPage() {
         </div>
       ) : (
         <>
+          {plans.length > 1 ? (
+            <label className="mt-5 block max-w-lg text-sm font-medium text-slate-700">
+              Select a saved plan
+              <select
+                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5"
+                onChange={(event) => {
+                  setSelectedPlanId(event.target.value);
+                  setSchedule(null);
+                  setScheduleLoading(true);
+                  setToast([]);
+                  setError("");
+                }}
+                value={currentPlan.id}
+              >
+                {plans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.exam_date} · Target {plan.target_grade} ·{" "}
+                    {plan.mode === "predicted" ? "Adaptive" : "Custom"} ·{" "}
+                    {plan.id.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-semibold text-ink">
@@ -308,15 +407,17 @@ export default function PlanningPage() {
             </div>
             <button
               className="rounded-lg bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-              disabled={generating}
+              disabled={generating || scheduleLoading || (error !== "" && schedule === null)}
               onClick={() => void regenerate(currentPlan)}
               type="button"
             >
               {generating
                 ? "Regenerating..."
-                : schedule
-                  ? "Regenerate plan"
-                  : "Generate next 14 days"}
+                : scheduleLoading
+                  ? "Loading saved sessions..."
+                  : schedule?.tasks.length
+                    ? "Regenerate plan"
+                    : "Generate next 14 days"}
             </button>
           </div>
           {error ? (
@@ -344,6 +445,11 @@ export default function PlanningPage() {
                 </ul>
               ) : null}
             </div>
+          ) : null}
+          {scheduleLoading ? (
+            <p className="mt-6 rounded-xl border border-slate-200 bg-white p-5 text-slate-600">
+              Loading saved study sessions...
+            </p>
           ) : null}
           {schedule ? (
             <div className="mt-6">
@@ -394,7 +500,7 @@ export default function PlanningPage() {
               </div>
               {tasks.length === 0 ? (
                 <p className="mt-3 rounded-xl border border-slate-200 bg-white p-5 text-slate-600">
-                  No sessions were scheduled for this period.
+                  No study sessions are saved for this plan yet.
                 </p>
               ) : viewMode === "list" ? (
                 <ul className="mt-3 grid gap-3">

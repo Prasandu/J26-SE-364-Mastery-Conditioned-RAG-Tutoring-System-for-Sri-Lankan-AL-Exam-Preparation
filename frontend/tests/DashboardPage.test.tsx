@@ -30,6 +30,7 @@ const emptyDashboard: DashboardResponse = {
   readiness_score: 0.5,
   current_prediction: 0.5,
   has_prediction: false,
+  minimum_assessed_topics: 1,
 };
 
 const populatedDashboard: DashboardResponse = {
@@ -104,7 +105,7 @@ describe("PlanningDashboardPage", () => {
       await screen.findByText("Not enough data yet. Set your exam date."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Complete an assessment to receive a prediction/),
+      screen.getByText(/A prediction needs at least 1 assessed topic/),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/Submit an assessment to unlock the what-if estimate/),

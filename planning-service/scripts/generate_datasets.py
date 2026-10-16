@@ -346,6 +346,13 @@ def _completion_events(
         practical_done = rng.random() < 0.35
         completed.append(
             Component1CompletionEvent(
+                event_id=str(
+                    uuid5(
+                        EVENT_NAMESPACE,
+                        f"completion:{student['student_id']}:{topic_id}:{completed_at.isoformat()}",
+                    )
+                ),
+                student_id=student["student_id"],
                 topic_id=topic_id,
                 status="completed",
                 completed_at=completed_at,

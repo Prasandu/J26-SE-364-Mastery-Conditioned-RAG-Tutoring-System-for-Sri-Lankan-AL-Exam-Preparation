@@ -120,7 +120,11 @@ def test_demo_routes_are_hidden_when_demo_mode_is_disabled(monkeypatch: pytest.M
 
 
 def test_demo_mode_defaults_to_disabled() -> None:
-    config = Settings(database_url="postgresql://localhost/test", ingest_api_key="test-key")
+    config = Settings(
+        _env_file=None,
+        database_url="postgresql://localhost/test",
+        ingest_api_key="test-key",
+    )
 
     assert config.demo_mode is False
 

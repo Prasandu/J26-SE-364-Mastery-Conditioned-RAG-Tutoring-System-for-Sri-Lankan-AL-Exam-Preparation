@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 
 from app.db import get_db
 from app.main import app
-from app.models import AvailabilitySlot, LearnerTopicState, ReplanLog, StudyPlan, Topic
+from app.models import AvailabilitySlot, LearnerTopicState, ReplanLog, StudyPlan, StudyTask, Topic
+from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
 from app.security import get_student_id
 
 
@@ -22,15 +23,17 @@ class Result:
 
 
 class FakeSession:
-    def __init__(self) -> None:
-        self.topics = {
+    def __init__(self, shared: "FakeSession | None" = None) -> None:
+        self.topics = shared.topics if shared else {
             "chem-u1": SimpleNamespace(id="chem-u1", exam_weight=0.6),
             "chem-u2": SimpleNamespace(id="chem-u2", exam_weight=0.8),
         }
-        self.plans: dict[UUID, StudyPlan] = {}
-        self.states: list[LearnerTopicState] = []
-        self.slots: list[AvailabilitySlot] = []
-        self.logs: list[ReplanLog] = []
+        self.plans = shared.plans if shared else {}
+        self.states = shared.states if shared else []
+        self.slots = shared.slots if shared else []
+        self.logs = shared.logs if shared else []
+        self.tasks = shared.tasks if shared else []
+        self.plan_queries = shared.plan_queries if shared else []
         self.commits = 0
 
     def get(self, model: type, key: Any) -> Any:
@@ -38,16 +41,21 @@ class FakeSession:
             return self.topics.get(key)
         if model is StudyPlan:
             return self.plans.get(key)
+        if model is StudyTask:
+            return next((task for task in self.tasks if task.id == key), None)
         return None
 
     def add(self, record: Any) -> None:
         if isinstance(record, StudyPlan):
             record.id = record.id or uuid4()
+            record.created_at = record.created_at or datetime.now(UTC)
             self.plans[record.id] = record
         elif isinstance(record, AvailabilitySlot):
             self.slots.append(record)
         elif isinstance(record, ReplanLog):
             self.logs.append(record)
+        elif isinstance(record, StudyTask):
+            self.tasks.append(record)
 
     def flush(self) -> None:
         return None
@@ -55,11 +63,20 @@ class FakeSession:
     def scalars(self, statement: Any) -> Result:
         model = statement.column_descriptions[0]["entity"]
         if model is StudyPlan:
-            return Result([plan for plan in self.plans.values() if plan.student_id == "student-1"])
+            self.plan_queries.append(statement)
+            plans = [plan for plan in self.plans.values() if plan.student_id == "student-1"]
+            return Result(sorted(plans, key=lambda plan: (plan.created_at, str(plan.id)), reverse=True))
         if model is LearnerTopicState:
             return Result([state for state in self.states if state.student_id == "student-1"])
         if model is AvailabilitySlot:
             return Result(list(self.slots))
+        if model is StudyTask:
+            return Result(
+                sorted(
+                    (task for task in self.tasks if task.student_id == "student-1"),
+                    key=lambda task: (task.start_at, str(task.id)),
+                )
+            )
         return Result([])
 
     def delete(self, record: Any) -> None:
@@ -237,6 +254,103 @@ def test_get_lists_only_authenticated_students_plans(
 
     assert response.status_code == 200
     assert response.json() == {"plans": []}
+
+
+def test_new_request_returns_latest_created_plan_first(
+    client: TestClient,
+    session: FakeSession,
+) -> None:
+    def create_new_session() -> Generator[FakeSession]:
+        yield FakeSession(session)
+
+    app.dependency_overrides[get_db] = create_new_session
+    older = client.post("/api/v1/plans", json=valid_plan())
+    newer = client.post(
+        "/api/v1/plans",
+        json=valid_plan(target_grade="B"),
+    )
+    older_plan = session.plans[UUID(older.json()["id"])]
+    newer_plan = session.plans[UUID(newer.json()["id"])]
+    older_plan.created_at = datetime(2026, 10, 15, tzinfo=UTC)
+    newer_plan.created_at = datetime(2026, 10, 16, tzinfo=UTC)
+
+    response = client.get("/api/v1/plans")
+
+    assert response.status_code == 200
+    assert [plan["id"] for plan in response.json()["plans"]] == [
+        newer.json()["id"],
+        older.json()["id"],
+    ]
+    assert response.json()["plans"][0]["target_grade"] == "B"
+    assert "ORDER BY planning.study_plans.created_at DESC" in str(session.plan_queries[-1])
+
+
+def test_generated_schedule_is_available_in_a_new_session(
+    client: TestClient,
+    session: FakeSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created = client.post("/api/v1/plans", json=valid_plan())
+    plan_id = UUID(created.json()["id"])
+    task_id = uuid4()
+    start_at = datetime(2026, 10, 17, 16, 0, tzinfo=UTC)
+
+    def generate_schedule(
+        db_session: FakeSession,
+        student_id: str,
+        selected_plan_id: UUID,
+        *,
+        horizon_days: int,
+    ) -> ScheduleResponse:
+        assert student_id == "student-1"
+        assert selected_plan_id == plan_id
+        assert horizon_days == 14
+        db_session.add(
+            StudyTask(
+                id=task_id,
+                plan_id=plan_id,
+                student_id=student_id,
+                topic_id="chem-u1",
+                activity="practice",
+                start_at=start_at,
+                duration_min=45,
+                status="planned",
+                reason="Review this topic.",
+            )
+        )
+        db_session.commit()
+        return ScheduleResponse(
+            tasks=[
+                ScheduledTaskResponse(
+                    id=task_id,
+                    topic_id="chem-u1",
+                    activity="practice",
+                    start_at=start_at,
+                    duration_min=45,
+                    status="planned",
+                    reason="Review this topic.",
+                    priority=0.8,
+                )
+            ],
+            infeasible=False,
+            shortfall_minutes=0,
+            unscheduled_minutes={},
+        )
+
+    monkeypatch.setattr("app.api.plans.generate_and_commit_schedule", generate_schedule)
+    generated = client.post(
+        f"/api/v1/plans/{plan_id}/generate",
+        json={"horizon_days": 14},
+    )
+    assert generated.status_code == 200
+    assert generated.json()["tasks"][0]["id"] == str(task_id)
+
+    app.dependency_overrides[get_db] = lambda: FakeSession(session)
+    restored_schedule = client.get(f"/api/v1/plans/{plan_id}/schedule")
+
+    assert restored_schedule.status_code == 200
+    assert [task["id"] for task in restored_schedule.json()["tasks"]] == [str(task_id)]
+    assert restored_schedule.json()["tasks"][0]["priority"] == 0.8
 
 
 def test_update_plan_logs_constraint_edits(

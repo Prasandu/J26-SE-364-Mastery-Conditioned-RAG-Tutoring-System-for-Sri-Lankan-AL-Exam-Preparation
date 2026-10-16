@@ -179,6 +179,14 @@ tasks plus `infeasible`, `shortfall_minutes`, and `unscheduled_minutes`, so
 clients can distinguish a complete plan from one constrained by availability.
 No saved availability windows returns 422.
 
+### GET `/api/v1/plans/{plan_id}/schedule`
+
+Returns all persisted sessions for the authenticated student's plan, ordered
+by start time. Completed, partial, missed, and planned tasks are included so a
+returning session can restore its saved schedule without regenerating it. An
+empty `tasks` array means the plan has no saved sessions. A missing plan or a
+plan owned by another student returns 404.
+
 ### POST `/api/v1/tasks/{task_id}/status`
 
 Records an outcome for an owned, still-planned task. The `status` is required;
@@ -221,6 +229,11 @@ Returns dashboard metrics for the authenticated learner. `has_exam_plan`,
 each metric has an underlying source record. When no mastery state exists,
 `mastery_trend` and `weak_topics` are empty arrays; consumers should display an
 empty state rather than treat fallback score fields as observed results.
+When at least one distinct topic has assessment evidence, the endpoint
+generates and stores a fresh prediction using the trained model when
+available, otherwise the logged rule-based fallback. `minimum_assessed_topics`
+reports this prediction threshold; a missing plan does not prevent prediction
+and the dashboard uses target grade `B` until a plan sets another target.
 `mastery_trend` contains current per-topic mastery and stored trend signals.
 `mastery_history` contains weekly mastery snapshots recomputed from assessment
 evidence through each week; sparse evidence may result in no chartable trend.

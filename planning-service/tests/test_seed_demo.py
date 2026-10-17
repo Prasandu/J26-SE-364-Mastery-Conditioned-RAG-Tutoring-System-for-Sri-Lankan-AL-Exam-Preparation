@@ -50,6 +50,7 @@ def test_loading_translates_component_payloads_and_filters_personas(
     assert assessment[0] == "assessment"
     validated_assessment = AssessmentEvent.model_validate(assessment[1])
     assert validated_assessment.student_id == "614f0cf0-bd67-461d-9958-0bd24adbce04"
+    assert validated_assessment.paper_id
     assert validated_assessment.evidence[0].score <= validated_assessment.evidence[0].max_score
     assert completion[0] == "completion"
     validated_completion = ModuleCompletionEvent.model_validate(completion[1])

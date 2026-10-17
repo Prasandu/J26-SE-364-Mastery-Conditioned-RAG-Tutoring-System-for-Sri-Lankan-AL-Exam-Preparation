@@ -12,6 +12,7 @@ class EvidenceItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     topic_id: TopicId
+    question_id: Annotated[str, Field(min_length=1, max_length=120)] | None = None
     score: Annotated[float, Field(ge=0, allow_inf_nan=False)]
     max_score: Annotated[float, Field(gt=0, allow_inf_nan=False)]
     difficulty: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)] = 0.5
@@ -29,6 +30,7 @@ class AssessmentEvent(BaseModel):
 
     event_id: EventId
     student_id: StudentId
+    paper_id: Annotated[str, Field(min_length=1, max_length=120)] | None = None
     occurred_at: datetime
     evidence: Annotated[list[EvidenceItem], Field(min_length=1, max_length=200)]
 
@@ -71,3 +73,4 @@ class IngestionResult(BaseModel):
     accepted: bool
     duplicate: bool
     evidence_count: int
+    unknown_question_ids: list[str] = Field(default_factory=list)

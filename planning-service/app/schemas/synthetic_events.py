@@ -10,6 +10,7 @@ class Component2Result(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     topic_id: TopicId
+    question_id: Annotated[str, Field(min_length=1, max_length=120)] | None = None
     marks_awarded: Annotated[float, Field(ge=0, allow_inf_nan=False)]
     marks_total: Annotated[float, Field(gt=0, allow_inf_nan=False)]
     difficulty: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]

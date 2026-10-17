@@ -159,10 +159,12 @@ def _to_planning_payload(
             payload = AssessmentEvent(
                 event_id=event["event_id"],
                 student_id=event["student_id"],
+                paper_id=event.get("paper_id"),
                 occurred_at=event["submitted_at"],
                 evidence=[
                     {
                         "topic_id": result["topic_id"],
+                        "question_id": result.get("question_id"),
                         "score": result["marks_awarded"],
                         "max_score": result["marks_total"],
                         "difficulty": result["difficulty"],

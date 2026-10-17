@@ -18,10 +18,12 @@ Request:
 {
   "event_id": "assessment-2026-001",
   "student_id": "student-123",
+  "paper_id": "AL-CHEM-2024-P1",
   "occurred_at": "2026-10-12T09:00:00Z",
   "evidence": [
     {
       "topic_id": "chem-u3-mole-concept",
+      "question_id": "AL-CHEM-2024-P1-Q01",
       "score": 7,
       "max_score": 10,
       "difficulty": 0.7,
@@ -34,6 +36,50 @@ Request:
 `evidence` must contain 1-200 items. `difficulty` and optional `confidence`
 are between 0 and 1. Scores must be non-negative and cannot exceed a positive
 `max_score`. Extra fields are rejected.
+
+Assessment results should include a `question_id` from the shared question
+bank. The assessment component should send both `paper_id` and `question_id`
+for each identified past-paper result; planning resolves the paper year and
+question maximum marks from the bank. A question ID not yet in the bank does
+not reject the assessment: that evidence is stored without a question link and
+the response lists it in `unknown_question_ids`. If a known question is tagged
+to a different topic or paper, ingestion rejects the inconsistent event.
+Evidence with multiple questions under the same topic is supported. Mastery
+and weak-topic refreshes aggregate every evidence item for that student/topic
+across papers.
+
+The question bank is seeded from the clearly labelled sample data in
+`shared/contracts/question_bank.csv` after running migrations and loading
+topics:
+
+```powershell
+python -m scripts.seed_question_bank
+```
+
+### GET `/api/v1/students/me/topic-history/{topic_id}`
+
+Requires the student's Supabase Auth bearer token. Returns all evidence
+attempts for the authenticated student and topic in chronological order,
+including paper/year/question metadata when available. For legacy or
+unmatched-question evidence, question metadata is `null`; marks and attempt
+date are still returned.
+
+```json
+{
+  "topic_id": "chem-u3-mole-concept",
+  "attempts": [
+    {
+      "question_id": "AL-CHEM-2024-P1-Q01",
+      "paper_id": "AL-CHEM-2024-P1",
+      "year": 2024,
+      "question_no": "1",
+      "marks_awarded": 7,
+      "max_marks": 10,
+      "attempted_at": "2026-10-12T09:00:00Z"
+    }
+  ]
+}
+```
 
 ## POST `/api/v1/events/module-completion`
 
@@ -62,7 +108,8 @@ evidence, and refreshed learner-topic summaries in one database transaction.
   "event_id": "assessment-2026-001",
   "accepted": true,
   "duplicate": false,
-  "evidence_count": 1
+  "evidence_count": 1,
+  "unknown_question_ids": []
 }
 ```
 

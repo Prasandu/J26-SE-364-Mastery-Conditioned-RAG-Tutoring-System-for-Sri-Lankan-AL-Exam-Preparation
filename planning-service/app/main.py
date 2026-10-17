@@ -6,6 +6,7 @@ from app.api.demo import router as demo_router
 from app.api.events import router as events_router
 from app.api.plans import router as plans_router
 from app.api.predictions import router as predictions_router
+from app.api.students import router as students_router
 from app.api.tasks import router as tasks_router
 from app.errors import register_error_handlers
 
@@ -29,6 +30,7 @@ app.include_router(demo_router)
 app.include_router(events_router)
 app.include_router(plans_router)
 app.include_router(predictions_router)
+app.include_router(students_router)
 app.include_router(tasks_router)
 
 

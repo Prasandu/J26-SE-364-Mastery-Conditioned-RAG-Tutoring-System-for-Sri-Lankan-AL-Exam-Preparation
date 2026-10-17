@@ -11,6 +11,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -26,6 +27,8 @@ class RawEvent(Base):
     student_id: Mapped[str] = mapped_column(String(120), nullable=False)
     source: Mapped[str] = mapped_column(String(80), nullable=False)
     event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    paper_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    paper_year: Mapped[int | None] = mapped_column(nullable=True)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     received_at: Mapped[datetime] = mapped_column(
@@ -42,8 +45,20 @@ class TopicEvidence(Base):
         CheckConstraint("max_score > 0", name="ck_topic_evidence_max_score_positive"),
         CheckConstraint("score <= max_score", name="ck_topic_evidence_score_within_max"),
         CheckConstraint("difficulty >= 0 AND difficulty <= 1", name="ck_topic_evidence_difficulty"),
-        UniqueConstraint("event_id", "topic_id", name="uq_topic_evidence_event_topic"),
+        UniqueConstraint(
+            "event_id",
+            "topic_id",
+            "question_id",
+            name="uq_topic_evidence_event_topic_question",
+        ),
         Index("ix_topic_evidence_student_observed", "student_id", "observed_at"),
+        Index(
+            "uq_topic_evidence_event_topic_unlinked",
+            "event_id",
+            "topic_id",
+            unique=True,
+            postgresql_where=text("question_id IS NULL"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
@@ -51,6 +66,10 @@ class TopicEvidence(Base):
     topic_id: Mapped[str] = mapped_column(
         ForeignKey("planning.topics.id", ondelete="RESTRICT"),
         nullable=False,
+    )
+    question_id: Mapped[str | None] = mapped_column(
+        ForeignKey("planning.questions.question_id", ondelete="SET NULL"),
+        nullable=True,
     )
     event_id: Mapped[str] = mapped_column(
         ForeignKey("planning.raw_events.event_id", ondelete="CASCADE"),

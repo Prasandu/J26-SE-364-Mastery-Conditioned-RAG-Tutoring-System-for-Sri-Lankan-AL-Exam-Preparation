@@ -19,6 +19,7 @@ class EvidenceResult:
                 difficulty=0.5,
                 confidence=0.7,
                 observed_at=datetime(2026, 10, 1, tzinfo=UTC),
+                paper_id="paper-2022",
             ),
             SimpleNamespace(
                 score=5,
@@ -26,6 +27,15 @@ class EvidenceResult:
                 difficulty=0.5,
                 confidence=0.7,
                 observed_at=datetime(2026, 10, 2, tzinfo=UTC),
+                paper_id="paper-2023",
+            ),
+            SimpleNamespace(
+                score=4,
+                max_score=10,
+                difficulty=0.5,
+                confidence=0.7,
+                observed_at=datetime(2026, 10, 3, tzinfo=UTC),
+                paper_id="paper-2024",
             ),
         ]
 
@@ -48,7 +58,7 @@ class FakeSession:
         self.added.append(record)
 
 
-def test_recompute_creates_basic_topic_summary_from_evidence() -> None:
+def test_recompute_aggregates_question_evidence_across_papers() -> None:
     session = FakeSession()
 
     as_of = datetime(2026, 10, 3, tzinfo=UTC)
@@ -67,6 +77,13 @@ def test_recompute_creates_basic_topic_summary_from_evidence() -> None:
             confidence=0.7,
             observed_at=datetime(2026, 10, 2, tzinfo=UTC),
         ),
+        EvidenceObservation(
+            score=4,
+            max_score=10,
+            difficulty=0.5,
+            confidence=0.7,
+            observed_at=datetime(2026, 10, 3, tzinfo=UTC),
+        ),
     ]
 
     recompute_for(session, "student-1", ["chem-u1"], as_of=as_of)
@@ -75,6 +92,6 @@ def test_recompute_creates_basic_topic_summary_from_evidence() -> None:
     assert isinstance(state, LearnerTopicState)
     assert state.mastery == compute_mastery(evidence, as_of=as_of)
     assert state.error_rate == compute_error_rate(evidence, as_of=as_of)
-    assert state.last_revised == datetime(2026, 10, 2, tzinfo=UTC)
+    assert state.last_revised == datetime(2026, 10, 3, tzinfo=UTC)
     assert state.trend < 0
     assert 0 <= state.weak_score <= 1

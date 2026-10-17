@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.errors import Conflict, ConstraintViolation
-from app.models import RawEvent, Topic, TopicEvidence
+from app.models import Paper, Question, RawEvent, Topic, TopicEvidence
 from app.schemas.events import AssessmentEvent, EvidenceItem, ModuleCompletionEvent
 from app.services.mastery import recompute_for
 
@@ -27,6 +27,7 @@ def ingest_assessment_event(
         evidence=event.evidence,
         payload=payload,
         source=source,
+        paper_id=event.paper_id,
     )
 
 
@@ -66,18 +67,48 @@ def _ingest(
     evidence: Sequence[EvidenceItem],
     payload: dict[str, Any],
     source: str,
+    paper_id: str | None = None,
 ) -> dict[str, Any]:
+    unknown_question_ids: list[str] = []
+    question_by_id: dict[str, Question] = {}
+    for item in evidence:
+        if item.question_id is None:
+            continue
+        question = session.get(Question, item.question_id)
+        if question is None:
+            if item.question_id not in unknown_question_ids:
+                unknown_question_ids.append(item.question_id)
+            continue
+        if question.topic_id != item.topic_id:
+            raise ConstraintViolation(
+                f"Question {item.question_id!r} belongs to topic {question.topic_id!r}, "
+                f"not {item.topic_id!r}."
+            )
+        if paper_id is not None and question.paper_id != paper_id:
+            raise ConstraintViolation(
+                f"Question {item.question_id!r} belongs to paper {question.paper_id!r}, "
+                f"not {paper_id!r}."
+            )
+        question_by_id[item.question_id] = question
+
+    linked_paper_ids = {question.paper_id for question in question_by_id.values()}
+    resolved_paper_id = paper_id
+    if resolved_paper_id is None and len(linked_paper_ids) == 1:
+        resolved_paper_id = next(iter(linked_paper_ids))
+    paper = session.get(Paper, resolved_paper_id) if resolved_paper_id is not None else None
     event_data = {
         "event_id": event_id,
         "student_id": student_id,
         "source": source,
         "event_type": event_type,
+        "paper_id": resolved_paper_id,
+        "paper_year": paper.year if paper is not None else None,
         "payload": payload,
         "occurred_at": occurred_at,
     }
     existing = session.get(RawEvent, event_id)
     if existing is not None:
-        return _duplicate_or_conflict(existing, event_data, len(evidence))
+        return _duplicate_or_conflict(existing, event_data, len(evidence), unknown_question_ids)
 
     topic_ids = list(dict.fromkeys(item.topic_id for item in evidence))
     unknown_topics = [topic_id for topic_id in topic_ids if session.get(Topic, topic_id) is None]
@@ -94,6 +125,11 @@ def _ingest(
                     student_id=student_id,
                     topic_id=item.topic_id,
                     event_id=event_id,
+                    question_id=(
+                        item.question_id
+                        if item.question_id is not None and item.question_id in question_by_id
+                        else None
+                    ),
                     score=item.score,
                     max_score=item.max_score,
                     difficulty=item.difficulty,
@@ -116,6 +152,7 @@ def _ingest(
         "accepted": True,
         "duplicate": False,
         "evidence_count": len(evidence),
+        "unknown_question_ids": unknown_question_ids,
     }
 
 
@@ -123,6 +160,7 @@ def _duplicate_or_conflict(
     existing: RawEvent,
     incoming: dict[str, Any],
     evidence_count: int,
+    unknown_question_ids: list[str],
 ) -> dict[str, Any]:
     if (
         existing.student_id != incoming["student_id"]
@@ -136,4 +174,5 @@ def _duplicate_or_conflict(
         "accepted": True,
         "duplicate": True,
         "evidence_count": evidence_count,
+        "unknown_question_ids": unknown_question_ids,
     }

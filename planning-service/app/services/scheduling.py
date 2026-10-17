@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -9,6 +10,7 @@ from app.errors import ConstraintViolation, NotFound
 from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic
 from app.schemas.plans import FixedCommitment
 from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
+from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
 from app.services.priority import LearningProfile, choose_activity
 from app.services.scheduler import (
     FixedCommitment as SchedulerCommitment,
@@ -34,6 +36,7 @@ def generate_plan_schedule(
     plan = _owned_plan(session, student_id, plan_id)
     current = (now or datetime.now(UTC)).astimezone(UTC)
     constraints = plan.constraints
+    duration_overrides = duration_overrides or {}
     local_zone = _time_zone(constraints.get("timezone", "Asia/Colombo"))
     start_local = current.astimezone(local_zone)
     end_date = min(start_local.date() + timedelta(days=horizon_days - 1), plan.exam_date - timedelta(days=1))
@@ -64,6 +67,70 @@ def generate_plan_schedule(
         local_zone,
     )
     commitments = _fixed_commitments(constraints.get("fixed_commitments", []))
+    effective_minutes_by_day: dict[date, int] = {}
+    for window in windows:
+        duration = int((window.end_at - window.start_at).total_seconds() // 60)
+        blocked = sum(
+            int(
+                (
+                    min(window.end_at, item.end_at)
+                    - max(window.start_at, item.start_at)
+                ).total_seconds()
+                // 60
+            )
+            for item in commitments
+            if window.start_at < item.end_at and item.start_at < window.end_at
+        )
+        day = window.start_at.astimezone(local_zone).date()
+        effective_minutes_by_day[day] = effective_minutes_by_day.get(day, 0) + max(0, duration - blocked)
+    total_available_hours = sum(
+        min(minutes, constraints.get("max_daily_minutes", 180))
+        for minutes in effective_minutes_by_day.values()
+    ) / 60
+    allocation = allocate_hours(
+        [
+            {
+                "topic_id": topic.topic_id,
+                "exam_weight": topic.exam_weight,
+                "mastery": topic.mastery,
+                "prerequisites": list(topic.prerequisites),
+                "prerequisite_mastery": topic.prerequisite_mastery or {},
+            }
+            for topic in priorities
+        ],
+        total_available_hours,
+    )
+    if priorities and not any(allocation.values()):
+        unscheduled = {item.topic_id: item.duration_minutes for item in priorities}
+        return ScheduleResponse(
+            tasks=[],
+            infeasible=True,
+            shortfall_minutes=sum(unscheduled.values()),
+            unscheduled_minutes=unscheduled,
+        )
+    priorities = [
+        replace(
+            topic,
+            duration_minutes=max(
+                round(allocation.get(topic.topic_id, 0) * 60),
+                duration_overrides.get(topic.topic_id, 0),
+            ),
+        )
+        for topic in priorities
+        if allocation.get(topic.topic_id, 0) > 0 or duration_overrides.get(topic.topic_id, 0) > 0
+    ]
+    allocated_topic_ids = {topic.topic_id for topic in priorities}
+    priorities = [
+        replace(
+            topic,
+            prerequisites=tuple(
+                prerequisite
+                for prerequisite in topic.prerequisites
+                if prerequisite in allocated_topic_ids
+            ),
+        )
+        for topic in priorities
+    ]
     result = schedule_tasks(
         priorities=priorities,
         availability=windows,
@@ -186,6 +253,20 @@ def _ranked_topics(
         if topic is None:
             raise ConstraintViolation(f"Plan references unknown topic {topic_id!r}.")
         state = state_by_topic.get(topic_id)
+        topic_mastery = float(state.mastery) if state is not None else 0.0
+        prerequisite_mastery = {
+            prerequisite: float(state_by_topic[prerequisite].mastery)
+            for prerequisite in topic.prerequisites or []
+            if prerequisite in state_by_topic
+        }
+        gain_input: TopicInput = {
+            "topic_id": topic_id,
+            "exam_weight": float(topic.exam_weight or 0),
+            "mastery": topic_mastery,
+            "prerequisites": list(topic.prerequisites or []),
+            "prerequisite_mastery": prerequisite_mastery,
+        }
+        expected_priority = expected_gain_per_hour(gain_input)
         if state is None:
             profile = LearningProfile(studied=False, theory_completed=False, mastery=0)
         else:
@@ -201,7 +282,7 @@ def _ranked_topics(
             RankedTopic(
                 topic_id=topic_id,
                 activity=activity,
-                priority=priority_overrides.get(topic_id, float(item["priority"])),
+                priority=max(expected_priority, priority_overrides.get(topic_id, 0.0)),
                 duration_minutes=duration_overrides.get(
                     topic_id,
                     constraints["max_session_minutes"] * 2,
@@ -212,6 +293,9 @@ def _ranked_topics(
                     for prerequisite in topic.prerequisites
                     if prerequisite in {entry["topic_id"] for entry in priorities}
                 ),
+                exam_weight=float(topic.exam_weight or 0),
+                mastery=topic_mastery,
+                prerequisite_mastery=prerequisite_mastery,
             )
         )
     return ranked

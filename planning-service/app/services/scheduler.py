@@ -27,6 +27,9 @@ class RankedTopic:
     duration_minutes: int
     reason: str
     prerequisites: tuple[str, ...] = ()
+    exam_weight: float = 0.0
+    mastery: float = 0.0
+    prerequisite_mastery: dict[str, float] | None = None
 
 
 @dataclass(frozen=True)

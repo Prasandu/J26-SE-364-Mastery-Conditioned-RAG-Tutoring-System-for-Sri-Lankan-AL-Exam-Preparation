@@ -419,6 +419,33 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </article>
       </div>
 
+      {dashboard.achievability ? (
+        <section
+          aria-label="Plan achievability estimate"
+          className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-semibold text-sky-950">
+              Achievability estimate ·{" "}
+              {dashboard.achievability.status.replaceAll("_", " ")}
+            </h3>
+            <span className="text-sm font-medium text-sky-900">
+              Best-range grade: {dashboard.achievability.best_range_grade}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-sky-900">
+            {dashboard.achievability.message}
+          </p>
+          <p className="mt-2 text-sm text-sky-900">
+            Estimated {dashboard.achievability.hours_needed} study hours per
+            week needed; {dashboard.achievability.hours_available} available.
+            Projected score range:{" "}
+            {percent(dashboard.achievability.projected_range.low)}–
+            {percent(dashboard.achievability.projected_range.high)}.
+          </p>
+        </section>
+      ) : null}
+
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="text-lg font-semibold text-ink">Mastery trend</h3>

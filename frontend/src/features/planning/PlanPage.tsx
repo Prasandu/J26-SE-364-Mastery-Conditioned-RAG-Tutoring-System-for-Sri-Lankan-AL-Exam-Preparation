@@ -420,6 +420,20 @@ export default function PlanningPage() {
                     : "Generate next 14 days"}
             </button>
           </div>
+          {currentPlan.achievability ? (
+            <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">
+              <p className="font-semibold">
+                Achievability estimate ·{" "}
+                {currentPlan.achievability.status.replaceAll("_", " ")}
+              </p>
+              <p className="mt-1">{currentPlan.achievability.message}</p>
+              <p className="mt-1">
+                Estimated {currentPlan.achievability.hours_needed} hours/week
+                needed; {currentPlan.achievability.hours_available} available.
+                Best-range grade: {currentPlan.achievability.best_range_grade}.
+              </p>
+            </div>
+          ) : null}
           {error ? (
             <div className="mt-5">
               <ErrorState message={error} />

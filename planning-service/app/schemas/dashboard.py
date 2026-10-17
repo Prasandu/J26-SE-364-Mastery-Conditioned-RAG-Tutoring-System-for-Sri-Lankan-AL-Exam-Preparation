@@ -4,6 +4,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.schemas.plans import AchievabilityReportResponse
+
 
 class DashboardTopicTrend(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -55,6 +57,7 @@ class DashboardResponse(BaseModel):
     readiness_score: float
     current_prediction: float
     has_prediction: bool
+    achievability: AchievabilityReportResponse | None = None
 
 
 class WhatIfInput(BaseModel):

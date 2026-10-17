@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -6,9 +7,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.errors import Conflict, ConstraintViolation, NotFound
-from app.models import AvailabilitySlot, LearnerTopicState, ReplanLog, StudyPlan, Topic
+from app.models import (
+    AvailabilitySlot,
+    LearnerTopicState,
+    ReplanLog,
+    StudyPlan,
+    Topic,
+    TopicEvidence,
+)
 from app.schemas.plans import PlanInput
-from app.services.priority import compute_priority
+from app.services.achievability import (
+    TopicInput,
+    build_achievability_report,
+    expected_gain_per_hour,
+)
 
 
 def create_plan(session: Session, student_id: str, data: PlanInput) -> dict[str, Any]:
@@ -39,7 +51,7 @@ def create_plan(session: Session, student_id: str, data: PlanInput) -> dict[str,
         )
     )
     session.commit()
-    return _plan_response(plan)
+    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
 
 
 def list_plans(session: Session, student_id: str) -> list[dict[str, Any]]:
@@ -48,11 +60,15 @@ def list_plans(session: Session, student_id: str) -> list[dict[str, Any]]:
         .where(StudyPlan.student_id == student_id)
         .order_by(StudyPlan.created_at.desc(), StudyPlan.id.desc())
     ).all()
-    return [_plan_response(plan) for plan in plans]
+    return [
+        _plan_response(plan, build_plan_achievability(session, student_id, plan))
+        for plan in plans
+    ]
 
 
 def get_plan(session: Session, student_id: str, plan_id: UUID) -> dict[str, Any]:
-    return _plan_response(_owned_plan(session, student_id, plan_id))
+    plan = _owned_plan(session, student_id, plan_id)
+    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
 
 
 def update_plan(
@@ -95,7 +111,83 @@ def update_plan(
             )
         )
     session.commit()
-    return _plan_response(plan)
+    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
+
+
+def build_plan_achievability(
+    session: Session,
+    student_id: str,
+    plan: StudyPlan,
+    *,
+    current_score: float | None = None,
+    evidence_count: int | None = None,
+) -> dict[str, Any]:
+    states = session.scalars(
+        select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
+    ).all()
+    state_by_id = {state.topic_id: state for state in states}
+    priorities = plan.constraints.get("priorities", [])
+    topic_ids = [item["topic_id"] for item in priorities]
+    topics: list[TopicInput] = []
+    for topic_id in topic_ids:
+        topic = session.get(Topic, topic_id)
+        if topic is None:
+            continue
+        state = state_by_id.get(topic_id)
+        topics.append(
+            {
+                "topic_id": topic_id,
+                "exam_weight": float(topic.exam_weight or 0),
+                "mastery": float(state.mastery) if state is not None else 0.0,
+                "prerequisites": list(getattr(topic, "prerequisites", None) or []),
+                "prerequisite_mastery": {
+                    prerequisite: float(state_by_id[prerequisite].mastery)
+                    for prerequisite in getattr(topic, "prerequisites", None) or []
+                    if prerequisite in state_by_id
+                },
+            }
+        )
+    if current_score is None:
+        weights = [item["exam_weight"] for item in topics]
+        mastery_values = [item["mastery"] for item in topics]
+        total_weight = sum(weights)
+        current_score = (
+            sum(weight * mastery for weight, mastery in zip(weights, mastery_values, strict=True))
+            / total_weight
+            if total_weight > 0
+            else sum(mastery_values) / len(mastery_values)
+            if mastery_values
+            else 0.0
+        )
+    if evidence_count is None:
+        evidence_count = len(
+            session.scalars(
+                select(TopicEvidence).where(TopicEvidence.student_id == student_id)
+            ).all()
+        )
+    slots = session.scalars(
+        select(AvailabilitySlot).where(AvailabilitySlot.plan_id == plan.id)
+    ).all()
+    hours_available = sum(
+        (
+            slot.end_time.hour * 60
+            + slot.end_time.minute
+            - slot.start_time.hour * 60
+            - slot.start_time.minute
+        )
+        / 60
+        for slot in slots
+    )
+    days_remaining = max((plan.exam_date - datetime.now(UTC).date()).days, 0)
+    report = build_achievability_report(
+        current=current_score,
+        target_grade=plan.target_grade,
+        topics=topics,
+        days_remaining=days_remaining,
+        hours_available=hours_available,
+        evidence_count=evidence_count,
+    )
+    return asdict(report)
 
 
 def _validate_topic_ids(session: Session, topic_ids: list[str]) -> None:
@@ -123,38 +215,38 @@ def _build_constraints(
         states = session.scalars(
             select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
         ).all()
+        state_by_id = {item.topic_id: item for item in states}
         if data.topics:
             requested_topics = set(data.topics)
             states = [state for state in states if state.topic_id in requested_topics]
         if not states:
             raise Conflict("Predicted mode requires stored mastery data for selected topics.")
 
-        now = datetime.now(UTC)
-        days_until_exam = (data.exam_date - now.date()).days
         priorities = []
         for state in states:
             topic = session.get(Topic, state.topic_id)
             if topic is None:
                 raise ConstraintViolation(f"Mastery state references unknown topic {state.topic_id!r}.")
-            days_since_revision = (
-                max((now - state.last_revised).total_seconds() / 86400, 0)
-                if state.last_revised is not None
-                else None
-            )
-            result = compute_priority(
-                weakness=state.weak_score,
-                exam_importance=topic.exam_weight,
-                days_until_exam=days_until_exam,
-                days_since_revision=days_since_revision,
-                improvement_potential=1 - state.mastery,
-                prerequisite_boost=0,
+            prerequisite_mastery = {
+                prerequisite: float(state_by_id[prerequisite].mastery)
+                for prerequisite in getattr(topic, "prerequisites", None) or []
+                if prerequisite in state_by_id
+            }
+            priority = expected_gain_per_hour(
+                {
+                    "topic_id": state.topic_id,
+                    "exam_weight": float(topic.exam_weight or 0),
+                    "mastery": float(state.mastery),
+                    "prerequisites": list(getattr(topic, "prerequisites", None) or []),
+                    "prerequisite_mastery": prerequisite_mastery,
+                }
             )
             priorities.append(
                 {
                     "topic_id": state.topic_id,
-                    "priority": result.score,
+                    "priority": priority,
                     "mastery": state.mastery,
-                    "reason": result.reason,
+                    "reason": f"Estimated {priority:.3f} exam-score gain per study hour.",
                 }
             )
 
@@ -191,11 +283,12 @@ def _plan_snapshot(data: PlanInput, constraints: dict[str, Any]) -> dict[str, An
     }
 
 
-def _plan_response(plan: StudyPlan) -> dict[str, Any]:
+def _plan_response(plan: StudyPlan, achievability: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": str(plan.id),
         "mode": plan.mode,
         "exam_date": plan.exam_date,
         "target_grade": plan.target_grade,
         "constraints": plan.constraints,
+        "achievability": achievability,
     }

@@ -20,14 +20,33 @@ class FakeDashboardSession:
     def __init__(self) -> None:
         now = datetime(2026, 10, 12, tzinfo=UTC)
         self.plan = SimpleNamespace(
+            id="plan-1",
             student_id="student-1",
             exam_date=(now + timedelta(days=30)).date(),
             target_grade="A",
             updated_at=now,
+            constraints={
+                "priorities": [
+                    {"topic_id": "chem-1", "priority": 0.5},
+                    {"topic_id": "chem-2", "priority": 0.4},
+                ]
+            },
         )
         self.topics = [
-            SimpleNamespace(id="chem-1", name="Organic chemistry", parent_id=None),
-            SimpleNamespace(id="chem-2", name="Bonding", parent_id="chem-1"),
+            SimpleNamespace(
+                id="chem-1",
+                name="Organic chemistry",
+                parent_id=None,
+                exam_weight=0.5,
+                prerequisites=[],
+            ),
+            SimpleNamespace(
+                id="chem-2",
+                name="Bonding",
+                parent_id="chem-1",
+                exam_weight=0.5,
+                prerequisites=["chem-1"],
+            ),
         ]
         self.tasks = [
             SimpleNamespace(
@@ -51,6 +70,13 @@ class FakeDashboardSession:
             SimpleNamespace(student_id="student-1", topic_id=None, predicted_score=0.71),
         ]
         self.evidence = []
+        self.availability_slots = [
+            SimpleNamespace(start_time=datetime.strptime("16:00", "%H:%M").time(),
+                            end_time=datetime.strptime("18:00", "%H:%M").time())
+        ]
+
+    def get(self, model, key):
+        return next((topic for topic in self.topics if topic.id == key), None)
 
     def scalars(self, statement):
         sql = str(statement)
@@ -64,6 +90,8 @@ class FakeDashboardSession:
             return FakeResults(self.states)
         if "topic_evidence" in sql:
             return FakeResults(self.evidence)
+        if "availability_slots" in sql:
+            return FakeResults(self.availability_slots)
         if "predictions" in sql:
             return FakeResults(self.predictions)
         return FakeResults([])
@@ -84,6 +112,8 @@ def test_dashboard_summary_has_required_fields() -> None:
     assert response.has_adherence_data
     assert response.has_mastery_data
     assert response.has_prediction
+    assert response.achievability is not None
+    assert response.achievability.hours_available == 2
 
 
 def test_empty_dashboard_marks_unavailable_metrics_without_placeholder_topics() -> None:

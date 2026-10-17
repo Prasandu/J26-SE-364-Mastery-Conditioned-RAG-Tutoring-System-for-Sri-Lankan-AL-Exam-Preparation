@@ -99,12 +99,29 @@ class PlanInput(BaseModel):
         return self
 
 
+class AchievabilityRange(BaseModel):
+    low: Annotated[float, Field(ge=0, le=1)]
+    expected: Annotated[float, Field(ge=0, le=1)]
+    high: Annotated[float, Field(ge=0, le=1)]
+
+
+class AchievabilityReportResponse(BaseModel):
+    status: Literal["on_track", "stretch", "out_of_reach"]
+    best_range_grade: str
+    hours_needed: Annotated[float, Field(ge=0)]
+    hours_available: Annotated[float, Field(ge=0)]
+    hours_gap: float
+    projected_range: AchievabilityRange
+    message: str
+
+
 class PlanResponse(BaseModel):
     id: str
     mode: Literal["manual", "predicted"]
     exam_date: date
     target_grade: str
     constraints: dict
+    achievability: AchievabilityReportResponse | None = None
 
 
 class PlanListResponse(BaseModel):

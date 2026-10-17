@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.schemas.dashboard import DashboardResponse, WhatIfInput, WhatIfResponse
 from app.services.mastery import EvidenceObservation, compute_mastery
+from app.services.plans import build_plan_achievability
 from app.services.predictions import MINIMUM_ASSESSED_TOPICS
 
 
@@ -111,6 +112,17 @@ def get_dashboard(
         readiness_score=readiness_score,
         current_prediction=current_prediction,
         has_prediction=has_prediction,
+        achievability=(
+            build_plan_achievability(
+                session,
+                student_id,
+                plan,
+                current_score=current_prediction,
+                evidence_count=len(evidence_rows),
+            )
+            if plan is not None
+            else None
+        ),
     )
 
 

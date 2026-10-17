@@ -57,6 +57,21 @@ export interface PlanResponse {
   exam_date: string;
   target_grade: string;
   constraints: Record<string, unknown>;
+  achievability?: AchievabilityReport | null;
+}
+
+export interface AchievabilityReport {
+  status: "on_track" | "stretch" | "out_of_reach";
+  best_range_grade: string;
+  hours_needed: number;
+  hours_available: number;
+  hours_gap: number;
+  projected_range: {
+    low: number;
+    expected: number;
+    high: number;
+  };
+  message: string;
 }
 
 export interface PlanListResponse {
@@ -158,6 +173,7 @@ export interface DashboardResponse {
   readiness_score: number;
   current_prediction: number;
   has_prediction: boolean;
+  achievability: AchievabilityReport | null;
 }
 
 export interface WhatIfInput {

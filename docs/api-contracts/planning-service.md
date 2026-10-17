@@ -152,7 +152,10 @@ stored constraints. Creation and subsequent constraint edits are recorded in
 ### GET `/api/v1/plans` and GET `/api/v1/plans/{plan_id}`
 
 Lists the authenticated student's plans or returns one owned plan. A missing
-or other student's plan returns 404.
+or other student's plan returns 404. Each plan includes an `achievability`
+estimate with `status`, `best_range_grade`, `hours_needed`, `hours_available`,
+`hours_gap`, `projected_range` (`low`, `expected`, `high`), and an encouraging
+estimate message.
 
 ### PUT `/api/v1/plans/{plan_id}`
 
@@ -237,6 +240,9 @@ and the dashboard uses target grade `B` until a plan sets another target.
 `mastery_trend` contains current per-topic mastery and stored trend signals.
 `mastery_history` contains weekly mastery snapshots recomputed from assessment
 evidence through each week; sparse evidence may result in no chartable trend.
+When a plan exists, `achievability` returns the same estimate included in the
+plan response. The scheduler allocates the available horizon to topics by
+estimated exam-score gain per hour, while applying prerequisite constraints.
 
 ### POST `/api/v1/whatif`
 

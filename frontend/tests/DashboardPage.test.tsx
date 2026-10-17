@@ -31,6 +31,7 @@ const emptyDashboard: DashboardResponse = {
   current_prediction: 0.5,
   has_prediction: false,
   minimum_assessed_topics: 1,
+  achievability: null,
 };
 
 const populatedDashboard: DashboardResponse = {

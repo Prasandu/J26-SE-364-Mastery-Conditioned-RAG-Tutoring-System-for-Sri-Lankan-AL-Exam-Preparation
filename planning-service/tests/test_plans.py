@@ -145,6 +145,12 @@ def test_create_plan_persists_constraints_slots_and_audit_log(
     assert len(session.slots) == 2
     assert len(session.logs) == 1
     assert session.commits == 1
+    assert response.json()["achievability"]["status"] in {
+        "on_track",
+        "stretch",
+        "out_of_reach",
+    }
+    assert response.json()["achievability"]["message"].startswith("Estimate:")
 
 
 def test_manual_mode_uses_only_selected_topics(client: TestClient) -> None:

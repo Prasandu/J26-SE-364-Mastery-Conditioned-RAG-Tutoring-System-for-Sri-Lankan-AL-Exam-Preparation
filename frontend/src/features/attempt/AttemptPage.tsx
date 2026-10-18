@@ -163,7 +163,14 @@ export function AttemptPage() {
   }
 
   const locked = attempt.status !== "in_progress";
-  const marking = attempt.status === "submitted";
+  const points = attempt.questions.flatMap((question) => question.points);
+  // The machine can still be working (a "pending" point, waiting on the AI judge) -
+  // that is the only time the whole page should block on a progress screen. Once
+  // every point has SOME verdict, the student sees their results immediately: the
+  // ones a teacher still needs to check are shown as exactly that, in ResultList,
+  // rather than hiding every other already-decided question behind them too.
+  const marking = attempt.status === "submitted" && points.some((point) => point.status === "pending");
+  const needsTeacherCount = points.filter((point) => point.status === "needs_review").length;
   const items = answerableQuestions(paper);
   const answered = items.filter((item) => {
     const value = given[item.question.id];
@@ -190,11 +197,27 @@ export function AttemptPage() {
         <Card>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="text-lg font-medium tracking-tight">Result</h2>
-            <p className="text-3xl font-semibold tabular-nums text-brand-700">
-              {attempt.score ?? "-"}{" "}
-              <span className="text-base font-normal text-slate-400">/ {attempt.max_score}</span>
-            </p>
+            {attempt.score !== null ? (
+              <p className="text-3xl font-semibold tabular-nums text-brand-700">
+                {attempt.score}{" "}
+                <span className="text-base font-normal text-slate-400">/ {attempt.max_score}</span>
+              </p>
+            ) : (
+              <p className="text-3xl font-semibold tabular-nums text-brand-700">
+                {confirmedSoFar(points)}{" "}
+                <span className="text-base font-normal text-slate-400">
+                  / {attempt.max_score} confirmed
+                </span>
+              </p>
+            )}
           </div>
+          {needsTeacherCount > 0 && (
+            <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {needsTeacherCount === 1 ? "One marking point is" : `${needsTeacherCount} marking points are`}{" "}
+              parked for a teacher to check, for a more accurate result - see below for which ones.
+              Everything else here is your real mark already.
+            </p>
+          )}
           <div className="mt-4">
             <ResultList attempt={attempt} />
           </div>
@@ -257,6 +280,19 @@ export function AttemptPage() {
       )}
     </div>
   );
+}
+
+/**
+ * Marks confirmed so far, from only the points with a final verdict - a needs_review
+ * point's own `awarded` is a 0.0 placeholder, not a real decision, so it is left out
+ * rather than counted as a loss. Shown instead of attempt.score while that stays
+ * null (some point of some answer is not final yet), so a student sees the marks
+ * they have actually earned rather than a blank dash.
+ */
+function confirmedSoFar(points: Attempt["questions"][number]["points"]): number {
+  return points
+    .filter((point) => point.status === "awarded" || point.status === "not_awarded")
+    .reduce((total, point) => total + (point.awarded ?? 0), 0);
 }
 
 function SaveHint({ state }: { state: SaveState }) {

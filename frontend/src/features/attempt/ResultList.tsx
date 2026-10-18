@@ -32,14 +32,21 @@ export function ResultList({ attempt }: { attempt: Attempt }) {
     return <p className="text-sm text-slate-500">No answers were given.</p>;
   }
 
+  const anyProvisional = answered.some((question) => question.score === null && question.points.length > 0);
+
   return (
-    <ol className="divide-y divide-slate-100">
-      {answered.map((question) => (
-        <li key={question.question_id} className="py-4">
-          <QuestionResultRow question={question} />
-        </li>
-      ))}
-    </ol>
+    <>
+      <ol className="divide-y divide-slate-100">
+        {answered.map((question) => (
+          <li key={question.question_id} className="py-4">
+            <QuestionResultRow question={question} />
+          </li>
+        ))}
+      </ol>
+      {anyProvisional && (
+        <p className="mt-2 text-xs text-slate-400">* provisional - a point of this question still needs a teacher</p>
+      )}
+    </>
   );
 }
 
@@ -74,10 +81,23 @@ function QuestionResultRow({ question }: { question: QuestionResult }) {
       </div>
 
       <span className="shrink-0 text-sm tabular-nums text-slate-500">
-        {question.score ?? 0} / {question.max_marks ?? 0}
+        {question.score ?? provisionalScore(question.points)} / {question.max_marks ?? 0}
+        {question.score === null && question.points.length > 0 && "*"}
       </span>
     </div>
   );
+}
+
+/**
+ * Marks confirmed so far for one question whose overall score is not final yet (some
+ * point still needs a teacher) - the sum of only its decided points, not 0. A
+ * needs_review point's own `awarded` is a 0.0 placeholder, not a real decision, so
+ * it is left out rather than counted as a loss.
+ */
+function provisionalScore(points: readonly PointResult[]): number {
+  return points
+    .filter((point) => point.status === "awarded" || point.status === "not_awarded")
+    .reduce((total, point) => total + (point.awarded ?? 0), 0);
 }
 
 function PointRow({ point, compact }: { point: PointResult; compact: boolean }) {

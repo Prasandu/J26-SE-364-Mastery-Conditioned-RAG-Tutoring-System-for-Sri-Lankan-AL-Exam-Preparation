@@ -44,18 +44,23 @@ def review_queue(
     *,
     paper_id: int | None = None,
     status: PointStatus | None = None,
-    min_confidence: float = 0.7,
     limit: int = 50,
     offset: int = 0,
 ) -> Sequence[PointResult]:
     """Points waiting for a teacher, oldest submission first so nobody waits too long.
 
-    Without `status`, every point no marker has settled is listed.
+    Without `status`, every point no marker has settled is listed. `status` alone
+    decides this - the marking engine already weighed confidence once when it set
+    NEEDS_REVIEW in the first place (see app/services/marking.py); re-applying a
+    confidence cutoff here used to hide a genuinely unresolved point whenever the AI
+    had been confident but still wrong for some other reason (its quoted evidence not
+    actually being in the student's answer, for example) - the student's own "waiting
+    for a teacher" count would then not match anything a teacher could see.
     """
     chosen = PointResult.status == status if status else PointResult.status.in_(UNRESOLVED)
     stmt = (
         _submitted_points()
-        .where(chosen, _ai_reviewable(min_confidence))
+        .where(chosen)
         .order_by(Attempt.submitted_at, PointResult.id)
         .limit(min(limit, MAX_QUEUE_PAGE))
         .offset(offset)
@@ -69,7 +74,6 @@ def review_scripts(
     db: Session,
     *,
     paper_id: int | None = None,
-    min_confidence: float = 0.7,
     limit: int = 50,
     offset: int = 0,
 ) -> list[ReviewScriptOut]:
@@ -97,8 +101,7 @@ def review_scripts(
             r
             for answer in attempt.answers
             for r in answer.point_results
-            if _is_ai_reviewable(r, min_confidence)
-            and (r.status in UNRESOLVED or r.teacher_awarded is not None)
+            if r.status in UNRESOLVED or r.teacher_awarded is not None
         ]
         if not results:
             continue
@@ -231,22 +234,6 @@ def _submitted_points() -> Select[tuple[PointResult]]:
     )
 
 
-def _ai_reviewable(min_confidence: float):
-    return (
-        (PointResult.ai_awarded.is_(None))
-        | (PointResult.confidence.is_(None))
-        | (PointResult.confidence < min_confidence)
-    )
-
-
-def _is_ai_reviewable(result: PointResult, min_confidence: float) -> bool:
-    return (
-        result.ai_awarded is None
-        or result.confidence is None
-        or result.confidence < min_confidence
-    )
-
-
 def _compare(results: Sequence[PointResult], left: str, right: str) -> MarkerAgreement:
     both = [r for r in results if getattr(r, left) is not None and getattr(r, right) is not None]
     agree = sum(getattr(r, left) == getattr(r, right) for r in both)
@@ -258,14 +245,16 @@ def _compare(results: Sequence[PointResult], left: str, right: str) -> MarkerAgr
     )
 
 
-def attempt_points(
-    db: Session, attempt_id: uuid.UUID, *, min_confidence: float = 0.7
-) -> Sequence[PointResult]:
-    """Unresolved AI-review points of one submitted attempt."""
+def attempt_points(db: Session, attempt_id: uuid.UUID) -> Sequence[PointResult]:
+    """Unresolved or already-reviewed points of one submitted attempt.
+
+    Not every point of the attempt - a point no marker ever doubted (an MCQ key, a
+    confidently checker-decided calculation) is not something a teacher is asked to
+    double-check just because it exists.
+    """
     stmt = _submitted_points().where(
         Attempt.id == attempt_id,
-        _ai_reviewable(min_confidence),
-        (PointResult.status.in_(UNRESOLVED) | PointResult.teacher_awarded.is_not(None)),
+        PointResult.status.in_(UNRESOLVED) | PointResult.teacher_awarded.is_not(None),
     ).order_by(PointResult.id)
     results = db.scalars(stmt).all()
     if not results:

@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_file_store
-from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import PointStatus
 from app.schemas.review import (
@@ -34,7 +33,6 @@ def review_queue(
     limit: int = Query(default=50, ge=1, le=review.MAX_QUEUE_PAGE),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings),
 ):
     """Marking points waiting for a teacher, oldest submission first.
 
@@ -44,7 +42,6 @@ def review_queue(
         db,
         paper_id=paper_id,
         status=status,
-        min_confidence=settings.ai_min_confidence,
         limit=limit,
         offset=offset,
     )]  # fmt: skip
@@ -56,29 +53,15 @@ def review_scripts(
     limit: int = Query(default=50, ge=1, le=review.MAX_QUEUE_PAGE),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings),
 ):
     """Submitted scripts a teacher can mark right through, with how far they have got."""
-    return review.review_scripts(
-        db,
-        paper_id=paper_id,
-        min_confidence=settings.ai_min_confidence,
-        limit=limit,
-        offset=offset,
-    )
+    return review.review_scripts(db, paper_id=paper_id, limit=limit, offset=offset)
 
 
 @router.get("/attempts/{attempt_id}", response_model=list[ReviewItemOut])
-def attempt_points(
-    attempt_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    settings: Settings = Depends(get_settings),
-):
-    """Unresolved AI-review points of one submitted attempt."""
-    return [
-        review.to_review_item(result)
-        for result in review.attempt_points(db, attempt_id, min_confidence=settings.ai_min_confidence)
-    ]
+def attempt_points(attempt_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Unresolved or already-reviewed points of one submitted attempt."""
+    return [review.to_review_item(result) for result in review.attempt_points(db, attempt_id)]
 
 
 @router.get("/images/{image_id}")

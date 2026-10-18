@@ -66,8 +66,6 @@ def run_migrations_online() -> None:
         connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}"))
         connection.commit()
 
-        connection = connection.execution_options(schema_translate_map={None: SCHEMA})
-
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

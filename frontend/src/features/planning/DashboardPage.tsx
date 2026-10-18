@@ -446,6 +446,27 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </section>
       ) : null}
 
+      {dashboard.alerts.length > 0 && (
+        <section
+          aria-label="Decline alerts"
+          className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm sm:p-6"
+        >
+          <h3 className="text-lg font-semibold text-rose-950">
+            Topics needing attention
+          </h3>
+          <ul className="mt-3 space-y-2">
+            {dashboard.alerts.map((alert) => (
+              <li
+                className="rounded-xl border border-rose-100 bg-white p-4 text-sm text-slate-700"
+                key={alert.topic_id}
+              >
+                {alert.message}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="text-lg font-semibold text-ink">Mastery trend</h3>

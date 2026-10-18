@@ -1,10 +1,33 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.plans import AchievabilityReportResponse
+
+
+class DeclineAttemptResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    score: float
+    max_score: float
+    attempted_at: datetime
+    paper_id: str | None = None
+    question_id: str | None = None
+
+
+class DeclineAlertResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    topic_id: str
+    baseline: float
+    recent: float
+    drop: float
+    attempts: list[DeclineAttemptResponse]
+    latest_attempt_at: datetime
+    message: str
 
 
 class DashboardTopicTrend(BaseModel):
@@ -49,6 +72,7 @@ class DashboardResponse(BaseModel):
     mastery_history: list[DashboardMasteryHistoryPoint]
     has_mastery_data: bool
     weak_topics: list[WeakTopic]
+    alerts: list[DeclineAlertResponse] = Field(default_factory=list)
     predicted_grade: str
     target_grade: str
     gap_to_target: float

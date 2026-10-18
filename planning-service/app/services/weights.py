@@ -45,6 +45,11 @@ ACHIEVABILITY_GRADE_THRESHOLDS = {
     "F": 0.0,
 }
 
+DECLINE_THRESHOLD = 0.20
+DECLINE_RECENT_ATTEMPTS = 3
+DECLINE_BASELINE_ATTEMPTS = 2
+DECLINE_PRIORITY_BOOST = 0.20
+
 
 def weights_sum_to_one(weights: dict[str, float]) -> bool:
     return abs(sum(weights.values()) - 1.0) < 1e-9

@@ -154,6 +154,22 @@ export interface WeakTopic {
   reason: string;
 }
 
+export interface DeclineAlert {
+  topic_id: string;
+  baseline: number;
+  recent: number;
+  drop: number;
+  attempts: {
+    score: number;
+    max_score: number;
+    attempted_at: string;
+    paper_id: string | null;
+    question_id: string | null;
+  }[];
+  latest_attempt_at: string;
+  message: string;
+}
+
 export interface DashboardResponse {
   minimum_assessed_topics: number;
   exam_countdown_days: number;
@@ -165,6 +181,7 @@ export interface DashboardResponse {
   mastery_history: DashboardMasteryHistoryPoint[];
   has_mastery_data: boolean;
   weak_topics: WeakTopic[];
+  alerts: DeclineAlert[];
   predicted_grade: string;
   target_grade: string;
   gap_to_target: number;

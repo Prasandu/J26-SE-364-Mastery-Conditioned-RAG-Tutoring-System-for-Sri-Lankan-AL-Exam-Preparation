@@ -287,6 +287,13 @@ and the dashboard uses target grade `B` until a plan sets another target.
 `mastery_trend` contains current per-topic mastery and stored trend signals.
 `mastery_history` contains weekly mastery snapshots recomputed from assessment
 evidence through each week; sparse evidence may result in no chartable trend.
+`alerts` contains up to five current decline alerts, newest evidence first.
+Each alert compares the mean of the most recent three attempts against the
+best available earlier baseline and appears when the drop meets the configured
+`DECLINE_THRESHOLD` (default 0.20). Alerts are recalculated from current
+evidence, so new attempts can create or clear them. The scheduler boosts
+declining topics and creates `recovery_revision` sessions whose reason
+recommends revision before topic questions.
 When a plan exists, `achievability` returns the same estimate included in the
 plan response. The scheduler allocates the available horizon to topics by
 estimated exam-score gain per hour, while applying prerequisite constraints.

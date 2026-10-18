@@ -179,6 +179,46 @@ def test_dashboard_builds_weekly_mastery_history_from_assessment_evidence() -> N
     assert response.mastery_history[0].mastery != response.mastery_history[1].mastery
 
 
+def test_dashboard_includes_newest_decline_alerts_up_to_five() -> None:
+    session = FakeDashboardSession()
+    session.evidence = [
+        SimpleNamespace(
+            topic_id=f"chem-{topic_index}",
+            score=score,
+            max_score=10,
+            difficulty=0.5,
+            confidence=0.8,
+            observed_at=datetime(2026, 10, 1, tzinfo=UTC)
+            + timedelta(days=attempt_index + topic_index),
+            question_id=f"q-{topic_index}-{attempt_index}",
+        )
+        for topic_index in range(7)
+        for attempt_index, score in enumerate((10, 10, 6, 5, 5))
+    ]
+    session.topics.extend(
+        SimpleNamespace(
+            id=f"chem-{topic_index}",
+            name=f"Topic {topic_index}",
+            parent_id=None,
+            exam_weight=0.5,
+            prerequisites=[],
+        )
+        for topic_index in range(7)
+    )
+
+    response = get_dashboard(
+        session,
+        "student-1",
+        as_of=datetime(2026, 10, 10, tzinfo=UTC),
+    )
+
+    assert len(response.alerts) == 5
+    assert [alert.topic_id for alert in response.alerts] == [
+        f"chem-{topic_index}" for topic_index in range(6, 1, -1)
+    ]
+    assert all(alert.drop >= 0.2 for alert in response.alerts)
+
+
 def test_what_if_projection_never_drops_below_current_prediction() -> None:
     session = FakeDashboardSession()
 

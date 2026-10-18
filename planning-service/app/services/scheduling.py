@@ -7,10 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.errors import ConstraintViolation, NotFound
-from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic
+from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic, TopicEvidence
 from app.schemas.plans import FixedCommitment
 from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
 from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
+from app.services.decline import detect_decline
 from app.services.priority import LearningProfile, choose_activity
 from app.services.scheduler import (
     FixedCommitment as SchedulerCommitment,
@@ -20,6 +21,7 @@ from app.services.scheduler import (
     TimeWindow,
     schedule_tasks,
 )
+from app.services.weights import DECLINE_PRIORITY_BOOST
 
 
 def generate_plan_schedule(
@@ -246,6 +248,21 @@ def _ranked_topics(
             select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
         ).all()
     }
+    evidence_by_topic: dict[str, list[dict[str, Any]]] = {}
+    for evidence in session.scalars(
+        select(TopicEvidence)
+        .where(TopicEvidence.student_id == student_id)
+        .order_by(TopicEvidence.observed_at)
+    ).all():
+        evidence_by_topic.setdefault(evidence.topic_id, []).append(
+            {
+                "score": evidence.score,
+                "max_score": evidence.max_score,
+                "attempted_at": evidence.observed_at,
+                "paper_id": getattr(evidence, "paper_id", None),
+                "question_id": getattr(evidence, "question_id", None),
+            }
+        )
     ranked: list[RankedTopic] = []
     for item in priorities:
         topic_id = item["topic_id"]
@@ -267,6 +284,11 @@ def _ranked_topics(
             "prerequisite_mastery": prerequisite_mastery,
         }
         expected_priority = expected_gain_per_hour(gain_input)
+        decline = detect_decline(
+            topic_id,
+            evidence_by_topic.get(topic_id, []),
+            topic_name=getattr(topic, "name", None),
+        )
         if state is None:
             profile = LearningProfile(studied=False, theory_completed=False, mastery=0)
         else:
@@ -277,17 +299,28 @@ def _ranked_topics(
                 repeated_errors=2 if state.error_rate >= 0.4 else 0,
                 review_due=state.next_review_at is not None and state.next_review_at <= as_of,
             )
-        activity = choose_activity(profile)
+        activity = "recovery_revision" if decline is not None else choose_activity(profile)
         ranked.append(
             RankedTopic(
                 topic_id=topic_id,
                 activity=activity,
-                priority=max(expected_priority, priority_overrides.get(topic_id, 0.0)),
+                priority=min(
+                    max(
+                        expected_priority
+                        + (DECLINE_PRIORITY_BOOST if decline is not None else 0),
+                        priority_overrides.get(topic_id, 0.0),
+                    ),
+                    1.0,
+                ),
                 duration_minutes=duration_overrides.get(
                     topic_id,
                     constraints["max_session_minutes"] * 2,
                 ),
-                reason=item.get("reason", f"Scheduled from priority {item['priority']:.2f}."),
+                reason=(
+                    f"Recovery revision first, then questions from this topic. {decline.message}"
+                    if decline is not None
+                    else item.get("reason", f"Scheduled from priority {item['priority']:.2f}.")
+                ),
                 prerequisites=tuple(
                     prerequisite
                     for prerequisite in topic.prerequisites

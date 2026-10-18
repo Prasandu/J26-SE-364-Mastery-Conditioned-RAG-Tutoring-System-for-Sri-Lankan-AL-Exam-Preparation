@@ -15,6 +15,7 @@ from app.models import (
     TopicEvidence,
 )
 from app.schemas.dashboard import DashboardResponse, WhatIfInput, WhatIfResponse
+from app.services.decline import detect_declines
 from app.services.mastery import EvidenceObservation, compute_mastery
 from app.services.plans import build_plan_achievability
 from app.services.predictions import MINIMUM_ASSESSED_TOPICS
@@ -79,6 +80,26 @@ def get_dashboard(
     for row in evidence_rows:
         history_by_topic[row.topic_id].append(row)
     mastery_history = _build_mastery_history(history_by_topic, topics_by_id, now)
+    decline_alerts = detect_declines(
+        {
+            topic_id: [
+                {
+                    "score": row.score,
+                    "max_score": row.max_score,
+                    "attempted_at": row.observed_at,
+                    "paper_id": getattr(row, "paper_id", None),
+                    "question_id": getattr(row, "question_id", None),
+                }
+                for row in rows
+            ]
+            for topic_id, rows in history_by_topic.items()
+        },
+        topic_names={
+            topic_id: topic.name
+            for topic_id, topic in topics_by_id.items()
+            if topic is not None
+        },
+    )
 
     has_prediction = prediction_score is not None or _has_overall_prediction(session, student_id)
     current_prediction = (
@@ -104,6 +125,27 @@ def get_dashboard(
         mastery_history=mastery_history,
         has_mastery_data=bool(states),
         weak_topics=weak_topics,
+        alerts=[
+            {
+                "topic_id": alert.topic_id,
+                "baseline": alert.baseline,
+                "recent": alert.recent,
+                "drop": alert.drop,
+                "attempts": [
+                    {
+                        "score": item.score,
+                        "max_score": item.max_score,
+                        "attempted_at": item.attempted_at,
+                        "paper_id": item.paper_id,
+                        "question_id": item.question_id,
+                    }
+                    for item in alert.attempts
+                ],
+                "latest_attempt_at": alert.latest_attempt_at,
+                "message": alert.message,
+            }
+            for alert in decline_alerts[:5]
+        ],
         predicted_grade=current_grade,
         target_grade=target_grade,
         gap_to_target=gap_to_target,

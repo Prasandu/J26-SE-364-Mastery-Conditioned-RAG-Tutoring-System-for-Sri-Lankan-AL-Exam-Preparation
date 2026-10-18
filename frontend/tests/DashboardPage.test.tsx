@@ -22,6 +22,7 @@ const emptyDashboard: DashboardResponse = {
   mastery_history: [],
   has_mastery_data: false,
   weak_topics: [],
+  alerts: [],
   predicted_grade: "C",
   target_grade: "B",
   gap_to_target: -0.15,
@@ -81,6 +82,17 @@ const populatedDashboard: DashboardResponse = {
       reason: "Trending downward; revisit prior mistakes.",
     },
   ],
+  alerts: [
+    {
+      topic_id: "topic-1",
+      baseline: 1,
+      recent: 0.53,
+      drop: 0.47,
+      attempts: [],
+      latest_attempt_at: "2026-10-17T00:00:00Z",
+      message: "Your recent scores in Sub-topic have declined.",
+    },
+  ],
   predicted_grade: "B",
   predicted_score: 0.7,
   readiness_score: 0.7,
@@ -128,6 +140,9 @@ describe("PlanningDashboardPage", () => {
     expect(screen.getAllByText("Sub-topic").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Trending downward; revisit prior mistakes."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Your recent scores in Sub-topic have declined."),
     ).toBeInTheDocument();
     expect(screen.getByText("70%")).toBeInTheDocument();
     expect(screen.getByText("65% required")).toBeInTheDocument();

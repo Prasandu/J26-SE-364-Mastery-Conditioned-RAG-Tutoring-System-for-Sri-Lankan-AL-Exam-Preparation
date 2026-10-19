@@ -1,43 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useState } from "react";
+import { ConsultationPage } from "./pages/ConsultationPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { ProblemSolvingPage } from "./pages/ProblemSolvingPage";
+import { ReportPage } from "./pages/ReportPage";
+import { TutorPage } from "./pages/TutorPage";
 
-type HealthResponse = {
-  status: string
-  app_name: string
-  environment: string
-}
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+type Tab = "chat" | "practice" | "dashboard" | "consultation" | "report";
 
 function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [tab, setTab] = useState<Tab>("chat");
 
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/api/v1/health`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-        return res.json()
-      })
-      .then(setHealth)
-      .catch((err) => setError(err.message))
-  }, [])
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "chat", label: "Chat" },
+    { key: "practice", label: "Practice" },
+    { key: "dashboard", label: "Dashboard" },
+    { key: "consultation", label: "Consultation" },
+    { key: "report", label: "Report" },
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-semibold mb-4">Chemistry Tutor</h1>
-        {error && <p className="text-red-600">Backend error: {error}</p>}
-        {!error && !health && <p className="text-gray-500">Checking backend...</p>}
-        {health && (
-          <div className="text-green-700">
-            <p>Status: {health.status}</p>
-            <p>{health.app_name}</p>
-            <p className="text-sm text-gray-500">{health.environment}</p>
-          </div>
-        )}
+    <div className="flex h-screen flex-col">
+      <nav className="flex gap-1 border-b bg-gray-900 px-3 py-2 print:hidden">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`rounded px-3 py-1 text-sm ${
+              tab === t.key ? "bg-gray-700 text-white" : "text-gray-300"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      <div className="flex-1 overflow-hidden">
+        {tab === "chat" && <TutorPage />}
+        {tab === "practice" && <ProblemSolvingPage />}
+        {tab === "dashboard" && <DashboardPage />}
+        {tab === "consultation" && <ConsultationPage />}
+        {tab === "report" && <ReportPage />}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

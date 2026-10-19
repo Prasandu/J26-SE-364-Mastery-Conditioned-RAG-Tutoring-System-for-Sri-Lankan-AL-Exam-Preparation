@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     hybrid_model_enabled: bool = False
     hybrid_model_stacking_weight: float = 0.35
     hybrid_model_max_history: int = 24
+    # Minutes after a session ends before an untouched task counts as missed.
+    # Set e.g. MISSED_GRACE_MINUTES=0.5 to demo the missed flow live.
+    missed_grace_minutes: float = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",

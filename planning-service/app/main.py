@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.dashboard import router as dashboard_router
 from app.api.demo import router as demo_router
 from app.api.events import router as events_router
+from app.api.notifications import router as notifications_router
 from app.api.plans import router as plans_router
 from app.api.predictions import router as predictions_router
 from app.api.students import router as students_router
@@ -28,6 +29,7 @@ register_error_handlers(app)
 app.include_router(dashboard_router)
 app.include_router(demo_router)
 app.include_router(events_router)
+app.include_router(notifications_router)
 app.include_router(plans_router)
 app.include_router(predictions_router)
 app.include_router(students_router)

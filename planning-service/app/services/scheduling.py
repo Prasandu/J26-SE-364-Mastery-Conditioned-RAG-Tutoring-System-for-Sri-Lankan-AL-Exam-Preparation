@@ -91,8 +91,13 @@ def generate_plan_schedule(
             StudyTask.status == "planned",
         )
     ).all()
+    # Sessions the student has started timing are kept and their time blocked.
+    in_progress = [
+        task for task in existing_planned if (getattr(task, "timer_state", None) or "idle") != "idle"
+    ]
     for task in existing_planned:
-        session.delete(task)
+        if task not in in_progress:
+            session.delete(task)
 
     priorities = _ranked_topics(
         session,
@@ -128,7 +133,13 @@ def generate_plan_schedule(
         end_date,
         local_zone,
     )
-    commitments = _fixed_commitments(constraints.get("fixed_commitments", []))
+    commitments = _fixed_commitments(constraints.get("fixed_commitments", [])) + [
+        SchedulerCommitment(
+            start_at=task.start_at.astimezone(UTC),
+            end_at=(task.start_at + timedelta(minutes=task.duration_min)).astimezone(UTC),
+        )
+        for task in in_progress
+    ]
     effective_minutes_by_day: dict[date, int] = {}
     for window in windows:
         duration = int((window.end_at - window.start_at).total_seconds() // 60)

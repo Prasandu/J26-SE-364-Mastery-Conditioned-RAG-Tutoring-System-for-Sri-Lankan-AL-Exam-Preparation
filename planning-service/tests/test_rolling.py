@@ -35,6 +35,7 @@ from app.services.roadmap import (
     rescheduling_horizon_days,
     schedule_limits,
 )
+from app.services.scheduler import ScheduleResult
 from app.services.task_content import build_activity_steps
 from app.services.weights import ADHERENCE_FLOOR, FINAL_WEEK_DAYS
 
@@ -627,4 +628,45 @@ def fake_roadmap() -> RoadmapResponse:
         checkpoint_due=False,
         deferred_topics=[],
         weeks=[],
+    )
+
+
+def test_replanning_keeps_sessions_being_timed_and_blocks_their_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = make_plan()
+    timed = SimpleNamespace(
+        id=uuid4(),
+        status="planned",
+        timer_state="running",
+        start_at=NOW + timedelta(hours=14),
+        duration_min=60,
+    )
+    untouched = SimpleNamespace(
+        id=uuid4(), status="planned", timer_state="idle", start_at=NOW, duration_min=60
+    )
+    session = FakeSession(plan, topics=TOPICS, slots=every_day_slots(plan.id))
+    deleted: list[Any] = []
+    session.delete = deleted.append  # type: ignore[method-assign]
+    base_scalars = _with_empty(session.scalars, Question, TopicEvidence)
+
+    def scalars(statement: Any) -> Scalars:
+        if statement.column_descriptions[0]["entity"] is StudyTask:
+            return Scalars([timed, untouched])
+        return base_scalars(statement)
+
+    session.scalars = scalars  # type: ignore[method-assign]
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        scheduling,
+        "schedule_tasks",
+        lambda **kwargs: captured.update(kwargs) or ScheduleResult((), False, 0, {}),
+    )
+
+    scheduling.generate_plan_schedule(session, "student-1", plan.id, horizon_days=7, now=NOW)  # type: ignore[arg-type]
+
+    assert deleted == [untouched]
+    assert any(
+        item.start_at == timed.start_at and item.end_at == timed.start_at + timedelta(minutes=60)
+        for item in captured["commitments"]
     )

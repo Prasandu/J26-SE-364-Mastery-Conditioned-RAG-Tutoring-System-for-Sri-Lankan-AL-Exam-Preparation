@@ -7,6 +7,8 @@ def test_all_p1_models_use_planning_schema() -> None:
         "availability_slots",
         "attempts",
         "learner_topic_state",
+        "notification_preferences",
+        "notifications",
         "papers",
         "predictions",
         "profile_embeddings",

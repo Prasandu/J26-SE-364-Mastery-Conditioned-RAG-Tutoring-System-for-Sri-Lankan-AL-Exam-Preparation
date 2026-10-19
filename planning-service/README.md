@@ -99,6 +99,29 @@ or running past local midnight, return `requires_confirmation` and are saved
 only when the student sends `confirmed_minutes`. Recording an outcome directly
 closes any active timer.
 
+## Notifications
+
+`GET /api/v1/notifications` runs a sweep and returns at most three unread
+alerts, newest first, with the total `unread_count` (NFR8). The frontend calls
+it on load and every 60 seconds, so no background job is needed.
+
+- **Reminder:** a planned session with an unused timer starts within
+  `reminder_lead_minutes` (default 10).
+- **Missed:** a session that is still untouched `MISSED_GRACE_MINUTES` (30)
+  after it ends is marked missed and re-planned once per plan with the
+  existing re-planner. The supportive alert says where the session moved, or
+  offers **Find a new time** (calls `/plans/{id}/generate`) when nothing fit.
+  Sessions overdue by more than 24 h are marked missed without an alert.
+- One alert per event (`dedupe_key`, unique per student). Reminders are
+  cleared once their session starts. During quiet hours (default 22:00–06:00
+  in the plan's timezone) nothing new is created and missed processing waits.
+- Re-planning keeps sessions whose timer has been used and blocks their time.
+
+`POST /api/v1/notifications/{id}/read` marks one read;
+`GET`/`PUT /api/v1/notifications/preferences` manage lead time, quiet hours
+and the on/off switch. For a live demo, set `MISSED_GRACE_MINUTES=0.5` and a
+1-minute reminder lead.
+
 ## Rolling-horizon planning
 
 A plan has three layers. The **roadmap** forecasts hours per topic for every

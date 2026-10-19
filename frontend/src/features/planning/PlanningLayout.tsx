@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/AuthContext";
 import LoginPanel from "../../auth/LoginPanel";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
+import NotificationBell from "./NotificationBell";
 
 const navigation = [
   { to: "/planning/setup", label: "Set up" },
@@ -58,6 +59,7 @@ function AuthenticatedPlanningLayout() {
                 {label}
               </NavLink>
             ))}
+            <NotificationBell />
             <button
               className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-ink"
               onClick={() => {

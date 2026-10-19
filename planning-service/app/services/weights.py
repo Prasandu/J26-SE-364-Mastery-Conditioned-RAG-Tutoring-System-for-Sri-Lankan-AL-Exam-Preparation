@@ -78,3 +78,8 @@ TIMER_CONFIRM_MULTIPLIER = 3  # sessions longer than this x planned duration nee
 
 def weights_sum_to_one(weights: dict[str, float]) -> bool:
     return abs(sum(weights.values()) - 1.0) < 1e-9
+
+
+# Notifications (NFR8: relevant alerts, notification restraint)
+MAX_VISIBLE_ALERTS = 3  # at most this many unread alerts are shown, newest first
+MISSED_ALERT_MAX_AGE_HOURS = 24  # older overdue tasks are marked missed without an alert

@@ -468,3 +468,63 @@ export function submitWhatIf(data: WhatIfInput) {
     body: JSON.stringify(data),
   });
 }
+
+export type NotificationType = "reminder" | "missed" | "info";
+
+export interface NotificationAction {
+  kind: "open_plan" | "reschedule";
+  label: string;
+  plan_id: string | null;
+}
+
+export interface StudyNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  task_id: string | null;
+  action: NotificationAction | null;
+  created_at: string;
+  read_at: string | null;
+}
+
+export interface NotificationListResponse {
+  notifications: StudyNotification[];
+  unread_count: number;
+  quiet_hours_active: boolean;
+}
+
+export interface NotificationPreferences {
+  reminder_lead_minutes: number;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  enabled: boolean;
+}
+
+export function getNotifications() {
+  return planningRequest<NotificationListResponse>("/api/v1/notifications");
+}
+
+export function markNotificationRead(notificationId: string) {
+  return planningRequest<StudyNotification>(
+    `/api/v1/notifications/${encodeURIComponent(notificationId)}/read`,
+    { method: "POST" },
+  );
+}
+
+export function getNotificationPreferences() {
+  return planningRequest<NotificationPreferences>(
+    "/api/v1/notifications/preferences",
+  );
+}
+
+export function updateNotificationPreferences(data: NotificationPreferences) {
+  return planningRequest<NotificationPreferences>(
+    "/api/v1/notifications/preferences",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+}

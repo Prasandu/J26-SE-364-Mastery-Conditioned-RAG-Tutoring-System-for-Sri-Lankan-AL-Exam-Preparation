@@ -7,12 +7,93 @@ from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask
 from app.services.achievability import (
     allocate_hours,
     build_achievability_report,
+    build_coaching_message,
     expected_gain_per_hour,
     learning_rate,
     projected_score_range,
     required_hours_for_target,
 )
 from app.services.scheduler import ScheduleResult
+
+
+def test_coaching_message_variants_are_safe_specific_and_under_70_words() -> None:
+    banned_words = ("out of reach", "impossible", "cannot", "fail")
+    variants = [
+        ("on_track", "on_track", "You're on track, keep your pace."),
+        ("stretch", "stretch", "A focused push can build momentum."),
+        ("out_of_reach", "ambitious", "very ambitious"),
+    ]
+    for status, tone, expected_text in variants:
+        coaching = build_coaching_message(
+            student_name="Amara",
+            days_left=62,
+            best_range="B (60–75%)",
+            target_grade="A",
+            status=status,
+            focus_topics=[
+                {"topic": f"Topic {index}", "reason": "mastery is 35%"}
+                for index in range(5)
+            ],
+            suggested_hours_per_day=2,
+        )
+        message = " ".join(
+            (
+                coaching.greeting,
+                coaching.headline,
+                coaching.body,
+                *(f"{item.topic} {item.reason}" for item in coaching.focus_topics),
+                coaching.daily_suggestion,
+            )
+        )
+
+        assert coaching.tone == tone
+        assert coaching.greeting == "Dear Amara,"
+        assert "62 days left" in coaching.body
+        assert expected_text.lower() in message.lower()
+        assert "estimated" in message.lower()
+        assert len(message.split()) < 70
+        assert len(coaching.focus_topics) == 3
+        assert all(word not in message.lower() for word in banned_words)
+
+
+def test_coaching_daily_suggestion_uses_supplied_daily_hours() -> None:
+    coaching = build_coaching_message(
+        student_name="there",
+        days_left=10,
+        best_range="C (45–60%)",
+        target_grade="A",
+        status="stretch",
+        focus_topics=[],
+        suggested_hours_per_day=3,
+    )
+
+    assert "about 3 hours a day" in coaching.daily_suggestion
+
+
+def test_coaching_message_stays_concise_with_long_focus_labels() -> None:
+    coaching = build_coaching_message(
+        student_name="A very long display name",
+        days_left=25,
+        best_range="B (60–75%)",
+        target_grade="A",
+        status="stretch",
+        focus_topics=[
+            {"topic": " ".join(["organic"] * 30), "reason": " ".join(["weak"] * 30)}
+            for _ in range(3)
+        ],
+        suggested_hours_per_day=1,
+    )
+    message = " ".join(
+        (
+            coaching.greeting,
+            coaching.headline,
+            coaching.body,
+            *(f"{item.topic} {item.reason}" for item in coaching.focus_topics),
+            coaching.daily_suggestion,
+        )
+    )
+
+    assert len(message.split()) < 70
 
 
 def test_learning_rate_has_diminishing_returns_and_prerequisite_penalty() -> None:

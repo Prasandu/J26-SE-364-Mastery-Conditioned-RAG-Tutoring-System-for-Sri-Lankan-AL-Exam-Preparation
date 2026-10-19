@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+from math import floor, isfinite
 from typing import Literal, TypedDict
 
 from app.services.weights import (
@@ -57,6 +57,99 @@ class AchievabilityReport:
     hours_gap: float
     projected_range: ScoreRange
     message: str
+
+
+@dataclass(frozen=True)
+class CoachingFocusTopic:
+    topic: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class CoachingMessage:
+    greeting: str
+    headline: str
+    body: str
+    focus_topics: tuple[CoachingFocusTopic, ...]
+    daily_suggestion: str
+    tone: Literal["on_track", "stretch", "ambitious"]
+
+
+def build_coaching_message(
+    student_name: str,
+    days_left: int,
+    best_range: str,
+    target_grade: str,
+    status: str,
+    focus_topics: list[dict[str, str]],
+    suggested_hours_per_day: float,
+) -> CoachingMessage:
+    """Build a warm, concise study message using the student's current plan."""
+    if days_left < 0:
+        raise ValueError("days_left cannot be negative.")
+    _validate_nonnegative_finite("suggested_hours_per_day", suggested_hours_per_day)
+
+    tone: Literal["on_track", "stretch", "ambitious"]
+    if status == "on_track":
+        tone = "on_track"
+        headline = "You're on track, keep your pace."
+        body = (
+            f"With {days_left} days left, keep your steady rhythm. "
+            f"Estimated best range: {best_range}; you're building toward {target_grade}."
+        )
+    elif status == "out_of_reach":
+        tone = "ambitious"
+        headline = f"Your {target_grade} target is very ambitious."
+        body = (
+            f"With {days_left} days left, effort now still raises your result. "
+            f"Aim for the estimated best range, {best_range}, as a realistic goal."
+        )
+    else:
+        tone = "stretch"
+        headline = "A focused push can build momentum."
+        body = (
+            f"With {days_left} days left, estimated best range: {best_range}. "
+            f"Consistent practice can move you closer to {target_grade}."
+        )
+
+    focus = tuple(
+        CoachingFocusTopic(
+            topic=_limit_words(item["topic"], 3),
+            reason=_limit_words(item["reason"], 3),
+        )
+        for item in focus_topics[:3]
+    )
+    daily_suggestion = _daily_suggestion(
+        suggested_hours_per_day=suggested_hours_per_day,
+    )
+    return CoachingMessage(
+        greeting=f"Dear {_limit_words(student_name.strip() or 'there', 1)},",
+        headline=_limit_words(headline, 8),
+        body=_limit_words(body, 22),
+        focus_topics=focus,
+        daily_suggestion=daily_suggestion,
+        tone=tone,
+    )
+
+
+def _daily_suggestion(*, suggested_hours_per_day: float) -> str:
+    if suggested_hours_per_day <= 0:
+        return "Use the study time available in your plan for short, focused sessions."
+    daily_minutes = floor(suggested_hours_per_day * 60 / 5) * 5
+    if daily_minutes < 5:
+        return "Try a short, focused study session whenever time is available."
+    hours, minutes = divmod(daily_minutes, 60)
+    if hours and minutes:
+        amount = f"{hours} hour{'s' if hours != 1 else ''} {minutes} minutes"
+    elif hours:
+        amount = f"{hours} hour{'s' if hours != 1 else ''}"
+    else:
+        amount = f"{minutes} minutes"
+    return f"Aim for about {amount} a day, using the time available in your plan."
+
+
+def _limit_words(value: str, maximum: int) -> str:
+    return " ".join(value.split()[:maximum])
 
 
 def learning_rate(mastery: float) -> float:

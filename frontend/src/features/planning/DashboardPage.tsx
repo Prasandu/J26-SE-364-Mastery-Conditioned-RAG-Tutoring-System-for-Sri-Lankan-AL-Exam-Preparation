@@ -26,6 +26,7 @@ import {
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
+import CoachingCard from "./CoachingCard";
 
 const chartColors = {
   brand: "#155e75",
@@ -419,32 +420,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </article>
       </div>
 
-      {dashboard.achievability ? (
-        <section
-          aria-label="Plan achievability estimate"
-          className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-semibold text-sky-950">
-              Achievability estimate ·{" "}
-              {dashboard.achievability.status.replaceAll("_", " ")}
-            </h3>
-            <span className="text-sm font-medium text-sky-900">
-              Best-range grade: {dashboard.achievability.best_range_grade}
-            </span>
-          </div>
-          <p className="mt-2 text-sm text-sky-900">
-            {dashboard.achievability.message}
-          </p>
-          <p className="mt-2 text-sm text-sky-900">
-            Estimated {dashboard.achievability.hours_needed} study hours per
-            week needed; {dashboard.achievability.hours_available} available.
-            Projected score range:{" "}
-            {percent(dashboard.achievability.projected_range.low)}–
-            {percent(dashboard.achievability.projected_range.high)}.
-          </p>
-        </section>
-      ) : null}
+      <CoachingCard message={dashboard.coaching_message} />
 
       {dashboard.alerts.length > 0 && (
         <section

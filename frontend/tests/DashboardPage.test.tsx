@@ -32,6 +32,15 @@ const emptyDashboard: DashboardResponse = {
   current_prediction: 0.5,
   has_prediction: false,
   minimum_assessed_topics: 1,
+  student_name: "there",
+  coaching_message: {
+    greeting: "Dear there,",
+    headline: "A focused push can build momentum.",
+    body: "With 0 days left, your estimated best range is C (50%).",
+    focus_topics: [],
+    daily_suggestion: "Use the study time available in your plan for short, focused sessions.",
+    tone: "stretch",
+  },
   achievability: null,
 };
 
@@ -98,6 +107,15 @@ const populatedDashboard: DashboardResponse = {
   readiness_score: 0.7,
   current_prediction: 0.7,
   has_prediction: true,
+  student_name: "Amara",
+  coaching_message: {
+    greeting: "Dear Amara,",
+    headline: "You're on track, keep your pace.",
+    body: "With 50 days left, your estimated best range is B (60–75%).",
+    focus_topics: [{ topic: "Sub-topic", reason: "mastery is 60%" }],
+    daily_suggestion: "Aim for about 1 hour a day.",
+    tone: "on_track",
+  },
 };
 
 describe("PlanningDashboardPage", () => {
@@ -146,7 +164,12 @@ describe("PlanningDashboardPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("70%")).toBeInTheDocument();
     expect(screen.getByText("65% required")).toBeInTheDocument();
-    expect(screen.getByText("Estimate")).toBeInTheDocument();
+    expect(screen.getByText("Dear Amara,")).toBeInTheDocument();
+    expect(
+      screen.getByText(/estimated best range is B/),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Sub-topic").length).toBeGreaterThan(0);
+    expect(screen.getByText("mastery is 60%")).toBeInTheDocument();
     await waitFor(() => {
       expect(
         screen.getByRole("slider", { name: /Extra study time/ }),

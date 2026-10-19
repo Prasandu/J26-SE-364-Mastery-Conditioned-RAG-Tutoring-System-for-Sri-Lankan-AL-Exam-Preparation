@@ -31,6 +31,15 @@ const plans = [
     exam_date: "2027-06-01",
     target_grade: "A",
     constraints: {},
+    student_name: "Amara",
+    coaching_message: {
+      greeting: "Dear Amara,",
+      headline: "You're on track, keep your pace.",
+      body: "With 62 days left, your estimated best range is B (60–75%).",
+      focus_topics: [{ topic: "Alkanes", reason: "mastery is 35%" }],
+      daily_suggestion: "Aim for about 1 hour a day.",
+      tone: "on_track" as const,
+    },
   },
   {
     id: "older-plan",
@@ -38,6 +47,15 @@ const plans = [
     exam_date: "2027-04-01",
     target_grade: "B",
     constraints: {},
+    student_name: "Amara",
+    coaching_message: {
+      greeting: "Dear Amara,",
+      headline: "A focused push can build momentum.",
+      body: "With 62 days left, your estimated best range is C (45–60%).",
+      focus_topics: [],
+      daily_suggestion: "Aim for about 1 hour a day.",
+      tone: "stretch" as const,
+    },
   },
 ];
 
@@ -94,6 +112,9 @@ describe("PlanningPage", () => {
     expect(
       screen.getByText("Exam date: 2027-06-01 · Target grade: A"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Dear Amara,")).toBeInTheDocument();
+    expect(screen.getByText(/Alkanes:/)).toBeInTheDocument();
+    expect(screen.getByText("mastery is 35%")).toBeInTheDocument();
 
     fireEvent.change(selector, { target: { value: "older-plan" } });
     expect(selector).toHaveValue("older-plan");

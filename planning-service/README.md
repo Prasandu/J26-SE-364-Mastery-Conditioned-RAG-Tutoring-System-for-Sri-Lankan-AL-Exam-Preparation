@@ -92,6 +92,11 @@ incorrectly and then unattempted questions. New and low-mastery topics include
 theory time; declining topics include a review step. The tasks API returns
 these fields alongside the original reason string.
 
+Plan and dashboard responses also include `student_name` and a structured
+`coaching_message`. It addresses the learner by their verified Supabase
+profile name (or email prefix fallback), gives a realistic estimate and focus
+topics, and suggests a daily study pace bounded by their plan availability.
+
 These endpoints require a Supabase Auth bearer token. Replanned tasks point to
 their original task through `replanned_from`; replan actions are recorded in
 `replan_log`. Run `alembic upgrade head` after updating to add the nullable

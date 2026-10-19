@@ -202,7 +202,17 @@ Lists the authenticated student's plans or returns one owned plan. A missing
 or other student's plan returns 404. Each plan includes an `achievability`
 estimate with `status`, `best_range_grade`, `hours_needed`, `hours_available`,
 `hours_gap`, `projected_range` (`low`, `expected`, `high`), and an encouraging
-estimate message.
+estimate message. It also includes `student_name` and a structured
+`coaching_message` with `greeting`, `headline`, `body`, the top three
+`focus_topics` and their reasons, a `daily_suggestion`, and a `tone`.
+The greeting uses the first name from verified Supabase user metadata, falling
+back to the capitalized email prefix and then `there`. Coaching always uses
+the plan's actual remaining days, labels the score interval as an estimate,
+and keeps the suggested daily effort within weekly plan availability.
+
+`GET /api/v1/dashboard` returns the same `student_name` and
+`coaching_message`. Without an exam plan, the coaching uses the actual
+countdown (zero when there is no planned exam) and available mastery topics.
 
 ### PUT `/api/v1/plans/{plan_id}`
 

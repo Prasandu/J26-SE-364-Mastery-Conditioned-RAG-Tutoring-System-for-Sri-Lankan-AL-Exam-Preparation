@@ -19,11 +19,18 @@ from app.schemas.plans import PlanInput
 from app.services.achievability import (
     TopicInput,
     build_achievability_report,
+    build_coaching_message,
     expected_gain_per_hour,
 )
 
 
-def create_plan(session: Session, student_id: str, data: PlanInput) -> dict[str, Any]:
+def create_plan(
+    session: Session,
+    student_id: str,
+    data: PlanInput,
+    *,
+    student_name: str = "there",
+) -> dict[str, Any]:
     _validate_topic_ids(session, data.topics)
     constraints = _build_constraints(session, student_id, data)
     plan = StudyPlan(
@@ -51,24 +58,44 @@ def create_plan(session: Session, student_id: str, data: PlanInput) -> dict[str,
         )
     )
     session.commit()
-    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
+    return _plan_response(
+        plan,
+        build_plan_achievability(session, student_id, plan, student_name=student_name),
+    )
 
 
-def list_plans(session: Session, student_id: str) -> list[dict[str, Any]]:
+def list_plans(
+    session: Session,
+    student_id: str,
+    *,
+    student_name: str = "there",
+) -> list[dict[str, Any]]:
     plans = session.scalars(
         select(StudyPlan)
         .where(StudyPlan.student_id == student_id)
         .order_by(StudyPlan.created_at.desc(), StudyPlan.id.desc())
     ).all()
     return [
-        _plan_response(plan, build_plan_achievability(session, student_id, plan))
+        _plan_response(
+            plan,
+            build_plan_achievability(session, student_id, plan, student_name=student_name),
+        )
         for plan in plans
     ]
 
 
-def get_plan(session: Session, student_id: str, plan_id: UUID) -> dict[str, Any]:
+def get_plan(
+    session: Session,
+    student_id: str,
+    plan_id: UUID,
+    *,
+    student_name: str = "there",
+) -> dict[str, Any]:
     plan = _owned_plan(session, student_id, plan_id)
-    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
+    return _plan_response(
+        plan,
+        build_plan_achievability(session, student_id, plan, student_name=student_name),
+    )
 
 
 def update_plan(
@@ -76,6 +103,8 @@ def update_plan(
     student_id: str,
     plan_id: UUID,
     data: PlanInput,
+    *,
+    student_name: str = "there",
 ) -> dict[str, Any]:
     plan = _owned_plan(session, student_id, plan_id)
     _validate_topic_ids(session, data.topics)
@@ -111,7 +140,10 @@ def update_plan(
             )
         )
     session.commit()
-    return _plan_response(plan, build_plan_achievability(session, student_id, plan))
+    return _plan_response(
+        plan,
+        build_plan_achievability(session, student_id, plan, student_name=student_name),
+    )
 
 
 def build_plan_achievability(
@@ -119,8 +151,10 @@ def build_plan_achievability(
     student_id: str,
     plan: StudyPlan,
     *,
+    student_name: str = "there",
     current_score: float | None = None,
     evidence_count: int | None = None,
+    as_of: datetime | None = None,
 ) -> dict[str, Any]:
     states = session.scalars(
         select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
@@ -129,6 +163,7 @@ def build_plan_achievability(
     priorities = plan.constraints.get("priorities", [])
     topic_ids = [item["topic_id"] for item in priorities]
     topics: list[TopicInput] = []
+    focus_topics: list[tuple[float, dict[str, str]]] = []
     for topic_id in topic_ids:
         topic = session.get(Topic, topic_id)
         if topic is None:
@@ -146,6 +181,27 @@ def build_plan_achievability(
                     if prerequisite in state_by_id
                 },
             }
+        )
+        mastery = float(state.mastery) if state is not None else 0.0
+        trend = float(getattr(state, "trend", 0)) if state is not None else 0.0
+        if trend < -0.01:
+            reason = "recent mastery is declining"
+        elif mastery < 0.45:
+            reason = f"mastery is {round(mastery * 100)}%"
+        elif float(topic.exam_weight or 0) >= 0.65:
+            reason = "high exam weight"
+        else:
+            reason = "steady practice will strengthen recall"
+        parent_id = getattr(topic, "parent_id", None)
+        parent = session.get(Topic, parent_id) if parent_id else None
+        name = getattr(topic, "name", topic_id)
+        if parent is not None:
+            name = f"{getattr(parent, 'name', topic_id)}, {name}"
+        focus_topics.append(
+            (
+                expected_gain_per_hour(topics[-1]),
+                {"topic": name, "reason": reason},
+            )
         )
     if current_score is None:
         weights = [item["exam_weight"] for item in topics]
@@ -178,7 +234,8 @@ def build_plan_achievability(
         / 60
         for slot in slots
     )
-    days_remaining = max((plan.exam_date - datetime.now(UTC).date()).days, 0)
+    now = (as_of or datetime.now(UTC)).astimezone(UTC)
+    days_remaining = max((plan.exam_date - now.date()).days, 0)
     report = build_achievability_report(
         current=current_score,
         target_grade=plan.target_grade,
@@ -187,7 +244,32 @@ def build_plan_achievability(
         hours_available=hours_available,
         evidence_count=evidence_count,
     )
-    return asdict(report)
+    ordered_focus_topics = [
+        topic
+        for _, topic in sorted(focus_topics, key=lambda item: item[0], reverse=True)[:3]
+    ]
+    suggested_hours_per_day = min(
+        max(report.hours_needed / 7, min(report.hours_available / 7, 1.5)),
+        report.hours_available / 7,
+    )
+    coaching = build_coaching_message(
+        student_name=student_name,
+        days_left=days_remaining,
+        best_range=(
+            f"{report.best_range_grade} "
+            f"({round(report.projected_range.low * 100)}–"
+            f"{round(report.projected_range.high * 100)}%)"
+        ),
+        target_grade=plan.target_grade,
+        status=report.status,
+        focus_topics=ordered_focus_topics,
+        suggested_hours_per_day=suggested_hours_per_day,
+    )
+    return {
+        **asdict(report),
+        "student_name": student_name,
+        "coaching_message": asdict(coaching),
+    }
 
 
 def _validate_topic_ids(session: Session, topic_ids: list[str]) -> None:
@@ -284,11 +366,18 @@ def _plan_snapshot(data: PlanInput, constraints: dict[str, Any]) -> dict[str, An
 
 
 def _plan_response(plan: StudyPlan, achievability: dict[str, Any]) -> dict[str, Any]:
+    report = {
+        key: value
+        for key, value in achievability.items()
+        if key not in {"student_name", "coaching_message"}
+    }
     return {
         "id": str(plan.id),
         "mode": plan.mode,
         "exam_date": plan.exam_date,
         "target_grade": plan.target_grade,
         "constraints": plan.constraints,
-        "achievability": achievability,
+        "student_name": achievability["student_name"],
+        "coaching_message": achievability["coaching_message"],
+        "achievability": report,
     }

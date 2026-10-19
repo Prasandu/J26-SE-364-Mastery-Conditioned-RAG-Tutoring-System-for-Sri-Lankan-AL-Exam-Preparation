@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import asdict
 from datetime import UTC, datetime, time, timedelta
 from math import isfinite
 
@@ -15,6 +16,7 @@ from app.models import (
     TopicEvidence,
 )
 from app.schemas.dashboard import DashboardResponse, WhatIfInput, WhatIfResponse
+from app.services.achievability import build_coaching_message
 from app.services.decline import detect_declines
 from app.services.mastery import EvidenceObservation, compute_mastery
 from app.services.plans import build_plan_achievability
@@ -27,6 +29,7 @@ def get_dashboard(
     *,
     as_of: datetime | None = None,
     prediction_score: float | None = None,
+    student_name: str = "there",
 ) -> DashboardResponse:
     now = (as_of or datetime.now(UTC)).astimezone(UTC)
     plans = _all(session, select(StudyPlan).where(StudyPlan.student_id == student_id))
@@ -113,6 +116,30 @@ def get_dashboard(
     gap_to_target = current_prediction - target_score
     grade_gap_to_target = gap_to_target
     readiness_score = current_prediction
+    if plan is not None:
+        achievability = build_plan_achievability(
+            session,
+            student_id,
+            plan,
+            student_name=student_name,
+            current_score=current_prediction,
+            evidence_count=len(evidence_rows),
+            as_of=now,
+        )
+        coaching_message = achievability["coaching_message"]
+    else:
+        coaching_message = asdict(build_coaching_message(
+            student_name=student_name,
+            days_left=exam_countdown_days,
+            best_range=f"{current_grade} ({round(current_prediction * 100)}%)",
+            target_grade=target_grade,
+            status="stretch",
+            focus_topics=[
+                {"topic": item["topic_name"] or item["topic_id"], "reason": item["reason"]}
+                for item in weak_topics
+            ],
+            suggested_hours_per_day=0,
+        ))
 
     return DashboardResponse(
         minimum_assessed_topics=MINIMUM_ASSESSED_TOPICS,
@@ -154,14 +181,14 @@ def get_dashboard(
         readiness_score=readiness_score,
         current_prediction=current_prediction,
         has_prediction=has_prediction,
+        student_name=student_name,
+        coaching_message=coaching_message,
         achievability=(
-            build_plan_achievability(
-                session,
-                student_id,
-                plan,
-                current_score=current_prediction,
-                evidence_count=len(evidence_rows),
-            )
+            {
+                key: value
+                for key, value in achievability.items()
+                if key not in {"student_name", "coaching_message"}
+            }
             if plan is not None
             else None
         ),

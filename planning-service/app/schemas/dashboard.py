@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.schemas.plans import AchievabilityReportResponse
+from app.schemas.plans import AchievabilityReportResponse, CoachingMessageResponse
 
 
 class DeclineAttemptResponse(BaseModel):
@@ -81,6 +81,8 @@ class DashboardResponse(BaseModel):
     readiness_score: float
     current_prediction: float
     has_prediction: bool
+    student_name: str = "there"
+    coaching_message: CoachingMessageResponse
     achievability: AchievabilityReportResponse | None = None
 
 

@@ -3,10 +3,15 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends, FastAPI
+from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.testclient import TestClient
 
 from app.config import settings
-from app.security import get_student_id, require_api_key
+from app.security import (
+    _student_identity_from_credentials,
+    get_student_id,
+    require_api_key,
+)
 
 app = FastAPI()
 
@@ -42,6 +47,50 @@ def test_student_endpoint_accepts_valid_supabase_token(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json() == {"student_id": "student-123"}
+
+
+def test_student_identity_uses_metadata_display_name_first(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.security.decode_supabase_token",
+        lambda _token: {
+            "sub": "student-123",
+            "email": "emailprefix@example.com",
+            "user_metadata": {"display_name": "Amara Perera"},
+        },
+    )
+
+    identity = _student_identity_from_credentials(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+    )
+
+    assert identity.student_id == "student-123"
+    assert identity.first_name == "Amara"
+
+
+def test_student_identity_falls_back_to_capitalized_email_prefix(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.security.decode_supabase_token",
+        lambda _token: {"sub": "student-123", "email": "nimal.perera@example.com"},
+    )
+
+    identity = _student_identity_from_credentials(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+    )
+
+    assert identity.first_name == "Nimal.perera"
+
+
+def test_student_identity_falls_back_to_there_without_profile_name(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.security.decode_supabase_token",
+        lambda _token: {"sub": "student-123"},
+    )
+
+    identity = _student_identity_from_credentials(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+    )
+
+    assert identity.first_name == "there"
 
 
 def test_student_endpoint_prefers_supabase_jwks(monkeypatch) -> None:

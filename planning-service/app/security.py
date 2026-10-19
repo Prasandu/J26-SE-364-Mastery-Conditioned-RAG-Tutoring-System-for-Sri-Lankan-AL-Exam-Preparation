@@ -1,4 +1,5 @@
 import hmac
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated
 
@@ -9,6 +10,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@dataclass(frozen=True)
+class StudentIdentity:
+    student_id: str
+    first_name: str
 
 
 def _jwks_url() -> str:
@@ -52,6 +59,21 @@ def get_student_id(
         Depends(bearer_scheme),
     ],
 ) -> str:
+    return _student_identity_from_credentials(credentials).student_id
+
+
+def get_student_identity(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
+) -> StudentIdentity:
+    return _student_identity_from_credentials(credentials)
+
+
+def _student_identity_from_credentials(
+    credentials: HTTPAuthorizationCredentials | None,
+) -> StudentIdentity:
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -90,7 +112,24 @@ def get_student_id(
             detail="Bearer token does not identify a student.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return student_id
+    metadata = claims.get("user_metadata")
+    display_name = ""
+    if isinstance(metadata, dict):
+        display_name = next(
+            (
+                value.strip()
+                for key in ("display_name", "full_name", "name")
+                if isinstance((value := metadata.get(key)), str) and value.strip()
+            ),
+            "",
+        )
+    if display_name:
+        first_name = display_name.split()[0]
+    else:
+        email = claims.get("email")
+        prefix = email.partition("@")[0] if isinstance(email, str) else ""
+        first_name = prefix.capitalize() if prefix else "there"
+    return StudentIdentity(student_id=student_id, first_name=first_name)
 
 
 def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:

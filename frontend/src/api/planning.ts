@@ -57,7 +57,21 @@ export interface PlanResponse {
   exam_date: string;
   target_grade: string;
   constraints: Record<string, unknown>;
+  student_name: string;
+  coaching_message: CoachingMessage;
   achievability?: AchievabilityReport | null;
+}
+
+export interface CoachingMessage {
+  greeting: string;
+  headline: string;
+  body: string;
+  focus_topics: {
+    topic: string;
+    reason: string;
+  }[];
+  daily_suggestion: string;
+  tone: "on_track" | "stretch" | "ambitious";
 }
 
 export interface AchievabilityReport {
@@ -215,6 +229,8 @@ export interface DashboardResponse {
   readiness_score: number;
   current_prediction: number;
   has_prediction: boolean;
+  student_name: string;
+  coaching_message: CoachingMessage;
   achievability: AchievabilityReport | null;
 }
 

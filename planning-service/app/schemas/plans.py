@@ -115,12 +115,28 @@ class AchievabilityReportResponse(BaseModel):
     message: str
 
 
+class CoachingFocusTopicResponse(BaseModel):
+    topic: str
+    reason: str
+
+
+class CoachingMessageResponse(BaseModel):
+    greeting: str
+    headline: str
+    body: str
+    focus_topics: list[CoachingFocusTopicResponse]
+    daily_suggestion: str
+    tone: Literal["on_track", "stretch", "ambitious"]
+
+
 class PlanResponse(BaseModel):
     id: str
     mode: Literal["manual", "predicted"]
     exam_date: date
     target_grade: str
     constraints: dict
+    student_name: str = "there"
+    coaching_message: CoachingMessageResponse
     achievability: AchievabilityReportResponse | None = None
 
 

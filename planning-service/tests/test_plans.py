@@ -11,7 +11,7 @@ from app.db import get_db
 from app.main import app
 from app.models import AvailabilitySlot, LearnerTopicState, ReplanLog, StudyPlan, StudyTask, Topic
 from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
-from app.security import get_student_id
+from app.security import StudentIdentity, get_student_id, get_student_identity
 
 
 class Result:
@@ -95,6 +95,7 @@ def session() -> FakeSession:
 def client(session: FakeSession) -> Generator[TestClient]:
     app.dependency_overrides[get_db] = lambda: session
     app.dependency_overrides[get_student_id] = lambda: "student-1"
+    app.dependency_overrides[get_student_identity] = lambda: StudentIdentity("student-1", "there")
     try:
         yield TestClient(app)
     finally:
@@ -135,6 +136,8 @@ def test_create_plan_persists_constraints_slots_and_audit_log(
 
     assert response.status_code == 201
     assert response.json()["mode"] == "manual"
+    assert response.json()["student_name"] == "there"
+    assert response.json()["coaching_message"]["greeting"] == "Dear there,"
     assert response.json()["constraints"]["priorities"] == [
         {
             "topic_id": "chem-u1",

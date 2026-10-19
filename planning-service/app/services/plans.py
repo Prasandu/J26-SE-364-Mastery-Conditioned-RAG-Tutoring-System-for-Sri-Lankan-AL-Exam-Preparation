@@ -24,6 +24,7 @@ from app.services.achievability import (
     expected_gain_per_hour,
 )
 from app.services.roadmap import build_and_store_roadmap, set_rolling_state
+from app.services.topic_lookup import preload_topics
 
 
 def create_plan(
@@ -168,6 +169,7 @@ def build_plan_achievability(
     evidence_count: int | None = None,
     as_of: datetime | None = None,
 ) -> dict[str, Any]:
+    preload_topics(session)
     states = session.scalars(
         select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
     ).all()
@@ -285,6 +287,7 @@ def build_plan_achievability(
 
 
 def _validate_topic_ids(session: Session, topic_ids: list[str]) -> None:
+    preload_topics(session)
     unknown = [topic_id for topic_id in topic_ids if session.get(Topic, topic_id) is None]
     if unknown:
         raise ConstraintViolation(f"Unknown topic_ids: {', '.join(unknown)}")

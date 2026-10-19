@@ -40,6 +40,7 @@ from app.services.achievability import (
     expected_gain_per_hour,
     grade_for,
 )
+from app.services.topic_lookup import preload_topics
 from app.services.weights import (
     ADHERENCE_FLOOR,
     COMPRESSED_SESSION_FACTOR,
@@ -321,6 +322,7 @@ def plan_topic_inputs(
     student_id: str,
     plan: StudyPlan,
 ) -> tuple[list[TopicInput], dict[str, str]]:
+    preload_topics(session)
     states = {
         state.topic_id: state
         for state in session.scalars(

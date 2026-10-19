@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 
 from app.services.decline import DeclineAlert
-from app.services.scheduling import _question_ids_for_topic
+from app.services.scheduling import _question_ids_by_topic
 from app.services.task_content import build_activity_steps, build_task_reason
 
 
@@ -81,6 +81,7 @@ def test_question_selection_prefers_wrong_then_unattempted_questions() -> None:
         SimpleNamespace(question_id="correct", topic_id="alkanes", sub_topic_id=None),
         SimpleNamespace(question_id="unattempted", topic_id="alkanes", sub_topic_id=None),
         SimpleNamespace(question_id="wrong", topic_id="alkanes", sub_topic_id=None),
+        SimpleNamespace(question_id="sub", topic_id="organic", sub_topic_id="alkenes"),
     ]
     evidence = [
         SimpleNamespace(question_id="correct", score=5, max_score=5),
@@ -95,8 +96,8 @@ def test_question_selection_prefers_wrong_then_unattempted_questions() -> None:
             values = next(self.results)
             return SimpleNamespace(all=lambda: values)
 
-    assert _question_ids_for_topic(FakeSession(), "student-1", "alkanes") == (
-        "wrong",
-        "unattempted",
-        "correct",
-    )
+    # One batch of two queries serves every topic, including sub-topics.
+    assert _question_ids_by_topic(FakeSession(), "student-1", ["alkanes", "alkenes"]) == {
+        "alkanes": ("wrong", "unattempted", "correct"),
+        "alkenes": ("sub",),
+    }

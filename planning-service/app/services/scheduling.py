@@ -50,6 +50,7 @@ from app.services.task_content import (
     build_task_reason,
 )
 from app.services.task_views import scheduled_task_response
+from app.services.topic_lookup import preload_topics
 from app.services.weights import (
     DECLINE_PRIORITY_BOOST,
     ERROR_REVIEW_RECENT_ATTEMPTS,
@@ -324,6 +325,7 @@ def _ranked_topics(
     priorities = constraints.get("priorities", [])
     if not priorities:
         raise ConstraintViolation("Plan has no topics to schedule.")
+    preload_topics(session)
     state_by_topic = {
         state.topic_id: state
         for state in session.scalars(
@@ -345,6 +347,11 @@ def _ranked_topics(
                 "question_id": getattr(evidence, "question_id", None),
             }
         )
+    question_ids_by_topic = _question_ids_by_topic(
+        session,
+        student_id,
+        [item["topic_id"] for item in priorities],
+    )
     ranked: list[RankedTopic] = []
     for item in priorities:
         topic_id = item["topic_id"]
@@ -445,7 +452,7 @@ def _ranked_topics(
             },
             activity=activity,
         )
-        question_ids = _question_ids_for_topic(session, student_id, topic_id)
+        question_ids = question_ids_by_topic.get(topic_id, ())
         ranked.append(
             RankedTopic(
                 topic_id=topic_id,
@@ -477,16 +484,22 @@ def _ranked_topics(
     return ranked
 
 
-def _question_ids_for_topic(
+def _question_ids_by_topic(
     session: Session,
     student_id: str,
-    topic_id: str,
-) -> tuple[str, ...]:
+    topic_ids: list[str],
+) -> dict[str, tuple[str, ...]]:
+    """Practice question IDs per topic: previously wrong first, then unattempted.
+
+    Two queries for all topics together, instead of two per topic.
+    """
     questions = session.scalars(
-        select(Question).where(or_(Question.topic_id == topic_id, Question.sub_topic_id == topic_id))
+        select(Question).where(
+            or_(Question.topic_id.in_(topic_ids), Question.sub_topic_id.in_(topic_ids))
+        )
     ).all()
     if not questions:
-        return ()
+        return {}
     question_ids = [question.question_id for question in questions]
     evidence = session.scalars(
         select(TopicEvidence).where(
@@ -502,16 +515,16 @@ def _question_ids_for_topic(
                 attempt_rank.get(attempt.question_id, rank),
                 rank,
             )
-    return tuple(
-        question.question_id
-        for question in sorted(
-            questions,
-            key=lambda question: (
-                attempt_rank.get(question.question_id, 1),
-                question.question_id,
-            ),
-        )
+    ordered = sorted(
+        questions,
+        key=lambda question: (attempt_rank.get(question.question_id, 1), question.question_id),
     )
+    wanted = set(topic_ids)
+    by_topic: dict[str, list[str]] = {}
+    for question in ordered:
+        for topic_id in {question.topic_id, question.sub_topic_id} & wanted:
+            by_topic.setdefault(topic_id, []).append(question.question_id)
+    return {topic_id: tuple(ids) for topic_id, ids in by_topic.items()}
 
 
 def _availability_windows(

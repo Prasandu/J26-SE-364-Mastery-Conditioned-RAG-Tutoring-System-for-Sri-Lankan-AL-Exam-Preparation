@@ -35,6 +35,7 @@ from app.services.roadmap import (
 from app.services.scheduling import generate_plan_schedule
 from app.services.task_views import scheduled_task_response
 from app.services.timer import stop_timer_for_outcome
+from app.services.topic_lookup import preload_topics
 
 
 def update_task_status(
@@ -256,6 +257,7 @@ def refresh_predicted_priorities(
 ) -> None:
     if plan.mode != "predicted":
         return
+    preload_topics(session)
     state_by_topic = {state.topic_id: state for state in states}
     priorities = plan.constraints.get("priorities", [])
     days_until_exam = (plan.exam_date - now.date()).days

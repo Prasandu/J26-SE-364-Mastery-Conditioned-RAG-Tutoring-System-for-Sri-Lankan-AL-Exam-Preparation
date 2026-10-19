@@ -229,6 +229,16 @@ tasks plus `infeasible`, `shortfall_minutes`, and `unscheduled_minutes`, so
 clients can distinguish a complete plan from one constrained by availability.
 No saved availability windows returns 422.
 
+Each task includes `reason_details` with `topic`, `sub_topic`, `mastery`,
+`trend`, optional `decline_alert`, `exam_weight`, `days_to_exam`,
+`main_factors` (factor names and numeric values), and
+`activity_recommendation`. Its ordered `steps` contain `kind`, `minutes`, and
+`question_ids`; practice question IDs come from the question bank, preferring
+previously incorrect or unattempted questions. Theory and review steps are
+included for new/low-mastery and declining topics respectively. Both fields
+are persisted and returned by generated schedules, saved-schedule reads, and
+task-status responses.
+
 ### GET `/api/v1/plans/{plan_id}/schedule`
 
 Returns all persisted sessions for the authenticated student's plan, ordered

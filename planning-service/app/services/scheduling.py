@@ -1,13 +1,22 @@
 from dataclasses import replace
 from datetime import UTC, date, datetime, time, timedelta
+from math import exp
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.errors import ConstraintViolation, NotFound
-from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic, TopicEvidence
+from app.models import (
+    AvailabilitySlot,
+    LearnerTopicState,
+    Question,
+    StudyPlan,
+    StudyTask,
+    Topic,
+    TopicEvidence,
+)
 from app.schemas.plans import FixedCommitment
 from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
 from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
@@ -21,6 +30,7 @@ from app.services.scheduler import (
     TimeWindow,
     schedule_tasks,
 )
+from app.services.task_content import build_activity_steps, build_task_reason
 from app.services.weights import DECLINE_PRIORITY_BOOST
 
 
@@ -51,6 +61,7 @@ def generate_plan_schedule(
         duration_overrides=duration_overrides or {},
         priority_overrides=priority_overrides or {},
         as_of=current,
+        exam_date=plan.exam_date,
     )
     if exam_deadline <= current:
         unscheduled = {item.topic_id: item.duration_minutes for item in priorities}
@@ -173,6 +184,15 @@ def generate_plan_schedule(
             duration_min=scheduled.duration_min,
             status="planned",
             reason=scheduled.reason,
+            reason_details=scheduled.reason_details or {},
+            steps=build_activity_steps(
+                duration_minutes=scheduled.duration_min,
+                mastery=scheduled.reason_details["mastery"],
+                studied=scheduled.studied,
+                activity=scheduled.activity,
+                declining=scheduled.declining,
+                question_ids=scheduled.question_ids,
+            ),
             replanned_from=origin_id if scheduled.topic_id not in replanned_topics else None,
         )
         if origin_id is not None:
@@ -238,6 +258,7 @@ def _ranked_topics(
     duration_overrides: dict[str, int],
     priority_overrides: dict[str, float],
     as_of: datetime,
+    exam_date: date | None = None,
 ) -> list[RankedTopic]:
     priorities = constraints.get("priorities", [])
     if not priorities:
@@ -300,18 +321,52 @@ def _ranked_topics(
                 review_due=state.next_review_at is not None and state.next_review_at <= as_of,
             )
         activity = "recovery_revision" if decline is not None else choose_activity(profile)
+        days_to_exam = max(((exam_date or as_of.date()) - as_of.date()).days, 0)
+        urgency = 1 / (1 + days_to_exam / 14)
+        days_since_revision = (
+            max((as_of - state.last_revised).total_seconds() / 86400, 0)
+            if state is not None and getattr(state, "last_revised", None) is not None
+            else None
+        )
+        forgetting_risk = 1.0 if days_since_revision is None else 1 - exp(-days_since_revision / 30)
+        effective_priority = min(
+            max(
+                expected_priority + (DECLINE_PRIORITY_BOOST if decline is not None else 0),
+                priority_overrides.get(topic_id, 0.0),
+            ),
+            1.0,
+        )
+        parent_id = getattr(topic, "parent_id", None)
+        topic_name = getattr(topic, "name", topic_id)
+        parent_topic = session.get(Topic, parent_id) if parent_id else None
+        reason_details = build_task_reason(
+            topic_name=getattr(parent_topic, "name", topic_name),
+            sub_topic_name=topic_name if parent_id else None,
+            mastery=topic_mastery,
+            trend=float(getattr(state, "trend", 0)) if state is not None else 0.0,
+            decline=decline,
+            exam_weight=float(topic.exam_weight or 0),
+            days_to_exam=days_to_exam,
+            main_factors={
+                "weakness": (
+                    float(getattr(state, "weak_score", 1 - topic_mastery))
+                    if state is not None
+                    else 1 - topic_mastery
+                ),
+                "exam_weight": float(topic.exam_weight or 0),
+                "urgency": urgency,
+                "forgetting_risk": forgetting_risk,
+                "improvement_potential": 1 - topic_mastery,
+                "priority": effective_priority,
+            },
+            activity=activity,
+        )
+        question_ids = _question_ids_for_topic(session, student_id, topic_id)
         ranked.append(
             RankedTopic(
                 topic_id=topic_id,
                 activity=activity,
-                priority=min(
-                    max(
-                        expected_priority
-                        + (DECLINE_PRIORITY_BOOST if decline is not None else 0),
-                        priority_overrides.get(topic_id, 0.0),
-                    ),
-                    1.0,
-                ),
+                priority=effective_priority,
                 duration_minutes=duration_overrides.get(
                     topic_id,
                     constraints["max_session_minutes"] * 2,
@@ -321,6 +376,10 @@ def _ranked_topics(
                     if decline is not None
                     else item.get("reason", f"Scheduled from priority {item['priority']:.2f}.")
                 ),
+                reason_details=reason_details,
+                question_ids=question_ids,
+                declining=decline is not None,
+                studied=profile.studied,
                 prerequisites=tuple(
                     prerequisite
                     for prerequisite in topic.prerequisites
@@ -332,6 +391,43 @@ def _ranked_topics(
             )
         )
     return ranked
+
+
+def _question_ids_for_topic(
+    session: Session,
+    student_id: str,
+    topic_id: str,
+) -> tuple[str, ...]:
+    questions = session.scalars(
+        select(Question).where(or_(Question.topic_id == topic_id, Question.sub_topic_id == topic_id))
+    ).all()
+    if not questions:
+        return ()
+    question_ids = [question.question_id for question in questions]
+    evidence = session.scalars(
+        select(TopicEvidence).where(
+            TopicEvidence.student_id == student_id,
+            TopicEvidence.question_id.in_(question_ids),
+        )
+    ).all()
+    attempt_rank: dict[str, int] = {}
+    for attempt in evidence:
+        rank = 0 if attempt.score < attempt.max_score else 2
+        if attempt.question_id is not None:
+            attempt_rank[attempt.question_id] = min(
+                attempt_rank.get(attempt.question_id, rank),
+                rank,
+            )
+    return tuple(
+        question.question_id
+        for question in sorted(
+            questions,
+            key=lambda question: (
+                attempt_rank.get(question.question_id, 1),
+                question.question_id,
+            ),
+        )
+    )
 
 
 def _availability_windows(
@@ -390,6 +486,8 @@ def _scheduled_response(task: StudyTask, priority: float) -> ScheduledTaskRespon
         duration_min=task.duration_min,
         status=task.status,
         reason=task.reason,
+        reason_details=getattr(task, "reason_details", None),
+        steps=getattr(task, "steps", None) or [],
         priority=priority,
         replanned_from=task.replanned_from,
     )

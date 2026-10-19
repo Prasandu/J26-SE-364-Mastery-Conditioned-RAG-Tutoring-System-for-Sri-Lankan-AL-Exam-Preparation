@@ -127,6 +127,27 @@ describe("PlanningPage", () => {
           duration_min: 45,
           status: "planned",
           reason: "Review this topic.",
+          reason_details: {
+            topic: "Organic chemistry",
+            sub_topic: "Alkanes",
+            mastery: 0.35,
+            trend: -0.2,
+            decline_alert: {
+              baseline: 1,
+              recent: 0.5,
+              drop: 0.5,
+              message: "Your last 3 papers show a decline from 10/10 to 5/10.",
+            },
+            exam_weight: 0.8,
+            days_to_exam: 62,
+            main_factors: { weakness: 0.65, urgency: 0.18 },
+            activity_recommendation: "Revise your notes, then redo questions from this topic.",
+          },
+          steps: [
+            { kind: "theory", minutes: 25, question_ids: [] },
+            { kind: "practice", minutes: 35, question_ids: ["2020-P2-Q3", "2018-P2-Q5"] },
+            { kind: "review", minutes: 10, question_ids: [] },
+          ],
           priority: 0.8,
           replanned_from: null,
         },
@@ -136,5 +157,12 @@ describe("PlanningPage", () => {
 
     expect(await screen.findByText("Practice · chem-u1")).toBeInTheDocument();
     expect(getSchedule).toHaveBeenCalledWith("newest-plan");
+    fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Organic chemistry, Alkanes")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your last 3 papers show a decline from 10/10 to 5/10."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Questions: 2020-P2-Q3, 2018-P2-Q5")).toBeInTheDocument();
   });
 });

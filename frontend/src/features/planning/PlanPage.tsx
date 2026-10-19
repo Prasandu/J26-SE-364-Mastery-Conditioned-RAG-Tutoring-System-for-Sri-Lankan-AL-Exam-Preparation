@@ -57,6 +57,24 @@ function taskTime(task: ScheduledTask): string {
   });
 }
 
+function masteryLabel(mastery: number): string {
+  if (mastery < 0.45) return "weak";
+  if (mastery < 0.75) return "developing";
+  return "strong";
+}
+
+function trendLabel(trend: number): string {
+  if (trend < -0.01) return `declining (${Math.round(Math.abs(trend) * 100)}%)`;
+  if (trend > 0.01) return `improving (${Math.round(trend * 100)}%)`;
+  return "stable";
+}
+
+function weightLabel(weight: number): string {
+  if (weight >= 0.67) return "high";
+  if (weight >= 0.34) return "medium";
+  return "low";
+}
+
 function TaskCard({
   task,
   busy,
@@ -70,6 +88,7 @@ function TaskCard({
   onPartialMinutesChange: (minutes: number) => void;
   onStatus: (task: ScheduledTask, status: TaskStatus) => void;
 }) {
+  const [showReason, setShowReason] = useState(false);
   const style =
     statusStyles[task.status] ?? "border-slate-200 bg-white text-ink";
   const actionable = task.status === "planned" && task.id !== null;
@@ -93,18 +112,104 @@ function TaskCard({
             <span className="capitalize">{task.status}</span>
           </p>
         </div>
-        <details className="group relative shrink-0">
-          <summary
-            className="cursor-pointer list-none rounded-lg border border-current/20 px-3 py-1.5 text-sm font-medium hover:bg-white/60"
-            title={task.reason}
-          >
-            Why this task?
-          </summary>
-          <p className="mt-2 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-lg sm:absolute sm:right-0 sm:z-10 sm:w-72">
-            {task.reason}
-          </p>
-        </details>
+        <button
+          className="shrink-0 rounded-lg border border-current/20 px-3 py-1.5 text-sm font-medium hover:bg-white/60"
+          onClick={() => setShowReason(true)}
+          type="button"
+        >
+          Why this task?
+        </button>
       </div>
+
+      {showReason ? (
+        <div
+          aria-labelledby={`task-reason-title-${task.id ?? task.topic_id}`}
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+          role="dialog"
+        >
+          <section className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 text-ink shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <h3
+                className="text-xl font-bold"
+                id={`task-reason-title-${task.id ?? task.topic_id}`}
+              >
+                Why this task?
+              </h3>
+              <button
+                aria-label="Close task explanation"
+                className="rounded-lg border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+                onClick={() => setShowReason(false)}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+            {task.reason_details ? (
+              <>
+                <p className="mt-4 text-sm">
+                  <span className="font-semibold">Topic:</span>{" "}
+                  {task.reason_details.topic}
+                  {task.reason_details.sub_topic
+                    ? `, ${task.reason_details.sub_topic}`
+                    : ""}
+                </p>
+                <p className="mt-2 text-sm">
+                  <span className="font-semibold">Reason:</span> Your mastery
+                  is {Math.round(task.reason_details.mastery * 100)}% (
+                  {masteryLabel(task.reason_details.mastery)}), and your trend
+                  is {trendLabel(task.reason_details.trend)}.
+                </p>
+                {task.reason_details.decline_alert ? (
+                  <p className="mt-2 text-sm">
+                    {task.reason_details.decline_alert.message}
+                  </p>
+                ) : null}
+                <p className="mt-2 text-sm">
+                  <span className="font-semibold">Exam weight:</span>{" "}
+                  {weightLabel(task.reason_details.exam_weight)} ·{" "}
+                  <span className="font-semibold">Days to exam:</span>{" "}
+                  {task.reason_details.days_to_exam}
+                </p>
+                <div className="mt-3">
+                  <p className="text-sm font-semibold">Priority factors</p>
+                  <ul className="mt-1 list-inside list-disc text-sm text-slate-700">
+                    {Object.entries(task.reason_details.main_factors).map(
+                      ([name, value]) => (
+                        <li key={name}>
+                          {name.replaceAll("_", " ")}:{" "}
+                          {Math.round(value * 100)}%
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+                <p className="mt-4 text-sm font-semibold">
+                  What to do in this slot
+                </p>
+                <p className="mt-1 text-sm">
+                  {task.reason_details.activity_recommendation}
+                </p>
+                <ol className="mt-2 list-inside list-decimal space-y-2 text-sm">
+                  {(task.steps ?? []).map((step, index) => (
+                    <li key={`${step.kind}-${index}`}>
+                      <span className="capitalize">{step.kind}</span> (
+                      {step.minutes} min)
+                      {step.question_ids.length ? (
+                        <span className="block break-words pl-6 text-slate-600">
+                          Questions: {step.question_ids.join(", ")}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              </>
+            ) : (
+              <p className="mt-4 text-sm">{task.reason}</p>
+            )}
+          </section>
+        </div>
+      ) : null}
 
       {actionable ? (
         <div className="mt-4 flex flex-col gap-2 border-t border-current/10 pt-3 sm:flex-row sm:items-center">

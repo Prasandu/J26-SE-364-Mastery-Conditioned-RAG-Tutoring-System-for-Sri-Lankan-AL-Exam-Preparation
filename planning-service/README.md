@@ -84,10 +84,18 @@ when availability is entered in a different local time zone.
   XGBoost when available (otherwise use the labeled rule fallback), and
   generate the next seven days.
 
+Each scheduled task persists a `reason_details` object (topic/sub-topic,
+mastery, trend, decline alert, exam weight, days to exam, factor values, and
+activity recommendation) and ordered `steps`. Practice steps include
+question-bank IDs, prioritizing questions the student previously answered
+incorrectly and then unattempted questions. New and low-mastery topics include
+theory time; declining topics include a review step. The tasks API returns
+these fields alongside the original reason string.
+
 These endpoints require a Supabase Auth bearer token. Replanned tasks point to
 their original task through `replanned_from`; replan actions are recorded in
 `replan_log`. Run `alembic upgrade head` after updating to add the nullable
-task outcome tracking columns.
+task outcome tracking and structured task explanation columns.
 
 ## Mastery calculations
 

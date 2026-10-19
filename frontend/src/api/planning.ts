@@ -86,8 +86,33 @@ export interface ScheduledTask {
   duration_min: number;
   status: string;
   reason: string;
+  reason_details?: TaskReason | null;
+  steps?: TaskStep[];
   priority: number;
   replanned_from: string | null;
+}
+
+export interface TaskReason {
+  topic: string;
+  sub_topic: string | null;
+  mastery: number;
+  trend: number;
+  decline_alert: {
+    baseline: number;
+    recent: number;
+    drop: number;
+    message: string;
+  } | null;
+  exam_weight: number;
+  days_to_exam: number;
+  main_factors: Record<string, number>;
+  activity_recommendation: string;
+}
+
+export interface TaskStep {
+  kind: "theory" | "practice" | "review";
+  minutes: number;
+  question_ids: string[];
 }
 
 export interface GenerateScheduleRequest {

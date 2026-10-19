@@ -57,6 +57,8 @@ class StudyTask(Base):
     duration_min: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="planned")
     reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    reason_details: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    steps: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     replanned_from: Mapped[UUID | None] = mapped_column(
         Uuid,
         ForeignKey("planning.study_tasks.id", ondelete="SET NULL"),

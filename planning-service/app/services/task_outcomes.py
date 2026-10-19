@@ -261,6 +261,8 @@ def _task_response(task: StudyTask, priority: float) -> ScheduledTaskResponse:
         duration_min=task.duration_min,
         status=task.status,
         reason=task.reason,
+        reason_details=getattr(task, "reason_details", None),
+        steps=getattr(task, "steps", None) or [],
         priority=priority,
         replanned_from=task.replanned_from,
     )

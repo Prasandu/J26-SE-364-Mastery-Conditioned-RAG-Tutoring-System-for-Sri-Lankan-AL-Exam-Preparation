@@ -34,6 +34,31 @@ class TaskStatusUpdate(BaseModel):
         return self
 
 
+class DeclineAlertDetails(BaseModel):
+    baseline: float
+    recent: float
+    drop: float
+    message: str
+
+
+class TaskReason(BaseModel):
+    topic: str
+    sub_topic: str | None = None
+    mastery: float
+    trend: float
+    decline_alert: DeclineAlertDetails | None = None
+    exam_weight: float
+    days_to_exam: int
+    main_factors: dict[str, float]
+    activity_recommendation: str
+
+
+class TaskStep(BaseModel):
+    kind: Literal["theory", "practice", "review"]
+    minutes: Annotated[int, Field(gt=0)]
+    question_ids: list[str] = Field(default_factory=list)
+
+
 class ScheduledTaskResponse(BaseModel):
     id: UUID | None = None
     topic_id: str
@@ -42,6 +67,8 @@ class ScheduledTaskResponse(BaseModel):
     duration_min: int
     status: str = "planned"
     reason: str
+    reason_details: TaskReason | None = None
+    steps: list[TaskStep] = Field(default_factory=list)
     priority: float = 0
     replanned_from: UUID | None = None
 

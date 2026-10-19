@@ -30,6 +30,10 @@ class RankedTopic:
     exam_weight: float = 0.0
     mastery: float = 0.0
     prerequisite_mastery: dict[str, float] | None = None
+    reason_details: dict | None = None
+    question_ids: tuple[str, ...] = ()
+    declining: bool = False
+    studied: bool = False
 
 
 @dataclass(frozen=True)
@@ -40,6 +44,10 @@ class ScheduledTask:
     duration_min: int
     reason: str
     priority: float
+    reason_details: dict | None = None
+    question_ids: tuple[str, ...] = ()
+    declining: bool = False
+    studied: bool = False
 
     @property
     def end_at(self) -> datetime:
@@ -157,6 +165,10 @@ class GreedyScheduler:
                     duration_min=duration,
                     reason=topic.reason,
                     priority=topic.priority,
+                    reason_details=topic.reason_details,
+                    question_ids=topic.question_ids,
+                    declining=topic.declining,
+                    studied=topic.studied,
                 ),
                 index,
             )

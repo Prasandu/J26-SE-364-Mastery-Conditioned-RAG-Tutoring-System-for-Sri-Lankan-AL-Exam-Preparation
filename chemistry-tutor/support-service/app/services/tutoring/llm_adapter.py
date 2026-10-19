@@ -26,8 +26,17 @@ class GroqProvider(LLMProvider):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
             ],
-            temperature=0.3,
-            max_tokens=800,
+            # Low (not zero — Groq doesn't guarantee fully deterministic
+            # output even at temperature=0) to reduce inconsistent
+            # answer-vs-abstain behavior on borderline-grounded questions.
+            # See docs/DEVELOPMENT_PROGRESS.md: the same question phrased
+            # two ways answered once and abstained once at temperature=0.3.
+            temperature=0.1,
+            # Raised from 800 after the correctness benchmark review found
+            # several detailed answers (worked examples, multi-part
+            # explanations) cut off mid-sentence at the old limit. See
+            # docs/DEVELOPMENT_PROGRESS.md Step 16 (continued).
+            max_tokens=1500,
         )
         return completion.choices[0].message.content
 

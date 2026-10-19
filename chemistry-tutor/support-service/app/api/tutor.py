@@ -1,6 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from app.schemas.tutor import AskRawRequest, AskRawResponse
+from app.db import get_db
+from app.schemas.tutor import AskRawRequest, AskRawResponse, AskRequest, AskResponse, Citation
+from app.services.tutoring.grounded_answer import answer_question
 from app.services.tutoring.llm_adapter import get_llm_provider
 
 router = APIRouter()
@@ -13,11 +16,28 @@ SYSTEM_PROMPT = (
 
 @router.post("/tutor/ask-raw", response_model=AskRawResponse)
 def ask_raw(request: AskRawRequest) -> AskRawResponse:
-    """Temporary ungrounded endpoint to verify the LLM adapter works end to end.
-
-    Not curriculum-grounded (no RAG retrieval yet). Replaced by
-    POST /tutor/ask once retrieval is wired in.
-    """
+    """Temporary ungrounded endpoint, kept only to compare against /tutor/ask."""
     provider = get_llm_provider()
-    answer = provider.generate_response(SYSTEM_PROMPT, request.question)
+    try:
+        answer = provider.generate_response(SYSTEM_PROMPT, request.question)
+    except Exception:
+        answer = "The AI service is temporarily unavailable. Please try again in a moment."
     return AskRawResponse(answer=answer)
+
+
+@router.post("/tutor/ask", response_model=AskResponse)
+def ask(request: AskRequest, db: Session = Depends(get_db)) -> AskResponse:
+    """Curriculum-grounded answer: retrieves relevant NIE passages, answers from
+    them only, and returns citations. Abstains if no relevant evidence is found.
+    """
+    result = answer_question(db, request.question, request.language)
+    citations = [
+        Citation(
+            document_title=c.document_title,
+            unit=c.unit,
+            section=c.section,
+            page_number=c.page_number,
+        )
+        for c in result.citations
+    ]
+    return AskResponse(answer=result.answer, citations=citations, grounded=result.grounded)

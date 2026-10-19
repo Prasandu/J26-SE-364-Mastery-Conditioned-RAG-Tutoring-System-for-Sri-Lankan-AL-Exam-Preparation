@@ -484,6 +484,94 @@
   box-shadow: var(--shadow);
 }
 
+.learning-path {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.6fr);
+  gap: var(--space-5);
+  align-items: center;
+  margin-top: var(--space-6);
+  background: linear-gradient(135deg, var(--surface), var(--brand-50));
+}
+
+.learning-path__intro,
+.mode-safety__heading {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.learning-path__intro p {
+  color: var(--ink-500);
+  margin-bottom: 0;
+}
+
+.learning-path__icon,
+.mode-safety__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  color: var(--brand-700);
+  background: var(--brand-100);
+}
+
+.learning-path__steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.learning-path__steps li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 5rem;
+  padding: var(--space-3);
+  border-left: 2px solid var(--brand-300);
+}
+
+.learning-path__steps strong {
+  color: var(--brand-700);
+  font-size: var(--text-sm);
+}
+
+.library-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.library-list .experiment-card {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.45fr) minmax(220px, 1fr) minmax(220px, 1.3fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.library-list .experiment-card__facts {
+  margin: 0;
+}
+
+.library-list .experiment-card__action {
+  white-space: nowrap;
+}
+
+.mode-safety {
+  margin-top: var(--space-5);
+}
+
+.mode-safety__heading {
+  margin-bottom: var(--space-4);
+}
+
+.prelab-safety-reminder p {
+  color: var(--ink-500);
+}
+
 .report__label {
   font-size: var(--text-lg);
   margin: 0;
@@ -637,8 +725,17 @@
 /* ---------- responsive ---------- */
 @media (max-width: 1024px) {
   .dashboard-grid,
+  .learning-path,
   .report-summary {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .library-list .experiment-card {
+    grid-template-columns: minmax(150px, 0.5fr) minmax(200px, 1fr) auto;
+  }
+
+  .library-list .experiment-card__facts {
+    grid-column: 1 / -1;
   }
 
   .mode-options,
@@ -678,5 +775,17 @@
 
   .target-banner {
     padding: var(--space-4);
+  }
+
+  .learning-path__steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .library-list .experiment-card {
+    display: block;
+  }
+
+  .library-list .experiment-card__action {
+    margin-top: var(--space-3);
   }
 }

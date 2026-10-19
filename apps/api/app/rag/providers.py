@@ -36,8 +36,21 @@ def groq_provider(settings: "Settings", timeout: float) -> GenerationProvider:
     )
 
 
+def ollama_provider(settings: "Settings") -> GenerationProvider:
+    from app.rag.ollama_provider import OllamaGenerationProvider
+
+    return OllamaGenerationProvider(
+        model=settings.ollama_model or "",
+        base_url=settings.ollama_base_url,
+        max_output_tokens=settings.llm_max_output_tokens,
+        timeout_seconds=settings.ollama_timeout_seconds,
+    )
+
+
 def build_configured_provider(settings: "Settings") -> GenerationProvider:
     kind = settings.llm_provider
+    if kind == "ollama":
+        return ollama_provider(settings)
     if kind == "groq":
         return groq_provider(settings, settings.llm_timeout_seconds)
     if kind == "failover":
@@ -67,4 +80,6 @@ def build_configured_provider(settings: "Settings") -> GenerationProvider:
 def service_timeout(settings: "Settings") -> float:
     if settings.llm_provider == "failover":
         return settings.llm_total_deadline_seconds
+    if settings.llm_provider == "ollama":
+        return settings.ollama_timeout_seconds
     return settings.llm_timeout_seconds

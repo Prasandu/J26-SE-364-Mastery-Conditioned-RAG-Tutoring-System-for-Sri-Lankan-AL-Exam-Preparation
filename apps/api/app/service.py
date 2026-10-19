@@ -113,13 +113,34 @@ class SessionService:
             raise ApiError(404, "not_found", "Experiment not found")
         return exp
 
+    def _experiment_version(
+        self, experiment_id: str, definition_version: str, assessment_version: str
+    ) -> ExperimentRecord:
+        exp = self._repos.experiments.get_version(
+            experiment_id, definition_version, assessment_version
+        )
+        if exp is None:
+            raise ApiError(
+                409,
+                "experiment_version_unavailable",
+                "The session's experiment version is no longer available",
+                details={
+                    "experimentId": experiment_id,
+                    "definitionVersion": definition_version,
+                    "assessmentVersion": assessment_version,
+                },
+            )
+        return exp
+
     def _session(
         self, principal: Principal, session_id: UUID
     ) -> tuple[SessionRecord, ExperimentRecord]:
         session = self._repos.sessions.get(session_id, principal.id)
         if session is None:
             raise ApiError(404, "not_found", "Session not found")
-        return session, self._experiment(session.experiment_id)
+        return session, self._experiment_version(
+            session.experiment_id, session.definition_version, session.assessment_version
+        )
 
     def owned_session(self, principal: Principal, session_id: UUID) -> SessionRecord:
         """The principal's own session (404 otherwise); the assistant's only view of a session."""

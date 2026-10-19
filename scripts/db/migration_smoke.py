@@ -207,6 +207,76 @@ def repository_checks(dsn: str) -> list[tuple[str, bool, str]]:
     return out
 
 
+ADMIN_EXPECT_FAIL = {
+    "audit update": "update public.admin_audit_events set hash = repeat('f', 64);",
+    "audit delete": "delete from public.admin_audit_events;",
+    "record id mismatch": (
+        "insert into public.admin_records (kind, id, version, record, integrity) values "
+        "('users', repeat('1', 32), 1, '{\"id\": \"x\", \"version\": 1}', repeat('a', 64));"
+    ),
+    "unknown record kind": (
+        "insert into public.admin_records (kind, id, version, record, integrity) values "
+        "('secrets', repeat('2', 32), 1, jsonb_build_object('id', repeat('2', 32), 'version', 1),"
+        " repeat('a', 64));"
+    ),
+}
+
+ADMIN_AS = "set role {role}; select count(*) from public.admin_records;"
+
+
+def admin_checks(dsn: str) -> list[tuple[str, bool, str]]:
+    """PostgresAdminStore against the migrated schema (synthetic records only)."""
+    import tempfile
+
+    from app.admin.store import (
+        DuplicateApproved,
+        PostgresAdminStore,
+        StoreError,
+        VersionConflict,
+        new_id,
+    )
+
+    out: list[tuple[str, bool, str]] = []
+    with tempfile.TemporaryDirectory() as uploads:
+        store = PostgresAdminStore(dsn, Path(uploads))
+        user = store.create("users", {"displayName": "Learner 1", "role": "student"})
+        out.append(("admin store: create and get", store.get("users", user["id"]) == user, ""))
+        updated = store.update("users", user["id"], 1, lambda r: {**r, "role": "teacher"})
+        out.append(("admin store: optimistic update", updated["version"] == 2, ""))
+        try:
+            store.update("users", user["id"], 1, lambda r: r)
+            out.append(("admin store: stale version rejected", False, ""))
+        except VersionConflict as exc:
+            out.append(("admin store: stale version rejected", exc.current == 2, ""))
+
+        def draft(number: int) -> dict[str, object]:
+            return {"id": new_id(), "status": "needs_review",
+                    "content": {"experimentNumber": number}}  # fmt: skip
+
+        a, b = store.create("drafts", draft(7)), store.create("drafts", draft(7))
+        store.update("drafts", a["id"], 1, lambda r: {**r, "status": "content_approved"})
+        try:
+            store.update("drafts", b["id"], 1, lambda r: {**r, "status": "content_approved"})
+            out.append(("admin store: one approved draft per number", False, ""))
+        except DuplicateApproved:
+            out.append(("admin store: one approved draft per number", True, ""))
+        doc = {"sourceSha256": "c" * 64, "kind": "guide"}
+        store.create("imports", {"id": new_id(), **doc})
+        try:
+            store.create("imports", {"id": new_id(), **doc})
+            out.append(("admin store: one import per document", False, ""))
+        except StoreError:
+            out.append(("admin store: one import per document", True, ""))
+        store.append_audit({"action": "user.created", "targetKind": "users", "targetId": None,
+                            "details": {}})  # fmt: skip
+        store.append_audit({"action": "user.updated", "targetKind": "users", "targetId": None,
+                            "details": {}})  # fmt: skip
+        events, chain_ok = store.audit()
+        out.append(("admin store: audit chain verifies", chain_ok and len(events) == 2, ""))
+        out.append(("admin store: listing", len(store.list("drafts")) == 2, ""))
+    return out
+
+
 def main() -> int:
     results: list[tuple[str, bool, str]] = []
     docker(
@@ -242,12 +312,21 @@ def main() -> int:
         tables = psql(
             "select string_agg(tablename, ',' order by tablename) from pg_tables where schemaname='public';"
         )
-        expected = "action_events,experiments,knowledge_chunks,knowledge_versions,notebooks,reports,sessions"
+        expected = ",".join(
+            [
+                "action_events", "active_catalog", "admin_audit_events", "admin_records",
+                "catalog_audit_events", "catalog_entries", "catalog_versions", "experiments",
+                "knowledge_chunks", "knowledge_versions", "notebooks", "practical_versions",
+                "reports", "sessions",
+            ]
+        )  # fmt: skip
         results.append(("tables", tables.stdout.strip() == expected, tables.stdout.strip()))
         rls = psql(
             "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity;"
         )
-        results.append(("rls enabled on 7 tables", rls.stdout.strip() == "7", rls.stdout.strip()))
+        results.append(
+            ("rls enabled on 14 tables", rls.stdout.strip() == "14", rls.stdout.strip())
+        )
         idx = psql(
             "select count(*) from pg_indexes where schemaname='public' and indexname in ('action_events_sequence_unique','action_events_idempotency_unique','reports_version_head_unique','sessions_owner_idx','knowledge_chunks_version_model_unique','knowledge_versions_one_active');"
         )
@@ -321,7 +400,15 @@ def main() -> int:
         results.append(("rejects duplicate versioned report", duplicate.returncode != 0, ""))
 
         port = docker("port", NAME, "5432/tcp").stdout.strip().splitlines()[0].rsplit(":", 1)[1]
-        results.extend(repository_checks(f"postgresql://postgres:smoke@127.0.0.1:{port}/lab"))
+        dsn = f"postgresql://postgres:smoke@127.0.0.1:{port}/lab"
+        results.extend(repository_checks(dsn))
+        results.extend(admin_checks(dsn))
+        for label, sql in ADMIN_EXPECT_FAIL.items():
+            outcome = psql(sql, check=False)
+            results.append((f"admin: rejects {label}", outcome.returncode != 0, ""))
+        for role in ("anon", "authenticated"):
+            client = psql(ADMIN_AS.format(role=role), check=False)
+            results.append((f"{role} cannot read admin records", client.returncode != 0, ""))
     finally:
         docker("rm", "-f", NAME, check=False)
 

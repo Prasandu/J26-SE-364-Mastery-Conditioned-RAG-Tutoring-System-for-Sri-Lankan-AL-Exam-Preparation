@@ -73,7 +73,11 @@
           "import_single",
           "edit",
           "validate",
-          "review"
+          "review",
+          "knowledge_build",
+          "users",
+          "audit",
+          "assist"
         ]
       }
     }

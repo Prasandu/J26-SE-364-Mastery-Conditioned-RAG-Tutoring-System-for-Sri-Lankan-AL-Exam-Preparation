@@ -4,18 +4,21 @@ import type { AdminClient } from './admin/adminClient';
 import { I18nextProvider } from 'react-i18next';
 import { AppHeader } from './components/AppHeader';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { SimulationFlowShell } from './components/SimulationFlowShell';
 import { createI18n } from './i18n';
 import { LocaleSync } from './i18n/LocaleSync';
-import type { SessionStore } from './store/sessionStore';
+import { isFlowView, type SessionStore } from './store/sessionStore';
 import { StoreProvider, useSession } from './store/StoreProvider';
 import { DashboardView } from './views/DashboardView';
 import { LibraryView } from './views/LibraryView';
 import { NotebookView } from './views/NotebookView';
+import { ReflectionView } from './views/ReflectionView';
 import { ReportView } from './views/ReportView';
 import { ModeSelectView } from './views/ModeSelectView';
 import { OverviewView } from './views/OverviewView';
 import { PreLabView } from './views/PreLabView';
 import { WorkbenchView } from './views/WorkbenchView';
+import { Lab2DDefs } from './workbench/lab2d/Lab2DDefs';
 
 /** Development-only admin tools: a separate chunk, loaded only when opened. */
 const AdminView = lazy(() => import('./admin/AdminView'));
@@ -37,6 +40,8 @@ function CurrentView() {
       return <WorkbenchView />;
     case 'notebook':
       return <NotebookView />;
+    case 'reflection':
+      return <ReflectionView />;
     case 'report':
       return <ReportView />;
     case 'admin':
@@ -46,6 +51,30 @@ function CurrentView() {
         </Suspense>
       );
   }
+}
+
+/**
+ * The five practical steps (`FLOW_VIEWS`) render full-screen inside `SimulationFlowShell`
+ * instead of the ordinary site header and width-limited page frame; every other view keeps the
+ * normal site chrome.
+ */
+function AppBody() {
+  const view = useSession((s) => s.view);
+  if (isFlowView(view)) {
+    return (
+      <SimulationFlowShell>
+        <CurrentView />
+      </SimulationFlowShell>
+    );
+  }
+  return (
+    <>
+      <AppHeader />
+      <main id="main" className="app-main" tabIndex={-1}>
+        <CurrentView />
+      </main>
+    </>
+  );
 }
 
 export function App({
@@ -62,11 +91,9 @@ export function App({
       <StoreProvider {...(store ? { store } : {})}>
         <AdminProvider client={admin}>
           <LocaleSync />
-          <AppHeader />
-          <main id="main" className="app-main" tabIndex={-1}>
-            <CurrentView />
-          </main>
+          <AppBody />
           <ConfirmDialog />
+          <Lab2DDefs />
         </AdminProvider>
       </StoreProvider>
     </I18nextProvider>

@@ -86,6 +86,9 @@ class NotebookRecord:
 class ExperimentRepository(Protocol):
     def list(self) -> list[ExperimentRecord]: ...
     def get(self, experiment_id: str) -> ExperimentRecord | None: ...
+    def get_version(
+        self, experiment_id: str, definition_version: str, assessment_version: str
+    ) -> ExperimentRecord | None: ...
 
 
 class SessionRepository(Protocol):
@@ -128,13 +131,22 @@ class ReportRepository(Protocol):
 
 class InMemoryExperiments:
     def __init__(self, records: list[ExperimentRecord]) -> None:
-        self._records = {r.experiment_id: r for r in records}
+        self._records = {r.experiment_id: r for r in records if r.active}
+        self._versions = {
+            (r.experiment_id, r.definition_version, r.assessment_version): r for r in records
+        }
 
     def list(self) -> list[ExperimentRecord]:
         return [copy.deepcopy(self._records[k]) for k in sorted(self._records)]
 
     def get(self, experiment_id: str) -> ExperimentRecord | None:
         record = self._records.get(experiment_id)
+        return copy.deepcopy(record) if record else None
+
+    def get_version(
+        self, experiment_id: str, definition_version: str, assessment_version: str
+    ) -> ExperimentRecord | None:
+        record = self._versions.get((experiment_id, definition_version, assessment_version))
         return copy.deepcopy(record) if record else None
 
 
@@ -166,6 +178,25 @@ class InMemoryRepositories:
             record = self._sessions.get(session_id)
             # Ownership is part of the lookup: another principal's session simply does not exist.
             return copy.deepcopy(record) if record and record.owner_id == owner_id else None
+
+    def owner_summary(self) -> list[dict[str, Any]]:
+        """Read-only per-owner session counts (admin learner-data view; no content)."""
+        with self._lock:
+            owners: dict[str, dict[str, Any]] = {}
+            for record in self._sessions.values():
+                entry = owners.setdefault(
+                    record.owner_id,
+                    {
+                        "ownerId": record.owner_id,
+                        "sessions": 0,
+                        "submitted": 0,
+                        "lastStartedOn": "",
+                    },
+                )
+                entry["sessions"] += 1
+                entry["submitted"] += 1 if record.status == "submitted" else 0
+                entry["lastStartedOn"] = max(entry["lastStartedOn"], record.started_on)
+            return sorted(owners.values(), key=lambda e: e["ownerId"])
 
     # -- events
     def list(self, session_id: UUID) -> list[StoredEvent]:

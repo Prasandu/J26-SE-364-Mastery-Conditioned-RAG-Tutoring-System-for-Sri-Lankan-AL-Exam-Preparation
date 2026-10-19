@@ -7,6 +7,7 @@ export function PageHeader({
   eyebrow,
   lead,
   actions,
+  media,
   children,
 }: {
   id: string;
@@ -14,6 +15,8 @@ export function PageHeader({
   eyebrow?: ReactNode;
   lead?: ReactNode;
   actions?: ReactNode;
+  /** Decorative illustration beside the heading. */
+  media?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -25,6 +28,7 @@ export function PageHeader({
         {children}
       </div>
       {actions && <div className="page-header__actions">{actions}</div>}
+      {media && <div className="page-header__media">{media}</div>}
     </header>
   );
 }

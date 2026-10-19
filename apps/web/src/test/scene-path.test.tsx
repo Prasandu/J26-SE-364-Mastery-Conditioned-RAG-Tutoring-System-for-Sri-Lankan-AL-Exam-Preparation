@@ -29,7 +29,10 @@ describe('3D selection and DOM controls share one action path', () => {
     const viaDom = makeStore();
     await startSession(viaScene, 'manual');
     await startSession(viaDom, 'manual');
+    viaScene.getState().setLabView('3d');
 
+    viaScene.getState().setWorkbenchTab('protocol');
+    viaDom.getState().setWorkbenchTab('protocol');
     const scene = renderApp(viaScene);
     await scene.user.click(screen.getByRole('button', { name: '3d-pick-watch-glass' }));
     await scene.user.click(selectButton());
@@ -39,7 +42,10 @@ describe('3D selection and DOM controls share one action path', () => {
     scene.unmount();
 
     const dom = renderApp(viaDom);
+    // The equipment list lives in the Materials section now (V3-2), the dispatch form in Protocol.
+    await dom.user.click(screen.getByRole('tab', { name: tx('ui.side.materials') }));
     await dom.user.click(document.getElementById('equip-watch_glass')!);
+    await dom.user.click(screen.getByRole('tab', { name: tx('ui.side.protocol') }));
     await dom.user.click(selectButton());
     await waitFor(() =>
       expect(viaDom.getState().session!.bench.selectedApparatus).toEqual(['watch_glass']),
@@ -53,6 +59,7 @@ describe('3D selection and DOM controls share one action path', () => {
   it('picking the reagent jar focuses the same item as the DOM reagent button', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
+    store.getState().setLabView('3d');
     const { user } = renderApp(store);
     await user.click(screen.getByRole('button', { name: '3d-pick-reagent' }));
     expect(store.getState().ui.focusedItem).toBe('reagent_na2co3');

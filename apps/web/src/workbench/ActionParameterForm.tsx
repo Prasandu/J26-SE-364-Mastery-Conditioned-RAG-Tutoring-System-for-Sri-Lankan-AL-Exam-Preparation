@@ -1,5 +1,5 @@
 import { ActionSchema, type ActionType } from '@vlab/contracts';
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { createContext, useContext, useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UNIT_LABEL } from '../lib/format';
 import { useSession } from '../store/StoreProvider';
@@ -8,6 +8,9 @@ import { useSession } from '../store/StoreProvider';
  * One form per engine action. Forms only collect the learner's input and build the typed action;
  * the contract schema validates it. Invalid input is reported, never silently repaired.
  */
+
+/** ID prefix so the same form can also appear in the on-stage pop-over without duplicate IDs. */
+const FormIdPrefix = createContext('');
 
 type FormErrorKey =
   | 'ui.form.invalid_number'
@@ -142,19 +145,21 @@ function ActionForm({
 }) {
   const { t } = useTranslation();
   const busy = useSession((s) => s.ui.busy);
-  const errorId = `action-error-${type}`;
+  const prefix = useContext(FormIdPrefix);
+  const errorId = `${prefix}action-error-${type}`;
+  const titleId = `${prefix}action-title-${type}`;
   return (
     <form
-      id={`action-form-${type}`}
+      id={`${prefix}action-form-${type}`}
       className={suggested ? 'action-form action-form--suggested' : 'action-form'}
-      aria-labelledby={`action-title-${type}`}
+      aria-labelledby={titleId}
       tabIndex={-1}
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
         onSubmit();
       }}
     >
-      <h4 id={`action-title-${type}`} className="action-form__title">
+      <h4 id={titleId} className="action-form__title">
         {t(`exp04.action.${type}`)}
         {suggested && <span className="tag tag--suggested">{t('ui.action.suggested')}</span>}
       </h4>
@@ -178,6 +183,15 @@ function ActionForm({
 
 const handlingRequired = (h: Handling | null) => (h === null ? 'ui.form.choose_option' : null);
 
+/** The same form rendered inside the laboratory stage (scoped IDs). */
+export function StageActionForm({ type, suggested }: { type: ActionType; suggested: boolean }) {
+  return (
+    <FormIdPrefix.Provider value="stage-">
+      <ActionParameterForm type={type} suggested={suggested} />
+    </FormIdPrefix.Provider>
+  );
+}
+
 export function ActionParameterForm({ type, suggested }: { type: ActionType; suggested: boolean }) {
   const { t } = useTranslation();
   const { error, submit } = useActionSubmit();
@@ -194,6 +208,7 @@ export function ActionParameterForm({ type, suggested }: { type: ActionType; sug
   const [handling, setHandling] = useState<Handling | null>(null);
   const [labelName, setLabelName] = useState('');
   const [labelDate, setLabelDate] = useState('');
+  const labelId = useId();
 
   const toggle = (id: string) =>
     setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
@@ -479,9 +494,9 @@ export function ActionParameterForm({ type, suggested }: { type: ActionType; sug
         >
           <p className="hint-text">{t('ui.form.label_help')}</p>
           <div className="field field--inline">
-            <label htmlFor="label-name">{t('ui.form.label_name')}</label>
+            <label htmlFor={`${labelId}-name`}>{t('ui.form.label_name')}</label>
             <input
-              id="label-name"
+              id={`${labelId}-name`}
               type="text"
               value={labelName}
               onChange={(e) => setLabelName(e.target.value)}
@@ -494,9 +509,9 @@ export function ActionParameterForm({ type, suggested }: { type: ActionType; sug
             onChange={setNum}
           />
           <div className="field field--inline">
-            <label htmlFor="label-date">{t('ui.form.label_date')}</label>
+            <label htmlFor={`${labelId}-date`}>{t('ui.form.label_date')}</label>
             <input
-              id="label-date"
+              id={`${labelId}-date`}
               type="date"
               value={labelDate}
               onChange={(e) => setLabelDate(e.target.value)}

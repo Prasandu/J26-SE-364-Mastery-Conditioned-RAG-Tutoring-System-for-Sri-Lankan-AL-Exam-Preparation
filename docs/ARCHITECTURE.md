@@ -129,3 +129,53 @@ browser (Admin area, lazy chunk) --raw PDF / JSON--> /admin/dev/* (FastAPI)
 
 Admin modules import nothing from the simulation or student session path. The only read from
 the student side is the published experiment list, used for duplicate information.
+
+## Candidate titration foundation (E5A)
+
+`packages/contracts/src/titration.ts` contains review-gated contracts for the proposed
+Experiment 36 titration. These types are deliberately separate from the active
+`ExperimentDefinition` union and the trusted simulation registry. The only runnable kind
+remains `standard_solution_by_mass`.
+
+The candidate contracts provide typed, unit-labelled records for pipette volumes, burette
+readings, titrant delivery, indicator additions, endpoint observations, trials and
+measurement provenance. They also define a dedicated preparation/glassware/burette/trial
+state shape and typed future actions. They contain no pH or colour thresholds, endpoint
+volumes, reaction calculations, scoring rules or executable expressions.
+
+Experiment 36 remains `teacher-review-pending` and `runnable: false`. Its source references
+retain page provenance and may carry `factId: null` until approved source facts are added
+through a separate content-review process. A future handler must be a statically trusted
+implementation, validate the candidate definition and versions, and be registered only
+after chemistry-teacher approval. Candidate types alone cannot create sessions, transition
+state or produce reports.
+
+## Laboratory renderers (V2-B, D32)
+
+```text
+gesture (2D item / 3D pick / equipment list) -> pickItem or existing typed action
+  -> dispatchLabAction -> engine (local adapter or API verifier) -> SessionView
+  -> buildSceneModel (public projection only) -> LaboratoryViewport
+       labView = '2d' -> lab2d/Laboratory2D (SVG, eager)
+       labView = '3d' -> LabCanvas -> lazy LabScene (three.js) | fallback: notice + 2D
+```
+
+`placementOf` and `flaskProfile` are shared, so both renderers agree on where items are and how
+high liquid is drawn. Renderers keep only view state (zoom, camera); switching renderer never
+dispatches an action.
+
+Gestures (V2-C, D33): renderer pick/drop or the stage dock → `interaction/gestures`
+(`resolveGesture`, `menuAction`) → existing typed action → `dispatchLabAction` (same confirmation
+and safety flow as the forms) → engine → projection → both renderers.
+
+## Admin console (A1–A8, D34)
+
+```text
+/admin/dev/* (loopback guard) -> AdminApi (common.py) -> AdminRepository: file | postgres
+  routes.py         imports, drafts, review (+ mark_distinct), audit on every change
+  manage_routes.py  knowledge feed, library, users, documents, translations, audit, settings,
+                    local AI suggestions (assist.py, quote-verified)
+  knowledge_feed.py approved drafts -> chunks -> local embeddings -> staged version -> activate
+KnowledgeRuntime (repository + embeddings) is shared by the assistant and the admin feed.
+Generation providers: disabled | fake | groq | openai | ollama (local) | failover.
+```

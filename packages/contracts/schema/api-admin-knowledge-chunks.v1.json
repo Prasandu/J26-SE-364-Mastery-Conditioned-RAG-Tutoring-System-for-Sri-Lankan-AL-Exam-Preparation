@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "maxItems": 500,
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "chunkId": {
+        "type": "string",
+        "pattern": "^kc_[0-9a-f]{20}$"
+      },
+      "documentTitle": {
+        "type": "string",
+        "maxLength": 300
+      },
+      "pdfPage": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+      },
+      "heading": {
+        "type": "string",
+        "maxLength": 600
+      },
+      "experimentId": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 80
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "tokenCount": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+      },
+      "text": {
+        "type": "string",
+        "maxLength": 8000
+      }
+    },
+    "required": [
+      "chunkId",
+      "documentTitle",
+      "pdfPage",
+      "heading",
+      "experimentId",
+      "tokenCount",
+      "text"
+    ],
+    "additionalProperties": false
+  }
+}

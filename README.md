@@ -120,8 +120,11 @@ LAB_ENVIRONMENT=development LAB_ADMIN_MODE=development uv run uvicorn app.main:a
 # apps/web in API mode (VITE_ENGINE_ADAPTER=api), then open "Admin (development)"
 ```
 
-Uploads and drafts are stored in gitignored `data/admin/`. Requests that are not local (a
-foreign `Host` or `Origin`, or proxy headers) get 404.
+Uploads and drafts are stored in gitignored `data/admin/` (or PostgreSQL with
+`LAB_ADMIN_REPOSITORY=postgres`). Requests that are not local (a foreign `Host` or `Origin`, or
+proxy headers) get 404. The console covers imports, review, duplicates, the knowledge-base feed,
+users, translations, the audit log and settings. See `docs/SETUP.md` for keys, the local LLM
+(Ollama), embeddings and the database.
 
 ## Quality gate
 
@@ -134,6 +137,7 @@ foreign `Host` or `Origin`, or proxy headers) get 404.
 | `pnpm test`         | Vitest per package + Pytest (builds the verifier first)                                                           |
 | `pnpm build`        | Content validation, verifier bundle, production web build                                                         |
 | `pnpm check`        | All of the above in order (CI entry point)                                                                        |
+| `pnpm test:e2e`     | Playwright browser checks on the installed Chrome (2D/3D lab, 1440/834/390 px; not part of `check`)               |
 | `pnpm db:smoke`     | Applies `supabase/migrations` to a disposable pgvector/PostgreSQL 16 container and tests the knowledge repository |
 
 Regenerate generated files with `pnpm --filter @vlab/contracts schemas:write` (JSON Schemas) and

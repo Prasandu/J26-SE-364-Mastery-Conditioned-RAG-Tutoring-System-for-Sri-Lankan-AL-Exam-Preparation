@@ -7,10 +7,14 @@ deterministic simulation definition. Nothing here touches the active student cat
 
 import re
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Protocol
 
 from app.admin.extract import REQUIRED_FIELDS, Candidate
-from app.admin.store import AdminStore
+
+
+class UploadCheck(Protocol):
+    def upload_ok(self, sha256: str) -> bool: ...
+
 
 LIST_FIELDS = (
     "aims",
@@ -31,8 +35,65 @@ APPROVAL_FIELDS = ("experimentNumber", "title", *REQUIRED_FIELDS)
 SUPPORTED_SIMULATION_KINDS = ("standard_solution_by_mass",)
 
 
+#: Word-shingle Jaccard similarity at which two practicals count as the same content.
+CONTENT_DUPLICATE_THRESHOLD = 0.6
+#: Fields compared for content duplicates (the experimental substance, not the questions).
+CONTENT_FIELDS = ("aims", "apparatus", "chemicals", "procedure", "precautions")
+SHINGLE = 4
+
+#: A published practical as seen by duplicate checks: (id, number, English title, English text).
+Published = tuple[str, int, str | None, str]
+
+
+#: Longest list item kept as one entry; longer extracted paragraphs are split at sentences.
+MAX_ITEM_CHARS = 1000
+#: Dotted / underlined answer spaces copied from worksheets ("......", "______").
+PLACEHOLDER = re.compile(r"[.·…_]{4,}|[-–—]{4,}")
+#: Required list fields a reviewer may confirm as "not given in the source document".
+CONFIRMABLE_ABSENT = tuple(f for f in REQUIRED_FIELDS if f in LIST_FIELDS)
+
+
 class TransitionError(ValueError):
     pass
+
+
+def split_long(item: str, limit: int = MAX_ITEM_CHARS) -> list[str]:
+    """Splits an over-long extracted paragraph at sentence ends (words are never cut)."""
+    if len(item) <= limit:
+        return [item]
+    parts: list[str] = []
+    current = ""
+    for sentence in re.split(r"(?<=[.!?;])\s+", item):
+        while len(sentence) > limit:  # a single very long sentence: break at a space
+            cut = sentence.rfind(" ", 0, limit)
+            cut = cut if cut > limit // 2 else limit
+            head, sentence = sentence[:cut].strip(), sentence[cut:].strip()
+            if current:
+                parts.append(current)
+                current = ""
+            parts.append(head)
+        if current and len(current) + 1 + len(sentence) > limit:
+            parts.append(current)
+            current = sentence
+        else:
+            current = f"{current} {sentence}".strip()
+    if current:
+        parts.append(current)
+    return [x for x in parts if x]
+
+
+def clean_items(items: list[str]) -> list[str]:
+    """Deterministic clean-up: answer-space dots removed, blank and repeated items dropped,
+    over-long paragraphs split. Never adds or rewrites words."""
+    out: list[str] = []
+    for item in items:
+        text = re.sub(r"\s+", " ", PLACEHOLDER.sub(" ", item)).strip(" :;,")
+        if not re.search(r"[^\W_]", text):
+            continue
+        for part in split_long(text):
+            if part not in out:
+                out.append(part)
+    return out
 
 
 def draft_from_candidate(
@@ -49,7 +110,7 @@ def draft_from_candidate(
         "experimentNumber": data["experimentNumber"],
         "title": data["title"],
         "syllabusUnit": data["syllabusUnit"],
-        **{f: list(data["fields"][f]) for f in LIST_FIELDS},
+        **{f: [p for i in data["fields"][f] for p in split_long(i)] for f in LIST_FIELDS},
     }
     return {
         "importId": import_id,
@@ -67,6 +128,8 @@ def draft_from_candidate(
             "pageRange": data["pageRange"],
         },
         "translation": {"si": "not_started"},
+        "distinctFrom": [],
+        "absentConfirmed": [],
     }
 
 
@@ -80,45 +143,88 @@ def _norm_title(title: str | None) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
+def shingles(text: str) -> set[str]:
+    """Overlapping 4-word sequences of the normalised text (a content fingerprint)."""
+    words = re.findall(r"[a-z0-9]+", text.casefold())
+    if len(words) < SHINGLE:
+        return set(words)
+    return {" ".join(words[i : i + SHINGLE]) for i in range(len(words) - SHINGLE + 1)}
+
+
+def content_text(content: dict[str, Any]) -> str:
+    return "\n".join(item for f in CONTENT_FIELDS for item in content.get(f) or [])
+
+
+def similarity(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
 def duplicates(
     draft: dict[str, Any],
     others: Iterable[dict[str, Any]],
-    published: Iterable[tuple[str, int, str | None]],
+    published: Iterable[Published],
 ) -> list[dict[str, Any]]:
-    """Same experiment number elsewhere. Same-document and conflicting drafts block approval;
-    a published practical with the same number is informational (a future update candidate)."""
-    number = draft["content"]["experimentNumber"]
-    if number is None:
-        return []
-    title = _norm_title(draft["content"]["title"])
+    """Duplicate findings, by identity (same experiment number) and by content (shingle
+    similarity of the experimental substance, whatever the number says).
+
+    * Same number in another live draft or the same document: blocks approval.
+    * Near-identical content in another live draft: blocks approval unless a reviewer recorded
+      that the two practicals are distinct (``distinctFrom``) or archives one of them.
+    * A published practical with the same number or near-identical content: informational (an
+      update candidate); publishing replaces nothing here.
+    """
+    content = draft["content"]
+    number = content["experimentNumber"]
+    title = _norm_title(content["title"])
+    mine = shingles(content_text(content))
+    distinct = set(draft.get("distinctFrom") or [])
     found: list[dict[str, Any]] = []
     for other in others:
         if other["id"] == draft["id"] or other["status"] == "archived":
             continue
-        if other["content"]["experimentNumber"] != number:
-            continue
         same_import = other["importId"] == draft["importId"]
-        conflicting = _norm_title(other["content"]["title"]) != title
-        found.append(
-            {
-                "kind": "document" if same_import else "draft",
-                "experimentNumber": number,
-                "otherId": other["id"],
-                "otherTitle": other["content"]["title"],
-                "conflictingTitle": conflicting,
-                "blocking": True,
-            }
-        )
-    for experiment_id, published_number, published_title in published:
-        if published_number == number:
+        other_number = other["content"]["experimentNumber"]
+        if number is not None and other_number == number:
+            found.append(
+                {
+                    "kind": "document" if same_import else "draft",
+                    "experimentNumber": number,
+                    "otherId": other["id"],
+                    "otherTitle": other["content"]["title"],
+                    "conflictingTitle": _norm_title(other["content"]["title"]) != title,
+                    "similarity": None,
+                    "blocking": True,
+                }
+            )
+            continue
+        score = similarity(mine, shingles(content_text(other["content"])))
+        if score >= CONTENT_DUPLICATE_THRESHOLD:
+            found.append(
+                {
+                    "kind": "content",
+                    "experimentNumber": other_number,
+                    "otherId": other["id"],
+                    "otherTitle": other["content"]["title"],
+                    "conflictingTitle": _norm_title(other["content"]["title"]) != title,
+                    "similarity": round(score, 3),
+                    "blocking": other["id"] not in distinct,
+                }
+            )
+    for experiment_id, published_number, published_title, published_text in published:
+        score = similarity(mine, shingles(published_text))
+        same_number = number is not None and published_number == number
+        if same_number or score >= CONTENT_DUPLICATE_THRESHOLD:
             found.append(
                 {
                     "kind": "published",
-                    "experimentNumber": number,
+                    "experimentNumber": published_number,
                     "otherId": experiment_id,
                     "otherTitle": published_title,
                     "conflictingTitle": bool(published_title)
                     and _norm_title(published_title) != title,
+                    "similarity": round(score, 3) if score else None,
                     "blocking": False,
                 }
             )
@@ -127,12 +233,13 @@ def duplicates(
 
 def validate(
     draft: dict[str, Any],
-    store: AdminStore,
+    store: UploadCheck,
     others: Iterable[dict[str, Any]],
-    published: Iterable[tuple[str, int, str | None]],
+    published: Iterable[Published],
 ) -> dict[str, Any]:
     content = draft["content"]
-    missing = [f for f in APPROVAL_FIELDS if not _present(content, f)]
+    absent = set(draft.get("absentConfirmed") or [])
+    missing = [f for f in APPROVAL_FIELDS if not _present(content, f) and f not in absent]
     provenance_issues: list[str] = []
     if not store.upload_ok(draft["provenance"]["sourceSha256"]):
         provenance_issues.append("source_document_missing_or_changed")
@@ -152,6 +259,8 @@ def validate(
         + ["sinhala_translation_not_started"]
         + ["simulation_definition_missing"]
         + [f"edited:{f}" for f, edited in draft["fieldEdited"].items() if edited]
+        + [f"absent_confirmed:{f}" for f in sorted(absent)]
+        + (["quick_approved"] if draft.get("quickApproved") else [])
         + [
             f"extraction:{i['code']}"
             for i in draft["extractionIssues"]
@@ -198,12 +307,65 @@ def apply_edit(
     status = record["status"]
     if changed and status == "content_approved":
         status = "needs_review"
+    # A field that now has content is no longer "not given in the source".
+    absent = [f for f in record.get("absentConfirmed") or [] if not content.get(f)]
     return {
         **record,
         "content": content,
         "sourcePages": source_pages,
         "fieldReview": review,
         "fieldEdited": edited,
+        "status": status,
+        "absentConfirmed": absent,
+        "quickApproved": record.get("quickApproved", False) and not changed,
+    }
+
+
+def quick_fix(record: dict[str, Any]) -> dict[str, Any]:
+    """Safe, deterministic repairs for common extraction problems (never invents content):
+
+    * list items cleaned (answer-space dots, blanks, repeats) and long paragraphs split;
+    * required list fields that are empty are confirmed as "not given in the source document";
+    * list fields with content but no source pages get the practical's own page range.
+
+    Changed fields lose their review mark, like any edit. The applied repairs are logged.
+    """
+    if record["status"] == "archived":
+        raise TransitionError("archived drafts cannot change")
+    content = dict(record["content"])
+    pages = {k: list(v) for k, v in record["sourcePages"].items()}
+    review = dict(record["fieldReview"])
+    edited = dict(record["fieldEdited"])
+    log: list[str] = []
+    for field in LIST_FIELDS:
+        cleaned = clean_items(content[field])
+        if cleaned != content[field]:
+            content[field] = cleaned
+            review[field], edited[field] = False, True
+            log.append(f"cleaned:{field}")
+    first, last = record["provenance"]["pageRange"]
+    span = list(range(max(1, first), max(first, last) + 1))
+    for field in LIST_FIELDS:
+        if content[field] and not pages.get(field) and span:
+            pages[field] = span
+            review[field] = False
+            log.append(f"pages:{field}")
+    absent = set(record.get("absentConfirmed") or [])
+    for field in CONFIRMABLE_ABSENT:
+        if not content[field] and field not in absent:
+            absent.add(field)
+            log.append(f"absent:{field}")
+    status = record["status"]
+    if log and status == "content_approved":
+        status = "needs_review"
+    return {
+        **record,
+        "content": content,
+        "sourcePages": pages,
+        "fieldReview": review,
+        "fieldEdited": edited,
+        "absentConfirmed": sorted(absent),
+        "quickFixLog": log,
         "status": status,
     }
 
@@ -214,10 +376,33 @@ def apply_review(
     field: str | None,
     reviewed: bool | None,
     validation: dict[str, Any],
+    other_id: str | None = None,
 ) -> dict[str, Any]:
     status = record["status"]
     if status == "archived":
         raise TransitionError("archived drafts cannot change")
+    if action == "quick_fix":
+        return quick_fix(record)
+    if action == "quick_approve":
+        if status == "content_approved":
+            raise TransitionError("already approved")
+        hard = [b for b in validation["blocking"]]
+        if hard:
+            raise TransitionError("fix the blocking issues first (try Quick fix)")
+        present = [f for f in ALL_FIELDS if _present(record["content"], f)]
+        review = {**record["fieldReview"], **{f: True for f in present}}
+        return {
+            **record,
+            "fieldReview": review,
+            "status": "content_approved",
+            "quickApproved": True,
+        }
+    if action == "mark_distinct":
+        flagged = {d["otherId"] for d in validation["duplicates"] if d["kind"] == "content"}
+        if not other_id or other_id not in flagged:
+            raise TransitionError("mark_distinct needs a content duplicate to dismiss")
+        distinct = sorted(set(record.get("distinctFrom") or []) | {other_id})
+        return {**record, "distinctFrom": distinct}
     if action == "mark_field":
         if field not in ALL_FIELDS or reviewed is None:
             raise TransitionError("mark_field needs a field and a reviewed value")

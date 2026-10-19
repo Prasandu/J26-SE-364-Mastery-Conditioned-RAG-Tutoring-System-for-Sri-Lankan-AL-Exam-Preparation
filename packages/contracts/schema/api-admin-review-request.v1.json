@@ -14,7 +14,10 @@
         "submit_for_review",
         "approve_content",
         "return_to_draft",
-        "archive"
+        "archive",
+        "mark_distinct",
+        "quick_fix",
+        "quick_approve"
       ]
     },
     "field": {
@@ -45,6 +48,17 @@
       "type": [
         "boolean",
         "null"
+      ]
+    },
+    "otherId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
       ]
     }
   },

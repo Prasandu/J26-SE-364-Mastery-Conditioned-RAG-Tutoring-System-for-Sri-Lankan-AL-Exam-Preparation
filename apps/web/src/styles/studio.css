@@ -1,0 +1,757 @@
+/*
+ * Laboratory studio: equipment tray, stage, item controls and the tabbed side panel.
+ * Loaded after workbench.css and overrides its grid.
+ */
+
+.lab2d-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ---------- grid ---------- */
+/* Column widths and stickiness come from the shared base rule in workbench.css (one right-hand
+ * column stacking the lab notebook above the equipment tray; no site header to offset for). */
+
+.lab-studio .workbench__safety .safety-alert {
+  padding: var(--space-2) var(--space-4);
+}
+
+/* ---------- equipment tray ---------- */
+.equipment-tray h2 {
+  margin-bottom: var(--space-1);
+}
+
+.equipment-tray > .hint-text {
+  font-size: var(--text-xs);
+  margin: 0 0 var(--space-3);
+}
+
+.equipment-tray__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.equipment-tray__grid li + li {
+  margin-top: 0;
+}
+
+.equipment-tray__subtitle {
+  font-size: var(--text-sm);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.tray-item {
+  position: relative;
+  min-width: 0;
+}
+
+.tray-item > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tray-item > label,
+.tray-item--button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2) var(--space-1) var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.tray-item > label:hover,
+.tray-item--button:hover {
+  border-color: var(--brand-500);
+  box-shadow: var(--shadow-sm);
+}
+
+.tray-item > input:focus-visible + label,
+.tray-item--button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tray-item--selected > label,
+.tray-item--button.tray-item--selected {
+  border-color: var(--teal-500);
+  background: var(--teal-100);
+  box-shadow: inset 0 0 0 1px var(--teal-500);
+}
+
+.tray-item__thumb {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #eef4f7, #dfe8ed);
+}
+
+.apparatus-thumb {
+  width: 86%;
+  height: 58px;
+}
+
+.tray-item__name {
+  font-size: var(--text-xs);
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+.tray-item__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+}
+
+.tray-item__selected {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--teal-600);
+}
+
+.mini-chip {
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--canvas);
+  color: var(--ink-700);
+}
+
+.mini-chip--bench {
+  background: var(--brand-100);
+  color: var(--brand-700);
+}
+
+.mini-chip--warn {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.mini-chip--ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+/* ---------- stage ---------- */
+.lab-stage {
+  position: relative;
+}
+
+.lab-stage--holding .lab2d__svg {
+  cursor: copy;
+}
+
+.lab2d-bench-target {
+  fill: transparent;
+}
+
+.lab2d-item {
+  touch-action: none;
+}
+
+.lab2d-item--held .lab2d-item__ring {
+  fill: rgba(15, 157, 138, 0.12);
+  stroke: var(--teal-500);
+  stroke-dasharray: 8 5;
+}
+
+.lab2d-item--held {
+  opacity: 0.55;
+}
+
+.lab2d__svg--dragging {
+  cursor: grabbing;
+}
+
+.lab2d-ghost {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.stage-feedback {
+  position: absolute;
+  top: 56px;
+  right: var(--space-3);
+  left: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+
+.stage-toast-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.stage-toast {
+  max-width: min(440px, 100%);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--brand-600);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-md, 0 6px 18px rgba(19, 33, 43, 0.16));
+  font-size: var(--text-sm);
+  color: var(--ink-900);
+  animation: toast-life 8s ease forwards;
+}
+
+.stage-toast--observation {
+  border-left-color: var(--teal-500);
+}
+
+.stage-toast--procedural {
+  border-left-color: var(--warning-line);
+}
+
+.stage-toast--rejected {
+  border-left-color: var(--danger);
+}
+
+.stage-toast--safety {
+  border-left-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.stage-toast--notice {
+  border-left-color: var(--ink-500);
+}
+
+@keyframes toast-life {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  6%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-toast {
+    animation: none;
+  }
+}
+
+/* ---------- item controls (dock) ---------- */
+.stage-dock {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.stage-dock--empty {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.stage-dock--held {
+  border-color: var(--teal-500);
+  background: var(--teal-100);
+}
+
+.stage-dock__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stage-dock__head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stage-dock__head .hint-text {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.stage-dock__title {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.stage-dock--form .stage-dock__title {
+  flex: 1 1 auto;
+}
+
+.stage-dock__thumb {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.stage-dock__thumb .apparatus-thumb {
+  width: 46px;
+  height: 46px;
+}
+
+.stage-dock__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.stage-dock__actions .button {
+  min-height: 40px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.stage-dock__actions .is-suggested {
+  border-color: var(--teal-500);
+  box-shadow: inset 0 0 0 1px var(--teal-500);
+}
+
+.stage-dock__targets {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.stage-dock__targets li + li {
+  margin-top: 0;
+}
+
+.target-chip {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--teal-500);
+  background: var(--surface);
+  color: var(--teal-600);
+  cursor: pointer;
+}
+
+.target-chip:hover:not(:disabled) {
+  background: var(--teal-500);
+  color: #ffffff;
+}
+
+.stage-dock--form .action-form {
+  margin-top: var(--space-3);
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.button--ghost {
+  font: inherit;
+  font-weight: 600;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-700);
+  cursor: pointer;
+}
+
+.button--ghost:hover {
+  background: var(--canvas);
+  border-color: var(--line);
+}
+
+.bench-details {
+  margin-top: var(--space-3);
+}
+
+.bench-details > summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand-700);
+}
+
+.bench-details .bench-description {
+  margin-top: var(--space-2);
+}
+
+/* ---------- side panel: the seven-section laboratory notebook (V3-2) ---------- */
+/* One card, not stacked cards: the toolbar (head + section nav) and the pager stay visible
+ * (`position: sticky`, no nested scroll container) while `.workbench__side` — the real scrolling
+ * ancestor — scrolls the active section's content underneath them. */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.side-panel__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.side-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--brand-700);
+}
+
+.side-panel__head .icon {
+  flex: none;
+}
+
+.side-panel__head-label {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+/* A compact vertical numbered list, like a notebook's table of contents. */
+.notebook-nav ol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notebook-nav__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-700);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notebook-nav__item:hover {
+  background: var(--brand-50);
+}
+
+.notebook-nav__item.is-active {
+  background: var(--brand-700);
+  color: #ffffff;
+}
+
+.notebook-nav__item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.notebook-nav__marker {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--canvas);
+  color: var(--ink-700);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.notebook-nav__item.is-active .notebook-nav__marker {
+  background: #ffffff;
+  color: var(--brand-700);
+}
+
+.notebook-nav__item .icon {
+  flex: none;
+  opacity: 0.8;
+}
+
+.notebook-nav__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-panel__scroll {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Panels nested in the notebook body read as one page, not separate stacked cards. */
+.side-panel__body .panel {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.side-panel__body .panel + .panel {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.side-panel__body[hidden] {
+  display: none;
+}
+
+/* ---------- notebook pager: Previous / Next section ---------- */
+.notebook-pager {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.notebook-pager__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.notebook-pager__button:hover:not(:disabled) {
+  border-color: var(--brand-300);
+}
+
+.notebook-pager__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.notebook-pager__button--back .icon {
+  transform: scaleX(-1);
+}
+
+/* ---------- vertical stage list (protocol) ---------- */
+.stage-progress--vertical ol {
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1);
+  overflow: visible;
+  background: var(--surface-2);
+  border: 0;
+}
+
+.stage-progress--vertical .stage {
+  flex: none;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+}
+
+/* A connecting line between step badges, like a notebook's numbered checklist. */
+.stage-progress--vertical .stage:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-2) + 11px);
+  top: 26px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--line);
+  z-index: 0;
+}
+
+.stage-progress--vertical .stage--done:not(:last-child)::after {
+  background: var(--ok-soft);
+}
+
+.protocol-panel .stage-progress--vertical {
+  margin-top: var(--space-3);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1360px) {
+  .equipment-tray__grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .stage-feedback {
+    position: static;
+    align-items: stretch;
+    margin-top: var(--space-2);
+  }
+
+  .stage-toast-group {
+    align-items: stretch;
+  }
+
+  .stage-toast {
+    max-width: none;
+  }
+}
+
+/* ---------- illustrations (dashboard hero, library cards) ---------- */
+.lab-illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.view--dashboard .page-header {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.view--dashboard .page-header__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-header__media {
+  flex: 0 1 400px;
+  min-width: 260px;
+}
+
+.experiment-card__media {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #e6eff4, #d6e3ea);
+  padding: var(--space-2);
+}
+
+.experiment-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.library-list .experiment-card {
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) auto;
+}
+
+@media (max-width: 900px) {
+  .view--dashboard .page-header {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-header__media {
+    display: none;
+  }
+
+  .library-list .experiment-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- phone header: do not cover the laboratory; navigation scrolls instead of clipping ---------- */
+@media (max-width: 760px) {
+  .app-header {
+    position: static;
+  }
+
+  .app-nav ul {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-nav li {
+    flex: 0 0 auto;
+  }
+
+  .nav-link {
+    width: auto;
+    font-size: var(--text-sm);
+    padding-inline: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header__title {
+    font-size: var(--text-sm);
+  }
+}
+
+/* The equipment tray now sits in the (narrower) side column at every width from 901px up, where
+ * the default two-column thumbnail grid already fits without the horizontal-scroll treatment
+ * that earlier suited a tray spanning the full stage width. */
+
+@media (min-width: 901px) {
+  /* Like the 3D canvas, the 2D stage never grows taller than about half the screen (it letterboxes). */
+  .lab2d__svg {
+    max-height: max(300px, 52vh);
+  }
+}

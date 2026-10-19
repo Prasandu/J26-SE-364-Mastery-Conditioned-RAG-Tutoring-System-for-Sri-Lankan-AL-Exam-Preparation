@@ -6,6 +6,7 @@
   background: rgb(255 255 255 / 96%);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
+  overflow-x: hidden;
 }
 
 .app-header__inner {
@@ -258,7 +259,10 @@
   }
 }
 
-@media (max-width: 760px) {
+/* 761-879px (e.g. an 834px tablet) was an uncovered gap: too narrow for the nav + tools to fit
+ * on one row, too wide for the previous 760px breakpoint to kick in, so the toolbar (language
+ * switcher) was pushed off the right edge. Widened to close that gap. */
+@media (max-width: 880px) {
   .app-header__inner {
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-4);
@@ -276,14 +280,17 @@
 
   .app-nav ul {
     justify-content: stretch;
+    width: 100%;
   }
 
   .app-nav li {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .nav-link {
     width: 100%;
+    padding-inline: var(--space-2);
   }
 
   .app-header__tools {
@@ -309,5 +316,25 @@
 
   .view-nav .button {
     flex: 1 1 100%;
+  }
+}
+
+/* A single nowrap row of 4 items ("Dashboard" / "Practical library" / "Start a practical" /
+ * "Admin") doesn't fit even one phone-width cell each without clipping text past the viewport
+ * edge; a 2x2 grid gives the longer labels enough room. */
+@media (max-width: 600px) {
+  .app-nav ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .app-nav li {
+    flex: initial;
+  }
+
+  .nav-link {
+    white-space: normal;
+    line-height: 1.2;
   }
 }

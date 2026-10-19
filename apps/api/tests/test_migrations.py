@@ -12,6 +12,13 @@ SQL = "\n".join(p.read_text(encoding="utf-8") for p in MIGRATIONS).lower()
 CODE = "\n".join(line for line in SQL.splitlines() if not line.strip().startswith("--"))
 TABLES = ("experiments", "sessions", "action_events", "notebooks", "reports")
 KNOWLEDGE_TABLES = ("knowledge_versions", "knowledge_chunks")
+CATALOG_TABLES = (
+    "practical_versions",
+    "catalog_versions",
+    "catalog_entries",
+    "active_catalog",
+    "catalog_audit_events",
+)
 
 
 def test_migrations_are_versioned() -> None:
@@ -73,3 +80,19 @@ def test_knowledge_tables_are_private_and_exact_search_only() -> None:
 def test_no_source_documents() -> None:
     assert ".pdf" not in CODE
     assert "storage." not in CODE
+
+
+def test_versioned_catalog_is_private_and_history_is_append_only() -> None:
+    for table in CATALOG_TABLES:
+        assert f"alter table public.{table} enable row level security;" in CODE
+        assert f"revoke all on table public.{table} from anon, authenticated;" in CODE
+    for table in (
+        "practical_versions",
+        "catalog_versions",
+        "catalog_entries",
+        "catalog_audit_events",
+    ):
+        assert f"before update on public.{table}" in CODE
+        assert f"before delete on public.{table}" in CODE
+    assert "singleton boolean primary key" in CODE
+    assert "future transaction" in SQL

@@ -2,7 +2,6 @@ import { NOTEBOOK_LIMITS, UnitSchema, type NotebookDocument, type Unit } from '@
 import { useEffect, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConnectionBanner } from '../components/ConnectionBanner';
-import { SessionNav } from '../components/SessionNav';
 import { UNIT_LABEL } from '../lib/format';
 import { useSession } from '../store/StoreProvider';
 
@@ -241,7 +240,6 @@ export function NotebookView() {
     <section className="view view--notebook" aria-labelledby="notebook-title">
       <header className="workbench__bar">
         <h1 id="notebook-title">{t('ui.notebook.title')}</h1>
-        <SessionNav current="notebook" />
       </header>
       <ConnectionBanner />
       <p className="hint-text">{t('ui.notebook.intro')}</p>

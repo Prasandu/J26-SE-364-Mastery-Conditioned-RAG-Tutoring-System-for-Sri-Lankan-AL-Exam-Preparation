@@ -25,6 +25,7 @@ dataset; `--max-cases` remains an additional deterministic cap.
 
 import argparse
 import json
+import os
 import sys
 import uuid
 from datetime import UTC, date, datetime
@@ -132,6 +133,9 @@ def main() -> int:
     secret = settings.groq_api_key if args.provider == "groq" else settings.openai_api_key
     key = secret.get_secret_value() if secret else ""
     key_name = "GROQ_API_KEY" if args.provider == "groq" else "OPENAI_API_KEY"
+    if args.confirm_live and os.getenv("LAB_EVAL_OFFLINE") == "1":
+        print("Offline evaluation guard enabled: live evaluation not run (nothing was sent).")
+        return 2
     if args.confirm_live and not key.strip():
         print(f"{key_name} is not set: live evaluation not run (nothing was sent).")
         return 2

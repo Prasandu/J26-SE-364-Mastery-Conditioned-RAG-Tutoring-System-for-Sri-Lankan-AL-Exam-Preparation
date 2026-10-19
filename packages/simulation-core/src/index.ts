@@ -2,6 +2,7 @@ export * from './quantities';
 export * from './rng';
 export * from './fingerprint';
 export * from './context';
+export * from './registry';
 export {
   achievedConcentration,
   computeStage,

@@ -14,10 +14,13 @@
     "lint": "eslint . && pnpm --filter @vlab/api lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @vlab/web test:e2e",
     "content:validate": "pnpm --filter @vlab/contracts test:content",
     "build": "pnpm content:validate && pnpm -r build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "db:smoke": "uv run --project apps/api python scripts/db/migration_smoke.py"
+    "db:smoke": "uv run --project apps/api python scripts/db/migration_smoke.py",
+    "db:migrate": "uv run --project apps/api python scripts/db/apply_migrations.py",
+    "test:e2e:admin": "pnpm --filter @vlab/web test:e2e:admin"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

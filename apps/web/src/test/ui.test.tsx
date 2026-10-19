@@ -39,12 +39,12 @@ describe('student flow', () => {
     expect(screen.getByLabelText(new RegExp(tx('exp04.prelab.q2.prompt')))).toHaveValue(
       'amount over volume',
     );
+    await user.click(screen.getByRole('button', { name: tx('ui.nav.to_mode') }));
     for (const r of store
       .getState()
       .engine.definition.safetyRules.filter((x) => x.kind === 'checklist'))
       await user.click(screen.getByLabelText(tx(r.textKey)));
     expect(screen.getByText(tx('ui.prelab.safety_complete'))).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: tx('ui.nav.to_mode') }));
     await user.click(screen.getByLabelText(tx('ui.mode.manual.title')));
     await user.click(screen.getByRole('button', { name: tx('ui.mode.start') }));
 
@@ -52,8 +52,9 @@ describe('student flow', () => {
       await screen.findByRole('heading', { level: 1, name: tx('exp04.title') }),
     ).toBeInTheDocument();
     expect(screen.getByText(tx('ui.mode.manual.title'))).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.protocol') }));
     expect(screen.getByRole('heading', { name: tx('ui.actions.title') })).toBeInTheDocument();
-  });
+  }, 15_000); // long multi-view flow; slow only under full parallel load
 
   it('pre-lab exposes no answer guides before submission', async () => {
     const store = makeStore();
@@ -95,17 +96,26 @@ describe('language', () => {
 });
 
 describe('workbench', () => {
-  it('shows the DOM fallback when WebGL is unavailable, without losing any controls', async () => {
+  it('shows the 2D laboratory without WebGL, and falls back to it from 3D without losing any controls', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
-    renderApp(store);
+    const before = store.getState().session;
+    store.getState().setWorkbenchTab('protocol');
+    const { user } = renderApp(store);
+    // 2D is the default and needs no WebGL (jsdom has none).
+    expect(screen.getByRole('group', { name: tx('ui.lab.scene_label') })).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: tx('ui.canvas.fallback_title') }),
     ).toBeInTheDocument();
+    expect(screen.queryByText(tx('ui.canvas.fallback_unsupported'))).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: tx('ui.lab.renderer_3d') }));
     expect(screen.getByText(tx('ui.canvas.fallback_unsupported'))).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: tx('ui.lab.scene_label') })).toBeInTheDocument();
     expect(
       screen.getAllByRole('button', { name: tx('exp04.action.weigh_watch_glass') }).length,
     ).toBe(1);
+    expect(store.getState().session).toBe(before);
   });
 
   it('numeric inputs dispatch typed quantities with units', async () => {
@@ -116,6 +126,7 @@ describe('workbench', () => {
       { type: 'weigh_watch_glass' as const },
     ])
       await store.getState().dispatchLabAction(a);
+    store.getState().setWorkbenchTab('protocol');
     const { user } = renderApp(store);
     const form = document.getElementById('action-form-set_balance_sliders')!;
     expect(within(form).getByText('g')).toBeInTheDocument();
@@ -134,6 +145,7 @@ describe('workbench', () => {
   it('invalid input is reported and not dispatched (never silently repaired)', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
+    store.getState().setWorkbenchTab('protocol');
     const { user } = renderApp(store);
     const events = store.getState().session!.events.length;
     const form = document.getElementById('action-form-add_water')!;
@@ -149,8 +161,10 @@ describe('workbench', () => {
   it('a physically impossible action shows a visible rejection in manual mode', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
+    store.getState().setWorkbenchTab('protocol');
     const { user } = renderApp(store);
     await user.click(screen.getByRole('button', { name: tx('exp04.action.remove_funnel') }));
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.results') }));
     const log = await screen.findByRole('heading', { name: tx('ui.log.feedback') });
     expect(
       within(log.parentElement!).getByText(tx('engine.rejection.funnel_on_flask')),
@@ -254,6 +268,8 @@ describe('keyboard operation', () => {
     await user.keyboard('{Enter}');
     expect(store.getState().view).toBe('library');
     expect(libraryNav).toHaveAttribute('aria-current', 'page');
+    await user.tab(); // Start a practical
+    await user.tab(); // Admin (always listed in development builds)
     await user.tab(); // English
     await user.tab(); // Sinhala
     await user.tab(); // search
@@ -269,12 +285,16 @@ describe('keyboard operation', () => {
   it('equipment checkboxes and action buttons work from the keyboard', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
+    // The equipment checklist (Materials) and the dispatch form (Protocol) are separate notebook
+    // sections now (V3-2); a keyboard user reaches each by switching the active section tab.
+    store.getState().setWorkbenchTab('materials');
     const { user } = renderApp(store);
     const box = document.getElementById('equip-watch_glass') as HTMLInputElement;
     expect(box).toHaveAccessibleName(new RegExp(tx('exp04.apparatus.watch_glass')));
     box.focus();
     await user.keyboard(' ');
     expect(store.getState().ui.pendingApparatus).toEqual(['watch_glass']);
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.protocol') }));
     const button = within(document.getElementById('action-form-select_apparatus')!).getByRole(
       'button',
       { name: tx('exp04.action.select_apparatus') },

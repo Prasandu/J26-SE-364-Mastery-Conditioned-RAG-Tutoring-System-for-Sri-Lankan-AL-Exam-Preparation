@@ -113,7 +113,7 @@ export function LibraryView() {
         />
       )}
       {visible.length > 0 && (
-        <div className="card-grid">
+        <div className="library-list">
           {visible.map((entry) => (
             <ExperimentCard key={entry.experimentId} entry={entry} />
           ))}

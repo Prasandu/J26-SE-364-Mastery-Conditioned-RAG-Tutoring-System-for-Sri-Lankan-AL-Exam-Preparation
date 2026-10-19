@@ -1,0 +1,416 @@
+/*
+ * The practical as one full-screen flow (SimulationFlowShell): pre-lab, workbench, notebook,
+ * reflection and report share this frame instead of the site header. Loaded after workbench.css
+ * and studio.css, so it can override their width rules for `.app-main.flow-shell__body`.
+ */
+
+/* A fixed-height application shell (V3-1), not a scrolling page: the top bar, step rail and
+ * Previous/Next pager are always visible, and exactly one region scrolls — `.flow-shell__body` —
+ * never the page itself. A `:has(.workbench)` override below further delegates that one scroll
+ * to the notebook/equipment column alone on the workbench step, so the stage never scrolls away
+ * while the student reads the notebook, and no two scroll containers ever compete. */
+.flow-shell {
+  display: grid;
+  /* `minmax(0, 1fr)`, not the grid default `auto`: without it, a row whose content doesn't wrap
+   * (e.g. the step rail at narrow widths) stretches this single column past the viewport width,
+   * and every row inherits that width — a classic CSS Grid "blowout" that plain overflow checks
+   * on document.documentElement miss, because `overflow: hidden` below clips it silently instead
+   * of producing a visible scrollbar. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100vh;
+  height: 100dvh; /* mobile browser chrome-aware; 100vh above is the fallback */
+  overflow: hidden;
+  background: var(--ink-900);
+}
+
+/* ---------- top bar: back, title, language ---------- */
+.flow-shell__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6) 0;
+  color: #ffffff;
+}
+
+.flow-shell__back {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 6%);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.flow-shell__back:hover {
+  background: rgb(255 255 255 / 16%);
+}
+
+.flow-shell__back:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.flow-shell__back .icon {
+  transform: scaleX(-1);
+}
+
+.flow-shell__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-shell__tools {
+  flex: none;
+}
+
+.flow-shell__tools .language-switcher {
+  border-color: rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.flow-shell__tools .toggle {
+  color: rgb(255 255 255 / 85%);
+}
+
+.flow-shell__tools .toggle--on {
+  background: #ffffff;
+  color: var(--ink-900);
+}
+
+/* ---------- step rail (SessionNav) ---------- */
+.flow-shell .session-nav {
+  align-items: center;
+  max-width: var(--workbench-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-6);
+}
+
+.flow-shell .session-nav__steps {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-shell .session-nav__item + .session-nav__item {
+  margin-top: 0;
+}
+
+.flow-shell .session-nav__button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 2px var(--space-3) 2px 2px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 7%);
+  color: rgb(255 255 255 / 70%);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.flow-shell .session-nav__button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 16%);
+}
+
+.flow-shell .session-nav__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.flow-shell .session-nav__button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.flow-shell .session-nav__marker {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 16%);
+  color: #ffffff;
+  font-size: var(--text-xs);
+}
+
+.flow-shell .session-nav__item--done .session-nav__button {
+  color: #ffffff;
+}
+
+.flow-shell .session-nav__item--done .session-nav__marker {
+  background: var(--teal-500);
+}
+
+.flow-shell .session-nav__item--current .session-nav__button {
+  background: #ffffff;
+  color: var(--ink-900);
+}
+
+.flow-shell .session-nav__item--current .session-nav__marker {
+  background: var(--teal-600);
+  color: #ffffff;
+}
+
+.flow-shell .session-nav__mode {
+  flex: none;
+  margin-left: var(--space-3);
+  border-color: rgb(255 255 255 / 30%);
+  background: transparent;
+  color: #ffffff;
+}
+
+.flow-shell .session-nav__mode:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+/* ---------- body: the step's own page, full flow width, light surface ---------- */
+.app-main.flow-shell__body {
+  min-height: 0; /* lets this grid row's content scroll instead of forcing the row to grow */
+  overflow-y: auto;
+  max-width: var(--workbench-max);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-8);
+  background: var(--canvas);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Desktop workbench: `.workbench__side` (the notebook + equipment column) stays pinned near the
+ * top of this one scrolling region via `position: sticky` (set in workbench.css) instead of a
+ * hard height/overflow containment — an earlier attempt at full containment clipped the stage to
+ * a fixed height regardless of its own content, which silently hid part of it (and the bench
+ * drop target with it) rather than keeping it visible. Sticky positioning degrades gracefully:
+ * the stage is always rendered at its natural size, and the notebook merely stops scrolling with
+ * it once it reaches the top, exactly like a normal "pinned sidebar" pattern. */
+
+/* ---------- pager: Previous / Next ---------- */
+.flow-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.flow-pager__side {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.flow-pager__side--next {
+  justify-content: flex-end;
+}
+
+.flow-pager__side:first-child .icon {
+  transform: scaleX(-1);
+}
+
+.flow-pager__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-900);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.flow-pager__button:hover:not(:disabled) {
+  border-color: var(--brand-300);
+}
+
+.flow-pager__button--primary {
+  border-color: var(--brand-700);
+  background: var(--brand-700);
+  color: #ffffff;
+}
+
+.flow-pager__button--primary:hover:not(:disabled) {
+  border-color: var(--brand-800, var(--brand-700));
+  background: var(--brand-800, var(--brand-700));
+}
+
+.flow-pager__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.flow-pager__kicker {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  opacity: 0.75;
+}
+
+/* ---------- floating "Need help?" assistant ---------- */
+/* The pager is now always visible as its own grid row (never just "near the bottom of a short
+ * page"), so the floating button needs a fixed clearance above it rather than a page-level
+ * padding hack: it sits just above the pager, never on top of its Next/Previous buttons. */
+.help-widget {
+  position: fixed;
+  right: var(--space-4);
+  bottom: calc(76px + var(--space-3));
+  z-index: 40;
+}
+
+.help-widget__launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand-700);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 650;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+}
+
+.help-widget__launcher:hover {
+  background: var(--brand-800, var(--brand-700));
+}
+
+.help-widget__launcher:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.help-widget__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  max-height: min(600px, calc(100vh - 2 * var(--space-4)));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.help-widget__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  background: var(--brand-700);
+  color: #ffffff;
+}
+
+.help-widget__text-button {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.help-widget__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 40%);
+  background: transparent;
+  color: #ffffff;
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.help-widget__close:hover {
+  background: rgb(255 255 255 / 15%);
+}
+
+.help-widget__body {
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+/* AssistantPanel's own card chrome is redundant inside the popup, which already has one. */
+.help-widget__body .assistant {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .help-widget {
+    right: var(--space-2);
+    bottom: calc(64px + var(--space-2));
+  }
+
+  .help-widget__launcher span {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .flow-shell__title {
+    font-size: var(--text-base);
+  }
+
+  .flow-shell .session-nav {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .flow-shell .session-nav__label {
+    display: none;
+  }
+
+  .flow-shell .session-nav__button {
+    padding: 2px;
+  }
+
+  .flow-shell .session-nav__mode {
+    margin-left: var(--space-1);
+  }
+
+  .app-main.flow-shell__body {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+
+  .flow-pager {
+    padding: var(--space-3);
+  }
+
+  .flow-pager__kicker {
+    display: none;
+  }
+}

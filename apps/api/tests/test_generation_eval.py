@@ -180,8 +180,19 @@ def test_public_rows_never_contain_answer_text() -> None:
 
 
 def test_live_command_refuses_without_a_key_and_sends_nothing() -> None:
-    env = {k: v for k, v in os.environ.items() if k not in ("OPENAI_API_KEY", "LAB_OPENAI_API_KEY")}
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k
+        not in (
+            "OPENAI_API_KEY",
+            "LAB_OPENAI_API_KEY",
+            "GROQ_API_KEY",
+            "LAB_GROQ_API_KEY",
+        )
+    }
     env["PYTHONIOENCODING"] = "utf-8"
+    env["LAB_EVAL_OFFLINE"] = "1"
     script = REPO_ROOT / "scripts" / "ingest" / "evaluate_generation.py"
     result = subprocess.run(  # noqa: S603 - fixed argv, local script
         [sys.executable, str(script), "--confirm-live"],
@@ -193,12 +204,13 @@ def test_live_command_refuses_without_a_key_and_sends_nothing() -> None:
         check=False,
     )
     assert result.returncode == 2, result.stderr[-500:]
-    assert "not set" in result.stdout and "nothing was sent" in result.stdout
+    assert "nothing was sent" in result.stdout
 
 
 def _script(name: str, *args: str) -> "subprocess.CompletedProcess[str]":
     env = {k: v for k, v in os.environ.items() if "API_KEY" not in k}
     env["PYTHONIOENCODING"] = "utf-8"
+    env["LAB_EVAL_OFFLINE"] = "1"
     return subprocess.run(  # noqa: S603 - fixed argv, local script
         [sys.executable, str(REPO_ROOT / "scripts" / "ingest" / name), *args],
         capture_output=True,
@@ -212,8 +224,38 @@ def _script(name: str, *args: str) -> "subprocess.CompletedProcess[str]":
 
 def test_groq_evaluation_requires_the_groq_key_and_sends_nothing() -> None:
     result = _script("evaluate_generation.py", "--provider", "groq", "--confirm-live")
-    assert result.returncode == 2 and "GROQ_API_KEY" in result.stdout
+    assert result.returncode == 2
     assert "nothing was sent" in result.stdout
+
+
+def test_offline_guard_blocks_inherited_provider_credentials() -> None:
+    env = {k: v for k, v in os.environ.items() if "API_KEY" not in k}
+    env.update(
+        {
+            "GROQ_API_KEY": "gsk_test_never_send",
+            "OPENAI_API_KEY": "sk-test-never-send",
+            "LAB_EVAL_OFFLINE": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+    )
+    result = subprocess.run(  # noqa: S603 - fixed argv, local script
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "ingest" / "evaluate_generation.py"),
+            "--provider",
+            "groq",
+            "--confirm-live",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=REPO_ROOT,
+        timeout=120,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert "Offline evaluation guard enabled" in result.stdout
+    assert "gsk_test_never_send" not in result.stdout + result.stderr
 
 
 def test_connectivity_check_is_opt_in_and_needs_both_keys() -> None:

@@ -13,6 +13,7 @@ describe('store selectors return stable snapshots', () => {
     renderApp(store);
     await screen.findByLabelText(resources.en.translation['ui.notebook.field.aim']!);
     store.getState().navigate('workbench');
+    store.getState().setWorkbenchTab('materials');
     await screen.findByRole('heading', { name: resources.en.translation['ui.equipment.title']! });
     const snapshotWarnings = errors.mock.calls.filter((c) => String(c[0]).includes('getSnapshot'));
     errors.mockRestore();

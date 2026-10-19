@@ -1,24 +1,18 @@
 import { useTranslation } from 'react-i18next';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { SafetyAlert } from '../components/SafetyAlert';
-import { SessionNav } from '../components/SessionNav';
-import { StageProgress } from '../components/StageProgress';
 import { Icon } from '../components/ui/Icon';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import { useSession } from '../store/StoreProvider';
-import { AccessibleEquipmentList } from '../workbench/AccessibleEquipmentList';
-import { ActionPanel } from '../workbench/ActionPanel';
-import { AssistantPanel } from '../workbench/AssistantPanel';
-import { GuidancePanel } from '../workbench/GuidancePanel';
-import { LabCanvas } from '../workbench/LabCanvas';
-import { MeasurementPanel } from '../workbench/MeasurementPanel';
-import { ObservationLog } from '../workbench/ObservationLog';
+import { LaboratoryViewport } from '../workbench/LaboratoryViewport';
 import { buildSceneModel } from '../workbench/sceneModel';
+import { SidePanel } from '../workbench/SidePanel';
 
 /**
- * Virtual laboratory workspace: equipment, a prominent 3D bench, guidance and actions, then
- * measurements, observations and the contextual assistant. Every panel stays rendered (no hidden
- * tabs) so keyboard and screen-reader users reach all controls; layout adapts by width.
+ * Virtual laboratory: session header and safety first, then the 2D/3D laboratory stage, with the
+ * seven-section laboratory notebook (V3-2: Context/Materials/Predictions/Protocol/Results/
+ * Reflection/Summary) beside it on the right — the equipment tray is the Materials section, not a
+ * separate permanent gallery. On narrow screens the stage comes first, then the notebook.
  */
 export function WorkbenchView() {
   const { t } = useTranslation();
@@ -26,7 +20,6 @@ export function WorkbenchView() {
   const session = useSession((s) => s.session);
   const ui = useSession((s) => s.ui);
   const feedback = useSession((s) => s.feedback);
-  const pickItem = useSession((s) => s.pickItem);
   const navigate = useSession((s) => s.navigate);
 
   if (!session) {
@@ -54,7 +47,12 @@ export function WorkbenchView() {
   }
 
   const model = buildSceneModel(session, engine.definition, ui);
-  const stage = engine.definition.stages.find((s) => s.id === session.stage);
+  const stages = engine.definition.stages;
+  const stageIndex = Math.max(
+    0,
+    stages.findIndex((s) => s.id === session.stage),
+  );
+  const stage = stages[stageIndex];
   // Feedback arrives already filtered by the projection's disclosure rules.
   const announced = feedback
     .filter((f) => f.severity !== 'safety')
@@ -62,7 +60,7 @@ export function WorkbenchView() {
     .join(' ');
 
   return (
-    <section className="workbench" aria-labelledby="workbench-title">
+    <section className="workbench lab-studio" aria-labelledby="workbench-title">
       <header className="workbench__bar">
         <div className="workbench__heading">
           <p className="page-header__eyebrow">
@@ -80,39 +78,29 @@ export function WorkbenchView() {
             )}
             {stage && (
               <li className="chip chip--outline">
-                <Icon name="layers" size={14} /> {t(stage.titleKey)}
+                <Icon name="layers" size={14} />{' '}
+                {t('ui.protocol.stage_of', { current: stageIndex + 1, total: stages.length })}{' '}
+                {t(stage.titleKey)}
               </li>
             )}
           </ul>
         </div>
-        <SessionNav current="workbench" />
       </header>
       <ConnectionBanner />
-      <StageProgress />
-      <SafetyAlert />
+      <div className="workbench__safety">
+        <SafetyAlert />
+      </div>
       <p className="visually-hidden" aria-live="polite" role="status">
         {announced}
       </p>
 
       <div className="workbench__grid">
-        <aside className="workbench__equipment">
-          <AccessibleEquipmentList model={model} />
-        </aside>
         <div className="workbench__scene">
-          <div className="scene-frame">
-            <LabCanvas model={model} onPick={pickItem} />
-            <p className="scene-frame__caption">{t('ui.workbench.scene_caption')}</p>
-          </div>
+          <LaboratoryViewport model={model} />
         </div>
-        <aside className="workbench__controls">
-          <GuidancePanel />
-          {session.mode !== 'automatic' && <ActionPanel />}
+        <aside className="workbench__side">
+          <SidePanel model={model} />
         </aside>
-      </div>
-      <div className="workbench__bottom">
-        <MeasurementPanel />
-        <ObservationLog />
-        <AssistantPanel />
       </div>
     </section>
   );

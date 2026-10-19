@@ -209,8 +209,9 @@ def test_validation_reports_missing_fields_duplicates_and_simulation(
     assert any(d["kind"] == "draft" and d["blocking"] for d in detail["duplicates"])
 
 
-def complete_draft(client: TestClient, tmp_path: Path) -> dict[str, Any]:
-    result = upload(client, pdf(tmp_path, [COMPLETE]), kind="single").json()
+def complete_draft(client: TestClient, tmp_path: Path, variant: str = "") -> dict[str, Any]:
+    pages = [COMPLETE + ([variant] if variant else [])]
+    result = upload(client, pdf(tmp_path, pages, name=f"doc{variant}.pdf"), kind="single").json()
     return dict(client.get(f"/admin/dev/drafts/{result['drafts'][0]['id']}").json())
 
 
@@ -276,7 +277,7 @@ def test_version_conflicts_and_invalid_edits(admin: TestClient, tmp_path: Path) 
     extra = {**payload, "expectedVersion": fresh["version"], "publish": True}
     assert admin.put(url, json=extra).status_code == 422
     too_long = {**payload, "expectedVersion": fresh["version"],
-                "content": {**draft["content"], "aims": ["x" * 3000]}}  # fmt: skip
+                "content": {**draft["content"], "aims": ["x" * 9000]}}  # fmt: skip
     assert admin.put(url, json=too_long).status_code == 422
 
 
@@ -298,7 +299,7 @@ def test_unsourced_manual_additions_block_approval(admin: TestClient, tmp_path: 
 
 def test_archiving_clears_duplicate_blocking(admin: TestClient, tmp_path: Path) -> None:
     first = complete_draft(admin, tmp_path)["draft"]
-    second = complete_draft(admin, tmp_path)["draft"]
+    second = complete_draft(admin, tmp_path, variant="Second printing.")["draft"]
     blocked = admin.get(f"/admin/dev/drafts/{first['id']}").json()["validation"]
     assert any(d["blocking"] for d in blocked["duplicates"])
     archived = review(admin, second, "archive").json()
@@ -337,3 +338,15 @@ def test_unwritable_storage_is_a_contract_error_not_a_crash(
     assert response.json()["error"]["code"] == "admin_storage_error"
     assert response.headers.get("X-Correlation-ID")
     assert admin.get("/admin/dev/drafts").json() == []
+
+
+def test_the_same_document_is_imported_once(admin: TestClient, tmp_path: Path) -> None:
+    data = pdf(tmp_path, [COMPLETE])
+    first = upload(admin, data, kind="single")
+    assert first.status_code == 201
+    again = upload(admin, data, kind="guide")
+    assert again.status_code == 409
+    error = again.json()["error"]
+    assert error["code"] == "document_already_imported"
+    assert error["details"]["importId"] == first.json()["import"]["id"]
+    assert len(admin.get("/admin/dev/drafts").json()) == 1

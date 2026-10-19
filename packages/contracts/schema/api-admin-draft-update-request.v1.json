@@ -52,7 +52,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "apparatus": {
@@ -61,7 +61,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "chemicals": {
@@ -70,7 +70,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "procedure": {
@@ -79,7 +79,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "precautions": {
@@ -88,7 +88,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "calculations": {
@@ -97,7 +97,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "observations": {
@@ -106,7 +106,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "preLabQuestions": {
@@ -115,7 +115,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         },
         "postLabQuestions": {
@@ -124,7 +124,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 8000
           }
         }
       },

@@ -13,5 +13,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Full-page jsdom flows are slow only when the whole suite runs in parallel.
+    testTimeout: 15_000,
   },
 });

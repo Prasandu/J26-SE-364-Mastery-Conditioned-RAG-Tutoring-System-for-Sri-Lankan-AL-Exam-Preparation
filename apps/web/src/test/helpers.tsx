@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { App } from '../App';
 import type { EngineAdapter } from '../engine/adapter';
 import { createLocalEngineAdapter } from '../engine/localAdapter';
-import { createSessionStore, type SessionStore } from '../store/sessionStore';
+import { createSessionStore, type SessionStore, type WorkbenchTab } from '../store/sessionStore';
 
 export const TODAY = '2026-10-10';
 
@@ -48,6 +48,12 @@ export const startSession = async (
   const session = store.getState().session;
   if (!session) throw new Error('session did not start');
   return session;
+};
+
+/** Opens a laboratory side-panel tab before rendering (presentation state only). */
+export const onTab = (store: SessionStore, tab: WorkbenchTab): SessionStore => {
+  store.getState().setWorkbenchTab(tab);
+  return store;
 };
 
 export const renderApp = (store: SessionStore = makeStore()) => {

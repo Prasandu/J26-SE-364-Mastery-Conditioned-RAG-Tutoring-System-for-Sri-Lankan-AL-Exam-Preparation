@@ -89,6 +89,9 @@ const ERRORS = new Set([
   'review_transition_invalid',
   'invalid_request',
   'network_unavailable',
+  'duplicate_practical',
+  'assist_unavailable',
+  'assist_failed',
 ]);
 
 /** Draft review: validation preview, field editing with source pages, and review actions. */
@@ -107,6 +110,8 @@ export function DraftReview({
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: 'error' | 'success'; key: string } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [fixedNow, setFixedNow] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -169,11 +174,42 @@ export function DraftReview({
     action: AdminReviewAction,
     field: AdminField | null = null,
     reviewed: boolean | null = null,
+    otherId: string | null = null,
   ) =>
     run(
-      () => client.review(draft.id, { expectedVersion: draft.version, action, field, reviewed }),
+      () =>
+        client.review(draft.id, {
+          expectedVersion: draft.version,
+          action,
+          field,
+          reviewed,
+          ...(otherId ? { otherId } : {}),
+        }),
       'admin.review.updated',
     );
+  const emptyLists = ADMIN_LIST_FIELDS.filter((f) => draft.content[f].length === 0);
+  const suggest = () =>
+    run(async () => {
+      const result = await client.suggest(draft.id, {
+        expectedVersion: draft.version,
+        fields: emptyLists.length > 0 ? emptyLists : [...ADMIN_LIST_FIELDS],
+      });
+      setNotice(t('admin.assist.result', { accepted: result.accepted, rejected: result.rejected }));
+      return result.detail;
+    }, 'admin.assist.done');
+  const addSuggestion = (f: ListField, text: string, page: number) => {
+    const values = form.values[f] ? `${form.values[f]}\n${text}` : text;
+    const pages = form.pages[f]
+      .split(/[,\s]+/)
+      .filter(Boolean)
+      .map(Number);
+    const nextPages = pages.includes(page) ? pages : [...pages, page].sort((a, b) => a - b);
+    setForm({
+      values: { ...form.values, [f]: values },
+      pages: { ...form.pages, [f]: nextPages.join(', ') },
+    });
+    setDirty(true);
+  };
   const issuesFor = (f: string) => draft.extractionIssues.filter((i) => i.field === f);
 
   return (
@@ -203,6 +239,48 @@ export function DraftReview({
           <button
             type="button"
             className="button"
+            disabled={busy || dirty || archived}
+            title={t('admin.quick.fix_help')}
+            onClick={() => {
+              if (window.confirm(t('admin.quick.fix_one_confirm')))
+                void act('quick_fix').then(() => setFixedNow(true));
+            }}
+          >
+            <Icon name="check" size={16} /> {t('admin.quick.fix')}
+          </button>
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={
+              busy ||
+              dirty ||
+              archived ||
+              draft.status === 'content_approved' ||
+              validation.blocking.length > 0
+            }
+            title={
+              validation.blocking.length > 0
+                ? t('admin.quick.approve_blocked')
+                : t('admin.quick.approve_help')
+            }
+            onClick={() => {
+              if (window.confirm(t('admin.quick.approve_one_confirm'))) void act('quick_approve');
+            }}
+          >
+            {t('admin.quick.approve')}
+          </button>
+          <button
+            type="button"
+            className="button"
+            disabled={busy || dirty || archived}
+            title={t('admin.assist.help')}
+            onClick={() => void suggest()}
+          >
+            {t('admin.assist.button')}
+          </button>
+          <button
+            type="button"
+            className="button"
             disabled={busy}
             onClick={() => void run(() => client.validate(draft.id), 'admin.review.validated')}
           >
@@ -212,6 +290,21 @@ export function DraftReview({
       </header>
 
       {message && <StatusMessage tone={message.tone} title={t(message.key)} />}
+      {notice && message?.tone === 'success' && <p className="hint-text">{notice}</p>}
+      {fixedNow && (
+        <p className="notice" role="status">
+          {(draft.quickFixLog ?? []).length === 0
+            ? t('admin.quick.nothing_to_fix')
+            : t('admin.quick.fixed_list', {
+                list: (draft.quickFixLog ?? [])
+                  .map((c) => {
+                    const [kind, field] = c.split(':');
+                    return t(`admin.quick.log.${kind}`, { field: t(`admin.field.${field}`) });
+                  })
+                  .join('; '),
+              })}
+        </p>
+      )}
 
       <div className="content-layout">
         <div className="content-layout__main">
@@ -225,8 +318,37 @@ export function DraftReview({
               const id = `field-${f}`;
               const issues = issuesFor(f);
               const missing = validation.missingFields.includes(f);
+              const absent = (draft.absentConfirmed ?? []).includes(f as ListField);
+              const reviewed = draft.fieldReview[f] ?? false;
+              const value = form.values[f];
+              const count = isList(f) ? value.split('\n').filter((x) => x.trim()).length : null;
+              const preview = value.split('\n')[0] ?? '';
               return (
-                <div key={f} className={missing ? 'admin-field is-missing' : 'admin-field'}>
+                <details
+                  key={f}
+                  className={missing ? 'admin-field is-missing' : 'admin-field'}
+                  open={missing || issues.length > 0 || (!reviewed && value.trim() !== '')}
+                >
+                  <summary className="admin-field__summary">
+                    <span className="admin-field__name">{t(`admin.field.${f}`)}</span>
+                    <span className="admin-field__preview">
+                      {count !== null && value.trim() !== ''
+                        ? t('admin.review.items', { count })
+                        : preview || t('admin.review.empty')}
+                    </span>
+                    {absent && <span className="tag">{t('admin.quick.absent')}</span>}
+                    {missing && (
+                      <span className="tag tag--warning">{t('admin.review.missing')}</span>
+                    )}
+                    {issues.length > 0 && (
+                      <span className="tag tag--warning">
+                        {t('admin.review.issue_count', { count: issues.length })}
+                      </span>
+                    )}
+                    <span className={reviewed ? 'tag tag--ok' : 'tag'}>
+                      {t(reviewed ? 'admin.review.reviewed' : 'admin.review.not_reviewed')}
+                    </span>
+                  </summary>
                   <div className="admin-field__head">
                     <label htmlFor={id}>{t(`admin.field.${f}`)}</label>
                     {draft.fieldEdited[f] && (
@@ -290,16 +412,41 @@ export function DraftReview({
                       }}
                     />
                   )}
+                  {isList(f) && (draft.suggestions?.[f] ?? []).length > 0 && (
+                    <div className="admin-suggestions">
+                      <p className="admin-suggestions__title">{t('admin.assist.suggested')}</p>
+                      <ul>
+                        {(draft.suggestions?.[f] ?? []).map((s) => (
+                          <li key={`${s.page}-${s.text}`}>
+                            <span>
+                              {s.text}{' '}
+                              <span className="hint-text">
+                                {t('admin.assist.from_page', { page: s.page })}
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              className="button button--ghost"
+                              disabled={archived || form.values[f].split('\n').includes(s.text)}
+                              onClick={() => addSuggestion(f, s.text, s.page)}
+                            >
+                              {t('admin.assist.add')}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   {issues.map((i, n) => (
                     <p key={`${i.code}-${n}`} className="admin-field__issue">
                       <Icon name="alert" size={14} />{' '}
                       {t(ISSUES.has(i.code) ? `admin.issue.${i.code}` : 'admin.issue.other')}
                     </p>
                   ))}
-                </div>
+                </details>
               );
             })}
-            <div className="button-row">
+            <div className="button-row admin-review__savebar">
               <button
                 type="button"
                 className="button button--primary"
@@ -401,13 +548,24 @@ export function DraftReview({
                   >
                     <Icon name="alert" size={16} />{' '}
                     {t(`admin.duplicate.${d.kind}`, {
-                      number: d.experimentNumber,
+                      number: d.experimentNumber ?? '—',
                       title: d.otherTitle ?? '—',
+                      percent: d.similarity === null ? '—' : Math.round(d.similarity * 100),
                     })}
                     {d.conflictingTitle && ` ${t('admin.duplicate.conflicting')}`}
                     {d.blocking
                       ? ` ${t('admin.duplicate.blocking')}`
                       : ` ${t('admin.duplicate.info')}`}
+                    {d.kind === 'content' && d.blocking && (
+                      <button
+                        type="button"
+                        className="button button--ghost"
+                        disabled={busy || dirty || archived}
+                        onClick={() => void act('mark_distinct', null, null, d.otherId)}
+                      >
+                        {t('admin.duplicate.mark_distinct')}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -1,15 +1,42 @@
 import {
+  AdminAuditSchema,
+  AdminDocumentsSchema,
   AdminDraftDetailSchema,
   AdminDraftSummarySchema,
   AdminImportResultSchema,
+  AdminImportSchema,
+  AdminKnowledgeBuildSchema,
+  AdminKnowledgeChunksSchema,
+  AdminKnowledgeSchema,
+  AdminLibrarySchema,
+  AdminSettingsSchema,
   AdminStatusSchema,
+  AdminSuggestResultSchema,
+  AdminTranslationsSchema,
+  AdminUserSchema,
+  AdminUsersSchema,
   ApiErrorSchema,
+  type AdminAudit,
+  type AdminDocuments,
+  type AdminDocumentUpdateRequest,
   type AdminDraftDetail,
   type AdminDraftSummary,
   type AdminDraftUpdateRequest,
+  type AdminImport,
   type AdminImportResult,
+  type AdminKnowledge,
+  type AdminKnowledgeBuild,
+  type AdminKnowledgeChunks,
+  type AdminLibrary,
   type AdminReviewRequest,
+  type AdminSettings,
   type AdminStatus,
+  type AdminSuggestRequest,
+  type AdminSuggestResult,
+  type AdminTranslations,
+  type AdminUser,
+  type AdminUserRequest,
+  type AdminUsers,
 } from '@vlab/contracts';
 import { EngineError } from '../engine/adapter';
 
@@ -36,6 +63,22 @@ export interface AdminClient {
   update(id: string, req: AdminDraftUpdateRequest): Promise<AdminDraftDetail>;
   validate(id: string): Promise<AdminDraftDetail>;
   review(id: string, req: AdminReviewRequest): Promise<AdminDraftDetail>;
+  suggest(id: string, req: AdminSuggestRequest): Promise<AdminSuggestResult>;
+  library(): Promise<AdminLibrary>;
+  knowledge(): Promise<AdminKnowledge>;
+  buildKnowledge(draftIds: string[]): Promise<AdminKnowledgeBuild>;
+  activateKnowledge(knowledgeVersion: string): Promise<AdminKnowledge>;
+  knowledgeChunks(knowledgeVersion: string): Promise<AdminKnowledgeChunks>;
+  users(): Promise<AdminUsers>;
+  createUser(req: AdminUserRequest): Promise<AdminUser>;
+  updateUser(id: string, req: AdminUserRequest): Promise<AdminUser>;
+  documents(): Promise<AdminDocuments>;
+  updateDocument(id: string, req: AdminDocumentUpdateRequest): Promise<AdminImport>;
+  translations(): Promise<AdminTranslations>;
+  /** Download URL of the Sinhala review sheet (CSV) for one locale file. */
+  translationSheetUrl(file: string): string;
+  audit(): Promise<AdminAudit>;
+  settings(): Promise<AdminSettings>;
 }
 
 interface Parser<T> {
@@ -138,5 +181,26 @@ export const createAdminClient = ({
     update: (draftId, req) => call('PUT', id(draftId), AdminDraftDetailSchema, req),
     validate: (draftId) => call('POST', `${id(draftId)}/validate`, AdminDraftDetailSchema),
     review: (draftId, req) => call('POST', `${id(draftId)}/review`, AdminDraftDetailSchema, req),
+    suggest: (draftId, req) =>
+      call('POST', `${id(draftId)}/suggest`, AdminSuggestResultSchema, req),
+    library: () => call('GET', '/library', AdminLibrarySchema),
+    knowledge: () => call('GET', '/knowledge', AdminKnowledgeSchema),
+    buildKnowledge: (draftIds) =>
+      call('POST', '/knowledge/builds', AdminKnowledgeBuildSchema, { draftIds }),
+    activateKnowledge: (knowledgeVersion) =>
+      call('POST', '/knowledge/activate', AdminKnowledgeSchema, { knowledgeVersion }),
+    knowledgeChunks: (version) =>
+      call('GET', `/knowledge/${encodeURIComponent(version)}/chunks`, AdminKnowledgeChunksSchema),
+    users: () => call('GET', '/users', AdminUsersSchema),
+    createUser: (req) => call('POST', '/users', AdminUserSchema, req),
+    updateUser: (userId, req) =>
+      call('PUT', `/users/${encodeURIComponent(userId)}`, AdminUserSchema, req),
+    documents: () => call('GET', '/documents', AdminDocumentsSchema),
+    updateDocument: (importId, req) =>
+      call('PUT', `/documents/${encodeURIComponent(importId)}`, AdminImportSchema, req),
+    translations: () => call('GET', '/translations', AdminTranslationsSchema),
+    translationSheetUrl: (file) => `${root}/translations/${encodeURIComponent(file)}.csv`,
+    audit: () => call('GET', '/audit', AdminAuditSchema),
+    settings: () => call('GET', '/settings', AdminSettingsSchema),
   };
 };

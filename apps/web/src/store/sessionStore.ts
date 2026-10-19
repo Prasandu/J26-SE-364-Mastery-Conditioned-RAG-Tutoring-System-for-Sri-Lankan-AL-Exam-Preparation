@@ -27,8 +27,24 @@ export type View =
   | 'mode'
   | 'workbench'
   | 'notebook'
+  | 'reflection'
   | 'report'
   | 'admin';
+
+/** The practical runs as one continuous full-screen flow: pre-lab, the lab itself, the notebook
+ * write-up, post-lab reflection and the final report, in this order. Mode selection sits between
+ * pre-lab and the lab but is not one of the numbered flow steps. */
+export type FlowView = 'prelab' | 'workbench' | 'notebook' | 'reflection' | 'report';
+export const FLOW_VIEWS: readonly FlowView[] = [
+  'prelab',
+  'workbench',
+  'notebook',
+  'reflection',
+  'report',
+];
+/** `FLOW_VIEWS.includes`/`.indexOf` need a `FlowView`; this widens the check to any `View`. */
+export const isFlowView = (view: View): view is FlowView =>
+  (FLOW_VIEWS as readonly View[]).includes(view);
 
 export type LogKind = 'observation' | 'safety' | 'rejected' | 'procedural' | 'guidance';
 
@@ -47,6 +63,11 @@ export interface PreLabState {
   acknowledgedSafety: string[];
 }
 
+/** Post-lab reflection answers; same storage pattern as pre-lab (local only, never graded). */
+export interface PostLabState {
+  answers: Record<string, string>;
+}
+
 export type PendingConfirmation =
   | { kind: 'predicted_errors'; action: Action; errorCodes: ErrorCode[] }
   | { kind: 'safety'; action: Action; errorCodes: ErrorCode[] }
@@ -62,6 +83,19 @@ export interface ConnectionError {
   retry: { action: Action; actor: 'student' | 'system'; request: SubmitRequest } | null;
 }
 
+/**
+ * Visual renderer for the laboratory. A presentation preference only: changing it never touches the
+ * session, events, notebook or scores.
+ */
+export type LabView = '2d' | '3d';
+
+/**
+ * Open section of the laboratory notebook (V3-2; presentation only — never tied to the chemistry
+ * stage). Context/Materials/Predictions/Protocol/Results/Reflection/Summary, in that order.
+ */
+export type WorkbenchTab =
+  'context' | 'materials' | 'predictions' | 'protocol' | 'results' | 'reflection' | 'summary';
+
 export type NotebookStatus = 'pristine' | 'unsaved' | 'saving' | 'saved' | 'error' | 'conflict';
 
 export interface SessionStoreState {
@@ -69,7 +103,10 @@ export interface SessionStoreState {
   readonly engine: EngineAdapter;
   view: View;
   locale: Locale;
+  labView: LabView;
+  workbenchTab: WorkbenchTab;
   preLab: PreLabState;
+  postLab: PostLabState;
   selection: { mode: Mode; guidanceLevel: GuidanceLevel | null };
   /** Public projection returned by the adapter; never full engine state. */
   session: SessionView | null;
@@ -95,7 +132,10 @@ export interface SessionStoreState {
 
   navigate(view: View): void;
   setLocale(locale: Locale): void;
+  setLabView(labView: LabView): void;
+  setWorkbenchTab(tab: WorkbenchTab): void;
   savePreLabAnswer(questionId: string, text: string): void;
+  savePostLabAnswer(questionId: string, text: string): void;
   setPrediction(text: string): void;
   toggleSafetyAcknowledgement(ruleId: string): void;
   selectMode(mode: Mode, guidanceLevel: GuidanceLevel | null): void;
@@ -178,12 +218,22 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
           messageKey: f.messageKey,
           visibility: f.visibility,
         }));
+        // Items the engine has accepted onto the bench no longer need a pending tick.
+        const placed =
+          result.event.accepted && action.type === 'select_apparatus' ? action.apparatusIds : [];
         set((s) => ({
           session: result.session,
           feedback: result.feedback,
           log: [...s.log, ...entries],
           connection: null,
           report: result.session.status === 'submitted' ? s.report : { status: 'idle', data: null },
+          ui:
+            placed.length > 0
+              ? {
+                  ...s.ui,
+                  pendingApparatus: s.ui.pendingApparatus.filter((id) => !placed.includes(id)),
+                }
+              : s.ui,
         }));
         return result;
       } catch (error) {
@@ -254,7 +304,10 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
       engine: adapter,
       view: 'dashboard',
       locale: 'en',
+      labView: '2d',
+      workbenchTab: 'protocol',
       preLab: { answers: {}, prediction: '', acknowledgedSafety: [] },
+      postLab: { answers: {} },
       selection: { mode: 'guided', guidanceLevel: 'beginner' },
       session: null,
       feedback: [],
@@ -271,9 +324,15 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
         if (view === 'report') void get().loadReport();
       },
       setLocale: (locale) => set({ locale }),
+      setLabView: (labView) => set({ labView }),
+      setWorkbenchTab: (workbenchTab) => set({ workbenchTab }),
       savePreLabAnswer: (questionId, text) =>
         set((s) => ({
           preLab: { ...s.preLab, answers: { ...s.preLab.answers, [questionId]: text } },
+        })),
+      savePostLabAnswer: (questionId, text) =>
+        set((s) => ({
+          postLab: { answers: { ...s.postLab.answers, [questionId]: text } },
         })),
       setPrediction: (text) => set((s) => ({ preLab: { ...s.preLab, prediction: text } })),
       toggleSafetyAcknowledgement: (ruleId) =>

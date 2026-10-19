@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "published",
+              "draft"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "experimentNumber": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "published",
+              "draft",
+              "needs_review",
+              "content_approved"
+            ]
+          },
+          "runnable": {
+            "type": "boolean"
+          },
+          "knowledgeChunks": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sinhala": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "blockers": {
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "experimentNumber",
+          "title",
+          "status",
+          "runnable",
+          "knowledgeChunks",
+          "sinhala",
+          "blockers"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rule": {
+      "type": "string",
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "entries",
+    "rule"
+  ],
+  "additionalProperties": false
+}

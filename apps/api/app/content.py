@@ -1,6 +1,7 @@
 """Loads the canonical experiment definitions and assessments from content/ (never from clients)."""
 
 import json
+import re
 from pathlib import Path
 
 from app.contracts import ContractRegistry
@@ -10,8 +11,16 @@ from app.settings import ConfigurationError
 
 def load_experiments(content_dir: Path, contracts: ContractRegistry) -> list[ExperimentRecord]:
     records: list[ExperimentRecord] = []
-    for definition_path in sorted((content_dir / "experiments").glob("*/definition.v1.json")):
-        assessment_path = definition_path.with_name("assessment.v1.json")
+    for definition_path in sorted((content_dir / "experiments").glob("*/definition.*.json")):
+        if definition_path.name == "definition.v1.json":
+            assessment_path = definition_path.with_name("assessment.v1.json")
+        else:
+            suffix = definition_path.stem.removeprefix("definition.")
+            if not re.fullmatch(r"v\d+", suffix):
+                continue
+            assessment_path = definition_path.with_name(f"assessment.{suffix}.json")
+        if not assessment_path.is_file():
+            raise ConfigurationError(f"Missing assessment for {definition_path.name}")
         definition = json.loads(definition_path.read_text(encoding="utf-8"))
         assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
         if contracts.errors("experiment-definition", definition) or contracts.errors(

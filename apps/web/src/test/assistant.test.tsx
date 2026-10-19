@@ -96,7 +96,8 @@ describe('assistant panel', () => {
   it('is disabled offline with an explanation', async () => {
     const store = makeStore();
     await startSession(store, 'manual');
-    renderApp(store);
+    const { user } = renderApp(store);
+    await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
     expect(screen.getByText(tx('assistant.offline'))).toBeInTheDocument();
     expect(screen.getByLabelText(tx('assistant.question.label'))).toBeDisabled();
   });
@@ -106,6 +107,7 @@ describe('assistant panel', () => {
     const store = makeStore(42, adapter);
     await startSession(store, 'manual');
     const { user } = renderApp(store);
+    await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
     const field = screen.getByLabelText(tx('assistant.question.label'));
     expect(field).toHaveAccessibleDescription(tx('assistant.question.hint'));
     await user.type(field, '  How much Na₂CO₃ do I weigh?  ');
@@ -133,6 +135,7 @@ describe('assistant panel', () => {
     await startSession(store, 'manual');
     store.getState().setLocale('si');
     const { user } = renderApp(store);
+    await user.click(screen.getByRole('button', { name: sx('assistant.help_button') }));
     await user.type(screen.getByLabelText(sx('assistant.question.label')), 'Na₂CO₃ කොපමණද?');
     await user.click(screen.getByRole('button', { name: sx('assistant.submit') }));
     expect(await screen.findByText(sx('assistant.aiLabel'))).toBeInTheDocument();
@@ -152,6 +155,7 @@ describe('assistant panel', () => {
     const store = makeStore(42, adapter);
     await startSession(store, 'manual');
     const { user } = renderApp(store);
+    await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
     await user.type(screen.getByLabelText(tx('assistant.question.label')), 'Who won the cricket?');
     await user.click(screen.getByRole('button', { name: tx('assistant.submit') }));
     const result = await screen.findByRole('article', { name: tx('assistant.status.refused') });
@@ -165,6 +169,7 @@ describe('assistant panel', () => {
     const store = makeStore(42, adapter);
     await startSession(store, 'manual');
     const { user } = renderApp(store);
+    await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
     await user.type(screen.getByLabelText(tx('assistant.question.label')), 'Why use a funnel?');
     await user.click(screen.getByRole('button', { name: tx('assistant.submit') }));
     const alert = await screen.findByText(tx('assistant.error.unavailable'));

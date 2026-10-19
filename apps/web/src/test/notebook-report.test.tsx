@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { EngineError } from '../engine/adapter';
 import { resources } from '../i18n';
-import { makeLocalAdapter, makeStore, renderApp, startSession } from './helpers';
+import { makeLocalAdapter, makeStore, onTab, renderApp, startSession } from './helpers';
 
 const en = resources.en.translation;
 const si = resources.si.translation;
@@ -79,7 +79,11 @@ describe('report view', () => {
     const store = makeStore();
     await startSession(store, 'manual');
     renderApp(store);
-    expect(screen.getByRole('button', { name: tx('ui.nav.report') })).toBeDisabled();
+    expect(
+      within(screen.getByRole('navigation', { name: tx('ui.nav.session') })).getByRole('button', {
+        name: tx('ui.nav.report'),
+      }),
+    ).toBeDisabled();
     store.getState().navigate('report');
     expect(await screen.findByText(tx('ui.report.status.unavailable'))).toBeInTheDocument();
   });
@@ -96,7 +100,7 @@ describe('report view', () => {
       },
     ];
     for (const a of actions) await store.getState().dispatchLabAction(a);
-    const { user } = renderApp(store);
+    const { user } = renderApp(onTab(store, 'protocol'));
     const tapMessage = tx('exp04.error.tap_water_used.message');
     expect(screen.queryByText(tapMessage)).toBeNull();
 
@@ -107,7 +111,11 @@ describe('report view', () => {
     );
     await waitFor(() => expect(store.getState().session?.status).toBe('submitted'));
     expect(screen.queryByText(tapMessage)).toBeNull(); // still hidden on the workbench
-    await user.click(screen.getByRole('button', { name: tx('ui.nav.report') }));
+    await user.click(
+      within(screen.getByRole('navigation', { name: tx('ui.nav.session') })).getByRole('button', {
+        name: tx('ui.nav.report'),
+      }),
+    );
 
     expect(
       await screen.findByRole('heading', { level: 1, name: tx('ui.report.title') }),
@@ -134,7 +142,7 @@ describe('connectivity banner', () => {
     vi.spyOn(adapter, 'submitAction').mockRejectedValueOnce(
       new EngineError('network_unavailable', null, true),
     );
-    const { user } = renderApp(store);
+    const { user } = renderApp(onTab(store, 'protocol'));
     await user.click(
       within(document.getElementById('action-form-request_hint')!).getByRole('button', {
         name: tx('exp04.action.request_hint'),
@@ -158,7 +166,7 @@ describe('connectivity banner', () => {
       await gate;
       return original(...args);
     });
-    const { user } = renderApp(store);
+    const { user } = renderApp(onTab(store, 'protocol'));
     const button = within(document.getElementById('action-form-request_hint')!).getByRole(
       'button',
       { name: tx('exp04.action.request_hint') },

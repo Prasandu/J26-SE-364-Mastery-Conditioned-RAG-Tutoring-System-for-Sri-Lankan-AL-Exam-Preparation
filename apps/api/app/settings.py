@@ -23,9 +23,10 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     repository: Literal["memory", "postgres"] = "memory"
     database_url: SecretStr | None = None
-    #: disabled (default) | fake (development/test only) | openai | groq | failover (ordered
-    #: providers, default groq then openai; technical failures only, see D30).
-    llm_provider: Literal["disabled", "fake", "openai", "groq", "failover"] = "disabled"
+    #: disabled (default) | fake (development/test only) | openai | groq | ollama (local model on
+    #: this machine) | failover (ordered providers, default groq then openai; technical failures
+    #: only, see D30).
+    llm_provider: Literal["disabled", "fake", "openai", "groq", "ollama", "failover"] = "disabled"
     #: OpenAI model; required for openai and failover. Never hard-coded (documented in .env).
     llm_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
     llm_reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] = "low"
@@ -41,6 +42,12 @@ class Settings(BaseSettings):
     groq_api_key: SecretStr | None = Field(
         default=None, validation_alias=AliasChoices("GROQ_API_KEY", "LAB_GROQ_API_KEY")
     )
+    #: Local Ollama server (OpenAI-compatible endpoint). Loopback only: documents and questions
+    #: never leave this machine through this provider.
+    ollama_base_url: str = "http://127.0.0.1:11434/v1"
+    #: Ollama model tag (for example a Qwen or Llama model pulled locally); required for ollama.
+    ollama_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$")
+    ollama_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
     llm_failover_order: list[Literal["groq", "openai"]] = ["groq", "openai"]
     llm_primary_timeout_seconds: float = Field(default=12.0, gt=0, le=120)
     llm_fallback_timeout_seconds: float = Field(default=18.0, gt=0, le=120)
@@ -58,6 +65,15 @@ class Settings(BaseSettings):
     admin_max_upload_bytes: int = Field(default=25 * 1024 * 1024, ge=1024, le=25 * 1024 * 1024)
     admin_max_pages: int = Field(default=400, ge=1, le=400)
     admin_extract_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    #: Where admin records live: file (private JSON under admin_data_dir; zero setup) | postgres
+    #: (LAB_DATABASE_URL; uploaded PDFs stay content-addressed on disk either way).
+    admin_repository: Literal["file", "postgres"] = "file"
+    #: Optional AI help for extraction. Local only by design: disabled (default) | ollama (needs
+    #: LAB_OLLAMA_MODEL) | fake (tests). External providers are deliberately not an option.
+    admin_extraction_assist: Literal["disabled", "ollama", "fake"] = "disabled"
+    #: Knowledge-base store shared by the assistant and the admin knowledge feed:
+    #: memory (private files under knowledge_data_dir / admin_data_dir) | postgres (pgvector).
+    knowledge_repository: Literal["memory", "postgres"] = "memory"
     embedding_provider: Literal["disabled", "fake", "e5_local"] = "disabled"
     embedding_model: str = "intfloat/multilingual-e5-small"
     #: Pinned model revision; defaults to the revision recorded in the knowledge manifest.
@@ -140,6 +156,24 @@ class Settings(BaseSettings):
                 raise ConfigurationError("LAB_LLM_FAILOVER_ORDER must list groq and openai once")
             if self.llm_total_deadline_seconds < self.llm_primary_timeout_seconds:
                 raise ConfigurationError("The total deadline must cover the primary timeout")
+        if self.llm_provider == "ollama" or self.admin_extraction_assist == "ollama":
+            if not self.ollama_model:
+                raise ConfigurationError("LAB_OLLAMA_MODEL is required to use the Ollama provider")
+            if not _loopback_url(self.ollama_base_url):
+                raise ConfigurationError(
+                    "LAB_OLLAMA_BASE_URL must point to this machine (loopback)"
+                )
+        if self.admin_extraction_assist == "fake" and self.environment != "test":
+            raise ConfigurationError("The fake extraction assistant is only allowed in tests")
+        needs_db = []
+        if self.admin_repository == "postgres":
+            needs_db.append("LAB_ADMIN_REPOSITORY")
+        if self.knowledge_repository == "postgres":
+            needs_db.append("LAB_KNOWLEDGE_REPOSITORY")
+        if needs_db and not _secret(self.database_url):
+            raise ConfigurationError(
+                f"LAB_DATABASE_URL is required for {', '.join(needs_db)}=postgres"
+            )
         if self.embedding_provider == "fake" and self.environment == "production":
             raise ConfigurationError("The fake embedding provider is not allowed in production")
         if self.repository == "postgres":
@@ -148,6 +182,16 @@ class Settings(BaseSettings):
 
 def _secret(value: SecretStr | None) -> bool:
     return bool(value and value.get_secret_value().strip())
+
+
+def _loopback_url(url: str) -> bool:
+    from urllib.parse import urlsplit
+
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    return parts.scheme in ("http", "https") and parts.hostname in ("127.0.0.1", "localhost", "::1")
 
 
 @lru_cache

@@ -82,7 +82,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "apparatus": {
@@ -91,7 +91,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "chemicals": {
@@ -100,7 +100,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "procedure": {
@@ -109,7 +109,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "precautions": {
@@ -118,7 +118,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "calculations": {
@@ -127,7 +127,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "observations": {
@@ -136,7 +136,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "preLabQuestions": {
@@ -145,7 +145,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             },
             "postLabQuestions": {
@@ -154,7 +154,7 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "maxLength": 2000
+                "maxLength": 8000
               }
             }
           },
@@ -303,6 +303,79 @@
             "si"
           ],
           "additionalProperties": false
+        },
+        "distinctFrom": {
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          }
+        },
+        "suggestions": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "maxItems": 60,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 600
+                },
+                "page": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 600
+                }
+              },
+              "required": [
+                "text",
+                "page",
+                "quote"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "absentConfirmed": {
+          "maxItems": 9,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "aims",
+              "apparatus",
+              "chemicals",
+              "procedure",
+              "precautions",
+              "calculations",
+              "observations",
+              "preLabQuestions",
+              "postLabQuestions"
+            ]
+          }
+        },
+        "quickApproved": {
+          "type": "boolean"
+        },
+        "quickFixLog": {
+          "maxItems": 60,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
         }
       },
       "required": [
@@ -368,13 +441,21 @@
                 "enum": [
                   "published",
                   "draft",
-                  "document"
+                  "document",
+                  "content"
                 ]
               },
               "experimentNumber": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 99
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 99
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "otherId": {
                 "type": "string",
@@ -394,6 +475,18 @@
               "conflictingTitle": {
                 "type": "boolean"
               },
+              "similarity": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "blocking": {
                 "type": "boolean"
               }
@@ -404,6 +497,7 @@
               "otherId",
               "otherTitle",
               "conflictingTitle",
+              "similarity",
               "blocking"
             ],
             "additionalProperties": false

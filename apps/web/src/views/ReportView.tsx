@@ -1,7 +1,6 @@
 import type { Deduction } from '@vlab/contracts';
 import { useTranslation } from 'react-i18next';
 import { ConnectionBanner } from '../components/ConnectionBanner';
-import { SessionNav } from '../components/SessionNav';
 import { SourceList } from '../components/SourceList';
 import { Icon } from '../components/ui/Icon';
 import { StatusMessage } from '../components/ui/StatusMessage';
@@ -58,7 +57,6 @@ export function ReportView() {
         <p className="page-header__eyebrow">{t(engine.definition.titleKey)}</p>
         <h1 id="report-title">{t('ui.report.title')}</h1>
       </div>
-      <SessionNav current="report" />
     </header>
   );
   if (report.status !== 'ready' || !report.data) {

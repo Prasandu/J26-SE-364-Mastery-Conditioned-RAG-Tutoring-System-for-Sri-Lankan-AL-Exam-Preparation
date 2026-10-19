@@ -1,7 +1,8 @@
 import type { Action, SessionView } from '@vlab/contracts';
 import { describe, expect, it } from 'vitest';
 import { definition } from '../engine/content';
-import { buildSceneModel } from '../workbench/sceneModel';
+import { FLASK_MARK_Y, FLASK_NECK_TOP_Y, liquidHeight } from '../workbench/flaskProfile';
+import { buildSceneModel, placementOf } from '../workbench/sceneModel';
 import { makeLocalAdapter } from './helpers';
 
 const checklist = definition.safetyRules.filter((r) => r.kind === 'checklist').map((r) => r.id);
@@ -68,5 +69,78 @@ describe('scene model (pure mapping of the public projection)', () => {
     ];
     expect(buildSceneModel(await run('manual', tap), definition, noUi).warning).toBe(false);
     expect(buildSceneModel(await run('guided', tap), definition, noUi).warning).toBe(true);
+  });
+});
+
+describe('scene model: shared visual descriptors for both renderers', () => {
+  const weighed: Action[] = [
+    base[0]!,
+    {
+      type: 'select_apparatus',
+      apparatusIds: ['watch_glass', 'four_beam_balance', 'funnel', 'volumetric_flask_250'],
+    },
+    { type: 'weigh_watch_glass' },
+  ];
+
+  it('places items by engine state: shelf, bench, balance pan and flask neck', async () => {
+    const m = buildSceneModel(
+      await run('manual', [...weighed, { type: 'place_funnel' }]),
+      definition,
+      noUi,
+    );
+    const where = (id: string) =>
+      placementOf(
+        m.items.find((i) => i.id === id)!,
+        m,
+      );
+    expect(where('watch_glass')).toBe('on_balance');
+    expect(where('funnel')).toBe('on_flask');
+    expect(where('four_beam_balance')).toBe('bench');
+    expect(where('beaker')).toBe('shelf');
+    expect(where('reagent_na2co3')).toBe('bench');
+  });
+
+  it('takes the balance pointer from the latest engine observation, only while weighing', async () => {
+    const m = buildSceneModel(
+      await run('manual', [
+        ...weighed,
+        { type: 'set_balance_sliders', mass: { value: 40, unit: 'g' } },
+      ]),
+      definition,
+      noUi,
+    );
+    expect(m.balance.pointer).not.toBeNull();
+    expect(m.balance.watchGlassReading).not.toBeNull();
+    const before = buildSceneModel(await run('manual', base), definition, noUi);
+    expect(before.balance.pointer).toBeNull();
+  });
+
+  it('carries cleanliness, flask scale and the reagent formula from public data', async () => {
+    const m = buildSceneModel(await run('manual', base), definition, noUi);
+    const flask = (id: string) => m.items.find((i) => i.id === id)!;
+    expect(flask('volumetric_flask_100').scale).toBeLessThan(flask('volumetric_flask_250').scale);
+    expect(flask('volumetric_flask_250').scale).toBeLessThan(flask('volumetric_flask_500').scale);
+    expect(flask('volumetric_flask_250').cleanliness).not.toBeUndefined();
+    expect(m.reagentFormula).toBe('Na₂CO₃');
+  });
+});
+
+describe('flask profile (display scale only)', () => {
+  it('maps the projection level to a monotonic height with the mark at 1', () => {
+    expect(liquidHeight(0)).toBe(0);
+    let previous = 0;
+    for (let f = 0.05; f < 1; f += 0.05) {
+      const h = liquidHeight(f);
+      expect(h).toBeGreaterThan(previous);
+      expect(h).toBeLessThan(FLASK_MARK_Y);
+      previous = h;
+    }
+    expect(liquidHeight(1)).toBe(FLASK_MARK_Y);
+  });
+
+  it('keeps an overshoot visible above the mark but inside the neck', () => {
+    expect(liquidHeight(1.02)).toBeGreaterThan(FLASK_MARK_Y);
+    expect(liquidHeight(1.1)).toBeLessThan(FLASK_NECK_TOP_Y);
+    expect(liquidHeight(5)).toBe(liquidHeight(1.1));
   });
 });

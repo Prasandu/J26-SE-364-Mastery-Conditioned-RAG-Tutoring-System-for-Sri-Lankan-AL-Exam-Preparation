@@ -5,5 +5,7 @@
 @import './components.css';
 @import './views.css';
 @import './workbench.css';
+@import './studio.css';
+@import './flow.css';
 @import './admin.css';
 @import './print.css';

@@ -121,6 +121,20 @@ describe('missing keys', () => {
       ...ErrorCodeSchema.options.map((c) => `exp04.error.${c.toLowerCase()}.message`),
       ...MeasurementIdSchema.options.map((m) => `exp04.measurement.${m}`),
       ...ObservationIdSchema.options.map((o) => `exp04.observation.${o}`),
+      ...['shelf', 'bench', 'on_balance', 'on_flask'].map((p) => `ui.lab.placement.${p}`),
+      ...[
+        'context',
+        'materials',
+        'predictions',
+        'protocol',
+        'results',
+        'reflection',
+        'summary',
+      ].map((p) => `ui.side.${p}`),
+      ...['shelf', 'bench', 'on_balance', 'on_flask'].map((p) => `ui.lab.where.${p}`),
+      ...['guidance', 'observation', 'procedural', 'rejected', 'safety'].map(
+        (k) => `ui.log.kind.${k}`,
+      ),
     ];
     for (const locale of ['en', 'si'] as const)
       for (const key of dynamic)

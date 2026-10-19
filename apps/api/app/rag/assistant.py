@@ -40,6 +40,7 @@ from app.rag.retrieval import Retriever, normalize_question
 from app.repositories import SessionRecord
 
 if TYPE_CHECKING:
+    from app.knowledge_runtime import KnowledgeRuntime
     from app.settings import Settings
 
 logger = logging.getLogger("vlab.assistant")
@@ -300,30 +301,21 @@ def _generated_by(meta: GenerationMeta) -> dict[str, str]:
 CACHEABLE_REFUSALS = frozenset({"model_refused", "unsupported_entity_in_question"})
 
 
-def build_assistant(settings: "Settings") -> AssistantService:
-    """Wire the configured providers. Missing private knowledge data degrades to 503."""
-    from app.rag.embeddings import build_embedding_provider
-    from app.rag.providers import build_configured_provider, service_timeout
-    from app.rag.repository import InMemoryKnowledgeRepository, load_knowledge_files
+def build_assistant(
+    settings: "Settings", knowledge: "KnowledgeRuntime | None" = None
+) -> AssistantService:
+    """Wire the configured providers. Missing private knowledge data degrades to 503.
 
+    The knowledge runtime (repository + embeddings) is shared with the admin knowledge feed, so
+    activating a new knowledge version changes what the assistant retrieves immediately.
+    """
+    from app.knowledge_runtime import build_knowledge_runtime
+    from app.rag.providers import build_configured_provider, service_timeout
+
+    runtime = knowledge or build_knowledge_runtime(settings)
     retriever: Retriever | None = None
-    if settings.embedding_provider != "disabled":
-        try:
-            version, chunks = load_knowledge_files(
-                settings.knowledge_manifest, settings.knowledge_data_dir
-            )
-            embeddings = build_embedding_provider(
-                settings.embedding_provider,
-                settings.embedding_model,
-                settings.embedding_revision or version.model_revision,
-            )
-            if embeddings is not None:
-                repository = InMemoryKnowledgeRepository()
-                repository.ingest(version, chunks)
-                repository.set_active(version.knowledge_version)
-                retriever = Retriever(repository, embeddings)
-        except KnowledgeUnavailable as exc:
-            logger.warning("knowledge base not loaded: %s", exc)
+    if runtime.repository is not None and runtime.embeddings is not None:
+        retriever = Retriever(runtime.repository, runtime.embeddings)
     return AssistantService(
         retriever,
         build_configured_provider(settings),

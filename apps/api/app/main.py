@@ -9,10 +9,14 @@ from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ValidationError
 
+from app.admin.assist import ExtractionAssistant
+from app.admin.assist import build_assistant as build_extraction_assistant
+from app.admin.manage_routes import register_manage_routes
 from app.admin.routes import register_admin_routes
 from app.content import load_experiments
 from app.contracts import ContractRegistry
 from app.errors import ApiError, correlation_id_var, install_error_handlers, new_correlation_id
+from app.knowledge_runtime import KnowledgeRuntime, build_knowledge_runtime
 from app.models import (
     ActionSubmission,
     AssistantAskRequest,
@@ -40,6 +44,7 @@ class AppState:
     store: InMemoryRepositories
     principal_provider: PrincipalProvider
     assistant: AssistantService
+    knowledge: KnowledgeRuntime
 
 
 def create_app(
@@ -48,6 +53,7 @@ def create_app(
     verifier: Verifier | None = None,
     service_factory: Callable[..., SessionService] | None = None,
     assistant: AssistantService | None = None,
+    extraction_assistant: ExtractionAssistant | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     settings.validate_for_startup()
@@ -69,6 +75,7 @@ def create_app(
     service = factory(
         repos, verifier, utc_offset_minutes=settings.utc_offset_minutes, **seed_kwargs
     )
+    knowledge = build_knowledge_runtime(settings)
     state = AppState(
         settings,
         contracts,
@@ -76,13 +83,16 @@ def create_app(
         verifier,
         store,
         build_principal_provider(settings.principal_provider),
-        assistant or build_assistant(settings),
+        assistant or build_assistant(settings, knowledge),
+        knowledge,
     )
 
     app = FastAPI(
         title="Virtual Chemistry Laboratory API", version=API_VERSION, docs_url=None, redoc_url=None
     )
     app.state.lab = state
+    # Local-only AI help for admin extraction (None when LAB_ADMIN_EXTRACTION_ASSIST=disabled).
+    app.state.extraction_assistant = extraction_assistant or build_extraction_assistant(settings)
     install_error_handlers(app)
     app.add_middleware(
         CORSMiddleware,
@@ -205,7 +215,8 @@ def create_app(
         return await lab(request).service.report(who, session_id(sid))
 
     # Development-only practical administration (404 unless enabled and verified local).
-    register_admin_routes(app, lab, read_json)
+    admin_api = register_admin_routes(app, lab, read_json)
+    register_manage_routes(app, admin_api)
 
     @app.post("/assistant/ask")
     async def ask_assistant(

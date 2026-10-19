@@ -18,12 +18,14 @@ export const MassSchema = z.strictObject({
   value: z.number().finite().nonnegative(),
   unit: z.enum(['g', 'kg']),
 });
+export type Mass = z.infer<typeof MassSchema>;
 
 /** Non-negative volume, labelled. */
 export const VolumeSchema = z.strictObject({
   value: z.number().finite().nonnegative(),
   unit: z.enum(['cm3', 'dm3']),
 });
+export type Volume = z.infer<typeof VolumeSchema>;
 
 export const TranslationStatusSchema = z.enum(['draft', 'reviewed']);
 export type TranslationStatus = z.infer<typeof TranslationStatusSchema>;

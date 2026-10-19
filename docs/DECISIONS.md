@@ -350,3 +350,110 @@ Supersedes the "runtime provider choice required" note in D23.
   that the content was reviewed. It never makes a practical runnable, because that requires a
   validated deterministic simulation definition (`simulation_pending` until then).
 - **Not in Slice C:** publishing, catalog replacement, rollback, production roles and OCR.
+
+## D32 — Dual-mode 2D/3D laboratory (V2-B)
+
+- **Why:** the 3D bench alone was visually basic and needs WebGL. Students choose an illustrated
+  2D laboratory (default, no WebGL) or the 3D laboratory; both show the same session.
+- **Boundary:** one scene model derived from the public projection, one placement rule, one
+  selection handler. Renderers never calculate chemistry, never dispatch on renderer change, and
+  never draw state the projection withholds (manual-mode validity stays hidden).
+- **Assets:** original programmatic SVG and three.js geometry only; no GLTF, downloaded HDR or
+  LabXchange material. Reflections use three's built-in RoomEnvironment.
+- **Dependencies:** none for rendering (three's OrbitControls, RoomEnvironment and
+  RoundedBoxGeometry add-ons). Dev-only `@playwright/test` 1.63.0 (pinned, published 2026-09-04)
+  runs on the installed Chrome (`channel: 'chrome'`, no browser download); `pnpm test:e2e` is
+  separate from `pnpm check` because it needs Chrome.
+- **Not in V2-B:** gesture-to-action dispatch, drag-and-drop, animation and the notebook drawer.
+
+## D33 — Direct apparatus interaction (laboratory studio)
+
+- **Why:** students should act on apparatus, not mainly fill forms. Gestures (item menu, pick up
+  and place, 2D drag, keyboard target list) are a presentation layer over the existing typed
+  actions; no new chemistry actions or contract changes.
+- **Non-disclosure:** item menus are static per apparatus kind and identical in every mode; the
+  only mode difference is guided beginner's existing `suggestedAction` marking. The UI never
+  predicts success (`previewAction` is not used for gestures).
+- **Integrity:** nothing animates or moves until the engine accepts the action; undefined
+  combinations dispatch nothing; undo is not offered (restart remains the verified path).
+- **Side panel tabs:** the earlier "no hidden tabs" choice is replaced by accessible ARIA tabs
+  (arrow keys) to reduce clutter; inactive panels stay mounted.
+
+### Addendum (2026-10-14) — visual pass against LabXchange reference screenshots
+
+The student shared LabXchange screenshots and asked for "the same UIs". The boundary above (no
+LabXchange assets, code or layouts) still applies and was not relaxed. What was built instead:
+a floating camera-style zoom/reset cluster anchored to the stage canvas, a single "lab notebook"
+card for the side panel instead of stacked cards per tab, and a connected numbered stepper —
+each reproduced as an original implementation (this project's colours, icons, copy and markup),
+not traced from or styled after LabXchange's own navy theme, iconography or exact control
+placement. See `docs/STATUS.md` "V2-F" for what changed and the tests run.
+
+## D34 — Admin console, knowledge feed and local LLM (A1–A8)
+
+- **Scope and access:** still development-only and loopback-only with no login (D31). The
+  Admin entry is always listed in development builds so it is discoverable; access is decided by
+  the server for every request. Users are a pseudonymous directory; roles are not enforced until
+  real authentication exists.
+- **Storage:** file store by default (zero setup); PostgreSQL behind the same interface when
+  configured. Records keep integrity hashes and optimistic versions; the audit log is
+  append-only and hash-chained (tamper evident) in both stores. PDFs never go into the database.
+- **Duplicates:** layered checks (checksum, number, content fingerprint, database unique
+  indexes, knowledge-chunk exact and vector similarity). Content duplicates block approval until a
+  reviewer explicitly records that two practicals are distinct.
+- **Knowledge feed:** only human-approved content enters the knowledge base, embedded locally;
+  versions are immutable and staged; activation is explicit and reversible.
+- **AI use:** extraction help and RAG answers can use a local Ollama model (loopback only). The
+  NIE PDFs are never sent to an external provider. Model output gets no extra trust: answers use
+  the shared post-validation; extraction suggestions must quote the page and need a human to add
+  and review them. Cloud providers (Groq/OpenAI) are unchanged and still need approval for live
+  use.
+
+### Addendum (2026-10-14) — Quick fix / Approve now and compact layout
+
+- **Quick fix** (`quick_fix` review action) applies only deterministic, content-preserving
+  repairs already used elsewhere in the pipeline: `clean_items` (answer-space dots, blank and
+  repeated lines), `split_long` (1000-char paragraphs split at sentence ends), the practical's own
+  page range copied onto a sourced field missing one, and empty required list fields marked
+  `absentConfirmed` ("not given in the source document"). It never invents or rewords content, and
+  a changed field loses its review mark like any edit.
+- **Approve now** (`quick_approve`) is a shortcut for marking every field with content reviewed
+  and approving in one step; it is refused server-side if any blocking issue remains (duplicate
+  conflict, missing required field not confirmed absent) or the draft is already approved. It does
+  not change what "approved" means or what is required for it (D31, D34): content approval is
+  still separate from, and never implies, simulation readiness.
+- Both actions are exposed per-draft and as bulk actions ("Fix all" / "Approve all ready") in the
+  drafts table, each behind a confirmation dialog, because they commit to the record as any other
+  review action does and are logged the same way in the audit trail.
+- **Layout:** the admin review page's extracted-content fields are now collapsible (`<details>`),
+  closed by default once reviewed and open while they need attention (missing, has issues, or has
+  unreviewed content), so a 45-field draft no longer renders as one very long page. The drafts
+  table and the laboratory side panel scroll within their own column instead of stretching the
+  whole page. The 2D laboratory stage is capped to roughly the same height as the 3D canvas
+  (`max-height: 52vh` above 900px) so the two renderers behave consistently; `getScreenCTM` already
+  accounts for any letterboxing, so pointer placement is unaffected.
+
+## D35 — One full-screen practical flow, LabXchange visual style (supersedes D33 for this feature)
+
+- **What changed and why:** the student referenced LabXchange a second time, more explicitly
+  ("set all same as the labxchange... same full screen size... procedure also same as the
+  labxchange simulation") and, asked directly, confirmed two things: (1) match LabXchange's visual
+  style, not only its structural pattern, and (2) merge pre-lab, the workbench, the notebook and
+  the report into one continuous full-screen flow rather than separate pages. This explicitly
+  overrides D33's "no LabXchange assets, code or layouts" line — only for this feature, only
+  because the student confirmed it directly when the conflict was raised. D33's boundary still
+  applies to everything not covered by this decision.
+- **What was still not copied:** LabXchange's own colours, icon set, branding, illustrations,
+  code or markup. The navy chrome uses this project's own tokens (`--ink-900`, the existing teal
+  accent); the numbered step rail, the Previous/Next pager and the full-screen takeover are an
+  original implementation of the same functional pattern the reference showed, not a trace of it.
+- **Scope:** the merge covers exactly the five steps the student named — pre-lab, workbench,
+  notebook, reflection (new), report (`FLOW_VIEWS`). Dashboard, library, overview, mode selection
+  and admin keep the ordinary site header and were not asked to change.
+- **New content, not new liberties:** the new reflection step surfaces `postLabQuestions`, which
+  already existed in the experiment definition and was already required by CLAUDE.md but had no
+  student-facing page. No new chemistry content, procedure or wording was authored; the simulation
+  engine remains the sole authority over state, scoring and outcomes — the flow shell is
+  presentation only, exactly like the V2-B/V2-C/V2-F work it builds on.
+- See `docs/STATUS.md` "V2-G" for the full file list, the width bug found and fixed during visual
+  review, and the tests run.

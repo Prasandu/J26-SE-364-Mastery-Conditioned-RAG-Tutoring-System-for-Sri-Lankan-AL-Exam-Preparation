@@ -34,7 +34,7 @@ const withCatalog = (
 };
 
 describe('dashboard', () => {
-  it('shows only real data: catalog count, modes, and no invented progress or duration', async () => {
+  it('shows only real data: catalog count, and no invented progress or duration', async () => {
     renderApp();
     expect(
       screen.getByRole('heading', { level: 1, name: tx('ui.dashboard.title') }),
@@ -45,14 +45,9 @@ describe('dashboard', () => {
         within(facts).getByText(tx('ui.dashboard.practicals_available')).nextSibling,
       ).toHaveTextContent('1'),
     );
-    expect(
-      within(facts).getByText(tx('ui.dashboard.modes_available')).nextSibling,
-    ).toHaveTextContent('3');
     // No continue card without a real session; no fabricated statistics.
     expect(screen.queryByText(tx('ui.dashboard.continue_title'))).toBeNull();
     expect(document.body.textContent).not.toMatch(/minutes|progress:|%/i);
-    // The assistant entry states its real requirement (offline here).
-    expect(screen.getByText(tx('assistant.offline'))).toBeInTheDocument();
   });
 
   it('offers to continue the current session with its real mode and stage', async () => {
@@ -72,13 +67,12 @@ describe('dashboard', () => {
     expect(store.getState().view).toBe('workbench');
   });
 
-  it('opens the assistant in the laboratory only when a session exists online', async () => {
+  it('the floating "Need help?" button only appears once a session exists', async () => {
     const local = makeLocalAdapter();
     const online: EngineAdapter = { ...local, kind: 'api' };
     const empty = makeStore(42, online);
     renderApp(empty);
-    expect(screen.getByText(tx('ui.dashboard.assistant_needs_session'))).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: tx('ui.dashboard.assistant_open') })).toBeNull();
+    expect(screen.queryByRole('button', { name: tx('assistant.help_button') })).toBeNull();
   });
 
   it('header navigation marks the current page', async () => {
@@ -212,9 +206,14 @@ describe('practical flow pages', () => {
       .getState()
       .engine.definition.safetyRules.filter((r) => r.kind === 'checklist');
     expect(within(readiness).getByText(`0 / ${checklist.length}`)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: tx('ui.nav.to_mode') }));
+    await user.click(screen.getByLabelText(tx('ui.mode.guided.title')));
     for (const r of checklist) await user.click(screen.getByLabelText(tx(r.textKey)));
+    await user.click(screen.getByRole('button', { name: tx('ui.nav.back_prelab') }));
     expect(
-      within(readiness).getByText(`${checklist.length} / ${checklist.length}`),
+      within(screen.getByRole('complementary', { name: tx('ui.prelab.readiness') })).getByText(
+        `${checklist.length} / ${checklist.length}`,
+      ),
     ).toBeInTheDocument();
     const firstAnswer = screen.getAllByRole('textbox')[0]!;
     expect(firstAnswer).toHaveAttribute('maxLength', '2000');
@@ -240,22 +239,35 @@ describe('practical flow pages', () => {
 });
 
 describe('workbench and report', () => {
-  it('workbench shows the session facts and keeps every panel rendered', async () => {
+  it('workbench shows the session facts and every panel through the side-panel tabs', async () => {
     const store = makeStore();
     await startSession(store, 'guided', 'beginner');
-    renderApp(store);
+    const { user } = renderApp(store);
     const facts = screen.getByRole('list', { name: tx('ui.workbench.session_facts') });
     expect(within(facts).getByText(tx('ui.mode.guided.title'))).toBeInTheDocument();
     expect(within(facts).getByText(tx('ui.level.beginner.title'))).toBeInTheDocument();
-    for (const heading of [
-      'ui.equipment.title',
-      'ui.guidance.title',
-      'ui.actions.title',
-      'ui.log.title',
-      'assistant.title',
-    ])
-      expect(screen.getByRole('heading', { name: tx(heading) })).toBeInTheDocument();
-    expect(screen.getByText(tx('ui.workbench.scene_caption'))).toBeInTheDocument();
+    // The equipment tray is the notebook's Materials section now (V3-2).
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.materials') }));
+    expect(screen.getByRole('heading', { name: tx('ui.equipment.title') })).toBeInTheDocument();
+    // Protocol now also hosts guidance and the full action list (one notebook section).
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.protocol') }));
+    expect(screen.getByRole('tab', { name: tx('ui.side.protocol') })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('heading', { name: tx('ui.guidance.title') })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: tx('ui.actions.title') })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: tx('ui.side.results') }));
+    expect(screen.getByRole('tab', { name: tx('ui.side.results') })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('heading', { name: tx('ui.log.title') })).toBeInTheDocument();
+    expect(screen.getByText(tx('ui.stage.caption'))).toBeInTheDocument();
+    // The assistant is a floating "Need help?" widget, reachable from every flow step.
+    await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
+    expect(screen.getByRole('heading', { name: tx('assistant.title') })).toBeInTheDocument();
   });
 
   it('report lists recorded actions with observations, and the summary keeps deterministic scores', async () => {

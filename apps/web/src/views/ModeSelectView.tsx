@@ -1,8 +1,10 @@
 import type { GuidanceLevel, Mode } from '@vlab/contracts';
 import { useTranslation } from 'react-i18next';
 import { FlowSteps } from '../components/FlowSteps';
+import { SourceList } from '../components/SourceList';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
+import { definition } from '../engine/content';
 import { useSession } from '../store/StoreProvider';
 
 const MODES: { mode: Mode; icon: IconName }[] = [
@@ -22,6 +24,10 @@ export function ModeSelectView() {
   const requestModeChange = useSession((s) => s.requestModeChange);
   const session = useSession((s) => s.session);
   const navigate = useSession((s) => s.navigate);
+  const preLab = useSession((s) => s.preLab);
+  const toggleSafetyAcknowledgement = useSession((s) => s.toggleSafetyAcknowledgement);
+  const checklist = definition.safetyRules.filter((rule) => rule.kind === 'checklist');
+  const allAcknowledged = checklist.every((rule) => preLab.acknowledgedSafety.includes(rule.id));
 
   const start = () => {
     if (session) requestModeChange(selection.mode, selection.guidanceLevel);
@@ -99,6 +105,40 @@ export function ModeSelectView() {
         <p className="notice" role="note">
           {t('ui.mode.automatic_prelab_note')}
         </p>
+      )}
+      {selection.mode !== 'automatic' && (
+        <section className="mode-safety card card--safety" aria-labelledby="mode-safety-title">
+          <div className="mode-safety__heading">
+            <span className="mode-safety__icon">
+              <Icon name="shield" size={22} />
+            </span>
+            <div>
+              <h2 id="mode-safety-title">{t('ui.mode.safety_title')}</h2>
+              <p className="hint-text">{t('ui.mode.safety_lead')}</p>
+            </div>
+          </div>
+          <fieldset className="checklist">
+            <legend>{t('ui.prelab.safety_ack_legend')}</legend>
+            {checklist.map((rule) => (
+              <div className="check check--card" key={rule.id}>
+                <input
+                  type="checkbox"
+                  id={`mode-ack-${rule.id}`}
+                  checked={preLab.acknowledgedSafety.includes(rule.id)}
+                  onChange={() => toggleSafetyAcknowledgement(rule.id)}
+                />
+                <label htmlFor={`mode-ack-${rule.id}`}>{t(rule.textKey)}</label>
+              </div>
+            ))}
+          </fieldset>
+          <SourceList refs={checklist.flatMap((rule) => rule.sourceRefs)} />
+          <p
+            className={allAcknowledged ? 'status status--ok' : 'status status--pending'}
+            aria-live="polite"
+          >
+            {t(allAcknowledged ? 'ui.prelab.safety_complete' : 'ui.prelab.safety_incomplete')}
+          </p>
+        </section>
       )}
       {!canStart && (
         <p id="start-blocked" className="status status--pending">

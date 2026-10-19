@@ -9,6 +9,7 @@ import {
   getRoadmap,
   getSchedule,
   runCheckpoint,
+  timerAction,
   updateTaskStatus,
   type PlanResponse,
   type RoadmapResponse,
@@ -17,12 +18,15 @@ import {
   type ScheduledTask,
   type TargetChoiceOption,
   type TaskStatus,
+  type TimerAction,
+  type TimerResponse,
   type TaskReason,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
 import RoadmapSection, { CheckpointNotice } from "./RoadmapSection";
+import { FinishDialog, TimerControls } from "./TaskTimer";
 
 type ViewMode = "list" | "calendar";
 
@@ -154,12 +158,14 @@ function TaskCard({
   partialMinutes,
   onPartialMinutesChange,
   onStatus,
+  onTimer,
 }: {
   task: ScheduledTask;
   busy: boolean;
   partialMinutes: number;
   onPartialMinutesChange: (minutes: number) => void;
   onStatus: (task: ScheduledTask, status: TaskStatus) => void;
+  onTimer: (task: ScheduledTask, action: TimerAction) => void;
 }) {
   const [showReason, setShowReason] = useState(false);
   const style =
@@ -314,6 +320,8 @@ function TaskCard({
         </div>
       ) : null}
 
+      <TimerControls busy={busy} onAction={onTimer} task={task} />
+
       {actionable ? (
         <div className="mt-4 flex flex-col gap-2 border-t border-current/10 pt-3 sm:flex-row sm:items-center">
           <button
@@ -381,6 +389,10 @@ export default function PlanningPage() {
   const [rollingUpdate, setRollingUpdate] =
     useState<RollingUpdateResponse | null>(null);
   const [choosingTarget, setChoosingTarget] = useState(false);
+  const [finishing, setFinishing] = useState<{
+    task: ScheduledTask;
+    result: TimerResponse;
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -533,21 +545,87 @@ export default function PlanningPage() {
     }
   }
 
-  async function updateStatus(task: ScheduledTask, status: TaskStatus) {
+  function replaceTasks(updated: (ScheduledTask | null)[]) {
+    setSchedule((current) => {
+      if (!current) return current;
+      const byId = new Map(
+        updated
+          .filter((item): item is ScheduledTask => item !== null && item.id !== null)
+          .map((item) => [item.id, item]),
+      );
+      return {
+        ...current,
+        tasks: current.tasks.map((item) =>
+          item.id !== null && byId.has(item.id) ? byId.get(item.id)! : item,
+        ),
+      };
+    });
+  }
+
+  async function runTimer(task: ScheduledTask, action: TimerAction) {
+    if (!task.id) return;
+    setBusyTaskId(task.id);
+    setError("");
+    try {
+      const result = await timerAction(task.id, action);
+      replaceTasks([result.task, result.paused_task]);
+      setToast(result.message ? [result.message] : []);
+      if (action === "finish") setFinishing({ task: result.task, result });
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError
+          ? cause.message
+          : "The study timer could not be updated.",
+      );
+    } finally {
+      setBusyTaskId(null);
+    }
+  }
+
+  async function submitFinish(status: TaskStatus, minutes: number | null) {
+    if (!finishing?.task.id) return;
+    const { task, result } = finishing;
+    if (result.requires_confirmation && status !== "missed" && minutes !== null) {
+      try {
+        setBusyTaskId(task.id);
+        const confirmed = await timerAction(task.id!, "finish", minutes);
+        replaceTasks([confirmed.task]);
+      } catch (cause) {
+        setError(
+          cause instanceof ApiError
+            ? cause.message
+            : "The study timer could not be updated.",
+        );
+        setBusyTaskId(null);
+        return;
+      }
+    }
+    setFinishing(null);
+    await updateStatus(task, status, minutes);
+  }
+
+  async function updateStatus(
+    task: ScheduledTask,
+    status: TaskStatus,
+    actualMinutes?: number | null,
+  ) {
     if (!task.id) return;
     setBusyTaskId(task.id);
     setError("");
     setToast([]);
     const before = schedule?.tasks ?? [];
+    const minutes =
+      status === "missed"
+        ? null
+        : actualMinutes !== undefined
+          ? actualMinutes
+          : status === "partial"
+            ? partialMinutes[task.id] ?? Math.max(1, Math.floor(task.duration_min / 2))
+            : null;
     try {
       const result = await updateTaskStatus(task.id, {
         status,
-        ...(status === "partial"
-          ? {
-              actual_duration_min:
-                partialMinutes[task.id] ?? Math.max(1, Math.floor(task.duration_min / 2)),
-            }
-          : {}),
+        ...(minutes !== null ? { actual_duration_min: minutes } : {}),
       });
       if (result.schedule) {
         setSchedule(result.schedule);
@@ -775,6 +853,7 @@ export default function PlanningPage() {
                         onStatus={(item, status) =>
                           void updateStatus(item, status)
                         }
+                        onTimer={(item, action) => void runTimer(item, action)}
                         partialMinutes={
                           task.id
                             ? partialMinutes[task.id] ??
@@ -817,6 +896,9 @@ export default function PlanningPage() {
                                 onStatus={(item, status) =>
                                   void updateStatus(item, status)
                                 }
+                                onTimer={(item, action) =>
+                                  void runTimer(item, action)
+                                }
                                 partialMinutes={
                                   task.id
                                     ? partialMinutes[task.id] ??
@@ -839,6 +921,15 @@ export default function PlanningPage() {
                 </div>
               )}
             </div>
+          ) : null}
+          {finishing ? (
+            <FinishDialog
+              busy={busyTaskId === finishing.task.id}
+              onCancel={() => setFinishing(null)}
+              onSubmit={(status, minutes) => void submitFinish(status, minutes)}
+              result={finishing.result}
+              task={finishing.task}
+            />
           ) : null}
           {roadmap ? (
             <RoadmapSection

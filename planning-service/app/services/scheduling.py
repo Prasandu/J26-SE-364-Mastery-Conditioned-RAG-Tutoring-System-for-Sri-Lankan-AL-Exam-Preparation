@@ -49,6 +49,7 @@ from app.services.task_content import (
     build_activity_steps,
     build_task_reason,
 )
+from app.services.task_views import scheduled_task_response
 from app.services.weights import (
     DECLINE_PRIORITY_BOOST,
     ERROR_REVIEW_RECENT_ATTEMPTS,
@@ -561,16 +562,4 @@ def _owned_plan(session: Session, student_id: str, plan_id: Any) -> StudyPlan:
 
 
 def _scheduled_response(task: StudyTask, priority: float) -> ScheduledTaskResponse:
-    return ScheduledTaskResponse(
-        id=task.id,
-        topic_id=task.topic_id,
-        activity=task.activity,
-        start_at=task.start_at,
-        duration_min=task.duration_min,
-        status=task.status,
-        reason=task.reason,
-        reason_details=getattr(task, "reason_details", None),
-        steps=getattr(task, "steps", None) or [],
-        priority=priority,
-        replanned_from=task.replanned_from,
-    )
+    return scheduled_task_response(task, priority)

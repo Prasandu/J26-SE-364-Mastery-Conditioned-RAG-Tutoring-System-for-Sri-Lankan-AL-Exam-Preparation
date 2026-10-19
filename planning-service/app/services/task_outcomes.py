@@ -33,6 +33,8 @@ from app.services.roadmap import (
     start_window,
 )
 from app.services.scheduling import generate_plan_schedule
+from app.services.task_views import scheduled_task_response
+from app.services.timer import stop_timer_for_outcome
 
 
 def update_task_status(
@@ -51,6 +53,7 @@ def update_task_status(
     if data.actual_duration_min is not None and data.actual_duration_min > task.duration_min:
         raise Conflict("actual_duration_min cannot exceed the planned duration.")
 
+    stop_timer_for_outcome(task)
     task.status = data.status
     task.actual_duration_min = (
         task.duration_min
@@ -295,16 +298,4 @@ def _topic_priority(session: Session, plan_id: UUID, topic_id: str) -> float:
 
 
 def _task_response(task: StudyTask, priority: float) -> ScheduledTaskResponse:
-    return ScheduledTaskResponse(
-        id=task.id,
-        topic_id=task.topic_id,
-        activity=task.activity,
-        start_at=task.start_at,
-        duration_min=task.duration_min,
-        status=task.status,
-        reason=task.reason,
-        reason_details=getattr(task, "reason_details", None),
-        steps=getattr(task, "steps", None) or [],
-        priority=priority,
-        replanned_from=task.replanned_from,
-    )
+    return scheduled_task_response(task, priority)

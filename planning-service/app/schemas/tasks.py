@@ -75,6 +75,10 @@ class ScheduledTaskResponse(BaseModel):
     steps: list[TaskStep] = Field(default_factory=list)
     priority: float = 0
     replanned_from: UUID | None = None
+    timer_state: Literal["idle", "running", "paused", "finished"] = "idle"
+    timer_started_at: datetime | None = None
+    # Seconds of active study measured by the server when this response was built.
+    timer_elapsed_sec: int = 0
 
 
 class ScheduleResponse(BaseModel):
@@ -107,3 +111,20 @@ class WeeklyReplanResponse(BaseModel):
     deferred_topics: list[str] = Field(default_factory=list)
     restored_topics: list[str] = Field(default_factory=list)
     explanation: str | None = None
+
+
+class TimerFinishRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Required only when the server asks for confirmation of an unusual session.
+    confirmed_minutes: Annotated[int, Field(ge=0, le=600)] | None = None
+
+
+class TimerResponse(BaseModel):
+    task: ScheduledTaskResponse
+    paused_task: ScheduledTaskResponse | None = None
+    message: str | None = None
+    measured_minutes: int | None = None
+    suggested_actual_minutes: int | None = None
+    requires_confirmation: bool = False
+    confirmation_reason: str | None = None

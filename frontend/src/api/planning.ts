@@ -104,6 +104,23 @@ export interface ScheduledTask {
   steps?: TaskStep[];
   priority: number;
   replanned_from: string | null;
+  timer_state?: TimerState;
+  timer_started_at?: string | null;
+  timer_elapsed_sec?: number;
+}
+
+export type TimerState = "idle" | "running" | "paused" | "finished";
+
+export type TimerAction = "start" | "pause" | "resume" | "finish";
+
+export interface TimerResponse {
+  task: ScheduledTask;
+  paused_task: ScheduledTask | null;
+  message: string | null;
+  measured_minutes: number | null;
+  suggested_actual_minutes: number | null;
+  requires_confirmation: boolean;
+  confirmation_reason: string | null;
 }
 
 export interface TaskReason {
@@ -410,6 +427,25 @@ export function updateTaskStatus(taskId: string, data: TaskStatusUpdate) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+    },
+  );
+}
+
+export function timerAction(
+  taskId: string,
+  action: TimerAction,
+  confirmedMinutes?: number,
+) {
+  return planningRequest<TimerResponse>(
+    `/api/v1/tasks/${encodeURIComponent(taskId)}/timer/${action}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        action === "finish" && confirmedMinutes !== undefined
+          ? { confirmed_minutes: confirmedMinutes }
+          : {},
+      ),
     },
   );
 }

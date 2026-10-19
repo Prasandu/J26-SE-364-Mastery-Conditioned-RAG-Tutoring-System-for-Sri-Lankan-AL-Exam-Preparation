@@ -18,8 +18,6 @@ import PlanningPage, {
   formatStepsSummary,
   formatTopicName,
   getWhyNowText,
-  masteryLabel,
-  trendLabel,
   weightLabel,
 } from "../src/features/planning/PlanPage";
 import {

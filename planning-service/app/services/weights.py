@@ -72,6 +72,9 @@ COMPRESSED_SESSION_FACTOR = 0.75  # compressed plans shorten sessions by this fa
 MIN_COMPRESSED_SESSION_MINUTES = 25
 RANGE_CHANGE_EPSILON = 0.01  # projected-score change treated as "moved" at a checkpoint
 
+# Study timer
+TIMER_CONFIRM_MULTIPLIER = 3  # sessions longer than this x planned duration need confirmation
+
 
 def weights_sum_to_one(weights: dict[str, float]) -> bool:
     return abs(sum(weights.values()) - 1.0) < 1e-9

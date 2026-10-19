@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Uuid,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,8 +38,19 @@ class StudyTask(Base):
             "status IN ('planned', 'completed', 'partial', 'missed')",
             name="ck_study_tasks_status",
         ),
+        CheckConstraint(
+            "timer_state IN ('idle', 'running', 'paused', 'finished')",
+            name="ck_study_tasks_timer_state",
+        ),
+        CheckConstraint("paused_total_sec >= 0", name="ck_study_tasks_paused_total"),
         Index("ix_study_tasks_student_start", "student_id", "start_at"),
         Index("ix_study_tasks_plan_start", "plan_id", "start_at"),
+        Index(
+            "ix_study_tasks_student_timer_running",
+            "student_id",
+            unique=True,
+            postgresql_where=text("timer_state = 'running'"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
@@ -67,6 +79,13 @@ class StudyTask(Base):
     actual_duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     score_before: Mapped[float | None] = mapped_column(Float, nullable=True)
     score_after: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Server-backed study timer. Elapsed time is always derived from these
+    # server timestamps, never from client-reported values.
+    timer_state: Mapped[str] = mapped_column(String(20), nullable=False, default="idle")
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_resumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    paused_total_sec: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class ReplanLog(Base):

@@ -84,6 +84,21 @@ when availability is entered in a different local time zone.
   XGBoost when available (otherwise use the labeled rule fallback), and
   generate the next seven days.
 
+## Study timer
+
+`POST /api/v1/tasks/{task_id}/timer/start|pause|resume|finish` run a
+server-backed timer on a planned task (`idle → running ⇄ paused → finished`).
+Elapsed time comes only from server timestamps (`started_at`, `paused_at`,
+`paused_total_sec`) and is returned on every task as `timer_elapsed_sec`, so a
+page refresh rebuilds the live display. A student has at most one running
+timer (a partial unique index enforces it); starting or resuming another task
+pauses the running one. `finish` stores the measured minutes (capped at the
+planned duration) in `actual_duration_min`, ready for the done/partial/missed
+outcome. Sessions longer than `TIMER_CONFIRM_MULTIPLIER` (3) × planned time,
+or running past local midnight, return `requires_confirmation` and are saved
+only when the student sends `confirmed_minutes`. Recording an outcome directly
+closes any active timer.
+
 ## Rolling-horizon planning
 
 A plan has three layers. The **roadmap** forecasts hours per topic for every

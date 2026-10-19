@@ -23,6 +23,8 @@ class LearningProfile:
     mastery: float
     repeated_errors: int = 0
     review_due: bool = False
+    has_evidence: bool = True
+    recorded_errors: int = 0
 
 
 @dataclass(frozen=True)
@@ -106,11 +108,13 @@ def choose_activity(profile: LearningProfile) -> Activity:
         raise ValueError("mastery must be between zero and one.")
     if profile.repeated_errors < 0:
         raise ValueError("repeated_errors cannot be negative.")
-    if not profile.studied:
+    if profile.recorded_errors < 0:
+        raise ValueError("recorded_errors cannot be negative.")
+    if not profile.has_evidence or not profile.studied:
         return "theory"
     if profile.mastery >= 0.85 and profile.review_due:
         return "spaced_revision"
-    if profile.repeated_errors >= 2:
+    if profile.repeated_errors >= 2 and profile.recorded_errors >= 2:
         return "error_review"
     if not profile.theory_completed and profile.mastery < 0.7:
         return "theory"

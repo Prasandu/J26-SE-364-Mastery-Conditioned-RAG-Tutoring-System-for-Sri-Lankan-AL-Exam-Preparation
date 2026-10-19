@@ -68,6 +68,25 @@ def test_adaptive_priority_beats_lowest_mark_baseline_scenario() -> None:
     assert adaptive_topic.score > lowest_mark_topic.score
 
 
+def test_priority_accounts_for_exam_weight_same_mastery() -> None:
+    # Same weakness (1 - mastery), same days until exam, same staleness
+    low_weight_topic = priority(
+        weakness=0.8,
+        exam_importance=0.1,
+        days_until_exam=30,
+        days_since_revision=10,
+        improvement_potential=0.8,
+    )
+    high_weight_topic = priority(
+        weakness=0.8,
+        exam_importance=0.9,
+        days_until_exam=30,
+        days_since_revision=10,
+        improvement_potential=0.8,
+    )
+    assert high_weight_topic.score > low_weight_topic.score
+
+
 def test_priority_handles_exam_tomorrow_and_no_prior_revision() -> None:
     result = priority(days_until_exam=1, days_since_revision=None)
 
@@ -87,7 +106,7 @@ def test_priority_rejects_out_of_range_inputs() -> None:
     [
         (LearningProfile(False, False, 0), "theory"),
         (LearningProfile(True, True, 0.9, review_due=True), "spaced_revision"),
-        (LearningProfile(True, True, 0.6, repeated_errors=2), "error_review"),
+        (LearningProfile(True, True, 0.6, repeated_errors=2, recorded_errors=2), "error_review"),
         (LearningProfile(True, True, 0.3), "guided_practice"),
         (LearningProfile(True, True, 0.6), "structured_questions"),
         (LearningProfile(True, True, 0.85), "past_paper"),
@@ -95,6 +114,53 @@ def test_priority_rejects_out_of_range_inputs() -> None:
 )
 def test_choose_activity(profile: LearningProfile, expected: str) -> None:
     assert choose_activity(profile) == expected
+
+
+def test_choose_activity_no_evidence_or_not_studied_gets_theory_and_guided_practice() -> None:
+    no_evidence = LearningProfile(
+        studied=False,
+        theory_completed=False,
+        mastery=0.3,
+        has_evidence=False,
+    )
+    assert choose_activity(no_evidence) == "theory"
+
+    never_studied = LearningProfile(
+        studied=False,
+        theory_completed=False,
+        mastery=0.3,
+        has_evidence=True,
+    )
+    assert choose_activity(never_studied) == "theory"
+
+    studied_low_mastery = LearningProfile(
+        studied=True,
+        theory_completed=True,
+        mastery=0.3,
+        has_evidence=True,
+    )
+    assert choose_activity(studied_low_mastery) == "guided_practice"
+
+
+def test_choose_activity_error_review_requires_at_least_two_recorded_errors() -> None:
+    one_error = LearningProfile(
+        studied=True,
+        theory_completed=True,
+        mastery=0.4,
+        repeated_errors=2,
+        recorded_errors=1,
+    )
+    assert choose_activity(one_error) != "error_review"
+    assert choose_activity(one_error) == "guided_practice"
+
+    two_errors = LearningProfile(
+        studied=True,
+        theory_completed=True,
+        mastery=0.4,
+        repeated_errors=2,
+        recorded_errors=2,
+    )
+    assert choose_activity(two_errors) == "error_review"
 
 
 def test_sm2_review_intervals_and_failed_recall() -> None:

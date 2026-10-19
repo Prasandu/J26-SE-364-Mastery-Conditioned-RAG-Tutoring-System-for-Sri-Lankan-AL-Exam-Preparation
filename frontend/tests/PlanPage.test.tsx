@@ -8,7 +8,15 @@ import {
   getSchedule,
 } from "../src/api/planning";
 import { AuthContext, type AuthContextValue } from "../src/auth/AuthContext";
-import PlanningPage from "../src/features/planning/PlanPage";
+import PlanningPage, {
+  formatStepKind,
+  formatStepsSummary,
+  formatTopicName,
+  getWhyNowText,
+  masteryLabel,
+  trendLabel,
+  weightLabel,
+} from "../src/features/planning/PlanPage";
 
 vi.mock("../src/api/planning", () => ({
   generateSchedule: vi.fn(),
@@ -152,6 +160,8 @@ describe("PlanningPage", () => {
             topic: "Organic chemistry",
             sub_topic: "Alkanes",
             mastery: 0.35,
+            has_evidence: true,
+            reason: "Based on your recent results and topic priorities.",
             trend: -0.2,
             decline_alert: {
               baseline: 1,
@@ -176,14 +186,259 @@ describe("PlanningPage", () => {
     });
     renderPlanPage(false);
 
-    expect(await screen.findByText("Practice · chem-u1")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Practice · Organic chemistry, Alkanes"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Actual minutes for Organic chemistry, Alkanes"),
+    ).toBeInTheDocument();
     expect(getSchedule).toHaveBeenCalledWith("newest-plan");
+
     fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Organic chemistry, Alkanes")).toBeInTheDocument();
     expect(
       screen.getByText("Your last 3 papers show a decline from 10/10 to 5/10."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Questions: 2020-P2-Q3, 2018-P2-Q5")).toBeInTheDocument();
+    expect(screen.getByText("62 days")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "25 min theory, 35 min practice questions, 10 min review",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Priority factors")).toBeInTheDocument();
+    expect(
+      screen.getByText("Questions: 2020-P2-Q3, 2018-P2-Q5"),
+    ).toBeInTheDocument();
+  });
+
+  it("renders 'not assessed yet' and plain kind language when a topic has no evidence", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    vi.mocked(getSchedule).mockResolvedValueOnce({
+      infeasible: false,
+      shortfall_minutes: 0,
+      unscheduled_minutes: {},
+      tasks: [
+        {
+          id: "task-no-evidence",
+          topic_id: "ketones",
+          activity: "theory",
+          start_at: "2026-10-19T16:00:00Z",
+          duration_min: 60,
+          status: "planned",
+          reason: "No results yet for this topic.",
+          reason_details: {
+            topic: "Ketones",
+            sub_topic: null,
+            mastery: 0.3,
+            has_evidence: false,
+            reason: "No results yet for this topic.",
+            trend: 0,
+            decline_alert: null,
+            exam_weight: 0.7,
+            days_to_exam: 32,
+            main_factors: { weakness: 0.7, urgency: 0.3 },
+            activity_recommendation:
+              "Learn the theory, then practise questions on this topic.",
+          },
+          steps: [{ kind: "theory", minutes: 60, question_ids: [] }],
+          priority: 0.7,
+          replanned_from: null,
+        },
+      ],
+    });
+    renderPlanPage(false);
+
+    expect(await screen.findByText("theory · Ketones")).toBeInTheDocument();
+    expect(screen.getByLabelText("Actual minutes for Ketones")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Ketones")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "You haven't tried questions in Ketones yet, and it carries high weight in the exam.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("32 days")).toBeInTheDocument();
+    expect(screen.getByText("60 min theory")).toBeInTheDocument();
+  });
+
+  it("removes the Priority factors heading when there are no factors and formats steps with minutes", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    vi.mocked(getSchedule).mockResolvedValueOnce({
+      infeasible: false,
+      shortfall_minutes: 0,
+      unscheduled_minutes: {},
+      tasks: [
+        {
+          id: "task-no-factors",
+          topic_id: "chem-u9-ketones",
+          activity: "Practice",
+          start_at: "2026-10-20T16:00:00Z",
+          duration_min: 60,
+          status: "planned",
+          reason: "No evidence yet.",
+          reason_details: {
+            topic: "Ketones",
+            sub_topic: null,
+            mastery: 0.3,
+            has_evidence: false,
+            trend: 0,
+            decline_alert: null,
+            exam_weight: 0.5,
+            days_to_exam: 31,
+            main_factors: {},
+            activity_recommendation:
+              "Learn the theory, then practise questions on this topic.",
+          },
+          steps: [
+            { kind: "theory", minutes: 20, question_ids: [] },
+            { kind: "practice", minutes: 40, question_ids: ["2022-P1-Q1"] },
+          ],
+          priority: 0.6,
+          replanned_from: null,
+        },
+      ],
+    });
+    renderPlanPage(false);
+
+    // Readable topic name is displayed in task list
+    expect(await screen.findByText("Practice · Ketones")).toBeInTheDocument();
+    expect(screen.getByLabelText("Actual minutes for Ketones")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    // 1. Topic (readable name)
+    expect(screen.getByText("Ketones")).toBeInTheDocument();
+    // 2. Why now
+    expect(
+      screen.getByText(
+        "You haven't tried questions in Ketones yet, and it carries moderate weight in the exam.",
+      ),
+    ).toBeInTheDocument();
+    // 3. Days left to your exam (real value)
+    expect(screen.getByText("31 days")).toBeInTheDocument();
+    // 4. What to do in this slot, as steps with minutes
+    expect(
+      screen.getByText("20 min theory, 40 min practice questions"),
+    ).toBeInTheDocument();
+    // 5. Empty priority factors heading is removed
+    expect(screen.queryByText("Priority factors")).toBeNull();
+  });
+});
+
+describe("PlanPage formatting helpers", () => {
+  it("formats topic names with reason_details, with or without sub-topics", () => {
+    expect(
+      formatTopicName({
+        topic_id: "chem-u1",
+        reason_details: { topic: "Organic chemistry", sub_topic: "Alkanes" },
+      }),
+    ).toBe("Organic chemistry, Alkanes");
+
+    expect(
+      formatTopicName({
+        topic_id: "chem-u9-ketones",
+        reason_details: { topic: "Ketones", sub_topic: null },
+      }),
+    ).toBe("Ketones");
+  });
+
+  it("formats raw topic IDs cleanly when reason_details is not present", () => {
+    expect(
+      formatTopicName({
+        topic_id: "chem-u9-ketones",
+      }),
+    ).toBe("Ketones");
+
+    expect(
+      formatTopicName({
+        topic_id: "ketones",
+      }),
+    ).toBe("Ketones");
+
+    expect(
+      formatTopicName({
+        topic_id: "organic_chemistry",
+      }),
+    ).toBe("Organic Chemistry");
+  });
+
+  it("formats step kinds and steps summary with minutes", () => {
+    expect(formatStepKind("practice")).toBe("practice questions");
+    expect(formatStepKind("theory")).toBe("theory");
+    expect(formatStepKind("review")).toBe("review");
+
+    expect(
+      formatStepsSummary([
+        { kind: "theory", minutes: 20 },
+        { kind: "practice", minutes: 40 },
+      ]),
+    ).toBe("20 min theory, 40 min practice questions");
+  });
+
+  it("labels exam weights accurately", () => {
+    expect(weightLabel(0.8)).toBe("high");
+    expect(weightLabel(0.5)).toBe("moderate");
+    expect(weightLabel(0.2)).toBe("low");
+  });
+
+  it("generates kind, plain-language 'Why now' text", () => {
+    // 1. Decline alert
+    expect(
+      getWhyNowText({
+        topic: "Organic chemistry",
+        sub_topic: "Alkanes",
+        mastery: 0.5,
+        trend: -0.3,
+        exam_weight: 0.8,
+        days_to_exam: 60,
+        main_factors: {},
+        activity_recommendation: "",
+        decline_alert: {
+          baseline: 1,
+          recent: 0.5,
+          drop: 0.5,
+          message: "Your last 3 papers in Alkanes dropped from 10/10 to 5/10.",
+        },
+      }),
+    ).toBe("Your last 3 papers in Alkanes dropped from 10/10 to 5/10.");
+
+    // 2. No evidence
+    expect(
+      getWhyNowText({
+        topic: "Ketones",
+        sub_topic: null,
+        mastery: 0.3,
+        has_evidence: false,
+        trend: 0,
+        exam_weight: 0.5,
+        days_to_exam: 32,
+        main_factors: {},
+        activity_recommendation: "",
+        decline_alert: null,
+      }),
+    ).toBe(
+      "You haven't tried questions in Ketones yet, and it carries moderate weight in the exam.",
+    );
+
+    // 3. Evidence with mastery and trend
+    expect(
+      getWhyNowText({
+        topic: "Ketones",
+        sub_topic: null,
+        mastery: 0.8,
+        has_evidence: true,
+        trend: 0.1,
+        exam_weight: 0.7,
+        days_to_exam: 32,
+        main_factors: {},
+        activity_recommendation: "",
+        decline_alert: null,
+      }),
+    ).toBe(
+      "Your mastery in Ketones is 80% (strong) with an improving (10%) trend, and it carries high weight in the exam.",
+    );
   });
 });

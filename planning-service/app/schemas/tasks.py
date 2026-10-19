@@ -45,6 +45,8 @@ class TaskReason(BaseModel):
     topic: str
     sub_topic: str | None = None
     mastery: float
+    has_evidence: bool = True
+    reason: str = ""
     trend: float
     decline_alert: DeclineAlertDetails | None = None
     exam_weight: float

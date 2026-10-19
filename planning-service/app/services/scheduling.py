@@ -31,7 +31,7 @@ from app.services.scheduler import (
     schedule_tasks,
 )
 from app.services.task_content import build_activity_steps, build_task_reason
-from app.services.weights import DECLINE_PRIORITY_BOOST
+from app.services.weights import DECLINE_PRIORITY_BOOST, NEUTRAL_PRIOR_MASTERY
 
 
 def generate_plan_schedule(
@@ -53,6 +53,14 @@ def generate_plan_schedule(
     start_local = current.astimezone(local_zone)
     end_date = min(start_local.date() + timedelta(days=horizon_days - 1), plan.exam_date - timedelta(days=1))
     exam_deadline = datetime.combine(plan.exam_date, time.min, local_zone)
+    existing_planned = session.scalars(
+        select(StudyTask).where(
+            StudyTask.plan_id == plan.id,
+            StudyTask.status == "planned",
+        )
+    ).all()
+    for task in existing_planned:
+        session.delete(task)
 
     priorities = _ranked_topics(
         session,
@@ -61,6 +69,7 @@ def generate_plan_schedule(
         duration_overrides=duration_overrides or {},
         priority_overrides=priority_overrides or {},
         as_of=current,
+        today=start_local.date(),
         exam_date=plan.exam_date,
     )
     if exam_deadline <= current:
@@ -154,22 +163,6 @@ def generate_plan_schedule(
         now=current,
     )
 
-    existing = session.scalars(
-        select(StudyTask).where(
-            StudyTask.plan_id == plan.id,
-            StudyTask.status == "planned",
-            StudyTask.start_at >= current,
-            StudyTask.start_at
-            < datetime.combine(
-                end_date + timedelta(days=1),
-                time.min,
-                local_zone,
-            ).astimezone(UTC),
-        )
-    ).all()
-    for task in existing:
-        session.delete(task)
-
     priority_by_topic = {item.topic_id: item.priority for item in priorities}
     stored: list[StudyTask] = []
     replanned_topics: set[str] = set()
@@ -258,8 +251,10 @@ def _ranked_topics(
     duration_overrides: dict[str, int],
     priority_overrides: dict[str, float],
     as_of: datetime,
+    today: date | None = None,
     exam_date: date | None = None,
 ) -> list[RankedTopic]:
+    today = today or as_of.date()
     priorities = constraints.get("priorities", [])
     if not priorities:
         raise ConstraintViolation("Plan has no topics to schedule.")
@@ -291,7 +286,13 @@ def _ranked_topics(
         if topic is None:
             raise ConstraintViolation(f"Plan references unknown topic {topic_id!r}.")
         state = state_by_topic.get(topic_id)
-        topic_mastery = float(state.mastery) if state is not None else 0.0
+        topic_evidence = evidence_by_topic.get(topic_id, [])
+        has_evidence = bool(topic_evidence)
+        topic_mastery = (
+            float(state.mastery)
+            if state is not None and has_evidence
+            else NEUTRAL_PRIOR_MASTERY
+        )
         prerequisite_mastery = {
             prerequisite: float(state_by_topic[prerequisite].mastery)
             for prerequisite in topic.prerequisites or []
@@ -310,18 +311,31 @@ def _ranked_topics(
             evidence_by_topic.get(topic_id, []),
             topic_name=getattr(topic, "name", None),
         )
-        if state is None:
-            profile = LearningProfile(studied=False, theory_completed=False, mastery=0)
-        else:
-            profile = LearningProfile(
-                studied=True,
-                theory_completed=state.mastery >= 0.35,
-                mastery=state.mastery,
-                repeated_errors=2 if state.error_rate >= 0.4 else 0,
-                review_due=state.next_review_at is not None and state.next_review_at <= as_of,
-            )
+        recorded_errors = sum(
+            attempt["score"] < attempt["max_score"] for attempt in topic_evidence
+        )
+        studied = (
+            has_evidence
+            and state is not None
+            and getattr(state, "last_revised", None) is not None
+        )
+        profile = LearningProfile(
+            studied=studied,
+            theory_completed=bool(
+                state is not None and has_evidence and state.mastery >= 0.35
+            ),
+            mastery=topic_mastery,
+            repeated_errors=recorded_errors,
+            recorded_errors=recorded_errors,
+            has_evidence=has_evidence,
+            review_due=(
+                state is not None
+                and state.next_review_at is not None
+                and state.next_review_at <= as_of
+            ),
+        )
         activity = "recovery_revision" if decline is not None else choose_activity(profile)
-        days_to_exam = max(((exam_date or as_of.date()) - as_of.date()).days, 0)
+        days_to_exam = max(((exam_date or today) - today).days, 0)
         urgency = 1 / (1 + days_to_exam / 14)
         days_since_revision = (
             max((as_of - state.last_revised).total_seconds() / 86400, 0)
@@ -343,6 +357,7 @@ def _ranked_topics(
             topic_name=getattr(parent_topic, "name", topic_name),
             sub_topic_name=topic_name if parent_id else None,
             mastery=topic_mastery,
+            has_evidence=has_evidence,
             trend=float(getattr(state, "trend", 0)) if state is not None else 0.0,
             decline=decline,
             exam_weight=float(topic.exam_weight or 0),

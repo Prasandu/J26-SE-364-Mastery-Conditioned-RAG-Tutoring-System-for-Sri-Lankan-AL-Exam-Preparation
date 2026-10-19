@@ -110,6 +110,8 @@ export interface TaskReason {
   topic: string;
   sub_topic: string | null;
   mastery: number;
+  has_evidence?: boolean;
+  reason?: string;
   trend: number;
   decline_alert: {
     baseline: number;

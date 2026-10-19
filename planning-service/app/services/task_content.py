@@ -7,6 +7,7 @@ def build_task_reason(
     topic_name: str,
     sub_topic_name: str | None,
     mastery: float,
+    has_evidence: bool = True,
     trend: float,
     decline: Any | None,
     exam_weight: float,
@@ -37,6 +38,12 @@ def build_task_reason(
         "topic": topic_name,
         "sub_topic": sub_topic_name,
         "mastery": mastery,
+        "has_evidence": has_evidence,
+        "reason": (
+            "No results yet for this topic."
+            if not has_evidence
+            else "Based on your recent results and topic priorities."
+        ),
         "trend": trend,
         "decline_alert": decline_alert,
         "exam_weight": exam_weight,

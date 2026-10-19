@@ -92,3 +92,36 @@ def test_scheduler_reports_shortfall_without_available_time() -> None:
     assert result.infeasible
     assert result.shortfall_minutes == 45
     assert result.unscheduled_minutes == {"chem-1": 45}
+
+
+def test_scheduler_interleaves_topics_and_limits_consecutive_sessions() -> None:
+    now = datetime(2026, 10, 19, 8, tzinfo=UTC)
+    deadline = now + timedelta(days=14)
+    # 6 available slots of 60 min
+    windows = [
+        TimeWindow(now + timedelta(hours=i * 2), now + timedelta(hours=i * 2 + 1))
+        for i in range(6)
+    ]
+    # Two topics, each needing 180 min (3 slots of 60 min)
+    topics = [
+        RankedTopic("ketones", "theory", 0.9, 180, "weak topic"),
+        RankedTopic("alkanes", "theory", 0.8, 180, "weak topic"),
+    ]
+    result = schedule_tasks(
+        priorities=topics,
+        availability=windows,
+        commitments=[],
+        exam_deadline=deadline,
+        max_session_minutes=60,
+        daily_cap_minutes=360,
+        now=now,
+    )
+    scheduled_topic_sequence = [t.topic_id for t in result.tasks]
+    assert len(scheduled_topic_sequence) == 6
+    # No more than 2 consecutive sessions of the same topic
+    for i in range(len(scheduled_topic_sequence) - 2):
+        assert not (
+            scheduled_topic_sequence[i]
+            == scheduled_topic_sequence[i + 1]
+            == scheduled_topic_sequence[i + 2]
+        )

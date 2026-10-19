@@ -11,6 +11,7 @@ import {
   type ScheduleResponse,
   type ScheduledTask,
   type TaskStatus,
+  type TaskReason,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
@@ -24,6 +25,26 @@ const statusStyles: Record<string, string> = {
   partial: "border-amber-200 bg-amber-50 text-amber-950",
   missed: "border-rose-200 bg-rose-50 text-rose-950",
 };
+
+export function formatTopicName(task: {
+  topic_id: string;
+  reason_details?: { topic?: string; sub_topic?: string | null } | null;
+}): string {
+  if (task.reason_details?.topic) {
+    return task.reason_details.sub_topic
+      ? `${task.reason_details.topic}, ${task.reason_details.sub_topic}`
+      : task.reason_details.topic;
+  }
+  let clean = task.topic_id.replace(/^[a-z]+-u\d+-?/i, "");
+  if (!clean || clean === task.topic_id) {
+    clean = task.topic_id.replace(/^[a-z]+-/i, "");
+  }
+  const words = clean.split(/[-_]/).filter(Boolean);
+  if (words.length > 0) {
+    return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+  return task.topic_id;
+}
 
 function movedTasks(before: ScheduledTask[], after: ScheduledTask[]): string[] {
   const oldSlots = new Set(
@@ -39,7 +60,7 @@ function movedTasks(before: ScheduledTask[], after: ScheduledTask[]): string[] {
     )
     .map(
       (task) =>
-        `${task.activity} · ${task.topic_id} — ${new Date(task.start_at).toLocaleString()}`,
+        `${task.activity} · ${formatTopicName(task)} — ${new Date(task.start_at).toLocaleString()}`,
     );
 }
 
@@ -58,22 +79,50 @@ function taskTime(task: ScheduledTask): string {
   });
 }
 
-function masteryLabel(mastery: number): string {
+export function masteryLabel(mastery: number): string {
   if (mastery < 0.45) return "weak";
   if (mastery < 0.75) return "developing";
   return "strong";
 }
 
-function trendLabel(trend: number): string {
+export function trendLabel(trend: number): string {
   if (trend < -0.01) return `declining (${Math.round(Math.abs(trend) * 100)}%)`;
   if (trend > 0.01) return `improving (${Math.round(trend * 100)}%)`;
   return "stable";
 }
 
-function weightLabel(weight: number): string {
+export function weightLabel(weight: number): string {
   if (weight >= 0.67) return "high";
-  if (weight >= 0.34) return "medium";
+  if (weight >= 0.34) return "moderate";
   return "low";
+}
+
+export function getWhyNowText(reasonDetails: TaskReason): string {
+  const focusTopic = reasonDetails.sub_topic ?? reasonDetails.topic;
+  const weight = weightLabel(reasonDetails.exam_weight);
+
+  if (reasonDetails.decline_alert?.message) {
+    return reasonDetails.decline_alert.message;
+  }
+  if (reasonDetails.has_evidence === false) {
+    return `You haven't tried questions in ${focusTopic} yet, and it carries ${weight} weight in the exam.`;
+  }
+  const trend = trendLabel(reasonDetails.trend);
+  const article = trend.startsWith("improving") ? "an" : "a";
+  return `Your mastery in ${focusTopic} is ${Math.round(reasonDetails.mastery * 100)}% (${masteryLabel(reasonDetails.mastery)}) with ${article} ${trend} trend, and it carries ${weight} weight in the exam.`;
+}
+
+export function formatStepKind(kind: string): string {
+  if (kind === "practice") return "practice questions";
+  if (kind === "theory") return "theory";
+  if (kind === "review") return "review";
+  return kind.replace(/_/g, " ");
+}
+
+export function formatStepsSummary(
+  steps: Array<{ kind: string; minutes: number }>,
+): string {
+  return steps.map((s) => `${s.minutes} min ${formatStepKind(s.kind)}`).join(", ");
 }
 
 function TaskCard({
@@ -97,6 +146,7 @@ function TaskCard({
     Number.isInteger(partialMinutes) &&
     partialMinutes >= 1 &&
     partialMinutes <= task.duration_min;
+  const displayTopic = formatTopicName(task);
 
   return (
     <article
@@ -106,7 +156,7 @@ function TaskCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-semibold">
-            {task.activity} · {task.topic_id}
+            {task.activity} · {displayTopic}
           </p>
           <p className="mt-1 text-sm opacity-80">
             {taskDate(task)} at {taskTime(task)} · {task.duration_min} min ·{" "}
@@ -147,66 +197,89 @@ function TaskCard({
               </button>
             </div>
             {task.reason_details ? (
-              <>
-                <p className="mt-4 text-sm">
-                  <span className="font-semibold">Topic:</span>{" "}
-                  {task.reason_details.topic}
-                  {task.reason_details.sub_topic
-                    ? `, ${task.reason_details.sub_topic}`
-                    : ""}
+              <div className="mt-4 space-y-3">
+                <p className="text-sm">
+                  <span className="font-semibold text-slate-900">Topic:</span>{" "}
+                  <span className="text-slate-700">
+                    {task.reason_details.topic}
+                    {task.reason_details.sub_topic
+                      ? `, ${task.reason_details.sub_topic}`
+                      : ""}
+                  </span>
                 </p>
-                <p className="mt-2 text-sm">
-                  <span className="font-semibold">Reason:</span> Your mastery
-                  is {Math.round(task.reason_details.mastery * 100)}% (
-                  {masteryLabel(task.reason_details.mastery)}), and your trend
-                  is {trendLabel(task.reason_details.trend)}.
+                <p className="text-sm">
+                  <span className="font-semibold text-slate-900">Why now:</span>{" "}
+                  <span className="text-slate-700">
+                    {getWhyNowText(task.reason_details)}
+                  </span>
                 </p>
-                {task.reason_details.decline_alert ? (
-                  <p className="mt-2 text-sm">
-                    {task.reason_details.decline_alert.message}
+                <p className="text-sm">
+                  <span className="font-semibold text-slate-900">
+                    Days left to your exam:
+                  </span>{" "}
+                  <span className="text-slate-700">
+                    {task.reason_details.days_to_exam}{" "}
+                    {task.reason_details.days_to_exam === 1 ? "day" : "days"}
+                  </span>
+                </p>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    What to do in this slot
                   </p>
-                ) : null}
-                <p className="mt-2 text-sm">
-                  <span className="font-semibold">Exam weight:</span>{" "}
-                  {weightLabel(task.reason_details.exam_weight)} ·{" "}
-                  <span className="font-semibold">Days to exam:</span>{" "}
-                  {task.reason_details.days_to_exam}
-                </p>
-                <div className="mt-3">
-                  <p className="text-sm font-semibold">Priority factors</p>
-                  <ul className="mt-1 list-inside list-disc text-sm text-slate-700">
-                    {Object.entries(task.reason_details.main_factors).map(
-                      ([name, value]) => (
-                        <li key={name}>
-                          {name.replaceAll("_", " ")}:{" "}
-                          {Math.round(value * 100)}%
-                        </li>
-                      ),
-                    )}
-                  </ul>
+                  {task.steps && task.steps.length > 0 ? (
+                    <p className="mt-1 text-sm font-medium text-slate-800">
+                      {formatStepsSummary(task.steps)}
+                    </p>
+                  ) : null}
+                  {task.reason_details.activity_recommendation ? (
+                    <p className="mt-1 text-sm text-slate-600">
+                      {task.reason_details.activity_recommendation}
+                    </p>
+                  ) : null}
+                  <ol className="mt-2 list-inside list-decimal space-y-2 text-sm text-slate-700">
+                    {(task.steps ?? []).map((step, index) => (
+                      <li key={`${step.kind}-${index}`}>
+                        <span className="capitalize">{step.kind}</span> (
+                        {step.minutes} min)
+                        {step.question_ids.length ? (
+                          <span className="block break-words pl-6 text-slate-600">
+                            Questions: {step.question_ids.join(", ")}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ol>
                 </div>
-                <p className="mt-4 text-sm font-semibold">
-                  What to do in this slot
-                </p>
-                <p className="mt-1 text-sm">
-                  {task.reason_details.activity_recommendation}
-                </p>
-                <ol className="mt-2 list-inside list-decimal space-y-2 text-sm">
-                  {(task.steps ?? []).map((step, index) => (
-                    <li key={`${step.kind}-${index}`}>
-                      <span className="capitalize">{step.kind}</span> (
-                      {step.minutes} min)
-                      {step.question_ids.length ? (
-                        <span className="block break-words pl-6 text-slate-600">
-                          Questions: {step.question_ids.join(", ")}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ol>
-              </>
+                {task.reason_details.main_factors &&
+                Object.keys(task.reason_details.main_factors).length > 0 ? (
+                  <div className="pt-1">
+                    <p className="text-sm font-semibold text-slate-900">
+                      Priority factors
+                    </p>
+                    <ul className="mt-1 list-inside list-disc text-sm text-slate-700">
+                      {Object.entries(task.reason_details.main_factors).map(
+                        ([name, value]) => (
+                          <li key={name}>
+                            {name.replaceAll("_", " ")}:{" "}
+                            {Math.round(value * 100)}%
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             ) : (
-              <p className="mt-4 text-sm">{task.reason}</p>
+              <div className="mt-4 space-y-3">
+                <p className="text-sm">
+                  <span className="font-semibold text-slate-900">Topic:</span>{" "}
+                  <span className="text-slate-700">{displayTopic}</span>
+                </p>
+                <p className="text-sm">
+                  <span className="font-semibold text-slate-900">Why now:</span>{" "}
+                  <span className="text-slate-700">{task.reason}</span>
+                </p>
+              </div>
             )}
           </section>
         </div>
@@ -225,7 +298,7 @@ function TaskCard({
           <label className="flex items-center gap-2 text-xs font-medium">
             Actual min
             <input
-              aria-label={`Actual minutes for ${task.topic_id}`}
+              aria-label={`Actual minutes for ${displayTopic}`}
               className="w-20 rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-ink"
               max={task.duration_min}
               min={1}

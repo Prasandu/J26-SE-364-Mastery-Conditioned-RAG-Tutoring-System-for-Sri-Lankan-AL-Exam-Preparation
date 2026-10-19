@@ -4,7 +4,6 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from math import ceil
 
 
 @dataclass(frozen=True)
@@ -91,10 +90,13 @@ class GreedyScheduler:
         daily_minutes: dict[date, int] = defaultdict(int)
         remaining_by_topic = {topic.topic_id: topic.duration_minutes for topic in ordered_topics}
 
-        max_rounds = max(
-            (ceil(topic.duration_minutes / max_session_minutes) for topic in ordered_topics), default=0
-        )
-        for _ in range(max_rounds):
+        weekly_topics: dict[tuple[int, int], set[str]] = defaultdict(set)
+        last_topic_id: str | None = None
+        consecutive_topic_count = 0
+        topic_order = {topic.topic_id: index for index, topic in enumerate(ordered_topics)}
+
+        while True:
+            candidates = []
             for topic in ordered_topics:
                 remaining = remaining_by_topic[topic.topic_id]
                 if remaining <= 0:
@@ -110,16 +112,49 @@ class GreedyScheduler:
                     max_session_minutes=max_session_minutes,
                     daily_cap_minutes=daily_cap_minutes,
                 )
-                if slot is None:
-                    continue
-                task, window_index = slot
-                scheduled.append(task)
-                remaining_by_topic[topic.topic_id] -= task.duration_min
-                daily_minutes[task.start_at.date()] += task.duration_min
-                normalized_windows[window_index] = TimeWindow(
-                    task.end_at,
-                    normalized_windows[window_index].end_at,
-                )
+                if slot is not None:
+                    candidates.append((topic, slot))
+            if not candidates:
+                break
+
+            if consecutive_topic_count >= 2:
+                alternatives = [
+                    candidate
+                    for candidate in candidates
+                    if candidate[0].topic_id != last_topic_id
+                ]
+                if not alternatives:
+                    break
+                candidates = alternatives
+
+            earliest_start = min(slot[0].start_at for _, slot in candidates)
+            candidates = [
+                candidate
+                for candidate in candidates
+                if candidate[1][0].start_at == earliest_start
+            ]
+            week = earliest_start.isocalendar()[:2]
+            topic, (task, window_index) = min(
+                candidates,
+                key=lambda candidate: (
+                    candidate[0].topic_id in weekly_topics[week],
+                    -candidate[0].priority,
+                    topic_order[candidate[0].topic_id],
+                ),
+            )
+            scheduled.append(task)
+            remaining_by_topic[topic.topic_id] -= task.duration_min
+            daily_minutes[task.start_at.date()] += task.duration_min
+            weekly_topics[week].add(topic.topic_id)
+            if topic.topic_id == last_topic_id:
+                consecutive_topic_count += 1
+            else:
+                last_topic_id = topic.topic_id
+                consecutive_topic_count = 1
+            normalized_windows[window_index] = TimeWindow(
+                task.end_at,
+                normalized_windows[window_index].end_at,
+            )
 
         unscheduled = {
             topic_id: remaining for topic_id, remaining in remaining_by_topic.items() if remaining > 0

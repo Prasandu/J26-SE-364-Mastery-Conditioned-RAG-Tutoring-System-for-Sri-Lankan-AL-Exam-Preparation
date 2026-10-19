@@ -1,9 +1,9 @@
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
 import app.services.scheduling as scheduling
-from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic
+from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic, TopicEvidence
 from app.services.achievability import (
     allocate_hours,
     build_achievability_report,
@@ -269,6 +269,116 @@ def test_plan_schedule_uses_available_time_on_highest_gain_topic(
     ]
 
 
+def test_days_to_exam_computed_from_today_with_fixed_clock(monkeypatch) -> None:
+    # Fixed clock: today is 2026-10-19, exam is 2026-11-20 -> exactly 32 days
+    fixed_now = datetime(2026, 10, 19, 10, 0, tzinfo=UTC)
+    plan_id = uuid4()
+    plan = SimpleNamespace(
+        id=plan_id,
+        student_id="student-fixed-clock",
+        exam_date=date(2026, 11, 20),
+        constraints={
+            "timezone": "Asia/Colombo",
+            "max_session_minutes": 60,
+            "max_daily_minutes": 120,
+            "fixed_commitments": [],
+            "priorities": [
+                {"topic_id": "ketones", "priority": 0.8},
+            ],
+        },
+    )
+    topic = SimpleNamespace(id="ketones", name="Ketones", exam_weight=0.5, parent_id=None, prerequisites=[])
+    # Student has no evidence for ketones
+    slot = SimpleNamespace(
+        plan_id=plan_id,
+        weekday=fixed_now.astimezone(scheduling.ZoneInfo("Asia/Colombo")).weekday(),
+        start_time=time(16, 0),
+        end_time=time(17, 0),
+    )
+
+    class ClockSession:
+        def get(self, model, key):
+            if model is StudyPlan:
+                return plan
+            if model is Topic:
+                return topic
+            return None
+
+        def scalars(self, statement):
+            model = statement.column_descriptions[0]["entity"]
+            records = {
+                LearnerTopicState: [],
+                TopicEvidence: [],
+                AvailabilitySlot: [slot],
+                StudyTask: [],
+            }
+            return SimpleNamespace(all=lambda: records.get(model, []))
+
+        def flush(self):
+            return None
+
+    captured = {}
+
+    def capture_schedule(**kwargs):
+        captured["priorities"] = kwargs["priorities"]
+        return ScheduleResult((), False, 0, {})
+
+    monkeypatch.setattr(scheduling, "schedule_tasks", capture_schedule)
+    scheduling.generate_plan_schedule(
+        ClockSession(),
+        "student-fixed-clock",
+        plan_id,
+        horizon_days=7,
+        now=fixed_now,
+    )
+
+    ranked_topic = captured["priorities"][0]
+    assert ranked_topic.reason_details["days_to_exam"] == 32
+    assert ranked_topic.reason_details["has_evidence"] is False
+    assert ranked_topic.reason_details["mastery"] == 0.3  # NEUTRAL_PRIOR_MASTERY
+    assert ranked_topic.reason_details["reason"] == "No results yet for this topic."
+
+
+def test_regeneration_drops_past_planned_tasks() -> None:
+    plan_id = uuid4()
+    past_task = SimpleNamespace(
+        id=uuid4(),
+        plan_id=plan_id,
+        status="planned",
+        start_at=datetime(2026, 10, 17, 10, 0, tzinfo=UTC),
+    )
+    future_task = SimpleNamespace(
+        id=uuid4(),
+        plan_id=plan_id,
+        status="planned",
+        start_at=datetime(2026, 10, 20, 10, 0, tzinfo=UTC),
+    )
+    completed_task = SimpleNamespace(
+        id=uuid4(),
+        plan_id=plan_id,
+        status="completed",
+        start_at=datetime(2026, 10, 17, 8, 0, tzinfo=UTC),
+    )
+    deleted = []
+
+    class MockSession:
+        def scalars(self, statement):
+            return SimpleNamespace(all=lambda: [past_task, future_task])
+
+        def delete(self, task):
+            deleted.append(task)
+
+    # All planned tasks (including past planned) are deleted on regeneration
+    sess = MockSession()
+    tasks_to_delete = sess.scalars(None).all()
+    for t in tasks_to_delete:
+        sess.delete(t)
+
+    assert past_task in deleted
+    assert future_task in deleted
+    assert completed_task not in deleted
+
+
 def test_required_hours_reports_the_weekly_availability_gap() -> None:
     required = required_hours_for_target(
         "A",
@@ -280,3 +390,26 @@ def test_required_hours_reports_the_weekly_availability_gap() -> None:
 
     assert required.hours_per_week >= 0
     assert required.gap_hours_per_week == required.hours_per_week - 4
+
+
+def test_achievability_recalibrated_profiles() -> None:
+    # Profile 1: Weak student (mastery 0.2 across 5 topics) aiming for B in 40 days, 10h available
+    topics_weak = [{"topic_id": f"t{i}", "exam_weight": 0.2, "mastery": 0.2} for i in range(5)]
+    r1 = required_hours_for_target(
+        "B", current=0.2, topics=topics_weak, days_remaining=40, hours_available=10
+    )
+    assert 0 < r1.hours_per_week < 40
+    assert r1.gap_hours_per_week == r1.hours_per_week - 10
+
+    # Profile 2: Weak student aiming for C in 32 days, 10h available
+    r2 = required_hours_for_target(
+        "C", current=0.2, topics=topics_weak, days_remaining=32, hours_available=10
+    )
+    assert 0 < r2.hours_per_week < 40
+
+    # Profile 3: Moderate student (mastery 0.5 across 5 topics) aiming for A in 45 days, 8h available
+    topics_mod = [{"topic_id": f"t{i}", "exam_weight": 0.2, "mastery": 0.5} for i in range(5)]
+    r3 = required_hours_for_target(
+        "A", current=0.5, topics=topics_mod, days_remaining=45, hours_available=8
+    )
+    assert 0 < r3.hours_per_week < 40

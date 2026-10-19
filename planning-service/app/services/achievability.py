@@ -23,6 +23,7 @@ from app.services.weights import (
     ACHIEVABILITY_STRETCH_MULTIPLIER,
     ACHIEVABILITY_UNCERTAINTY_EVIDENCE_DECAY,
     ACHIEVABILITY_UNMET_PREREQUISITE_PENALTY,
+    NEUTRAL_EXAM_WEIGHT,
 )
 
 
@@ -150,6 +151,16 @@ def _daily_suggestion(*, suggested_hours_per_day: float) -> str:
 
 def _limit_words(value: str, maximum: int) -> str:
     return " ".join(value.split()[:maximum])
+
+
+def effective_exam_weight(value: float | None) -> float:
+    """Exam weight for planning; unset weights (``None`` or 0) count as neutral.
+
+    Without this, a curriculum with no weights gives every topic zero gain and
+    the allocator would put all hours on one arbitrary topic.
+    """
+    weight = float(value or 0)
+    return weight if weight > 0 else NEUTRAL_EXAM_WEIGHT
 
 
 def learning_rate(mastery: float) -> float:

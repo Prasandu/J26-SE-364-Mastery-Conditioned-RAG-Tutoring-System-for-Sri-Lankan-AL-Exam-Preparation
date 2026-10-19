@@ -3,6 +3,8 @@ from datetime import UTC, datetime, timedelta
 from math import exp, isfinite
 from typing import Literal
 
+from app.services.weights import ERROR_REVIEW_MAX_MASTERY, ERROR_REVIEW_MIN_ERRORS
+
 
 @dataclass(frozen=True)
 class PriorityResult:
@@ -21,10 +23,10 @@ class LearningProfile:
     studied: bool
     theory_completed: bool
     mastery: float
-    repeated_errors: int = 0
+    repeated_errors: int = 0  # wrong answers among the most recent attempts
     review_due: bool = False
     has_evidence: bool = True
-    recorded_errors: int = 0
+    recorded_errors: int = 0  # wrong answers across all attempts
 
 
 @dataclass(frozen=True)
@@ -114,7 +116,11 @@ def choose_activity(profile: LearningProfile) -> Activity:
         return "theory"
     if profile.mastery >= 0.85 and profile.review_due:
         return "spaced_revision"
-    if profile.repeated_errors >= 2 and profile.recorded_errors >= 2:
+    if (
+        profile.repeated_errors >= ERROR_REVIEW_MIN_ERRORS
+        and profile.recorded_errors >= ERROR_REVIEW_MIN_ERRORS
+        and profile.mastery < ERROR_REVIEW_MAX_MASTERY
+    ):
         return "error_review"
     if not profile.theory_completed and profile.mastery < 0.7:
         return "theory"

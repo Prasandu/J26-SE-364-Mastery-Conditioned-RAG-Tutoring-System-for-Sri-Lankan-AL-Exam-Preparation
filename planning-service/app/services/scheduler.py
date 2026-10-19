@@ -92,6 +92,7 @@ class GreedyScheduler:
 
         weekly_topics: dict[tuple[int, int], set[str]] = defaultdict(set)
         last_topic_id: str | None = None
+        last_task_date: date | None = None
         consecutive_topic_count = 0
         topic_order = {topic.topic_id: index for index, topic in enumerate(ordered_topics)}
 
@@ -118,14 +119,23 @@ class GreedyScheduler:
                 break
 
             if consecutive_topic_count >= 2:
-                alternatives = [
+                # At most two back-to-back sessions of a topic on the same day.
+                candidates = [
                     candidate
                     for candidate in candidates
                     if candidate[0].topic_id != last_topic_id
+                    or candidate[1][0].start_at.date() != last_task_date
                 ]
-                if not alternatives:
-                    break
-                candidates = alternatives
+                if not candidates:
+                    # Nothing else can use today's remaining time: move on to the next day.
+                    normalized_windows = [
+                        TimeWindow(window.end_at, window.end_at)
+                        if window.start_at.date() == last_task_date
+                        else window
+                        for window in normalized_windows
+                    ]
+                    consecutive_topic_count = 0
+                    continue
 
             earliest_start = min(slot[0].start_at for _, slot in candidates)
             candidates = [
@@ -146,11 +156,12 @@ class GreedyScheduler:
             remaining_by_topic[topic.topic_id] -= task.duration_min
             daily_minutes[task.start_at.date()] += task.duration_min
             weekly_topics[week].add(topic.topic_id)
-            if topic.topic_id == last_topic_id:
+            if topic.topic_id == last_topic_id and task.start_at.date() == last_task_date:
                 consecutive_topic_count += 1
             else:
                 last_topic_id = topic.topic_id
                 consecutive_topic_count = 1
+            last_task_date = task.start_at.date()
             normalized_windows[window_index] = TimeWindow(
                 task.end_at,
                 normalized_windows[window_index].end_at,

@@ -125,3 +125,28 @@ def test_scheduler_interleaves_topics_and_limits_consecutive_sessions() -> None:
             == scheduled_topic_sequence[i + 1]
             == scheduled_topic_sequence[i + 2]
         )
+
+
+def test_single_remaining_topic_continues_on_later_days() -> None:
+    now = datetime(2026, 10, 19, 8, tzinfo=UTC)
+    windows = [
+        TimeWindow(now + timedelta(days=day, hours=hour), now + timedelta(days=day, hours=hour + 1))
+        for day in range(3)
+        for hour in range(4)
+    ]
+    result = schedule_tasks(
+        priorities=[RankedTopic("ketones", "theory", 0.9, 360, "only topic")],
+        availability=windows,
+        commitments=[],
+        exam_deadline=now + timedelta(days=14),
+        max_session_minutes=60,
+        daily_cap_minutes=240,
+        now=now,
+    )
+
+    sessions_per_day: dict[object, int] = {}
+    for task in result.tasks:
+        sessions_per_day[task.start_at.date()] = sessions_per_day.get(task.start_at.date(), 0) + 1
+    assert sum(task.duration_min for task in result.tasks) == 360
+    assert list(sessions_per_day.values()) == [2, 2, 2]
+    assert not result.infeasible

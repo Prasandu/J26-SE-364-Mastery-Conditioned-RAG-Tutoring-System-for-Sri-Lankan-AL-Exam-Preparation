@@ -36,6 +36,7 @@ from app.services.achievability import (
     TopicInput,
     allocate_hours,
     build_achievability_report,
+    effective_exam_weight,
     expected_gain_per_hour,
     grade_for,
 )
@@ -338,7 +339,7 @@ def plan_topic_inputs(
         inputs.append(
             {
                 "topic_id": topic_id,
-                "exam_weight": float(topic.exam_weight or 0),
+                "exam_weight": effective_exam_weight(topic.exam_weight),
                 "mastery": float(state.mastery) if state is not None else NEUTRAL_PRIOR_MASTERY,
                 "prerequisites": prerequisites,
                 "prerequisite_mastery": {

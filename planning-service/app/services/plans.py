@@ -20,6 +20,7 @@ from app.services.achievability import (
     TopicInput,
     build_achievability_report,
     build_coaching_message,
+    effective_exam_weight,
     expected_gain_per_hour,
 )
 from app.services.roadmap import build_and_store_roadmap, set_rolling_state
@@ -183,7 +184,7 @@ def build_plan_achievability(
         topics.append(
             {
                 "topic_id": topic_id,
-                "exam_weight": float(topic.exam_weight or 0),
+                "exam_weight": effective_exam_weight(topic.exam_weight),
                 "mastery": float(state.mastery) if state is not None else 0.0,
                 "prerequisites": list(getattr(topic, "prerequisites", None) or []),
                 "prerequisite_mastery": {
@@ -199,7 +200,7 @@ def build_plan_achievability(
             reason = "recent mastery is declining"
         elif mastery < 0.45:
             reason = f"mastery is {round(mastery * 100)}%"
-        elif float(topic.exam_weight or 0) >= 0.65:
+        elif effective_exam_weight(topic.exam_weight) >= 0.65:
             reason = "high exam weight"
         else:
             reason = "steady practice will strengthen recall"
@@ -328,7 +329,7 @@ def _build_constraints(
             priority = expected_gain_per_hour(
                 {
                     "topic_id": state.topic_id,
-                    "exam_weight": float(topic.exam_weight or 0),
+                    "exam_weight": effective_exam_weight(topic.exam_weight),
                     "mastery": float(state.mastery),
                     "prerequisites": list(getattr(topic, "prerequisites", None) or []),
                     "prerequisite_mastery": prerequisite_mastery,

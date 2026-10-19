@@ -19,7 +19,12 @@ from app.models import (
 )
 from app.schemas.plans import FixedCommitment
 from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
-from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
+from app.services.achievability import (
+    TopicInput,
+    allocate_hours,
+    effective_exam_weight,
+    expected_gain_per_hour,
+)
 from app.services.decline import detect_decline
 from app.services.priority import LearningProfile, choose_activity
 from app.services.roadmap import (
@@ -44,7 +49,12 @@ from app.services.task_content import (
     build_activity_steps,
     build_task_reason,
 )
-from app.services.weights import DECLINE_PRIORITY_BOOST, NEUTRAL_PRIOR_MASTERY
+from app.services.weights import (
+    DECLINE_PRIORITY_BOOST,
+    ERROR_REVIEW_RECENT_ATTEMPTS,
+    ERROR_SCORE_THRESHOLD,
+    NEUTRAL_PRIOR_MASTERY,
+)
 
 
 def generate_plan_schedule(
@@ -355,7 +365,7 @@ def _ranked_topics(
         }
         gain_input: TopicInput = {
             "topic_id": topic_id,
-            "exam_weight": float(topic.exam_weight or 0),
+            "exam_weight": effective_exam_weight(topic.exam_weight),
             "mastery": topic_mastery,
             "prerequisites": list(topic.prerequisites or []),
             "prerequisite_mastery": prerequisite_mastery,
@@ -366,9 +376,12 @@ def _ranked_topics(
             evidence_by_topic.get(topic_id, []),
             topic_name=getattr(topic, "name", None),
         )
-        recorded_errors = sum(
-            attempt["score"] < attempt["max_score"] for attempt in topic_evidence
-        )
+        wrong_answers = [
+            attempt["score"] / attempt["max_score"] < ERROR_SCORE_THRESHOLD
+            for attempt in topic_evidence
+        ]
+        recorded_errors = sum(wrong_answers)
+        recent_errors = sum(wrong_answers[-ERROR_REVIEW_RECENT_ATTEMPTS:])
         studied = (
             has_evidence
             and state is not None
@@ -380,7 +393,7 @@ def _ranked_topics(
                 state is not None and has_evidence and state.mastery >= 0.35
             ),
             mastery=topic_mastery,
-            repeated_errors=recorded_errors,
+            repeated_errors=recent_errors,
             recorded_errors=recorded_errors,
             has_evidence=has_evidence,
             review_due=(
@@ -415,7 +428,7 @@ def _ranked_topics(
             has_evidence=has_evidence,
             trend=float(getattr(state, "trend", 0)) if state is not None else 0.0,
             decline=decline,
-            exam_weight=float(topic.exam_weight or 0),
+            exam_weight=effective_exam_weight(topic.exam_weight),
             days_to_exam=days_to_exam,
             main_factors={
                 "weakness": (
@@ -423,7 +436,7 @@ def _ranked_topics(
                     if state is not None
                     else 1 - topic_mastery
                 ),
-                "exam_weight": float(topic.exam_weight or 0),
+                "exam_weight": effective_exam_weight(topic.exam_weight),
                 "urgency": urgency,
                 "forgetting_risk": forgetting_risk,
                 "improvement_potential": 1 - topic_mastery,
@@ -455,7 +468,7 @@ def _ranked_topics(
                     for prerequisite in topic.prerequisites
                     if prerequisite in {entry["topic_id"] for entry in priorities}
                 ),
-                exam_weight=float(topic.exam_weight or 0),
+                exam_weight=effective_exam_weight(topic.exam_weight),
                 mastery=topic_mastery,
                 prerequisite_mastery=prerequisite_mastery,
             )

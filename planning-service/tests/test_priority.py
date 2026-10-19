@@ -106,7 +106,7 @@ def test_priority_rejects_out_of_range_inputs() -> None:
     [
         (LearningProfile(False, False, 0), "theory"),
         (LearningProfile(True, True, 0.9, review_due=True), "spaced_revision"),
-        (LearningProfile(True, True, 0.6, repeated_errors=2, recorded_errors=2), "error_review"),
+        (LearningProfile(True, True, 0.5, repeated_errors=2, recorded_errors=2), "error_review"),
         (LearningProfile(True, True, 0.3), "guided_practice"),
         (LearningProfile(True, True, 0.6), "structured_questions"),
         (LearningProfile(True, True, 0.85), "past_paper"),
@@ -161,6 +161,14 @@ def test_choose_activity_error_review_requires_at_least_two_recorded_errors() ->
         recorded_errors=2,
     )
     assert choose_activity(two_errors) == "error_review"
+
+
+def test_choose_activity_skips_error_review_when_topic_is_mostly_correct() -> None:
+    old_mistakes = LearningProfile(True, True, 0.5, repeated_errors=1, recorded_errors=6)
+    strong_topic = LearningProfile(True, True, 0.7, repeated_errors=3, recorded_errors=3)
+
+    assert choose_activity(old_mistakes) == "structured_questions"
+    assert choose_activity(strong_topic) == "structured_questions"
 
 
 def test_sm2_review_intervals_and_failed_recall() -> None:

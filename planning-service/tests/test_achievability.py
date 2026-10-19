@@ -413,3 +413,20 @@ def test_achievability_recalibrated_profiles() -> None:
         "A", current=0.5, topics=topics_mod, days_remaining=45, hours_available=8
     )
     assert 0 < r3.hours_per_week < 40
+
+
+def test_unset_exam_weights_are_neutral_so_hours_are_spread_by_weakness() -> None:
+    from app.services.achievability import effective_exam_weight
+
+    topics = [
+        {"topic_id": f"chem-u{index}", "exam_weight": effective_exam_weight(0), "mastery": mastery,
+         "prerequisites": [], "prerequisite_mastery": {}}
+        for index, mastery in enumerate([0.3, 0.45, 0.6, 0.9])
+    ]
+
+    allocated = allocate_hours(topics, 6)
+
+    assert effective_exam_weight(None) == effective_exam_weight(0) == 0.5
+    assert effective_exam_weight(0.8) == 0.8
+    assert sum(1 for hours in allocated.values() if hours > 0) >= 2
+    assert allocated["chem-u0"] >= allocated["chem-u3"]

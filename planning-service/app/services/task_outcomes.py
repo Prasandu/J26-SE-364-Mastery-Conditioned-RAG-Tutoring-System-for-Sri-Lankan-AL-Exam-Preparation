@@ -22,6 +22,7 @@ from app.schemas.tasks import (
     TaskStatusUpdate,
     WeeklyReplanResponse,
 )
+from app.services.achievability import effective_exam_weight
 from app.services.mastery import recompute_for
 from app.services.predictions import predict_student
 from app.services.priority import compute_priority
@@ -262,7 +263,7 @@ def refresh_predicted_priorities(
         result = compute_priority(
             weakness=state.weak_score,
             exam_importance=(
-                float(topic.exam_weight or 0)
+                effective_exam_weight(topic.exam_weight)
                 if (topic := session.get(Topic, state.topic_id)) is not None
                 else 0
             ),

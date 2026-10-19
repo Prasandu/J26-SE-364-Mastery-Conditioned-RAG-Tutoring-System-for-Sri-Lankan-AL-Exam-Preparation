@@ -13,6 +13,7 @@ import {
 } from "../src/api/planning";
 import { AuthContext, type AuthContextValue } from "../src/auth/AuthContext";
 import PlanningPage, {
+  formatActivity,
   formatStepKind,
   formatStepsSummary,
   formatTopicName,
@@ -452,7 +453,7 @@ describe("PlanningPage", () => {
     });
     renderPlanPage(false);
 
-    expect(await screen.findByText("theory · Ketones")).toBeInTheDocument();
+    expect(await screen.findByText("Learn the theory · Ketones")).toBeInTheDocument();
     expect(screen.getByLabelText("Actual minutes for Ketones")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -528,6 +529,16 @@ describe("PlanningPage", () => {
     ).toBeInTheDocument();
     // 5. Empty priority factors heading is removed
     expect(screen.queryByText("Priority factors")).toBeNull();
+  });
+});
+
+describe("formatActivity", () => {
+  it("shows readable activity names instead of internal codes", () => {
+    expect(formatActivity("error_review")).toBe("Review mistakes");
+    expect(formatActivity("past_paper")).toBe("Past-paper practice");
+    expect(formatActivity("recovery_revision")).toBe("Recovery revision");
+    expect(formatActivity("new_activity_type")).toBe("New activity type");
+    expect(formatActivity("Practice")).toBe("Practice");
   });
 });
 

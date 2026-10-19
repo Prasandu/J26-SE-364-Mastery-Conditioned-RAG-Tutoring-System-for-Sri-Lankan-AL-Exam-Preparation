@@ -23,6 +23,7 @@ COVERAGE_TARGET_EVIDENCE = 5
 STALE_HALF_LIFE_DAYS = 30.0
 
 NEUTRAL_PRIOR_MASTERY = 0.30
+NEUTRAL_EXAM_WEIGHT = 0.50  # used when a topic has no exam weight set (stored as 0)
 
 ACHIEVABILITY_LEARNING_RATE_BASE = 0.12
 ACHIEVABILITY_DIMINISHING_RETURNS = 0.75
@@ -51,6 +52,12 @@ DECLINE_THRESHOLD = 0.20
 DECLINE_RECENT_ATTEMPTS = 3
 DECLINE_BASELINE_ATTEMPTS = 2
 DECLINE_PRIORITY_BOOST = 0.20
+
+# Error review is chosen only for recent, repeated mistakes on a still-weak topic
+ERROR_SCORE_THRESHOLD = 0.5  # an attempt scoring below this fraction counts as a wrong answer
+ERROR_REVIEW_RECENT_ATTEMPTS = 5  # look for repeated mistakes among the latest N attempts
+ERROR_REVIEW_MIN_ERRORS = 2
+ERROR_REVIEW_MAX_MASTERY = 0.6
 
 # Rolling-horizon planning
 WINDOW_DAYS = 14  # detailed committed task window (7 when fewer than 21 days remain)

@@ -53,6 +53,22 @@ export function formatTopicName(task: {
   return task.topic_id;
 }
 
+const activityLabels: Record<string, string> = {
+  theory: "Learn the theory",
+  guided_practice: "Guided practice",
+  structured_questions: "Structured questions",
+  past_paper: "Past-paper practice",
+  error_review: "Review mistakes",
+  spaced_revision: "Quick revision",
+  recovery_revision: "Recovery revision",
+};
+
+export function formatActivity(activity: string): string {
+  if (activityLabels[activity]) return activityLabels[activity];
+  const words = activity.replace(/_/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 function movedTasks(before: ScheduledTask[], after: ScheduledTask[]): string[] {
   const oldSlots = new Set(
     before.map((task) => `${task.topic_id}|${task.start_at}|${task.duration_min}`),
@@ -67,7 +83,7 @@ function movedTasks(before: ScheduledTask[], after: ScheduledTask[]): string[] {
     )
     .map(
       (task) =>
-        `${task.activity} · ${formatTopicName(task)} — ${new Date(task.start_at).toLocaleString()}`,
+        `${formatActivity(task.activity)} · ${formatTopicName(task)} — ${new Date(task.start_at).toLocaleString()}`,
     );
 }
 
@@ -163,7 +179,7 @@ function TaskCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-semibold">
-            {task.activity} · {displayTopic}
+            {formatActivity(task.activity)} · {displayTopic}
           </p>
           <p className="mt-1 text-sm opacity-80">
             {taskDate(task)} at {taskTime(task)} · {task.duration_min} min ·{" "}
@@ -416,10 +432,11 @@ export default function PlanningPage() {
 
   const currentPlan =
     plans.find((plan) => plan.id === selectedPlanId) ?? plans[0];
+  const currentPlanId = currentPlan?.id;
 
   useEffect(() => {
     let active = true;
-    if (authLoading || loading || !currentPlan) {
+    if (authLoading || loading || !currentPlanId) {
       setSchedule(null);
       setScheduleLoading(false);
       return () => {
@@ -434,13 +451,13 @@ export default function PlanningPage() {
     setError("");
     // Roadmap first: if a checkpoint is due, rebuild the window before
     // loading sessions so the schedule shown is the fresh one.
-    void loadRoadmap(currentPlan.id)
+    void loadRoadmap(currentPlanId)
       .then(({ roadmap: nextRoadmap, update }) => {
         if (!active) return;
         setRoadmap(nextRoadmap);
         setRollingUpdate(update);
       })
-      .then(() => getSchedule(currentPlan.id))
+      .then(() => getSchedule(currentPlanId))
       .then((response) => {
         if (active) setSchedule(response);
       })
@@ -459,7 +476,8 @@ export default function PlanningPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, currentPlan, loading]);
+    // Keyed on the plan ID so local edits (e.g. a new target grade) don't reload.
+  }, [authLoading, currentPlanId, loading]);
 
   async function chooseNextStep(plan: PlanResponse, choice: TargetChoiceOption) {
     setChoosingTarget(true);

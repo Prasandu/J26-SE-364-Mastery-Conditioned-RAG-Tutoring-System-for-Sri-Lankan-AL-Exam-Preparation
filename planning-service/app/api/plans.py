@@ -6,9 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas.plans import PlanInput, PlanListResponse, PlanResponse
+from app.schemas.roadmap import (
+    CheckpointRequest,
+    RoadmapResponse,
+    RollingUpdateResponse,
+    TargetChoiceRequest,
+)
 from app.schemas.tasks import GenerateScheduleRequest, ScheduleResponse, WeeklyReplanResponse
 from app.security import StudentIdentity, get_student_identity
 from app.services.plans import create_plan, get_plan, list_plans, update_plan
+from app.services.rolling import choose_target, roadmap_view, run_checkpoint
 from app.services.scheduling import generate_and_commit_schedule, get_plan_schedule
 from app.services.task_outcomes import weekly_replan
 
@@ -109,3 +116,37 @@ def refresh_weekly_plan(
     identity: StudentIdentityDep,
 ) -> WeeklyReplanResponse:
     return weekly_replan(session, identity.student_id, plan_id)
+
+
+@router.get("/{plan_id}/roadmap", response_model=RoadmapResponse)
+def get_student_roadmap(
+    plan_id: UUID,
+    session: DbSession,
+    identity: StudentIdentityDep,
+) -> RoadmapResponse:
+    return roadmap_view(session, identity.student_id, plan_id)
+
+
+@router.post("/{plan_id}/checkpoint", response_model=RollingUpdateResponse)
+def run_plan_checkpoint(
+    plan_id: UUID,
+    session: DbSession,
+    identity: StudentIdentityDep,
+    data: CheckpointRequest | None = None,
+) -> RollingUpdateResponse:
+    return run_checkpoint(
+        session,
+        identity.student_id,
+        plan_id,
+        force=data.force if data is not None else False,
+    )
+
+
+@router.post("/{plan_id}/target-choice", response_model=RollingUpdateResponse)
+def choose_plan_target(
+    plan_id: UUID,
+    data: TargetChoiceRequest,
+    session: DbSession,
+    identity: StudentIdentityDep,
+) -> RollingUpdateResponse:
+    return choose_target(session, identity.student_id, plan_id, data.choice)

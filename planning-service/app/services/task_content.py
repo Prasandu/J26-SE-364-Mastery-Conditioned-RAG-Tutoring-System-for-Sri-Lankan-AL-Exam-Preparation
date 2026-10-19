@@ -1,6 +1,23 @@
 from math import ceil
 from typing import Any
 
+ACTIVITY_RECOMMENDATIONS = {
+    "theory": "Learn the theory, then practise questions on this topic.",
+    "guided_practice": "Work through guided practice questions on this topic.",
+    "structured_questions": "Complete structured questions on this topic.",
+    "past_paper": "Practise past-paper questions on this topic.",
+    "error_review": "Review your mistakes, then retry related questions.",
+    "spaced_revision": "Refresh your notes, then test your recall with questions.",
+    "recovery_revision": "Revise your notes, then redo questions from this topic.",
+}
+
+
+def activity_recommendation(activity: str) -> str:
+    return ACTIVITY_RECOMMENDATIONS.get(
+        activity,
+        "Study this topic using the recommended practice questions.",
+    )
+
 
 def build_task_reason(
     *,
@@ -15,15 +32,6 @@ def build_task_reason(
     main_factors: dict[str, float],
     activity: str,
 ) -> dict[str, Any]:
-    recommendations = {
-        "theory": "Learn the theory, then practise questions on this topic.",
-        "guided_practice": "Work through guided practice questions on this topic.",
-        "structured_questions": "Complete structured questions on this topic.",
-        "past_paper": "Practise past-paper questions on this topic.",
-        "error_review": "Review your mistakes, then retry related questions.",
-        "spaced_revision": "Refresh your notes, then test your recall with questions.",
-        "recovery_revision": "Revise your notes, then redo questions from this topic.",
-    }
     decline_alert = (
         {
             "baseline": decline.baseline,
@@ -49,10 +57,7 @@ def build_task_reason(
         "exam_weight": exam_weight,
         "days_to_exam": days_to_exam,
         "main_factors": main_factors,
-        "activity_recommendation": recommendations.get(
-            activity,
-            "Study this topic using the recommended practice questions.",
-        ),
+        "activity_recommendation": activity_recommendation(activity),
     }
 
 
@@ -64,8 +69,9 @@ def build_activity_steps(
     activity: str,
     declining: bool,
     question_ids: tuple[str, ...],
+    allow_theory: bool = True,
 ) -> list[dict[str, Any]]:
-    needs_theory = not studied or mastery < 0.45 or activity == "theory"
+    needs_theory = allow_theory and (not studied or mastery < 0.45 or activity == "theory")
     needs_review = declining or activity in {"error_review", "spaced_revision"}
     kinds = [
         kind

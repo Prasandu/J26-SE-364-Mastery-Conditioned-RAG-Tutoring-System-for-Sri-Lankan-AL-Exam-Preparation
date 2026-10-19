@@ -10,7 +10,8 @@ TaskStatus = Literal["completed", "partial", "missed"]
 class GenerateScheduleRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    horizon_days: Annotated[int, Field(ge=1, le=56)] = 14
+    # None uses the rolling committed window (14 days, or 7 near the exam).
+    horizon_days: Annotated[int, Field(ge=1, le=56)] | None = None
 
 
 class TaskStatusUpdate(BaseModel):
@@ -53,6 +54,7 @@ class TaskReason(BaseModel):
     days_to_exam: int
     main_factors: dict[str, float]
     activity_recommendation: str
+    final_week: bool = False
 
 
 class TaskStep(BaseModel):
@@ -101,3 +103,7 @@ class WeeklyReplanResponse(BaseModel):
     average_score_change: float | None
     predictions_created: int
     schedule: ScheduleResponse
+    compressed: bool = False
+    deferred_topics: list[str] = Field(default_factory=list)
+    restored_topics: list[str] = Field(default_factory=list)
+    explanation: str | None = None

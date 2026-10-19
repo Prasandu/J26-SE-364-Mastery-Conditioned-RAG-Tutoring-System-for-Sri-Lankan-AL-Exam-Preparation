@@ -25,6 +25,12 @@ from app.schemas.tasks import (
 from app.services.mastery import recompute_for
 from app.services.predictions import predict_student
 from app.services.priority import compute_priority
+from app.services.roadmap import (
+    apply_overload_rule,
+    build_and_store_roadmap,
+    rescheduling_horizon_days,
+    start_window,
+)
 from app.services.scheduling import generate_plan_schedule
 
 
@@ -65,11 +71,15 @@ def update_task_status(
     schedule: ScheduleResponse | None = None
     if remaining_minutes:
         priority = _topic_priority(session, task.plan_id, task.topic_id)
+        # Daily level: reschedule into the next free slot of the committed window.
         schedule = generate_plan_schedule(
             session,
             student_id,
             task.plan_id,
-            horizon_days=56,
+            horizon_days=rescheduling_horizon_days(
+                session.get(StudyPlan, task.plan_id),
+                datetime.now(UTC).date(),
+            ),
             duration_overrides={task.topic_id: remaining_minutes},
             priority_overrides={task.topic_id: min(priority + 0.25, 1.0)},
             replanned_from={task.topic_id: task.id},
@@ -115,24 +125,13 @@ def weekly_replan(
 
     analyzed_until = (now or datetime.now(UTC)).astimezone(UTC)
     analyzed_from = analyzed_until - timedelta(days=7)
-    tasks = session.scalars(
-        select(StudyTask).where(
-            StudyTask.plan_id == plan_id,
-            StudyTask.student_id == student_id,
-            StudyTask.start_at >= analyzed_from,
-            StudyTask.start_at < analyzed_until,
-        )
-    ).all()
-    planned_minutes = sum(task.duration_min for task in tasks)
-    completed_minutes = sum(
-        task.actual_duration_min
-        if task.actual_duration_min is not None
-        else task.duration_min
-        if task.status == "completed"
-        else 0
-        for task in tasks
+    tasks, planned_minutes, completed_minutes, adherence = measure_adherence(
+        session,
+        student_id,
+        plan_id,
+        since=analyzed_from,
+        until=analyzed_until,
     )
-    adherence = completed_minutes / planned_minutes if planned_minutes else None
     changes = [
         task.score_after - task.score_before
         for task in tasks
@@ -155,8 +154,10 @@ def weekly_replan(
     states = session.scalars(
         select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
     ).all()
-    _refresh_predicted_priorities(session, plan, states, analyzed_until)
+    refresh_predicted_priorities(session, plan, states, analyzed_until)
     session.flush()
+    # Weekly level: compress the plan when adherence falls below the floor.
+    overload = apply_overload_rule(session, student_id, plan, adherence, now=analyzed_until)
     predictions = predict_student(
         session,
         student_id,
@@ -171,6 +172,8 @@ def weekly_replan(
         horizon_days=7,
         now=analyzed_until,
     )
+    start_window(plan, today=analyzed_until.date(), window_days=7, now=analyzed_until)
+    build_and_store_roadmap(session, student_id, plan, now=analyzed_until)
     session.add(
         ReplanLog(
             student_id=student_id,
@@ -185,6 +188,8 @@ def weekly_replan(
                     "predictions_created": len(predictions.topics) + 1,
                     "next_week_tasks": len(schedule.tasks),
                     "infeasible": schedule.infeasible,
+                    "compressed": overload.compressed,
+                    "deferred_topics": overload.dropped_topics,
                 }
             ],
         )
@@ -200,10 +205,46 @@ def weekly_replan(
         average_score_change=average_score_change,
         predictions_created=len(predictions.topics) + 1,
         schedule=schedule,
+        compressed=overload.compressed,
+        deferred_topics=overload.dropped_topics,
+        restored_topics=overload.restored_topics,
+        explanation=overload.explanation,
     )
 
 
-def _refresh_predicted_priorities(
+def measure_adherence(
+    session: Session,
+    student_id: str,
+    plan_id: UUID,
+    *,
+    since: datetime,
+    until: datetime,
+) -> tuple[list[StudyTask], int, int, float | None]:
+    """Return tasks, planned minutes, completed minutes and adherence in a period."""
+    tasks = list(
+        session.scalars(
+            select(StudyTask).where(
+                StudyTask.plan_id == plan_id,
+                StudyTask.student_id == student_id,
+                StudyTask.start_at >= since,
+                StudyTask.start_at < until,
+            )
+        ).all()
+    )
+    planned_minutes = sum(task.duration_min for task in tasks)
+    completed_minutes = sum(
+        task.actual_duration_min
+        if task.actual_duration_min is not None
+        else task.duration_min
+        if task.status == "completed"
+        else 0
+        for task in tasks
+    )
+    adherence = completed_minutes / planned_minutes if planned_minutes else None
+    return tasks, planned_minutes, completed_minutes, adherence
+
+
+def refresh_predicted_priorities(
     session: Session,
     plan: StudyPlan,
     states: list[LearnerTopicState],

@@ -22,6 +22,15 @@ from app.schemas.tasks import ScheduledTaskResponse, ScheduleResponse
 from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
 from app.services.decline import detect_decline
 from app.services.priority import LearningProfile, choose_activity
+from app.services.roadmap import (
+    build_and_store_roadmap,
+    committed_window_days,
+    deferred_topics,
+    final_week_activity,
+    is_final_week,
+    schedule_limits,
+    start_window,
+)
 from app.services.scheduler import (
     FixedCommitment as SchedulerCommitment,
 )
@@ -30,7 +39,11 @@ from app.services.scheduler import (
     TimeWindow,
     schedule_tasks,
 )
-from app.services.task_content import build_activity_steps, build_task_reason
+from app.services.task_content import (
+    activity_recommendation,
+    build_activity_steps,
+    build_task_reason,
+)
 from app.services.weights import DECLINE_PRIORITY_BOOST, NEUTRAL_PRIOR_MASTERY
 
 
@@ -44,7 +57,14 @@ def generate_plan_schedule(
     duration_overrides: dict[str, int] | None = None,
     priority_overrides: dict[str, float] | None = None,
     replanned_from: dict[str, Any] | None = None,
+    excluded_topics: set[str] | None = None,
 ) -> ScheduleResponse:
+    """Generate detailed tasks for the next ``horizon_days``.
+
+    Topics deferred by overload compression are skipped (unless that would
+    leave nothing to study), and tasks in the final week never contain new
+    theory.
+    """
     plan = _owned_plan(session, student_id, plan_id)
     current = (now or datetime.now(UTC)).astimezone(UTC)
     constraints = plan.constraints
@@ -72,6 +92,14 @@ def generate_plan_schedule(
         today=start_local.date(),
         exam_date=plan.exam_date,
     )
+    excluded = deferred_topics(plan) if excluded_topics is None else excluded_topics
+    if excluded and any(item.topic_id not in excluded for item in priorities):
+        priorities = [
+            item
+            for item in priorities
+            if item.topic_id not in excluded or item.topic_id in duration_overrides
+        ]
+    max_session_minutes, daily_cap_minutes = schedule_limits(plan)
     if exam_deadline <= current:
         unscheduled = {item.topic_id: item.duration_minutes for item in priorities}
         return ScheduleResponse(
@@ -106,7 +134,7 @@ def generate_plan_schedule(
         day = window.start_at.astimezone(local_zone).date()
         effective_minutes_by_day[day] = effective_minutes_by_day.get(day, 0) + max(0, duration - blocked)
     total_available_hours = sum(
-        min(minutes, constraints.get("max_daily_minutes", 180))
+        min(minutes, daily_cap_minutes)
         for minutes in effective_minutes_by_day.values()
     ) / 60
     allocation = allocate_hours(
@@ -158,8 +186,8 @@ def generate_plan_schedule(
         availability=windows,
         commitments=commitments,
         exam_deadline=exam_deadline,
-        max_session_minutes=constraints["max_session_minutes"],
-        daily_cap_minutes=constraints.get("max_daily_minutes", 180),
+        max_session_minutes=max_session_minutes,
+        daily_cap_minutes=daily_cap_minutes,
         now=current,
     )
 
@@ -168,23 +196,37 @@ def generate_plan_schedule(
     replanned_topics: set[str] = set()
     for scheduled in result.tasks:
         origin_id = (replanned_from or {}).get(scheduled.topic_id)
+        task_day = scheduled.start_at.astimezone(local_zone).date()
+        final_week = is_final_week((plan.exam_date - task_day).days)
+        activity = scheduled.activity
+        reason_details = dict(scheduled.reason_details or {})
+        if final_week:
+            activity = final_week_activity(
+                activity,
+                mastery=reason_details.get("mastery", NEUTRAL_PRIOR_MASTERY),
+                declining=scheduled.declining,
+                studied=scheduled.studied,
+            )
+            reason_details["activity_recommendation"] = activity_recommendation(activity)
+            reason_details["final_week"] = True
         task = StudyTask(
             plan_id=plan.id,
             student_id=student_id,
             topic_id=scheduled.topic_id,
-            activity=scheduled.activity,
+            activity=activity,
             start_at=scheduled.start_at,
             duration_min=scheduled.duration_min,
             status="planned",
             reason=scheduled.reason,
-            reason_details=scheduled.reason_details or {},
+            reason_details=reason_details,
             steps=build_activity_steps(
                 duration_minutes=scheduled.duration_min,
-                mastery=scheduled.reason_details["mastery"],
+                mastery=reason_details["mastery"],
                 studied=scheduled.studied,
-                activity=scheduled.activity,
+                activity=activity,
                 declining=scheduled.declining,
                 question_ids=scheduled.question_ids,
+                allow_theory=not final_week,
             ),
             replanned_from=origin_id if scheduled.topic_id not in replanned_topics else None,
         )
@@ -206,14 +248,27 @@ def generate_and_commit_schedule(
     student_id: str,
     plan_id: Any,
     *,
-    horizon_days: int = 14,
+    horizon_days: int | None = None,
+    now: datetime | None = None,
 ) -> ScheduleResponse:
+    """Commit the next window of detailed tasks and refresh the roadmap.
+
+    Without an explicit ``horizon_days`` the rolling committed window is used:
+    14 days, or 7 when fewer than 21 days remain.
+    """
+    plan = _owned_plan(session, student_id, plan_id)
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    today = current.astimezone(_time_zone(plan.constraints.get("timezone", "Asia/Colombo"))).date()
+    window_days = horizon_days or max(committed_window_days((plan.exam_date - today).days), 1)
     response = generate_plan_schedule(
         session,
         student_id,
         plan_id,
-        horizon_days=horizon_days,
+        horizon_days=window_days,
+        now=current,
     )
+    start_window(plan, today=today, window_days=window_days, now=current)
+    build_and_store_roadmap(session, student_id, plan, now=current)
     session.commit()
     return response
 

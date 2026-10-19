@@ -13,6 +13,7 @@ def test_all_p1_models_use_planning_schema() -> None:
         "questions",
         "raw_events",
         "replan_log",
+        "roadmap_weeks",
         "study_plans",
         "study_tasks",
         "topic_evidence",

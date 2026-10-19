@@ -123,6 +123,7 @@ export interface TaskReason {
   days_to_exam: number;
   main_factors: Record<string, number>;
   activity_recommendation: string;
+  final_week?: boolean;
 }
 
 export interface TaskStep {
@@ -132,7 +133,7 @@ export interface TaskStep {
 }
 
 export interface GenerateScheduleRequest {
-  horizon_days: number;
+  horizon_days?: number;
 }
 
 export interface ScheduleResponse {
@@ -170,7 +171,85 @@ export interface WeeklyReplanResponse {
   average_score_change: number | null;
   predictions_created: number;
   schedule: ScheduleResponse;
+  compressed?: boolean;
+  deferred_topics?: string[];
+  restored_topics?: string[];
+  explanation?: string | null;
 }
+
+export interface RoadmapTopic {
+  topic_id: string;
+  topic_name: string;
+  hours: number;
+  focus: string;
+  projected_mastery: number;
+}
+
+export interface RoadmapWeek {
+  week_start: string;
+  week_end: string;
+  label: "forecast" | "committed";
+  phase: "learning" | "final_revision";
+  topics: RoadmapTopic[];
+  total_hours: number;
+  weeks_to_exam: number;
+  compressed: boolean;
+  compression_note: string | null;
+}
+
+export interface TargetOption {
+  grade: string;
+  hours_per_day: number;
+  label: string;
+}
+
+export interface TargetChoice {
+  target_grade: string;
+  keep_target: TargetOption;
+  adjust_goal: TargetOption;
+}
+
+export interface RoadmapResponse {
+  plan_id: string;
+  exam_date: string;
+  days_to_exam: number;
+  window_days: number;
+  window_start: string | null;
+  window_end: string | null;
+  next_checkpoint: string | null;
+  final_week_start: string;
+  final_week: boolean;
+  checkpoint_due: boolean;
+  checkpoint_reason: "window_end" | "new_evidence" | null;
+  deferred_topics: { topic_id: string; topic_name: string }[];
+  compression_note: string | null;
+  target_choice: TargetChoice | null;
+  weeks: RoadmapWeek[];
+}
+
+export interface RangeChange {
+  direction: "up" | "down" | "same";
+  previous: number | null;
+  current: number;
+  message: string;
+}
+
+export interface RollingUpdateResponse {
+  plan_id: string;
+  ran: boolean;
+  trigger: "window_end" | "new_evidence" | "manual" | "target_choice" | null;
+  adherence: number | null;
+  compressed: boolean;
+  deferred_topics: string[];
+  restored_topics: string[];
+  explanation: string | null;
+  target_grade: string;
+  range_change: RangeChange | null;
+  roadmap: RoadmapResponse;
+  schedule: ScheduleResponse | null;
+}
+
+export type TargetChoiceOption = "keep_target" | "adjust_goal";
 
 export interface DashboardTopicTrend {
   topic_id: string;
@@ -283,13 +362,43 @@ export function getSchedule(planId: string) {
   );
 }
 
-export function generateSchedule(planId: string, horizonDays = 14) {
+export function generateSchedule(planId: string, horizonDays?: number) {
+  const body: GenerateScheduleRequest =
+    horizonDays === undefined ? {} : { horizon_days: horizonDays };
   return planningRequest<ScheduleResponse>(
     `/api/v1/plans/${encodeURIComponent(planId)}/generate`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ horizon_days: horizonDays }),
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export function getRoadmap(planId: string) {
+  return planningRequest<RoadmapResponse>(
+    `/api/v1/plans/${encodeURIComponent(planId)}/roadmap`,
+  );
+}
+
+export function runCheckpoint(planId: string, force = false) {
+  return planningRequest<RollingUpdateResponse>(
+    `/api/v1/plans/${encodeURIComponent(planId)}/checkpoint`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ force }),
+    },
+  );
+}
+
+export function chooseTarget(planId: string, choice: TargetChoiceOption) {
+  return planningRequest<RollingUpdateResponse>(
+    `/api/v1/plans/${encodeURIComponent(planId)}/target-choice`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ choice }),
     },
   );
 }

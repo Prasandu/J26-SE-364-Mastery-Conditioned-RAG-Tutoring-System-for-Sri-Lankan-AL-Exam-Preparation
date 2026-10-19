@@ -268,6 +268,7 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
         lambda *_args, **_kwargs: SimpleNamespace(topics=[object()]),
     )
     monkeypatch.setattr(task_outcomes, "generate_plan_schedule", fake_generate)
+    monkeypatch.setattr(task_outcomes, "build_and_store_roadmap", lambda *_args, **_kwargs: [])
     session = FakeSession()
     result = task_outcomes.weekly_replan(
         session,  # type: ignore[arg-type]
@@ -283,4 +284,6 @@ def test_weekly_replan_reports_outcomes_and_preserves_manual_priorities(
     assert result.predictions_created == 2
     assert generated["horizon_days"] == 7
     assert plan.constraints["priorities"] == original_priorities
+    assert plan.constraints["rolling"]["window_days"] == 7
+    assert not result.compressed
     assert session.committed

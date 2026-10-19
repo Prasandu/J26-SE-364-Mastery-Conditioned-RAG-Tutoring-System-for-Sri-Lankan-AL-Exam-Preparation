@@ -52,6 +52,19 @@ DECLINE_RECENT_ATTEMPTS = 3
 DECLINE_BASELINE_ATTEMPTS = 2
 DECLINE_PRIORITY_BOOST = 0.20
 
+# Rolling-horizon planning
+WINDOW_DAYS = 14  # detailed committed task window (7 when fewer than 21 days remain)
+SHORT_HORIZON_THRESHOLD_DAYS = 21  # switch to 7-day window below this
+SHORT_HORIZON_DAYS = 7
+ADHERENCE_FLOOR = 0.60  # weekly adherence below this triggers plan compression
+FINAL_WEEK_DAYS = 7  # last N days use revision/past-paper only; no new theory
+COMPRESSION_MIN_LOAD = 0.40  # compressed plans keep at least this share of the original load
+COMPRESSION_HEADROOM = 0.15  # compressed load = measured adherence + headroom (room for good days)
+COMPRESSION_MIN_TOPIC_HOURS = 1.0  # kept topics need at least this many hours a week to be useful
+COMPRESSED_SESSION_FACTOR = 0.75  # compressed plans shorten sessions by this factor
+MIN_COMPRESSED_SESSION_MINUTES = 25
+RANGE_CHANGE_EPSILON = 0.01  # projected-score change treated as "moved" at a checkpoint
+
 
 def weights_sum_to_one(weights: dict[str, float]) -> bool:
     return abs(sum(weights.values()) - 1.0) < 1e-9

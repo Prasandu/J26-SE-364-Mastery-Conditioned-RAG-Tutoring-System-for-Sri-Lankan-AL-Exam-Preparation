@@ -3,19 +3,26 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { ApiError } from "../../api/client";
 import {
+  chooseTarget,
   generateSchedule,
   getPlans,
+  getRoadmap,
   getSchedule,
+  runCheckpoint,
   updateTaskStatus,
   type PlanResponse,
+  type RoadmapResponse,
+  type RollingUpdateResponse,
   type ScheduleResponse,
   type ScheduledTask,
+  type TargetChoiceOption,
   type TaskStatus,
   type TaskReason,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
+import RoadmapSection, { CheckpointNotice } from "./RoadmapSection";
 
 type ViewMode = "list" | "calendar";
 
@@ -213,6 +220,12 @@ function TaskCard({
                     {getWhyNowText(task.reason_details)}
                   </span>
                 </p>
+                {task.reason_details.final_week ? (
+                  <p className="rounded-lg bg-violet-50 p-2 text-sm text-violet-950">
+                    Final week: revision and past papers only, with no new
+                    theory.
+                  </p>
+                ) : null}
                 <p className="text-sm">
                   <span className="font-semibold text-slate-900">
                     Days left to your exam:
@@ -348,6 +361,10 @@ export default function PlanningPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [error, setError] = useState("");
   const [toast, setToast] = useState<string[]>([]);
+  const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
+  const [rollingUpdate, setRollingUpdate] =
+    useState<RollingUpdateResponse | null>(null);
+  const [choosingTarget, setChoosingTarget] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -411,9 +428,19 @@ export default function PlanningPage() {
     }
 
     setSchedule(null);
+    setRoadmap(null);
+    setRollingUpdate(null);
     setScheduleLoading(true);
     setError("");
-    void getSchedule(currentPlan.id)
+    // Roadmap first: if a checkpoint is due, rebuild the window before
+    // loading sessions so the schedule shown is the fresh one.
+    void loadRoadmap(currentPlan.id)
+      .then(({ roadmap: nextRoadmap, update }) => {
+        if (!active) return;
+        setRoadmap(nextRoadmap);
+        setRollingUpdate(update);
+      })
+      .then(() => getSchedule(currentPlan.id))
       .then((response) => {
         if (active) setSchedule(response);
       })
@@ -434,6 +461,32 @@ export default function PlanningPage() {
     };
   }, [authLoading, currentPlan, loading]);
 
+  async function chooseNextStep(plan: PlanResponse, choice: TargetChoiceOption) {
+    setChoosingTarget(true);
+    setError("");
+    try {
+      const result = await chooseTarget(plan.id, choice);
+      setRoadmap(result.roadmap);
+      setRollingUpdate(result);
+      setPlans((current) =>
+        current.map((item) =>
+          item.id === plan.id
+            ? { ...item, target_grade: result.target_grade }
+            : item,
+        ),
+      );
+      setSchedule(await getSchedule(plan.id));
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError
+          ? cause.message
+          : "Your choice could not be saved.",
+      );
+    } finally {
+      setChoosingTarget(false);
+    }
+  }
+
   async function regenerate(plan: PlanResponse) {
     setGenerating(true);
     setError("");
@@ -442,6 +495,9 @@ export default function PlanningPage() {
     try {
       const nextSchedule = await generateSchedule(plan.id);
       setSchedule(nextSchedule);
+      void getRoadmap(plan.id)
+        .then((nextRoadmap) => setRoadmap(nextRoadmap ?? null))
+        .catch(() => undefined);
       const changed = movedTasks(previousTasks, nextSchedule.tasks);
       setToast(
         changed.length > 0
@@ -596,10 +652,11 @@ export default function PlanningPage() {
                   ? "Loading saved sessions..."
                   : schedule?.tasks.length
                     ? "Regenerate plan"
-                    : "Generate next 14 days"}
+                    : `Generate next ${roadmap?.window_days ?? 14} days`}
             </button>
           </div>
           <CoachingCard message={currentPlan.coaching_message} />
+          {rollingUpdate ? <CheckpointNotice update={rollingUpdate} /> : null}
           {error ? (
             <div className="mt-5">
               <ErrorState message={error} />
@@ -765,8 +822,32 @@ export default function PlanningPage() {
               )}
             </div>
           ) : null}
+          {roadmap ? (
+            <RoadmapSection
+              choosing={choosingTarget}
+              onChooseTarget={(choice) => void chooseNextStep(currentPlan, choice)}
+              roadmap={roadmap}
+            />
+          ) : null}
         </>
       )}
     </section>
   );
+}
+
+async function loadRoadmap(planId: string): Promise<{
+  roadmap: RoadmapResponse | null;
+  update: RollingUpdateResponse | null;
+}> {
+  // The roadmap is supplementary: failures here must not block sessions.
+  try {
+    const roadmap = (await getRoadmap(planId)) ?? null;
+    if (!roadmap?.checkpoint_due) return { roadmap, update: null };
+    const update = await runCheckpoint(planId);
+    return update?.ran
+      ? { roadmap: update.roadmap, update }
+      : { roadmap: update?.roadmap ?? roadmap, update: null };
+  } catch {
+    return { roadmap: null, update: null };
+  }
 }

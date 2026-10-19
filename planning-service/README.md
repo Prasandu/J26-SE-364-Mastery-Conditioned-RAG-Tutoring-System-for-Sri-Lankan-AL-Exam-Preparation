@@ -84,6 +84,39 @@ when availability is entered in a different local time zone.
   XGBoost when available (otherwise use the labeled rule fallback), and
   generate the next seven days.
 
+## Rolling-horizon planning
+
+A plan has three layers. The **roadmap** forecasts hours per topic for every
+week until the exam (expected-gain allocation, with projected mastery carried
+forward week to week) and is stored in `planning.roadmap_weeks`. The
+**committed window** holds detailed tasks for the next `WINDOW_DAYS` (14), or
+`SHORT_HORIZON_DAYS` (7) when fewer than 21 days remain; windows are shortened
+so the final `FINAL_WEEK_DAYS` always start a fresh, fixed window.
+**Checkpoints** rebuild the roadmap and the next window when the window ends or
+new assessment evidence arrives. All constants live in `app/services/weights.py`;
+rolling state is kept on `plan.constraints["rolling"]`.
+
+- `POST /api/v1/plans/{plan_id}/generate` — with no `horizon_days`, commits the
+  rolling window and refreshes the roadmap.
+- `GET /api/v1/plans/{plan_id}/roadmap` — roadmap weeks (`committed` or
+  `forecast`, `learning` or `final_revision`), window dates, next checkpoint,
+  `checkpoint_due`, deferred topics, and any pending target decision.
+- `POST /api/v1/plans/{plan_id}/checkpoint` — runs a checkpoint when due (or
+  with `{"force": true}`): measures last-week adherence, refreshes mastery,
+  applies the overload rule, reports how the estimated range moved, and commits
+  the next window.
+- `POST /api/v1/plans/{plan_id}/target-choice` — `{"choice": "keep_target"}`
+  restores deferred topics; `{"choice": "adjust_goal"}` lowers the target to the
+  grade reachable at the current pace. The target never changes otherwise.
+
+Overload rule: when weekly adherence is below `ADHERENCE_FLOOR` (0.6), the plan
+is compressed to adherence + `COMPRESSION_HEADROOM` of its load, sessions are
+shortened, and the lowest-gain topics are deferred whenever scaling down would
+leave a kept topic under `COMPRESSION_MIN_TOPIC_HOURS` a week. The change is
+recorded in `replan_log` with a student-friendly explanation. Missed tasks are
+rescheduled within the current window, and final-week tasks use revision,
+past-paper, error-review or recovery activities with no theory steps.
+
 Each scheduled task persists a `reason_details` object (topic/sub-topic,
 mastery, trend, decline alert, exam weight, days to exam, factor values, and
 activity recommendation) and ordered `steps`. Practice steps include
@@ -294,6 +327,14 @@ scheduler and prints a Markdown results table:
 ```powershell
 python -m scripts.evaluate --teacher-ranking data\teacher-ranking.csv --output data\table-2.md
 ```
+
+The same command appends a second table comparing a fixed full-period plan
+(the day-1 roadmap executed unchanged) with rolling re-planning (14/7-day and
+fixed 7-day windows, plus a no-compression ablation). Simulated students have
+true mastery that shifts and study capacity that changes on day 21 of 42. It
+reports adherence, exam-weighted mastery gain, the paired gain difference
+against the fixed plan, overdue high-priority topics per student, feasibility
+violations and re-plans, with 95% confidence intervals.
 
 The supplied teacher-ranking CSV may contain one row per topic with
 `topic_id,rank`, or per-student rows with `student_id,topic_id,rank`; lower

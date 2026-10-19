@@ -22,6 +22,7 @@ from app.services.achievability import (
     build_coaching_message,
     expected_gain_per_hour,
 )
+from app.services.roadmap import build_and_store_roadmap, set_rolling_state
 
 
 def create_plan(
@@ -57,11 +58,9 @@ def create_plan(
             ],
         )
     )
+    achievability = _initialise_rolling_plan(session, student_id, plan, student_name=student_name)
     session.commit()
-    return _plan_response(
-        plan,
-        build_plan_achievability(session, student_id, plan, student_name=student_name),
-    )
+    return _plan_response(plan, achievability)
 
 
 def list_plans(
@@ -113,7 +112,7 @@ def update_plan(
         "mode": plan.mode,
         "exam_date": plan.exam_date.isoformat(),
         "target_grade": plan.target_grade,
-        "constraints": plan.constraints,
+        "constraints": {key: value for key, value in plan.constraints.items() if key != "rolling"},
     }
     new_snapshot = _plan_snapshot(data, constraints)
     changes = [
@@ -139,11 +138,23 @@ def update_plan(
                 changes=changes,
             )
         )
+    achievability = _initialise_rolling_plan(session, student_id, plan, student_name=student_name)
     session.commit()
-    return _plan_response(
-        plan,
-        build_plan_achievability(session, student_id, plan, student_name=student_name),
-    )
+    return _plan_response(plan, achievability)
+
+
+def _initialise_rolling_plan(
+    session: Session,
+    student_id: str,
+    plan: StudyPlan,
+    *,
+    student_name: str,
+) -> dict[str, Any]:
+    """Build the full-period roadmap forecast and record the starting estimate."""
+    build_and_store_roadmap(session, student_id, plan)
+    achievability = build_plan_achievability(session, student_id, plan, student_name=student_name)
+    set_rolling_state(plan, last_expected_score=achievability["projected_range"]["expected"])
+    return achievability
 
 
 def build_plan_achievability(

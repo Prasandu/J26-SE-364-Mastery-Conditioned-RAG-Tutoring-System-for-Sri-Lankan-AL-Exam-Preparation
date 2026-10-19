@@ -398,6 +398,11 @@ def _grade_threshold(grade: str) -> float:
         raise ValueError(f"Unknown target grade {grade!r}.") from exc
 
 
+def grade_for(score: float) -> str:
+    """Return the grade band for a normalized score."""
+    return _grade_for(score)
+
+
 def _grade_for(score: float) -> str:
     return next(
         grade

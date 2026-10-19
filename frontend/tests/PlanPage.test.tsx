@@ -1,11 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { Session } from "@supabase/supabase-js";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  chooseTarget,
   generateSchedule,
   getPlans,
+  getRoadmap,
   getSchedule,
+  runCheckpoint,
+  type RoadmapResponse,
 } from "../src/api/planning";
 import { AuthContext, type AuthContextValue } from "../src/auth/AuthContext";
 import PlanningPage, {
@@ -17,13 +21,77 @@ import PlanningPage, {
   trendLabel,
   weightLabel,
 } from "../src/features/planning/PlanPage";
+import {
+  checkpointReasonText,
+  formatHours,
+} from "../src/features/planning/RoadmapSection";
 
 vi.mock("../src/api/planning", () => ({
+  chooseTarget: vi.fn(),
   generateSchedule: vi.fn(),
   getPlans: vi.fn(),
+  getRoadmap: vi.fn(),
   getSchedule: vi.fn(),
+  runCheckpoint: vi.fn(),
   updateTaskStatus: vi.fn(),
 }));
+
+const roadmap: RoadmapResponse = {
+  plan_id: "newest-plan",
+  exam_date: "2026-11-30",
+  days_to_exam: 42,
+  window_days: 14,
+  window_start: "2026-10-19",
+  window_end: "2026-11-01",
+  next_checkpoint: "2026-11-02",
+  final_week_start: "2026-11-23",
+  final_week: false,
+  checkpoint_due: false,
+  checkpoint_reason: null,
+  deferred_topics: [],
+  compression_note: null,
+  target_choice: null,
+  weeks: [
+    {
+      week_start: "2026-10-19",
+      week_end: "2026-10-25",
+      label: "committed",
+      phase: "learning",
+      topics: [
+        {
+          topic_id: "organic",
+          topic_name: "Organic chemistry",
+          hours: 6,
+          focus: "practice questions",
+          projected_mastery: 0.4,
+        },
+      ],
+      total_hours: 6,
+      weeks_to_exam: 5,
+      compressed: false,
+      compression_note: null,
+    },
+    {
+      week_start: "2026-11-23",
+      week_end: "2026-11-29",
+      label: "forecast",
+      phase: "final_revision",
+      topics: [
+        {
+          topic_id: "calculations",
+          topic_name: "Calculations",
+          hours: 4.5,
+          focus: "revision and past papers",
+          projected_mastery: 0.6,
+        },
+      ],
+      total_hours: 4.5,
+      weeks_to_exam: 0,
+      compressed: false,
+      compression_note: null,
+    },
+  ],
+};
 
 const emptySchedule = {
   tasks: [],
@@ -94,6 +162,141 @@ describe("PlanningPage", () => {
     vi.mocked(generateSchedule).mockReset();
     vi.mocked(getSchedule).mockReset();
     vi.mocked(getSchedule).mockResolvedValue(emptySchedule);
+    vi.mocked(getRoadmap).mockReset();
+    vi.mocked(getRoadmap).mockResolvedValue(roadmap);
+    vi.mocked(runCheckpoint).mockReset();
+    vi.mocked(chooseTarget).mockReset();
+  });
+
+  it("shows the full roadmap with committed and forecast weeks", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    renderPlanPage(false);
+
+    expect(
+      await screen.findByRole("region", { name: "Roadmap to your exam" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Committed")).toBeInTheDocument();
+    expect(screen.getByText("Forecast")).toBeInTheDocument();
+    expect(screen.getByText("Final revision")).toBeInTheDocument();
+    expect(screen.getByText("4.5h · revision and past papers")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your next 14 days are detailed in your study sessions/),
+    ).toBeInTheDocument();
+    expect(runCheckpoint).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Generate next 14 days" }),
+    ).toBeInTheDocument();
+  });
+
+  it("runs a due checkpoint before loading sessions and explains it", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    vi.mocked(getRoadmap).mockResolvedValue({
+      ...roadmap,
+      checkpoint_due: true,
+      checkpoint_reason: "window_end",
+    });
+    vi.mocked(runCheckpoint).mockResolvedValue({
+      plan_id: "newest-plan",
+      ran: true,
+      trigger: "window_end",
+      adherence: 0.72,
+      compressed: false,
+      deferred_topics: [],
+      restored_topics: [],
+      explanation: null,
+      target_grade: "A",
+      range_change: {
+        direction: "up",
+        previous: 0.5,
+        current: 0.58,
+        message: "Your estimated score moved up from 50% to 58%. Your work is paying off!",
+      },
+      roadmap: { ...roadmap, window_days: 7 },
+      schedule: emptySchedule,
+    });
+    renderPlanPage(false);
+
+    expect(
+      await screen.findByText("Checkpoint: your plan was rebuilt"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Your committed study window ended.")).toBeInTheDocument();
+    expect(
+      screen.getByText(/you completed 72% of your planned study time/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Your work is paying off/)).toBeInTheDocument();
+    expect(runCheckpoint).toHaveBeenCalledWith("newest-plan");
+    await waitFor(() => expect(getSchedule).toHaveBeenCalledWith("newest-plan"));
+    expect(vi.mocked(runCheckpoint).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(getSchedule).mock.invocationCallOrder[0],
+    );
+    expect(
+      await screen.findByRole("button", { name: "Generate next 7 days" }),
+    ).toBeInTheDocument();
+  });
+
+  it("lets the student choose between keeping the target and adjusting the goal", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    vi.mocked(getRoadmap).mockResolvedValue({
+      ...roadmap,
+      compression_note:
+        "Last week you completed 40% of your planned study time, so we made your plan lighter. Your target grade (A) has not changed.",
+      deferred_topics: [{ topic_id: "periodic", topic_name: "Periodic table" }],
+      target_choice: {
+        target_grade: "A",
+        keep_target: {
+          grade: "A",
+          hours_per_day: 2.5,
+          label: "Keep target A: bring back all topics and aim for about 2.5 hours a day.",
+        },
+        adjust_goal: {
+          grade: "B",
+          hours_per_day: 1,
+          label: "Adjust goal to B: keep the lighter plan at your current pace.",
+        },
+      },
+    });
+    vi.mocked(chooseTarget).mockResolvedValue({
+      plan_id: "newest-plan",
+      ran: true,
+      trigger: "target_choice",
+      adherence: null,
+      compressed: false,
+      deferred_topics: ["periodic"],
+      restored_topics: [],
+      explanation:
+        "Goal adjusted from A to B. Your lighter plan stays in place, and you can raise the goal again at any time.",
+      target_grade: "B",
+      range_change: null,
+      roadmap: { ...roadmap, compression_note: "Lighter plan." },
+      schedule: emptySchedule,
+    });
+    renderPlanPage(false);
+
+    expect(await screen.findByText("Your plan is lighter for now")).toBeInTheDocument();
+    expect(screen.getByText(/has not changed/)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Adjust goal to B: keep the lighter plan at your current pace.",
+      }),
+    );
+
+    expect(await screen.findByText(/Goal adjusted from A to B/)).toBeInTheDocument();
+    expect(chooseTarget).toHaveBeenCalledWith("newest-plan", "adjust_goal");
+    expect(
+      screen.getByText("Exam date: 2027-06-01 · Target grade: B"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Keep target A/ })).toBeNull();
+  });
+
+  it("still shows sessions when the roadmap cannot be loaded", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [plans[0]] });
+    vi.mocked(getRoadmap).mockRejectedValue(new Error("offline"));
+    renderPlanPage(false);
+
+    expect(
+      await screen.findByText("No study sessions are saved for this plan yet."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Roadmap to your exam" })).toBeNull();
   });
 
   it("waits for auth restoration and shows the newest plan with a selector", async () => {
@@ -325,6 +528,20 @@ describe("PlanningPage", () => {
     ).toBeInTheDocument();
     // 5. Empty priority factors heading is removed
     expect(screen.queryByText("Priority factors")).toBeNull();
+  });
+});
+
+describe("RoadmapSection helpers", () => {
+  it("formats hours to the nearest half hour", () => {
+    expect(formatHours(6)).toBe("6h");
+    expect(formatHours(4.4)).toBe("4.5h");
+    expect(formatHours(0.2)).toBe("0h");
+  });
+
+  it("explains why a checkpoint ran", () => {
+    expect(checkpointReasonText("window_end")).toBe("Your committed study window ended.");
+    expect(checkpointReasonText("new_evidence")).toBe("New assessment results arrived.");
+    expect(checkpointReasonText("manual")).toBe("Your plan was refreshed.");
   });
 });
 

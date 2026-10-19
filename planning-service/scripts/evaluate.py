@@ -10,15 +10,48 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from math import ceil, isfinite
 from pathlib import Path
+from statistics import mean, stdev
 
+from app.services.achievability import TopicInput, allocate_hours, expected_gain_per_hour
 from app.services.priority import compute_priority
-from app.services.scheduler import RankedTopic, ScheduleResult, TimeWindow, schedule_tasks
+from app.services.roadmap import (
+    committed_window_days,
+    compress_allocation,
+    compressed_load,
+    forecast_weeks,
+    project_mastery,
+)
+from app.services.scheduler import (
+    RankedTopic,
+    ScheduledTask,
+    ScheduleResult,
+    TimeWindow,
+    schedule_tasks,
+)
+from app.services.weights import (
+    ADHERENCE_FLOOR,
+    COMPRESSED_SESSION_FACTOR,
+    MIN_COMPRESSED_SESSION_MINUTES,
+)
 
 STUDENT_COUNT = 50
 STUDY_BUDGET_MINUTES = 2_400
 EXAM_HORIZON_DAYS = 56
 HIGH_PRIORITY_FRACTION = 0.25
 STRATEGIES = ("Adaptive planning", "Static timetable", "Lowest-mark heuristic")
+
+ROLLING_STRATEGIES = (
+    "Fixed full-period plan",
+    "Rolling re-planning (14/7-day window)",
+    "Rolling re-planning (7-day window)",
+    "Rolling re-planning, no compression (14/7-day window)",
+)
+ROLLING_HORIZON_DAYS = 42
+ROLLING_SHIFT_DAY = 21
+ROLLING_SESSION_MINUTES = 60
+ROLLING_DAILY_CAP_MINUTES = 120
+ROLLING_OBSERVATION_NOISE = 0.05
+ROLLING_MISS_PROBABILITY = 0.05
 
 
 @dataclass(frozen=True)
@@ -43,6 +76,42 @@ class Metrics:
     prediction_mae: float
     prediction_rmse: float
     priority_agreement: float
+
+
+@dataclass(frozen=True)
+class RollingMetrics:
+    """Mean outcomes per strategy; ``*_ci95`` are 95% confidence half-widths."""
+
+    adherence_percent: float
+    adherence_ci95: float
+    mastery_gain: float
+    mastery_gain_ci95: float
+    gain_vs_fixed: float
+    gain_vs_fixed_ci95: float
+    overdue_high_priority_per_student: float
+    overdue_ci95: float
+    feasibility_violations_per_student: float
+    replans_per_student: float
+
+
+@dataclass(frozen=True)
+class ChangingStudent:
+    """A simulated student whose true ability and capacity change mid-period."""
+
+    student_id: str
+    initial_mastery: dict[str, float]
+    shift: dict[str, float]
+    capacity_before: int
+    capacity_after: int
+
+
+@dataclass(frozen=True)
+class _StudentOutcome:
+    adherence_percent: float
+    mastery_gain: float
+    overdue_high_priority: int
+    feasibility_violations: int
+    replans: int
 
 
 def read_teacher_ranking(path: Path) -> list[Topic]:
@@ -410,6 +479,328 @@ def _pearson(left: list[float], right: list[float]) -> float:
     return numerator / (denominator_left * denominator_right)
 
 
+def evaluate_rolling(
+    topics: list[Topic],
+    *,
+    seed: int = 364,
+    student_count: int = STUDENT_COUNT,
+) -> dict[str, RollingMetrics]:
+    """Compare rolling re-planning with a fixed full-period plan.
+
+    Every simulated student has a true mastery that shifts on day 21 (decline
+    or outside help) and a daily study capacity that changes at the same time.
+    The fixed plan is the day-1 roadmap executed unchanged; the rolling plans
+    observe noisy marks at each checkpoint, compress when adherence drops below
+    the floor and rebuild the roadmap with the planning service's own rules.
+    """
+    if len(topics) < 2:
+        raise ValueError("At least two topics are required.")
+    rng = random.Random(f"rolling:{seed}")
+    students = []
+    for index in range(student_count):
+        initial = {topic.topic_id: rng.uniform(0.15, 0.85) for topic in topics}
+        shift = {
+            topic.topic_id: rng.choice((-1, 1)) * rng.uniform(0.15, 0.3) if rng.random() < 0.4 else 0.0
+            for topic in topics
+        }
+        capacity = rng.randint(50, 140)
+        students.append(
+            ChangingStudent(
+                student_id=f"student-{index + 1:03d}",
+                initial_mastery=initial,
+                shift=shift,
+                capacity_before=capacity,
+                capacity_after=round(capacity * rng.uniform(0.5, 1.2)),
+            )
+        )
+    start = datetime(2026, 1, 5, tzinfo=UTC)
+    windows = _availability(start.date(), ROLLING_HORIZON_DAYS)
+    outcomes: dict[str, list[_StudentOutcome]] = {strategy: [] for strategy in ROLLING_STRATEGIES}
+    for student in students:
+        for strategy in ROLLING_STRATEGIES:
+            outcomes[strategy].append(
+                _simulate_changing_student(topics, student, strategy, start, windows, seed=seed)
+            )
+    baseline = outcomes[ROLLING_STRATEGIES[0]]
+    return {strategy: _summarise_rolling(values, baseline) for strategy, values in outcomes.items()}
+
+
+def _simulate_changing_student(
+    topics: list[Topic],
+    student: ChangingStudent,
+    strategy: str,
+    start: datetime,
+    windows: list[TimeWindow],
+    *,
+    seed: int,
+) -> _StudentOutcome:
+    topic_by_id = {topic.topic_id: topic for topic in topics}
+    true_mastery = dict(student.initial_mastery)
+    exam = start + timedelta(days=ROLLING_HORIZON_DAYS)
+    rolling = strategy != ROLLING_STRATEGIES[0]
+    compression_enabled = "no compression" not in strategy
+    tasks_by_day: dict[int, list[ScheduledTask]] = {}
+    all_tasks: list[ScheduledTask] = []
+    planned_by_day: dict[int, int] = {}
+    completed_by_day: dict[int, int] = {}
+    deferred: set[str] = set()
+    session_minutes, daily_cap = ROLLING_SESSION_MINUTES, ROLLING_DAILY_CAP_MINUTES
+    planned_until = -1
+    replans = overdue = 0
+    week_top: set[str] = set()
+    week_studied: dict[str, int] = {}
+
+    for day in range(ROLLING_HORIZON_DAYS):
+        if day == ROLLING_SHIFT_DAY:
+            for topic_id, change in student.shift.items():
+                true_mastery[topic_id] = min(1.0, max(0.0, true_mastery[topic_id] + change))
+        if day > planned_until and (rolling or day == 0):
+            days_left = ROLLING_HORIZON_DAYS - day
+            if not rolling:
+                window = days_left
+            elif "7-day window" in strategy and "14/7" not in strategy:
+                window = min(7, days_left)
+            else:
+                window = committed_window_days(days_left)
+            observed = {
+                topic_id: _observed_mastery(value, f"{seed}:{student.student_id}:{day}:{topic_id}")
+                for topic_id, value in true_mastery.items()
+            }
+            if rolling and compression_enabled and day >= 7:
+                planned = sum(planned_by_day.get(index, 0) for index in range(day - 7, day))
+                completed = sum(completed_by_day.get(index, 0) for index in range(day - 7, day))
+                adherence = completed / planned if planned else None
+                if adherence is not None and adherence < ADHERENCE_FLOOR:
+                    deferred, session_minutes, daily_cap = _simulated_compression(
+                        topics,
+                        observed,
+                        adherence,
+                    )
+                elif adherence is not None:
+                    deferred = set()
+                    session_minutes, daily_cap = ROLLING_SESSION_MINUTES, ROLLING_DAILY_CAP_MINUTES
+            new_tasks = _schedule_simulated_window(
+                topics,
+                observed,
+                start=start,
+                first_day=day,
+                days=window,
+                exam=exam,
+                windows=windows,
+                deferred=deferred,
+                session_minutes=session_minutes,
+                daily_cap=daily_cap,
+            )
+            for task in new_tasks:
+                tasks_by_day.setdefault((task.start_at - start).days, []).append(task)
+            all_tasks.extend(new_tasks)
+            planned_until = day + window - 1
+            replans += 1
+
+        if day % 7 == 0:
+            week_top = _top_quartile_topics(
+                {
+                    topic.topic_id: expected_gain_per_hour(
+                        _simulated_input(topic, true_mastery[topic.topic_id])
+                    )
+                    for topic in topics
+                }
+            )
+            week_studied = {}
+
+        base_capacity = student.capacity_before if day < ROLLING_SHIFT_DAY else student.capacity_after
+        capacity = base_capacity * random.Random(f"capacity:{seed}:{student.student_id}:{day}").uniform(
+            0.75,
+            1.25,
+        )
+        for task in sorted(tasks_by_day.get(day, []), key=lambda item: item.start_at):
+            planned_by_day[day] = planned_by_day.get(day, 0) + task.duration_min
+            miss_draw = random.Random(
+                f"miss:{seed}:{student.student_id}:{strategy}:{task.start_at.isoformat()}"
+            ).random()
+            done = (
+                0
+                if miss_draw < ROLLING_MISS_PROBABILITY
+                else int(min(task.duration_min, max(capacity, 0)))
+            )
+            capacity -= done
+            completed_by_day[day] = completed_by_day.get(day, 0) + done
+            if done:
+                week_studied[task.topic_id] = week_studied.get(task.topic_id, 0) + done
+                true_mastery[task.topic_id] = project_mastery(
+                    _simulated_input(topic_by_id[task.topic_id], true_mastery[task.topic_id]),
+                    done / 60,
+                )
+        if day % 7 == 6:
+            overdue += sum(1 for topic_id in week_top if not week_studied.get(topic_id))
+
+    planned_total = sum(planned_by_day.values())
+    total_weight = sum(topic.exam_weight for topic in topics)
+    gain = sum(
+        topic.exam_weight * (true_mastery[topic.topic_id] - student.initial_mastery[topic.topic_id])
+        for topic in topics
+    ) / total_weight
+    return _StudentOutcome(
+        adherence_percent=100 * sum(completed_by_day.values()) / planned_total if planned_total else 0.0,
+        mastery_gain=gain,
+        overdue_high_priority=overdue,
+        feasibility_violations=_count_feasibility_violations(
+            ScheduleResult(tuple(all_tasks), False, 0, {}),
+            windows,
+            exam,
+        ),
+        replans=replans,
+    )
+
+
+def _observed_mastery(true_value: float, key: str) -> float:
+    noise = random.Random(key).gauss(0, ROLLING_OBSERVATION_NOISE)
+    return min(1.0, max(0.0, true_value + noise))
+
+
+def _simulated_input(topic: Topic, mastery: float) -> TopicInput:
+    return {
+        "topic_id": topic.topic_id,
+        "exam_weight": topic.exam_weight,
+        "mastery": mastery,
+        "prerequisites": [],
+        "prerequisite_mastery": {},
+    }
+
+
+def _simulated_compression(
+    topics: list[Topic],
+    observed: dict[str, float],
+    adherence: float,
+) -> tuple[set[str], int, int]:
+    """Mirror ``apply_overload_rule``: defer lowest-gain topics, shorten sessions."""
+    inputs = [_simulated_input(topic, observed[topic.topic_id]) for topic in topics]
+    weekly_hours = 7 * ROLLING_DAILY_CAP_MINUTES / 60
+    load = compressed_load(adherence)
+    compression = compress_allocation(
+        allocate_hours(inputs, weekly_hours),
+        {item["topic_id"]: expected_gain_per_hour(item) for item in inputs},
+        weekly_hours * load,
+    )
+    daily_cap = max(MIN_COMPRESSED_SESSION_MINUTES, round(ROLLING_DAILY_CAP_MINUTES * load))
+    session_minutes = min(
+        daily_cap,
+        max(MIN_COMPRESSED_SESSION_MINUTES, round(ROLLING_SESSION_MINUTES * COMPRESSED_SESSION_FACTOR)),
+    )
+    return set(compression.dropped), session_minutes, daily_cap
+
+
+def _schedule_simulated_window(
+    topics: list[Topic],
+    observed: dict[str, float],
+    *,
+    start: datetime,
+    first_day: int,
+    days: int,
+    exam: datetime,
+    windows: list[TimeWindow],
+    deferred: set[str],
+    session_minutes: int,
+    daily_cap: int,
+) -> list[ScheduledTask]:
+    """Turn the roadmap's weekly hours into detailed tasks for one window."""
+    window_start = start + timedelta(days=first_day)
+    window_end = window_start + timedelta(days=days)
+    weeks = forecast_weeks(
+        [_simulated_input(topic, observed[topic.topic_id]) for topic in topics],
+        daily_hours={weekday: min(180, daily_cap) / 60 for weekday in range(7)},
+        today=window_start.date(),
+        exam_date=exam.date(),
+        window_end=None,
+        deferred=deferred,
+    )
+    tasks: list[ScheduledTask] = []
+    for week in weeks:
+        week_start = datetime.combine(week.week_start, time.min, UTC)
+        if not window_start <= week_start < window_end or not week.topics:
+            continue
+        week_end = min(week_start + timedelta(days=7), window_end)
+        top_hours = max(row["hours"] for row in week.topics)
+        ranked = [
+            RankedTopic(
+                topic_id=row["topic_id"],
+                activity="guided_practice",
+                priority=row["hours"] / top_hours,
+                duration_minutes=max(1, round(row["hours"] * 60)),
+                reason="Roadmap weekly allocation.",
+            )
+            for row in week.topics
+        ]
+        result = schedule_tasks(
+            priorities=ranked,
+            availability=[item for item in windows if week_start <= item.start_at < week_end],
+            commitments=(),
+            exam_deadline=exam,
+            max_session_minutes=session_minutes,
+            daily_cap_minutes=daily_cap,
+            now=week_start,
+        )
+        tasks.extend(result.tasks)
+    return tasks
+
+
+def _summarise_rolling(values: list[_StudentOutcome], baseline: list[_StudentOutcome]) -> RollingMetrics:
+    """Summarise per-student outcomes; gain differences are paired with the fixed plan."""
+    adherence = [item.adherence_percent for item in values]
+    gains = [item.mastery_gain for item in values]
+    paired = [item.mastery_gain - fixed.mastery_gain for item, fixed in zip(values, baseline, strict=True)]
+    overdue = [float(item.overdue_high_priority) for item in values]
+    return RollingMetrics(
+        adherence_percent=mean(adherence),
+        adherence_ci95=_ci95(adherence),
+        mastery_gain=mean(gains),
+        mastery_gain_ci95=_ci95(gains),
+        gain_vs_fixed=mean(paired),
+        gain_vs_fixed_ci95=_ci95(paired),
+        overdue_high_priority_per_student=mean(overdue),
+        overdue_ci95=_ci95(overdue),
+        feasibility_violations_per_student=mean(item.feasibility_violations for item in values),
+        replans_per_student=mean(item.replans for item in values),
+    )
+
+
+def _ci95(values: list[float]) -> float:
+    return 1.96 * stdev(values) / len(values) ** 0.5 if len(values) > 1 else 0.0
+
+
+def rolling_markdown_table(
+    results: dict[str, RollingMetrics],
+    *,
+    student_count: int = STUDENT_COUNT,
+) -> str:
+    rows = [
+        "| Strategy | Adherence | Mastery gain (exam-weighted) | Gain vs fixed (paired) | "
+        "Overdue high-priority / student | Feasibility violations / student | Re-plans / student |",
+        "|---|---:|---:|---:|---:|---:|---:|",
+    ]
+    for strategy in ROLLING_STRATEGIES:
+        metric = results[strategy]
+        rows.append(
+            f"| {strategy} | {metric.adherence_percent:.1f}% ± {metric.adherence_ci95:.1f} "
+            f"| {metric.mastery_gain:+.3f} ± {metric.mastery_gain_ci95:.3f} "
+            f"| {metric.gain_vs_fixed:+.3f} ± {metric.gain_vs_fixed_ci95:.3f} "
+            f"| {metric.overdue_high_priority_per_student:.2f} ± {metric.overdue_ci95:.2f} "
+            f"| {metric.feasibility_violations_per_student:.2f} "
+            f"| {metric.replans_per_student:.1f} |"
+        )
+    rows.extend(
+        [
+            "",
+            f"*Deterministic synthetic simulation of {student_count} students over "
+            f"{ROLLING_HORIZON_DAYS} days; true mastery shifts and study capacity changes on day "
+            f"{ROLLING_SHIFT_DAY}. ± values are 95% confidence intervals across students; "
+            "gain vs fixed is the paired per-student difference from the fixed plan. "
+            "This is not a real-student evaluation.*",
+        ]
+    )
+    return "\n".join(rows)
+
+
 def markdown_table(results: dict[str, Metrics]) -> str:
     rows = [
         "| Strategy | Feasibility violations / student | Adherence | "
@@ -450,11 +841,16 @@ def main() -> int:
     parser.add_argument("--output", type=Path, help="Optional Markdown output path")
     arguments = parser.parse_args()
     try:
-        results = evaluate(read_teacher_ranking(arguments.teacher_ranking), seed=arguments.seed)
+        topics = read_teacher_ranking(arguments.teacher_ranking)
+        results = evaluate(topics, seed=arguments.seed)
     except ValueError as exc:
         print(f"Evaluation input error: {exc}", file=sys.stderr)
         return 2
-    report = markdown_table(results)
+    report = (
+        markdown_table(results)
+        + "\n\n## Rolling re-planning vs fixed full-period plan\n\n"
+        + rolling_markdown_table(evaluate_rolling(topics, seed=arguments.seed))
+    )
     if arguments.output:
         try:
             arguments.output.write_text(report + "\n", encoding="utf-8")

@@ -122,6 +122,27 @@ it on load and every 60 seconds, so no background job is needed.
 and the on/off switch. For a live demo, set `MISSED_GRACE_MINUTES=0.5` and a
 1-minute reminder lead.
 
+## Daily motivation
+
+`GET /api/v1/motivation/today` returns one message per student per day from
+`shared/contracts/motivation_messages.json` (80 messages, 16 each in effort,
+consistency, recovery, exam_week and celebration; no grade promises, pressure
+or blame). Repeated calls on the same day return the same message.
+
+- Category: `exam_week` when 7 or fewer days remain, otherwise `recovery`
+  after a missed session in the last 3 days or a decline alert in the last
+  14, `celebration` after ≥80% adherence over ≥60 planned minutes last week,
+  `consistency` with study on 3+ days last week, else `effort`.
+- Shuffle bag per category in `planning.motivation_state`: every message is
+  shown once before any repeats, never the same one two days running.
+- A few messages include `{name}` for the first name; it is dropped cleanly
+  when no name is known.
+- Well-being hook: set `MOTIVATION_STRESS_HOOK=package.module:function`; the
+  function receives a student ID and returns True for high stress, which
+  suppresses the card (`suppressed: true`). Hook errors show the card.
+- `MOTIVATION_MESSAGES_PATH` overrides the file location; docker-compose
+  mounts `shared/contracts` read-only and sets it.
+
 ## Rolling-horizon planning
 
 A plan has three layers. The **roadmap** forecasts hours per topic for every

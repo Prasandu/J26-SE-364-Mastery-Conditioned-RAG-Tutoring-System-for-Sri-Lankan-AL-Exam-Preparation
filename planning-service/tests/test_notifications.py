@@ -123,6 +123,12 @@ class FakeSession:
         self.commits += 1
 
 
+@pytest.fixture(autouse=True)
+def default_grace(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests use the production 30-minute grace, whatever a local .env sets for demos."""
+    monkeypatch.setattr(notifications.settings, "missed_grace_minutes", 30)
+
+
 @pytest.fixture
 def replanner(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     """Stand-in for the existing re-planner; places the missed topic tomorrow at 17:00 Colombo."""

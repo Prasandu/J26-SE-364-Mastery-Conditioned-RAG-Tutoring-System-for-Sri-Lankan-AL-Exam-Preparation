@@ -9,6 +9,7 @@ import PlanningDashboardPage from "../src/features/planning/DashboardPage";
 
 vi.mock("../src/api/planning", () => ({
   getDashboard: vi.fn(),
+  getMotivationToday: vi.fn(),
   submitWhatIf: vi.fn(),
 }));
 

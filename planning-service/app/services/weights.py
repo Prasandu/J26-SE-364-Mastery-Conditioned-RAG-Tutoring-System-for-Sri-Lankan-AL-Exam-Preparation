@@ -83,3 +83,11 @@ def weights_sum_to_one(weights: dict[str, float]) -> bool:
 # Notifications (NFR8: relevant alerts, notification restraint)
 MAX_VISIBLE_ALERTS = 3  # at most this many unread alerts are shown, newest first
 MISSED_ALERT_MAX_AGE_HOURS = 24  # older overdue tasks are marked missed without an alert
+
+# Daily motivation category selection
+MOTIVATION_EXAM_WEEK_DAYS = 7  # exam_week messages when this many days or fewer remain
+MOTIVATION_RECOVERY_LOOKBACK_DAYS = 3  # a missed session in this window means recovery
+MOTIVATION_DECLINE_RECENT_DAYS = 14  # a decline alert this recent means recovery
+MOTIVATION_CELEBRATION_ADHERENCE = 0.8  # last-7-day adherence for celebration
+MOTIVATION_CELEBRATION_MIN_MINUTES = 60  # ...over at least this many planned minutes
+MOTIVATION_CONSISTENCY_MIN_DAYS = 3  # study days in the last week for consistency (else effort)

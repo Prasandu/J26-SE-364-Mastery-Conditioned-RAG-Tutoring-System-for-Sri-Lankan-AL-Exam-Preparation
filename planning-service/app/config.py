@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     # Minutes after a session ends before an untouched task counts as missed.
     # Set e.g. MISSED_GRACE_MINUTES=0.5 to demo the missed flow live.
     missed_grace_minutes: float = 30
+    # Daily motivation messages. Defaults to shared/contracts/motivation_messages.json
+    # in the repository; in Docker, mount that folder and point this at it.
+    motivation_messages_path: Path | None = None
+    # Optional well-being hook ("package.module:function"). The function gets a
+    # student ID and returns True when the student is flagged as highly
+    # stressed; the motivation card is then skipped.
+    motivation_stress_hook: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

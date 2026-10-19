@@ -27,6 +27,7 @@ import {
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
+import MotivationCard from "./MotivationCard";
 
 const chartColors = {
   brand: "#155e75",
@@ -352,6 +353,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
       <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
         Your learning dashboard
       </h2>
+      <MotivationCard />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

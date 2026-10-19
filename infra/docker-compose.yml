@@ -5,6 +5,11 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ../planning-service/.env
+    environment:
+      MOTIVATION_MESSAGES_PATH: /shared/contracts/motivation_messages.json
+    volumes:
+      # Shared contracts live outside the build context; mount them read-only.
+      - ../shared/contracts:/shared/contracts:ro
     ports:
       - "8083:8083"
     healthcheck:

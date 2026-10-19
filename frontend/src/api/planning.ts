@@ -528,3 +528,22 @@ export function updateNotificationPreferences(data: NotificationPreferences) {
     },
   );
 }
+
+export type MotivationCategory =
+  | "effort"
+  | "consistency"
+  | "recovery"
+  | "exam_week"
+  | "celebration";
+
+export interface MotivationMessage {
+  date: string;
+  category: MotivationCategory | null;
+  message_id: string | null;
+  text: string | null;
+  suppressed: boolean;
+}
+
+export function getMotivationToday() {
+  return planningRequest<MotivationMessage>("/api/v1/motivation/today");
+}

@@ -85,7 +85,7 @@ def sweep(
 
     Returns True when quiet hours are active (nothing new is created then).
     """
-    zone = _student_zone(session, student_id)
+    zone = student_zone(session, student_id)
     quiet = in_quiet_hours(now.astimezone(zone).time(), preferences)
     existing_keys = set(
         session.scalars(select(Notification.dedupe_key).where(Notification.student_id == student_id)).all()
@@ -323,7 +323,8 @@ def _add_once(session: Session, existing_keys: set[str], notification: Notificat
     session.add(notification)
 
 
-def _student_zone(session: Session, student_id: str) -> ZoneInfo:
+def student_zone(session: Session, student_id: str) -> ZoneInfo:
+    """Timezone of the student's latest plan (Asia/Colombo by default)."""
     plan = session.scalars(
         select(StudyPlan).where(StudyPlan.student_id == student_id).order_by(StudyPlan.created_at.desc())
     ).first()

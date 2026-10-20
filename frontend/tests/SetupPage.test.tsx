@@ -163,3 +163,69 @@ describe("daily study limit", () => {
     expect(createPlan).not.toHaveBeenCalled();
   });
 });
+
+describe("editing an existing plan", () => {
+  const savedPlan = {
+    ...existingPlan,
+    mode: "predicted" as const,
+    exam_date: "2027-01-17",
+    target_grade: "B",
+    constraints: {
+      mode: "predicted",
+      topics: [],
+      max_session_minutes: 45,
+      max_daily_minutes: 240,
+      availability_windows: [
+        { weekday: 1, start_time: "06:00:00", end_time: "07:30:00" },
+        { weekday: 1, start_time: "19:00:00", end_time: "21:00:00" },
+        { weekday: 4, start_time: "16:00:00", end_time: "18:00:00" },
+      ],
+    },
+  };
+
+  beforeEach(() => {
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [savedPlan] });
+    vi.mocked(replacePlan).mockReset().mockResolvedValue(savedPlan);
+    vi.stubGlobal("confirm", vi.fn(() => true));
+  });
+
+  it("prefills the form with the current plan's settings", async () => {
+    renderSetupPage();
+
+    expect(await screen.findByText(/These are your current plan's settings/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Exam date")).toHaveValue("2027-01-17");
+    expect(screen.getByLabelText("Target grade")).toHaveValue("B");
+    expect(screen.getByLabelText("Maximum session length")).toHaveValue("45");
+    expect(screen.getByLabelText(/Maximum study per day/)).toHaveValue("240");
+    expect(screen.getByLabelText("Tuesday start time")).toHaveValue("06:00");
+    expect(screen.getByLabelText("Tuesday start time 2")).toHaveValue("19:00");
+    expect(screen.getByLabelText("Friday end time")).toHaveValue("18:00");
+    expect(screen.getByLabelText("Monday start time")).toBeDisabled();
+  });
+
+  it("saves one change while keeping everything else", async () => {
+    renderSetupPage();
+    await screen.findByText(/These are your current plan's settings/);
+
+    fireEvent.change(screen.getByLabelText("Target grade"), { target: { value: "A" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    await waitFor(() => expect(replacePlan).toHaveBeenCalled());
+    const [planId, data] = vi.mocked(replacePlan).mock.calls[0];
+    expect(planId).toBe("latest-plan");
+    expect(data).toEqual(
+      expect.objectContaining({
+        target_grade: "A",
+        exam_date: "2027-01-17",
+        max_session_minutes: 45,
+        max_daily_minutes: 240,
+        availability_windows: [
+          { weekday: 1, start_time: "06:00", end_time: "07:30" },
+          { weekday: 1, start_time: "19:00", end_time: "21:00" },
+          { weekday: 4, start_time: "16:00", end_time: "18:00" },
+        ],
+      }),
+    );
+    expect(getPlans).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import catalogue from "../../../../shared/contracts/topics.json";
 import { ApiError } from "../../api/client";
@@ -8,6 +8,7 @@ import {
   replacePlan,
   type AvailabilityWindow,
   type PlanInput,
+  type PlanResponse,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
 import TopicTree, { type TopicNode } from "./TopicTree";
@@ -69,6 +70,39 @@ function getTopicUnits(value: unknown): TopicNode[] {
 
 const topicUnits = getTopicUnits(catalogue);
 
+function defaultAvailability(): AvailabilityEntry[] {
+  return weekdays.map((_, day) => ({
+    enabled: day === 0 || day === 2 || day === 5,
+    slots: [
+      {
+        start: day === 5 ? "09:00" : "16:00",
+        end: day === 5 ? "11:00" : "18:00",
+      },
+    ],
+  }));
+}
+
+/** Rebuild the weekly form rows from a saved plan's availability windows. */
+function availabilityFromWindows(windows: unknown): AvailabilityEntry[] | null {
+  if (!Array.isArray(windows) || windows.length === 0) return null;
+  const byDay = new Map<number, TimeSlot[]>();
+  for (const item of windows) {
+    if (!item || typeof item !== "object") continue;
+    const { weekday, start_time: start, end_time: end } = item as Record<string, unknown>;
+    if (typeof weekday !== "number" || typeof start !== "string" || typeof end !== "string") continue;
+    const slots = byDay.get(weekday) ?? [];
+    slots.push({ start: start.slice(0, 5), end: end.slice(0, 5) });
+    byDay.set(weekday, slots);
+  }
+  if (byDay.size === 0) return null;
+  return weekdays.map((_, day) => {
+    const slots = (byDay.get(day) ?? []).sort((left, right) => left.start.localeCompare(right.start));
+    return slots.length
+      ? { enabled: true, slots }
+      : { enabled: false, slots: [{ start: "16:00", end: "18:00" }] };
+  });
+}
+
 export default function PlanningSetupPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<PlanInput["mode"]>("predicted");
@@ -77,17 +111,9 @@ export default function PlanningSetupPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [maxSession, setMaxSession] = useState(60);
   const [maxDaily, setMaxDaily] = useState(180);
-  const [availability, setAvailability] = useState<AvailabilityEntry[]>(
-    weekdays.map((_, day) => ({
-      enabled: day === 0 || day === 2 || day === 5,
-      slots: [
-        {
-          start: day === 5 ? "09:00" : "16:00",
-          end: day === 5 ? "11:00" : "18:00",
-        },
-      ],
-    })),
-  );
+  const [availability, setAvailability] = useState<AvailabilityEntry[]>(defaultAvailability);
+  // undefined = still loading; null = no existing plan
+  const [existingPlan, setExistingPlan] = useState<PlanResponse | null | undefined>(undefined);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -105,6 +131,39 @@ export default function PlanningSetupPage() {
       ),
     [availability],
   );
+
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve()
+      .then(() => getPlans())
+      .then((response) => {
+        if (!active) return;
+        const latest = response?.plans?.[0] ?? null;
+        setExistingPlan(latest);
+        if (latest) applyPlan(latest);
+      })
+      .catch(() => {
+        if (active) setExistingPlan(undefined);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function applyPlan(plan: PlanResponse) {
+    const constraints = plan.constraints ?? {};
+    setMode(plan.mode);
+    setExamDate(plan.exam_date);
+    setTargetGrade(plan.target_grade);
+    const topics = constraints.topics;
+    if (Array.isArray(topics) && topics.every((item) => typeof item === "string")) {
+      setSelectedTopics(topics);
+    }
+    if (typeof constraints.max_session_minutes === "number") setMaxSession(constraints.max_session_minutes);
+    if (typeof constraints.max_daily_minutes === "number") setMaxDaily(constraints.max_daily_minutes);
+    const saved = availabilityFromWindows(constraints.availability_windows);
+    if (saved) setAvailability(saved);
+  }
 
   function updateDay(weekday: number, change: (entry: AvailabilityEntry) => AvailabilityEntry) {
     setAvailability((current) =>
@@ -167,8 +226,9 @@ export default function PlanningSetupPage() {
     };
 
     try {
-      const { plans } = await getPlans();
-      const latestPlan = plans[0];
+      // Reuse the plan loaded for prefilling; ask again only if that load failed.
+      const latestPlan =
+        existingPlan !== undefined ? existingPlan : ((await getPlans())?.plans?.[0] ?? null);
       if (latestPlan) {
         const confirmed = window.confirm(
           "You already have a study plan. Replace your latest plan with these settings?",
@@ -202,6 +262,12 @@ export default function PlanningSetupPage() {
         Choose your target and regular study windows. Adaptive plans use your
         saved mastery data to prioritize topics.
       </p>
+      {existingPlan ? (
+        <p className="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700" role="status">
+          These are your current plan's settings. Change what you need and save
+          to update your plan.
+        </p>
+      ) : null}
 
       {error ? (
         <div className="mt-6">

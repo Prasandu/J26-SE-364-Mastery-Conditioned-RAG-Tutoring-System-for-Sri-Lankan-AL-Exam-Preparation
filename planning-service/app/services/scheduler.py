@@ -75,6 +75,7 @@ class GreedyScheduler:
         daily_cap_minutes: int,
         now: datetime,
         existing_daily_minutes: Mapping[date, int] | None = None,
+        min_session_minutes: int = 0,
     ) -> ScheduleResult:
         _validate_scheduler_input(priorities, availability, commitments, exam_deadline, now)
         if max_session_minutes <= 0 or daily_cap_minutes <= 0:
@@ -114,6 +115,7 @@ class GreedyScheduler:
                     exam_deadline=exam_deadline,
                     max_session_minutes=max_session_minutes,
                     daily_cap_minutes=daily_cap_minutes,
+                    min_session_minutes=min_session_minutes,
                 )
                 if slot is not None:
                     candidates.append((topic, slot))
@@ -191,6 +193,7 @@ class GreedyScheduler:
         exam_deadline: datetime,
         max_session_minutes: int,
         daily_cap_minutes: int,
+        min_session_minutes: int = 0,
     ) -> tuple[ScheduledTask, int] | None:
         for index, window in enumerate(windows):
             if window.start_at >= window.end_at:
@@ -198,7 +201,12 @@ class GreedyScheduler:
             available_minutes = int((window.end_at - window.start_at).total_seconds() // 60)
             daily_remaining = daily_cap_minutes - daily_minutes[window.start_at.date()]
             duration = min(remaining, max_session_minutes, available_minutes, daily_remaining)
-            if duration <= 0:
+            # Avoid leaving a tail shorter than the minimum (75 -> 45 + 30, not 60 + 15).
+            tail = remaining - duration
+            if 0 < tail < min_session_minutes and remaining - min_session_minutes >= min_session_minutes:
+                duration = min(duration, remaining - min_session_minutes)
+            # No fragments shorter than the minimum, unless that is all that is left.
+            if duration <= 0 or duration < min(min_session_minutes, remaining):
                 continue
             end_at = window.start_at + timedelta(minutes=duration)
             if end_at > exam_deadline:
@@ -233,6 +241,7 @@ def schedule_tasks(
     daily_cap_minutes: int,
     now: datetime,
     existing_daily_minutes: Mapping[date, int] | None = None,
+    min_session_minutes: int = 0,
 ) -> ScheduleResult:
     """Stable scheduler entry point, currently backed by the greedy implementation."""
     return GreedyScheduler().schedule(
@@ -244,6 +253,7 @@ def schedule_tasks(
         daily_cap_minutes=daily_cap_minutes,
         now=now,
         existing_daily_minutes=existing_daily_minutes,
+        min_session_minutes=min_session_minutes,
     )
 
 

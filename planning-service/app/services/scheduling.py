@@ -55,6 +55,7 @@ from app.services.weights import (
     DECLINE_PRIORITY_BOOST,
     ERROR_REVIEW_RECENT_ATTEMPTS,
     ERROR_SCORE_THRESHOLD,
+    MIN_SESSION_MINUTES,
     NEUTRAL_PRIOR_MASTERY,
 )
 
@@ -215,7 +216,7 @@ def generate_plan_schedule(
         replace(
             topic,
             duration_minutes=max(
-                round(allocation.get(topic.topic_id, 0) * 60),
+                _session_blocks(allocation.get(topic.topic_id, 0) * 60),
                 duration_overrides.get(topic.topic_id, 0),
             ),
         )
@@ -249,6 +250,13 @@ def generate_plan_schedule(
         local_zone=local_zone,
         replanned_from=replanned_from,
     )
+
+
+def _session_blocks(minutes: float) -> int:
+    """Plan a topic's time in whole session blocks, with at least one block."""
+    if minutes <= 0:
+        return 0
+    return max(MIN_SESSION_MINUTES, int(minutes // MIN_SESSION_MINUTES) * MIN_SESSION_MINUTES)
 
 
 def _only_rescheduled_topics(
@@ -288,6 +296,7 @@ def _schedule_and_store(
         daily_cap_minutes=daily_cap_minutes,
         now=current,
         existing_daily_minutes=existing_daily_minutes,
+        min_session_minutes=min(MIN_SESSION_MINUTES, max_session_minutes),
     )
 
     priority_by_topic = {item.topic_id: item.priority for item in priorities}

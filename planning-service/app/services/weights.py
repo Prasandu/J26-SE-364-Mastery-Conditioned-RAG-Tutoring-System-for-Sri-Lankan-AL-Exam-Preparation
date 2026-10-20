@@ -102,3 +102,6 @@ UNDO_WINDOW_HOURS = 24  # a recorded outcome can be undone for this long
 # Coaching message
 COACHING_MAX_FOCUS_CHARS = 60  # focus topic names/reasons are shortened (with "…") only beyond this
 COACHING_MAX_FOCUS_WORDS = 5  # ...or beyond this many words
+
+# Sessions
+MIN_SESSION_MINUTES = 30  # no study session shorter than this (unless only a short remainder is left)

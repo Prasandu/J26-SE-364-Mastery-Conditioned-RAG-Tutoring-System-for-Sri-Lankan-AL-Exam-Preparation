@@ -169,3 +169,58 @@ def test_minutes_already_booked_count_toward_the_daily_cap() -> None:
 
     assert sum(task.duration_min for task in result.tasks) == 30
     assert result.unscheduled_minutes == {"ketones": 90}
+
+
+def _schedule_one(duration: int, windows: list[TimeWindow], *, min_session: int = 30):
+    now = windows[0].start_at
+    return schedule_tasks(
+        priorities=[RankedTopic("ketones", "theory", 0.9, duration, "weak topic")],
+        availability=windows,
+        commitments=[],
+        exam_deadline=now + timedelta(days=14),
+        max_session_minutes=60,
+        daily_cap_minutes=600,
+        now=now,
+        min_session_minutes=min_session,
+    )
+
+
+def test_no_session_is_shorter_than_the_minimum() -> None:
+    start = datetime(2026, 10, 19, 8, tzinfo=UTC)
+    # A 15-minute gap first, then a proper window: the gap must be skipped.
+    windows = [
+        TimeWindow(start, start + timedelta(minutes=15)),
+        TimeWindow(start + timedelta(hours=2), start + timedelta(hours=5)),
+    ]
+
+    result = _schedule_one(90, windows)
+
+    assert all(task.duration_min >= 30 for task in result.tasks)
+    assert result.tasks[0].start_at == start + timedelta(hours=2)
+    assert sum(task.duration_min for task in result.tasks) == 90
+
+
+def test_sessions_avoid_leaving_a_short_tail() -> None:
+    start = datetime(2026, 10, 19, 8, tzinfo=UTC)
+
+    result = _schedule_one(75, [TimeWindow(start, start + timedelta(hours=4))])
+
+    assert [task.duration_min for task in result.tasks] == [45, 30]
+
+
+def test_a_short_remainder_can_still_be_placed_on_its_own() -> None:
+    start = datetime(2026, 10, 19, 8, tzinfo=UTC)
+
+    result = _schedule_one(15, [TimeWindow(start, start + timedelta(hours=1))])
+
+    assert [task.duration_min for task in result.tasks] == [15]
+
+
+def test_topic_time_is_planned_in_whole_30_minute_blocks() -> None:
+    from app.services.scheduling import _session_blocks
+
+    assert _session_blocks(0) == 0
+    assert _session_blocks(15) == 30
+    assert _session_blocks(50) == 30
+    assert _session_blocks(75) == 60
+    assert _session_blocks(120) == 120

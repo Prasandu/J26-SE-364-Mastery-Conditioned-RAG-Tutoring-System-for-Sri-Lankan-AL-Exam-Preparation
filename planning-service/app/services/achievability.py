@@ -18,6 +18,7 @@ from app.services.weights import (
     ACHIEVABILITY_MIDPOINT_DIVISOR,
     ACHIEVABILITY_MIN_DAYS_FOR_WEEKLY_RATE,
     ACHIEVABILITY_MIN_HOURS_PER_TOPIC,
+    ACHIEVABILITY_MIN_UNCERTAINTY,
     ACHIEVABILITY_PREREQUISITE_MASTERY_THRESHOLD,
     ACHIEVABILITY_REQUIRED_HOURS_SEARCH_ITERATIONS,
     ACHIEVABILITY_STRETCH_MULTIPLIER,
@@ -256,14 +257,21 @@ def projected_score_range(
     *,
     evidence_count: int = 0,
 ) -> ScoreRange:
-    """Project a bounded score interval, widening uncertainty for sparse evidence."""
+    """Project a bounded score interval, widening uncertainty for sparse evidence.
+
+    ``evidence_count`` is the number of separate assessments (papers or
+    quizzes), not individual answers. The interval never narrows below
+    ``ACHIEVABILITY_MIN_UNCERTAINTY``: study behaviour and exam papers vary,
+    so a range like "64-64%" would claim precision the model does not have.
+    """
     _validate_unit_interval("current", current)
     _validate_nonnegative_finite("gains", gains)
     if evidence_count < 0:
         raise ValueError("evidence_count cannot be negative.")
     expected = min(1.0, current + gains)
-    uncertainty = ACHIEVABILITY_DEFAULT_UNCERTAINTY / (
-        1 + evidence_count * ACHIEVABILITY_UNCERTAINTY_EVIDENCE_DECAY
+    uncertainty = max(
+        ACHIEVABILITY_MIN_UNCERTAINTY,
+        ACHIEVABILITY_DEFAULT_UNCERTAINTY / (1 + evidence_count * ACHIEVABILITY_UNCERTAINTY_EVIDENCE_DECAY),
     )
     return ScoreRange(
         low=max(0.0, expected - uncertainty),

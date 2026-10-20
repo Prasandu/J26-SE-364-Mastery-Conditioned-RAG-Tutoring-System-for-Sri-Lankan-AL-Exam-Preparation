@@ -2,6 +2,8 @@ from datetime import UTC, date, datetime, time, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
+import pytest
+
 import app.services.scheduling as scheduling
 from app.models import AvailabilitySlot, LearnerTopicState, StudyPlan, StudyTask, Topic, TopicEvidence
 from app.services.achievability import (
@@ -143,6 +145,15 @@ def test_higher_mastery_and_more_time_can_be_on_track_for_current_target() -> No
     assert report.status == "on_track"
     assert report.hours_needed == 0
     assert report.hours_gap == -5
+
+
+def test_projected_range_never_collapses_to_a_single_value() -> None:
+    many_papers = projected_score_range(0.6, 0.04, evidence_count=1000)
+    few_papers = projected_score_range(0.6, 0.04, evidence_count=2)
+
+    assert many_papers.high - many_papers.low == pytest.approx(0.10)  # at least +/-5 points
+    assert few_papers.high - few_papers.low > many_papers.high - many_papers.low
+    assert round(many_papers.low * 100) != round(many_papers.high * 100)
 
 
 def test_more_hours_never_lowers_projected_score() -> None:

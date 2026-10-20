@@ -123,7 +123,8 @@ def get_dashboard(
             plan,
             student_name=student_name,
             current_score=current_prediction,
-            evidence_count=len(evidence_rows),
+            # Separate assessments, not individual answer rows.
+            evidence_count=len({getattr(row, "event_id", None) for row in evidence_rows} - {None}),
             as_of=now,
         )
         coaching_message = achievability["coaching_message"]

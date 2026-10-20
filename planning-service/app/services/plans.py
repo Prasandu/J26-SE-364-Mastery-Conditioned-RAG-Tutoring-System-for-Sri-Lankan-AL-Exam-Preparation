@@ -231,9 +231,10 @@ def build_plan_achievability(
             else 0.0
         )
     if evidence_count is None:
+        # Count separate assessments (papers/quizzes), not individual answer rows.
         evidence_count = len(
             session.scalars(
-                select(TopicEvidence).where(TopicEvidence.student_id == student_id)
+                select(TopicEvidence.event_id).where(TopicEvidence.student_id == student_id).distinct()
             ).all()
         )
     slots = session.scalars(

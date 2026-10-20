@@ -23,11 +23,17 @@ const weekdays = [
   "Sunday",
 ];
 
-interface AvailabilityEntry {
-  enabled: boolean;
+interface TimeSlot {
   start: string;
   end: string;
 }
+
+interface AvailabilityEntry {
+  enabled: boolean;
+  slots: TimeSlot[];
+}
+
+const MAX_SLOTS_PER_DAY = 4;
 
 function futureDate(days: number): string {
   const date = new Date();
@@ -64,8 +70,12 @@ export default function PlanningSetupPage() {
   const [availability, setAvailability] = useState<AvailabilityEntry[]>(
     weekdays.map((_, day) => ({
       enabled: day === 0 || day === 2 || day === 5,
-      start: day === 5 ? "09:00" : "16:00",
-      end: day === 5 ? "11:00" : "18:00",
+      slots: [
+        {
+          start: day === 5 ? "09:00" : "16:00",
+          end: day === 5 ? "11:00" : "18:00",
+        },
+      ],
     })),
   );
   const [error, setError] = useState("");
@@ -76,27 +86,44 @@ export default function PlanningSetupPage() {
     () =>
       availability.flatMap((entry, weekday): AvailabilityWindow[] =>
         entry.enabled
-          ? [
-              {
-                weekday,
-                start_time: entry.start,
-                end_time: entry.end,
-              },
-            ]
+          ? entry.slots.map((slot) => ({
+              weekday,
+              start_time: slot.start,
+              end_time: slot.end,
+            }))
           : [],
       ),
     [availability],
   );
 
-  function updateAvailability(
-    weekday: number,
-    change: Partial<AvailabilityEntry>,
-  ) {
+  function updateDay(weekday: number, change: (entry: AvailabilityEntry) => AvailabilityEntry) {
     setAvailability((current) =>
-      current.map((entry, index) =>
-        index === weekday ? { ...entry, ...change } : entry,
-      ),
+      current.map((entry, index) => (index === weekday ? change(entry) : entry)),
     );
+  }
+
+  function updateSlot(weekday: number, slotIndex: number, change: Partial<TimeSlot>) {
+    updateDay(weekday, (entry) => ({
+      ...entry,
+      slots: entry.slots.map((slot, index) => (index === slotIndex ? { ...slot, ...change } : slot)),
+    }));
+  }
+
+  function addSlot(weekday: number) {
+    updateDay(weekday, (entry) => {
+      const last = entry.slots[entry.slots.length - 1];
+      // Suggest the evening after an earlier slot, e.g. a morning + evening study day.
+      const start = last && last.end < "19:00" ? "19:00" : "06:00";
+      const end = start === "19:00" ? "21:00" : "07:30";
+      return { ...entry, enabled: true, slots: [...entry.slots, { start, end }] };
+    });
+  }
+
+  function removeSlot(weekday: number, slotIndex: number) {
+    updateDay(weekday, (entry) => ({
+      ...entry,
+      slots: entry.slots.filter((_, index) => index !== slotIndex),
+    }));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -254,9 +281,9 @@ export default function PlanningSetupPage() {
           </fieldset>
         ) : (
           <p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">
-            Adaptive planning requires at least one saved assessment or mastery
-            record. The service selects topics using your current learning
-            profile.
+            Adaptive planning picks topics from your results. No results yet?
+            It starts from the topics that carry the most exam marks and adapts
+            as you answer questions.
           </p>
         )}
 
@@ -265,65 +292,79 @@ export default function PlanningSetupPage() {
             Weekly availability
           </legend>
           <p className="mt-1 text-sm text-slate-600">
-            Add the days and times you are usually free to study.
+            Add the days and times you are usually free to study. Use
+            "+ Add time" for a second slot on the same day, such as morning and
+            evening.
           </p>
-          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-            <div className="hidden grid-cols-[minmax(8rem,1fr)_minmax(7rem,1fr)_minmax(7rem,1fr)] gap-3 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:grid">
-              <span>Day</span>
-              <span>Start</span>
-              <span>End</span>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {weekdays.map((day, index) => {
-                const entry = availability[index];
-                return (
-                  <div
-                    className="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(8rem,1fr)_minmax(7rem,1fr)_minmax(7rem,1fr)] sm:items-center"
-                    key={day}
-                  >
-                    <label className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <input
-                        checked={entry.enabled}
-                        className="size-4 accent-brand"
-                        onChange={(event) =>
-                          updateAvailability(index, {
-                            enabled: event.target.checked,
-                          })
-                        }
-                        type="checkbox"
-                      />
-                      {day}
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-slate-600">
-                      <span className="w-10 sm:sr-only">Start</span>
-                      <input
-                        aria-label={`${day} start time`}
-                        className="w-full rounded-lg border border-slate-300 px-2 py-2 disabled:bg-slate-100 disabled:text-slate-400"
-                        disabled={!entry.enabled}
-                        onChange={(event) =>
-                          updateAvailability(index, { start: event.target.value })
-                        }
-                        type="time"
-                        value={entry.start}
-                      />
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-slate-600">
-                      <span className="w-10 sm:sr-only">End</span>
-                      <input
-                        aria-label={`${day} end time`}
-                        className="w-full rounded-lg border border-slate-300 px-2 py-2 disabled:bg-slate-100 disabled:text-slate-400"
-                        disabled={!entry.enabled}
-                        onChange={(event) =>
-                          updateAvailability(index, { end: event.target.value })
-                        }
-                        type="time"
-                        value={entry.end}
-                      />
-                    </label>
+          <div className="mt-4 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+            {weekdays.map((day, index) => {
+              const entry = availability[index];
+              return (
+                <div className="grid gap-3 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-start" key={day}>
+                  <label className="flex items-center gap-3 pt-2 text-sm font-medium text-slate-800">
+                    <input
+                      checked={entry.enabled}
+                      className="size-4 accent-brand"
+                      onChange={(event) =>
+                        updateDay(index, (current) => ({
+                          ...current,
+                          enabled: event.target.checked,
+                          slots: current.slots.length ? current.slots : [{ start: "16:00", end: "18:00" }],
+                        }))
+                      }
+                      type="checkbox"
+                    />
+                    {day}
+                  </label>
+                  <div className="grid gap-2">
+                    {entry.slots.map((slot, slotIndex) => {
+                      const suffix = slotIndex === 0 ? "" : ` ${slotIndex + 1}`;
+                      return (
+                        <div className="flex flex-wrap items-center gap-2" key={slotIndex}>
+                          <input
+                            aria-label={`${day} start time${suffix}`}
+                            className="w-32 rounded-lg border border-slate-300 px-2 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-400"
+                            disabled={!entry.enabled}
+                            onChange={(event) => updateSlot(index, slotIndex, { start: event.target.value })}
+                            type="time"
+                            value={slot.start}
+                          />
+                          <span className="text-sm text-slate-500">to</span>
+                          <input
+                            aria-label={`${day} end time${suffix}`}
+                            className="w-32 rounded-lg border border-slate-300 px-2 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-400"
+                            disabled={!entry.enabled}
+                            onChange={(event) => updateSlot(index, slotIndex, { end: event.target.value })}
+                            type="time"
+                            value={slot.end}
+                          />
+                          {entry.enabled && entry.slots.length > 1 ? (
+                            <button
+                              aria-label={`Remove ${day} time${suffix || " 1"}`}
+                              className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-ink"
+                              onClick={() => removeSlot(index, slotIndex)}
+                              type="button"
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                    {entry.enabled && entry.slots.length < MAX_SLOTS_PER_DAY ? (
+                      <button
+                        aria-label={`Add another ${day} time`}
+                        className="w-fit rounded-lg px-2 py-1 text-sm font-medium text-brand hover:bg-slate-100"
+                        onClick={() => addSlot(index)}
+                        type="button"
+                      >
+                        + Add time
+                      </button>
+                    ) : null}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </fieldset>
 

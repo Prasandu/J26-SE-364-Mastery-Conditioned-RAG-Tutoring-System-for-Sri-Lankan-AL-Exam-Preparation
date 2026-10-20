@@ -2,11 +2,12 @@
 
 from fastapi import Depends
 
-from app.ai import build_judge, build_reader
+from app.ai import build_drawing_judge, build_judge, build_reader
 from app.ai.judge import AnswerJudge
 from app.config import Settings, get_settings
 from app.db import SessionLocal
 from app.services.attempts import SessionFactory
+from app.services.drawing_judge import DrawingJudge
 from app.services.reader import AnswerReader
 from app.services.storage import FileStore, LocalFileStore
 
@@ -24,6 +25,11 @@ def get_judge(settings: Settings = Depends(get_settings)) -> AnswerJudge | None:
 def get_reader(settings: Settings = Depends(get_settings)) -> AnswerReader | None:
     """The handwriting reader, or None when no vision model is configured."""
     return build_reader(settings)
+
+
+def get_drawing_judge(settings: Settings = Depends(get_settings)) -> DrawingJudge | None:
+    """The vision judge for drawn answers, or None (drawing points then always go to a teacher)."""
+    return build_drawing_judge(settings)
 
 
 def get_file_store(settings: Settings = Depends(get_settings)) -> FileStore:

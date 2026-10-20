@@ -15,7 +15,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.ai.judge import AnswerJudge
-from app.api.deps import get_file_store, get_judge, get_reader, get_session_factory
+from app.api.deps import get_drawing_judge, get_file_store, get_judge, get_reader, get_session_factory
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import User, UserRole
@@ -30,6 +30,7 @@ from app.schemas.attempts import (
 from app.security import require_role
 from app.services import attempts, sheets
 from app.services.attempts import SessionFactory
+from app.services.drawing_judge import DrawingJudge
 from app.services.marking import has_pending
 from app.services.omr.reader import SheetError
 from app.services.reader import AnswerReader
@@ -149,6 +150,8 @@ def submit_attempt(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     judge: AnswerJudge | None = Depends(get_judge),
+    drawing_judge: DrawingJudge | None = Depends(get_drawing_judge),
+    store: FileStore = Depends(get_file_store),
     session_factory: SessionFactory = Depends(get_session_factory),
     settings: Settings = Depends(get_settings),
 ):
@@ -158,13 +161,18 @@ def submit_attempt(
     marked by the AI judge in the background: call GET /attempts/{id} again to see them.
     """
     cross_check = judge is not None and settings.ai_cross_check
-    attempt = attempts.submit_attempt(db, attempt_id, cross_check=cross_check)
-    if judge is not None and has_pending(attempt):
+    attempt = attempts.submit_attempt(
+        db, attempt_id, cross_check=cross_check, drawing_judge_available=drawing_judge is not None
+    )
+    if (judge is not None or drawing_judge is not None) and has_pending(attempt):
         background_tasks.add_task(
             attempts.judge_pending_in_background,
             session_factory,
             judge,
             attempt.id,
             settings.ai_min_confidence,
+            drawing_judge=drawing_judge,
+            drawing_min_confidence=settings.ai_min_confidence_drawing,
+            store=store,
         )
     return attempts.to_attempt_out(attempt)

@@ -42,6 +42,7 @@ from app.schemas.attempts import (
     PointResultOut,
     QuestionResultOut,
 )
+from app.services.drawing_judge import DrawingJudge
 from app.services.marking import (
     FINAL_STATUSES,
     finalize_without_ai,
@@ -245,17 +246,28 @@ def preload_point_results(db: Session, attempt: Attempt) -> None:
     ).all()
 
 
-def submit_attempt(db: Session, attempt_id: uuid.UUID, cross_check: bool = False) -> Attempt:
+def submit_attempt(
+    db: Session, attempt_id: uuid.UUID, cross_check: bool = False, drawing_judge_available: bool = False
+) -> Attempt:
     attempt = get_in_progress(db, attempt_id)
     preload_point_results(db, attempt)
     attempt.status = AttemptStatus.SUBMITTED
     attempt.submitted_at = utcnow()
-    mark_attempt(attempt, cross_check=cross_check)
+    mark_attempt(attempt, cross_check=cross_check, drawing_judge_available=drawing_judge_available)
     db.commit()
     return attempt
 
 
-def judge_pending(db: Session, attempt_id: uuid.UUID, judge: AnswerJudge, min_confidence: float) -> Attempt:
+def judge_pending(
+    db: Session,
+    attempt_id: uuid.UUID,
+    judge: AnswerJudge | None,
+    min_confidence: float,
+    *,
+    drawing_judge: DrawingJudge | None = None,
+    drawing_min_confidence: float = 1.0,
+    store: FileStore | None = None,
+) -> Attempt:
     """Let the AI judge decide every pending point. Progress is saved answer by answer."""
     attempt = get_attempt(db, attempt_id)
     if attempt.status == AttemptStatus.IN_PROGRESS:
@@ -263,7 +275,14 @@ def judge_pending(db: Session, attempt_id: uuid.UUID, judge: AnswerJudge, min_co
 
     for answer in attempt.answers:
         try:
-            judge_answer(answer, judge, min_confidence)
+            judge_answer(
+                answer,
+                judge,
+                min_confidence,
+                drawing_judge=drawing_judge,
+                drawing_min_confidence=drawing_min_confidence,
+                store=store,
+            )
         except Exception:  # network, quota or a bad AI reply
             logger.exception("AI judge failed for attempt %s, question %s", attempt.id, answer.question_id)
             db.rollback()
@@ -276,11 +295,26 @@ def judge_pending(db: Session, attempt_id: uuid.UUID, judge: AnswerJudge, min_co
 
 
 def judge_pending_in_background(
-    session_factory: SessionFactory, judge: AnswerJudge, attempt_id: uuid.UUID, min_confidence: float
+    session_factory: SessionFactory,
+    judge: AnswerJudge | None,
+    attempt_id: uuid.UUID,
+    min_confidence: float,
+    *,
+    drawing_judge: DrawingJudge | None = None,
+    drawing_min_confidence: float = 1.0,
+    store: FileStore | None = None,
 ) -> None:
     """Runs after the submit response is sent, with its own database session."""
     with session_factory() as db:
-        judge_pending(db, attempt_id, judge, min_confidence)
+        judge_pending(
+            db,
+            attempt_id,
+            judge,
+            min_confidence,
+            drawing_judge=drawing_judge,
+            drawing_min_confidence=drawing_min_confidence,
+            store=store,
+        )
 
 
 def to_attempt_out(attempt: Attempt) -> AttemptOut:

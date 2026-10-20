@@ -15,7 +15,7 @@ from app.ai.author import QuestionAuthor
 from app.ai.classify import TopicClassifier
 from app.ai.critic import QuestionCritic
 from app.ai.judge import AnswerJudge
-from app.api.deps import get_judge
+from app.api.deps import get_drawing_judge, get_file_store, get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import ContentStatus, PaperKind, SuggestionStatus, User, UserRole
@@ -47,6 +47,7 @@ from app.schemas.generate import (
 from app.schemas.topics import ClassifyIn, DecideSuggestionIn, TopicSuggestionOut
 from app.security import require_admin
 from app.services import attempts, auth, export, papers, schemes, topics, topics_classify
+from app.services.drawing_judge import DrawingJudge
 from app.services.generator import api as generator
 from app.services.generator import practice
 from app.services.storage import FileStore, LocalFileStore
@@ -446,11 +447,23 @@ def judge_attempt(
     attempt_id: uuid.UUID,
     db: Session = Depends(get_db),
     judge: AnswerJudge | None = Depends(get_judge),
+    drawing_judge: DrawingJudge | None = Depends(get_drawing_judge),
+    store: FileStore = Depends(get_file_store),
     settings: Settings = Depends(get_settings),
 ):
     """Run the AI judge now for every still-pending point (e.g. after a network or quota failure)."""
-    if judge is None:
+    if judge is None and drawing_judge is None:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "AI judge is switched off. Set GEMINI_API_KEY."
         )
-    return attempts.to_attempt_out(attempts.judge_pending(db, attempt_id, judge, settings.ai_min_confidence))
+    return attempts.to_attempt_out(
+        attempts.judge_pending(
+            db,
+            attempt_id,
+            judge,
+            settings.ai_min_confidence,
+            drawing_judge=drawing_judge,
+            drawing_min_confidence=settings.ai_min_confidence_drawing,
+            store=store,
+        )
+    )

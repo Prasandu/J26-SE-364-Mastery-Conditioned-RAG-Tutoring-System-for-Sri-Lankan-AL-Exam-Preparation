@@ -2,8 +2,8 @@
 
 Who decides a point:
 - mcq_key          -> exact rule, at submit time
-- diagram          -> teacher (a typed answer cannot show a drawing)
-- graph            -> chemistry checker when the student plotted it as data, else teacher
+- diagram          -> AI vision judge if configured (stricter confidence), else teacher
+- graph            -> chemistry checker when the student plotted it as data, else same as diagram
 - chemistry checker-> exact code check (calculations, units, graphs), at submit time
 - everything else  -> AI judge, after submit (stays PENDING until then)
 
@@ -24,6 +24,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from app.ai.judge import AnswerJudge, JudgeRequest, PointToJudge, PointVerdict
+from app.ai.vision import Image
 from app.models import (
     Answer,
     Attempt,
@@ -41,7 +42,9 @@ from app.models import (
 )
 from app.services.chemistry.checkers import CHECKER_NAME, StudentAnswer, check_point
 from app.services.chemistry.graphs import GraphAnswer
+from app.services.drawing_judge import DrawingJudge, DrawingVerdict
 from app.services.marks import best_of, question_total
+from app.services.storage import FileStore
 
 FINAL_STATUSES = {PointStatus.AWARDED, PointStatus.NOT_AWARDED}
 MCQ_KEY_MARKER = "mcq-key"
@@ -50,24 +53,56 @@ MCQ_KEY_MARKER = "mcq-key"
 # Public
 
 
-def mark_attempt(attempt: Attempt, cross_check: bool = False) -> None:
-    """First pass at submit time: rule-based points are decided, the rest wait."""
+def mark_attempt(attempt: Attempt, cross_check: bool = False, drawing_judge_available: bool = False) -> None:
+    """First pass at submit time: rule-based points are decided, the rest wait.
+
+    drawing_judge_available: whether a vision judge is configured to look at a
+    drawing point's photo later (see judge_answer). When it is not, a drawing point
+    is sent straight to a teacher here, same as before this existed, instead of
+    waiting on a background pass that will never resolve it.
+    """
     points = _by_question(attempt.scheme.points)
     for answer in attempt.answers:
         answer.point_results = [
-            _first_pass(point, answer, cross_check) for point in points[answer.question_id]
+            _first_pass(point, answer, cross_check, drawing_judge_available)
+            for point in points[answer.question_id]
         ]
     refresh_scores(attempt)
 
 
-def judge_answer(answer: Answer, judge: AnswerJudge, min_confidence: float) -> None:
-    """Ask the AI judge about this answer's pending points, and apply its verdicts with checks."""
+def judge_answer(
+    answer: Answer,
+    judge: AnswerJudge | None,
+    min_confidence: float,
+    *,
+    drawing_judge: DrawingJudge | None = None,
+    drawing_min_confidence: float = 1.0,
+    store: FileStore | None = None,
+) -> None:
+    """Ask the AI judge about this answer's pending points, and apply its verdicts with checks.
+
+    A drawing point (diagram, or a photographed graph) is judged separately, from its
+    photo, by drawing_judge - never by the text judge, which only ever sees answer.text.
+    judge may be None when only a drawing judge is configured (text points then stay
+    pending, same as when no judge at all is configured today).
+    """
     pending = [result for result in answer.point_results if result.status == PointStatus.PENDING]
     if not pending:
         return
-    verdicts = {v.code: v for v in judge.judge(_judge_request(answer, [r.point for r in pending]))}
-    for result in pending:
-        _apply_verdict(result, verdicts.get(result.point.code), answer.text or "", judge.name, min_confidence)
+    text_pending = [r for r in pending if not _is_drawing_point(r.point, answer)]
+    drawing_pending = [r for r in pending if _is_drawing_point(r.point, answer)]
+
+    if text_pending and judge is not None:
+        verdicts = {
+            v.code: v for v in judge.judge(_judge_request(answer, [r.point for r in text_pending]))
+        }
+        for result in text_pending:
+            _apply_verdict(
+                result, verdicts.get(result.point.code), answer.text or "", judge.name, min_confidence
+            )
+
+    if drawing_pending:
+        _judge_drawings(drawing_pending, answer, drawing_judge, drawing_min_confidence, store)
 
 
 def finalize_without_ai(answer: Answer) -> None:
@@ -109,10 +144,12 @@ def quote_in_answer(quote: str | None, answer_text: str) -> bool:
 # First pass
 
 
-def _first_pass(point: MarkingPoint, answer: Answer, cross_check: bool) -> PointResult:
+def _first_pass(
+    point: MarkingPoint, answer: Answer, cross_check: bool, drawing_judge_available: bool
+) -> PointResult:
     if point.point_type == PointType.MCQ_KEY:
         return _judge_mcq(point, answer)
-    if _needs_teacher(point, answer):
+    if _is_drawing_point(point, answer) and not drawing_judge_available:
         return PointResult(
             point=point,
             status=PointStatus.NEEDS_REVIEW,
@@ -120,6 +157,10 @@ def _first_pass(point: MarkingPoint, answer: Answer, cross_check: bool) -> Point
             reason="A drawing in a typed answer is marked by a teacher",
         )
 
+    # With a drawing judge available, a drawing point falls through to check_point()
+    # exactly like any other point code cannot decide (it always returns None for
+    # these), becoming PENDING like an essay/concept point - judge_answer() then
+    # routes it to the drawing judge instead of the text judge.
     outcome = check_point(point, _student_answer(answer))
     if outcome is None:
         return PointResult(point=point, status=PointStatus.PENDING, awarded=0.0)
@@ -137,8 +178,10 @@ def _first_pass(point: MarkingPoint, answer: Answer, cross_check: bool) -> Point
     return result
 
 
-def _needs_teacher(point: MarkingPoint, answer: Answer) -> bool:
-    """A drawing can only be marked by a teacher, unless the student plotted it as data."""
+def _is_drawing_point(point: MarkingPoint, answer: Answer) -> bool:
+    """A drawing is judged from its photo, not from typed text - unless the student
+    plotted a graph as data instead of photographing it, which the chemistry checker
+    already handles like any other structured answer."""
     if point.point_type == PointType.DIAGRAM:
         return True
     return point.point_type == PointType.GRAPH and answer.data is None
@@ -259,6 +302,56 @@ def _apply_verdict(
         return
     result.status = PointStatus.AWARDED if judgement.awarded else PointStatus.NOT_AWARDED
     result.awarded = result.point.marks if judgement.awarded else 0.0
+
+
+# Drawing judge
+
+
+def _judge_drawings(
+    pending: list[PointResult],
+    answer: Answer,
+    drawing_judge: DrawingJudge | None,
+    min_confidence: float,
+    store: FileStore | None,
+) -> None:
+    """A drawing point goes to a teacher, same as always, unless a drawing judge and
+    the answer's photos are both available - the same "no judge configured" fallback
+    the text judge already has (see finalize_without_ai)."""
+    if drawing_judge is None or store is None or not answer.images:
+        for result in pending:
+            result.status = PointStatus.NEEDS_REVIEW
+            result.awarded = 0.0
+            result.reason = "A drawing in a typed answer is marked by a teacher"
+        return
+
+    images = [Image(store.load(image.storage_key), image.content_type) for image in answer.images]
+    for result in pending:
+        verdict = drawing_judge.judge(
+            point_description=result.point.description, expected=result.point.expected, images=images
+        )
+        _apply_drawing_verdict(result, verdict, drawing_judge.name, min_confidence)
+
+
+def _apply_drawing_verdict(
+    result: PointResult, verdict: DrawingVerdict | None, marker: str, min_confidence: float
+) -> None:
+    result.ai_awarded = verdict.awarded if verdict else None
+    result.method = MarkingMethod.LLM
+    result.marker = marker
+    if verdict is None:
+        result.status = PointStatus.NEEDS_REVIEW
+        result.awarded = 0.0
+        result.reason = "The AI judge could not evaluate this drawing"
+        return
+
+    result.confidence = min(max(verdict.confidence, 0.0), 1.0)
+    result.reason = verdict.reason
+    if verdict.confidence < min_confidence:
+        result.status = PointStatus.NEEDS_REVIEW
+        result.awarded = 0.0
+        return
+    result.status = PointStatus.AWARDED if verdict.awarded else PointStatus.NOT_AWARDED
+    result.awarded = result.point.marks if verdict.awarded else 0.0
 
 
 def _combine(result: PointResult, judgement: _Judgement, marker: str) -> None:

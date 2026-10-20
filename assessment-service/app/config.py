@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     ai_provider: ProviderName = ProviderName.GEMINI
     # AI decisions below this confidence go to teacher review instead of counting.
     ai_min_confidence: float = Field(default=0.7, ge=0, le=1)
+    # Judging a hand-drawn structure/diagram/graph from its photo needs more certainty
+    # than judging typed text before it counts - misjudging a drawing is costlier.
+    ai_min_confidence_drawing: float = Field(default=0.9, ge=0, le=1)
     # Also ask the AI about points the checker decided. Disagreement -> teacher.
     ai_cross_check: bool = True
 

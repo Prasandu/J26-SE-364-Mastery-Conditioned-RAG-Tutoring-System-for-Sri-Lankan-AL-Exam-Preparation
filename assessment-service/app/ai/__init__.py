@@ -24,6 +24,7 @@ from app.ai.judge import (
 from app.ai.vision import FallbackVisionModel, VisionModel, gemini_vision, openai_compatible_vision
 from app.config import ProviderName, Settings
 from app.errors import ConfigurationError
+from app.services.drawing_judge import DrawingJudge, VisionDrawingJudge
 from app.services.reader import AnswerReader, FallbackReader, VisionAnswerReader
 
 
@@ -127,6 +128,17 @@ def build_reader(settings: Settings) -> AnswerReader | None:
     if not readers:
         return None
     return readers[0] if len(readers) == 1 else FallbackReader(readers)
+
+
+def build_drawing_judge(settings: Settings) -> DrawingJudge | None:
+    """The vision model that judges a drawn answer, or None when no vision model is
+    configured (drawing points then always go to a teacher, as before this existed).
+
+    Reuses the same provider/fallback chain as build_reader - this just wraps it to
+    judge instead of transcribe.
+    """
+    model = build_vision_model_with_fallback(settings)
+    return VisionDrawingJudge(model) if model else None
 
 
 def build_vision_model(settings: Settings) -> VisionModel | None:

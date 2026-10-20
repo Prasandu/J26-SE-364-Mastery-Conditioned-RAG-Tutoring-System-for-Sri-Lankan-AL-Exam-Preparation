@@ -498,3 +498,28 @@ def test_daily_suggestion_speaks_about_the_students_study_days() -> None:
     assert suggestion(1.5, 1) == "Aim for about 1 hour 30 minutes on your study day" + tail
     assert suggestion(1, 7) == "Aim for about 1 hour a day" + tail
     assert suggestion(1, None) == "Aim for about 1 hour a day" + tail
+
+
+def test_estimate_does_not_inflate_with_the_number_of_topics() -> None:
+    def report_for(topic_count: int):
+        topics = [
+            {"topic_id": f"t{index}", "exam_weight": 0.5, "mastery": 0.6, "prerequisites": []}
+            for index in range(topic_count)
+        ]
+        return build_achievability_report(
+            current=0.6,
+            target_grade="A",
+            topics=topics,
+            days_remaining=70,
+            hours_available=10,
+            evidence_count=20,
+        )
+
+    one_topic = report_for(1)
+    many_topics = report_for(120)
+
+    # 100 hours spread over 120 topics cannot add more than 100 hours on one topic.
+    assert many_topics.projected_range.expected <= one_topic.projected_range.expected
+    assert many_topics.projected_range.expected < 0.75
+    # The grade label follows the expected score, not the top of the range.
+    assert many_topics.best_range_grade == "C"

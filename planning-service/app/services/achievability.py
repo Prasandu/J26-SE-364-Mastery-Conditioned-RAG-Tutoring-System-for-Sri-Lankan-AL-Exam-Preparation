@@ -391,7 +391,9 @@ def build_achievability_report(
         message = "Estimate: the target is beyond the current time available; steady progress still counts."
     return AchievabilityReport(
         status=status,
-        best_range_grade=_grade_for(score_range.high),
+        # Label the range by its expected score, not its optimistic top end:
+        # "B (62-80%)" rather than "A (62-80%)" when the likely result is ~71%.
+        best_range_grade=_grade_for(score_range.expected),
         hours_needed=round(required.hours_per_week, 2),
         hours_available=round(hours_available, 2),
         hours_gap=round(required.gap_hours_per_week, 2),
@@ -401,16 +403,26 @@ def build_achievability_report(
 
 
 def _expected_total_gain(topics: list[TopicInput], allocation: dict[str, float]) -> float:
+    """Expected gain in overall exam score (0-1) from the allocated hours.
+
+    Topic gains are weighted by exam_weight, so they are divided by the total
+    weight, exactly like the current score (a weight-normalised mean of
+    mastery). Without this, 122 topics whose weights sum to ~43 produced
+    gains of over +200% and every estimate capped at 100%.
+    """
     gains = 0.0
+    total_weight = 0.0
     for index, topic in enumerate(topics):
         topic_id = topic.get("topic_id", str(index))
         hours = allocation.get(topic_id, 0.0)
         mastery = float(topic.get("mastery", 0.0))
+        weight = float(topic.get("exam_weight", 0.0))
+        total_weight += weight
         gain_per_hour = expected_gain_per_hour(topic)
         saturation = _integrated_hour_factor(0, hours)
-        max_gain = float(topic.get("exam_weight", 0.0)) * (1 - mastery)
+        max_gain = weight * (1 - mastery)
         gains += min(max_gain, gain_per_hour * hours * saturation)
-    return gains
+    return gains / total_weight if total_weight > 0 else 0.0
 
 
 def _integrated_hour_factor(start_hours: float, hours: float) -> float:

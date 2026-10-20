@@ -7,18 +7,10 @@ for the routes and docs/integration-contract.md for the shape this returns.
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from sqlalchemy import Select, select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from app.models import (
-    Answer,
-    Attempt,
-    AttemptStatus,
-    PointResult,
-    PointStatus,
-    Question,
-    utcnow,
-)
+from app.models import Attempt, AttemptStatus, PointResult, PointStatus, utcnow
 from app.schemas.integration import (
     AnswerModeSummaryOut,
     ErrorCategoryOut,
@@ -27,30 +19,9 @@ from app.schemas.integration import (
     StudentProfileOut,
     TopicPerformanceOut,
 )
+from app.services.mastery import decided_points as _decided_points
 
 DEFAULT_EVENTS_WINDOW = timedelta(hours=24)
-DECIDED = (PointStatus.AWARDED, PointStatus.NOT_AWARDED)
-
-
-def _decided_points(student_ref: str) -> Select[tuple[PointResult]]:
-    """Every point of this student's that has an actual decision (not still
-    pending or waiting on a teacher) - the same eager-loading shape
-    app.services.export.submitted_points uses, so this is one query, not one
-    per row."""
-    return (
-        select(PointResult)
-        .join(PointResult.answer)
-        .join(Answer.attempt)
-        .where(Attempt.student_ref == student_ref, PointResult.status.in_(DECIDED))
-        .options(
-            selectinload(PointResult.answer).selectinload(Answer.attempt),
-            selectinload(PointResult.answer)
-            .selectinload(Answer.question)
-            .selectinload(Question.section),
-            selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.topics),
-            selectinload(PointResult.point),
-        )
-    )
 
 
 def student_profile(db: Session, student_ref: str) -> StudentProfileOut:

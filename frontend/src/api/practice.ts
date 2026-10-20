@@ -3,7 +3,15 @@
 // nothing here passes a student id of its own any more.
 
 import { request } from "./client";
-import type { Counts, GeneratedPaper, PaperSummary, PracticeLimits, Rates, Shape } from "./types";
+import type {
+  Counts,
+  GeneratedPaper,
+  PaperSummary,
+  PracticeLimits,
+  Rates,
+  Shape,
+  TopicMastery,
+} from "./types";
 
 interface PracticeBody {
   title: string;
@@ -17,6 +25,11 @@ export function practiceRates(signal?: AbortSignal): Promise<Rates> {
 
 export function practiceLimits(signal?: AbortSignal): Promise<PracticeLimits> {
   return request<PracticeLimits>("/papers/practice/limits", { signal });
+}
+
+/** The signed-in student's own accuracy per topic, weakest first. */
+export function practiceMastery(signal?: AbortSignal): Promise<TopicMastery[]> {
+  return request<TopicMastery[]>("/papers/practice/mastery", { signal });
 }
 
 export function planPractice(body: PracticeBody, signal?: AbortSignal): Promise<Shape> {

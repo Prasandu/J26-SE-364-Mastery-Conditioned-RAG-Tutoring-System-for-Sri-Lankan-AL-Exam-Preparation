@@ -9,8 +9,9 @@ from app.db import get_db
 from app.models import PaperKind, User, UserRole
 from app.schemas.content import PaperDetail, PaperSummary, TopicOut
 from app.schemas.generate import GeneratedOut, PracticeIn, PracticeLimitsOut, RatesOut, ShapeOut
+from app.schemas.mastery import TopicMasteryOut
 from app.security import optional_user, require_role
-from app.services import papers, topics
+from app.services import mastery, papers, topics
 from app.services.generator import api as generator
 from app.services.generator import practice
 from app.services.generator.api import plan as plan_shape
@@ -54,6 +55,19 @@ def practice_limits(
 def practice_rates():
     """How long each kind of question takes, so a screen can show the time live."""
     return generator.rates()
+
+
+@router.get("/practice/mastery", response_model=list[TopicMasteryOut])
+def practice_mastery(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(UserRole.STUDENT)),  # noqa: B008
+):
+    """The signed-in student's own accuracy per topic, weakest first.
+
+    For the topic picker to point them at what is actually worth practising, instead
+    of leaving topic choice a guess - see app/services/mastery.py.
+    """
+    return mastery.student_mastery(db, user.email)
 
 
 @router.post("/practice/plan", response_model=ShapeOut)

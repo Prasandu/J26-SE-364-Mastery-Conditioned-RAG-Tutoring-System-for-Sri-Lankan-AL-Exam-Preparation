@@ -29,6 +29,10 @@ const topicList = (signal: AbortSignal) => request<Topic[]>("/papers/practice/to
  * machine written questions is on the screen, not buried in a tick box.
  *
  * Gated by RequireAuth(role="student") in App.tsx, so a user is always signed in here.
+ *
+ * No mastery/analytics display here on purpose: that is Component 3's job (Adaptive
+ * Learning Analytics & Exam Planning). GET /papers/practice/mastery still exists
+ * for it to call - this page just does not use it.
  */
 export function PracticePage() {
   const navigate = useNavigate();

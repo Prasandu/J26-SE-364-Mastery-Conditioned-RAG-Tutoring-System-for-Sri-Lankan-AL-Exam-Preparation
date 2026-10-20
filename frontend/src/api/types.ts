@@ -245,6 +245,16 @@ export interface Topic {
   parent_id: number | null;
 }
 
+/** The signed-in student's own accuracy for one topic - see GET /papers/practice/mastery. */
+export interface TopicMastery {
+  topic_code: string;
+  topic_name: string;
+  points_total: number;
+  points_awarded: number;
+  accuracy_pct: number | null; // null = never attempted, not a 0%
+  last_attempt_at: string | null;
+}
+
 export interface Counts {
   mcq: number;
   structured: number;

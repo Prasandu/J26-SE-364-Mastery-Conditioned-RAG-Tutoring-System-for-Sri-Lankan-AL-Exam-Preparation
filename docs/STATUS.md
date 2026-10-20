@@ -1,6 +1,6 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-19 (V3-2: seven-section laboratory notebook — Context/Materials/Predictions/Protocol/Results/Reflection/Summary as one panel with in-panel section navigation, replacing the old Protocol/All actions/Results tabs)_
+_Last updated: 2026-10-20 (mobile notebook sheet, 3D placement motion — see "Mobile notebook sheet" below)_
 
 ## Slices
 
@@ -30,6 +30,491 @@ _Last updated: 2026-10-19 (V3-2: seven-section laboratory notebook — Context/M
 | V2-H  | Floating help, equipment under notebook, lean dashboard | ✅ done (within V2-G/D35 boundary)                |
 | V3-1  | Full-viewport laboratory shell, bounded notebook scroll | ✅ done (first of the approved V3-1..V3-8 stages) |
 | V3-2  | Seven-section laboratory notebook, in-panel navigation  | ✅ done                                           |
+| R1    | Advanced simulation graphics proof-of-quality prototype | ⚠️ isolated, honest verdict: not yet a clear win  |
+
+## Mobile notebook sheet and 3D placement motion (2026-10-20, later)
+
+Second pass against the system specification, after the printing/safe-area/accessibility work
+earlier the same day. Both items were confirmed missing by reading the code, not inferred.
+
+- **The notebook is now a sheet on a phone or tablet (§3.3, §3.4).** `.side-panel` had **no rules
+  under any mobile breakpoint**: below 900px it simply stacked under the stage and the student
+  scrolled the whole workbench to reach it, which is what §3.3's "replace the side panel with an
+  accessible sheet/drawer" and §3.4's "notebook full-height sheet" were asking for.
+  `NotebookSheet` renders **one** `<dialog>` for both layouts: `showModal()` below 900px, and a
+  non-modal element that CSS flattens back into an ordinary panel above it. Using a real dialog
+  rather than a styled `<div>` hands the browser the parts that are easy to get wrong by hand —
+  focus trapping, Escape, background inertness and focus restoration — and keeps one notebook,
+  one piece of state and no duplicated markup. Opening it dispatches no engine action.
+  New keys `ui.side.open_notebook` / `ui.side.close_notebook` in both locales (Sinhala follows the
+  existing විවෘත කරන්න / වසන්න patterns and remains draft).
+  - `e2e/notebook-sheet.e2e.ts` asserts open, Escape-to-close, **focus returning to the trigger**,
+    draft survival across close/reopen, that the stage and engine stage are untouched, and that the
+    desktop notebook is _not_ a modal (`:modal` is false).
+  - `notebook-sections.e2e.ts`'s "nav is reachable by scrolling on a phone" was the one test this
+    broke. Its intent still holds, so it was rewritten to the new mechanism (open the sheet) rather
+    than deleted or loosened.
+- **3D apparatus ease to confirmed positions instead of snapping (§6.4).** The 2D laboratory has
+  animated placement for some time (a 420ms confirm-gated CSS transition), but `LabScene` set each
+  item's `position` straight from `itemPosition3D`, so in 3D the watch glass teleported onto the
+  balance while the same action in 2D showed it travelling. `SettledGroup` eases toward the target
+  at the same 420ms, honours `prefers-reduced-motion`, places the first frame outright rather than
+  flying items in from the origin, and calls `invalidate()` per in-flight frame because the canvas
+  renders on demand. The target is still only ever an engine-confirmed position, so a rejected
+  action moves nothing.
+  - Verified rather than assumed: a frame-comparison probe showed no difference at 420ms (it
+    settles faster than a screenshot round-trip), so the constant was temporarily raised to 4000ms,
+    which produced differing mid-frames and a settled frame distinct from the start — proving the
+    easing runs — and then restored to 420ms.
+
+Checked and already satisfying the spec, so left alone: error and recovery affordances (§3.5) —
+retry on dashboard, library and report plus `ConnectionBanner` with a busy guard — and the mobile
+apparatus inspector route (§6.2), which the contextual dock, close-up presets and 44px controls
+already provide.
+
+## Spec alignment pass — printing, safe areas, accessibility (2026-10-20)
+
+Worked against `Chemistry_Virtual_Laboratory_Full_System_Specification.pdf` v1.0. Most of that
+document is already built; an audit found three genuine gaps, all in its "immediate finishing
+work" list (§15.1), and the rest of the spec's open items are explicitly BLOCKED (persistence,
+production auth, Experiment 36, catalog publishing, live AI) and were deliberately not touched.
+
+- **The report could not be printed — §15.1 P1.** `.flow-shell` is a fixed-height app frame
+  (`height: 100dvh`, `overflow: hidden`) with one scrolling region. Measured under print media:
+  shell `height 900px`, `overflow hidden`, background navy `rgb(16,40,55)`; body `overflow hidden`
+  at 844px; pager and floating help launcher both still `display` on. A printed or PDF-saved
+  report was therefore **one dark page with everything below the fold cut off**. `print.css` was
+  32 lines written before the flow shell existed and did not mention any of its classes.
+  Rewritten: `@page A4` with 14mm margins, the shell and body unclipped, app chrome hidden,
+  sticky boxes returned to flow, horizontal scrollers opened out. Re-measured on a real submitted
+  report: **900px clipped → 3621px flowing**, white, with all 21 recorded actions, the sources,
+  the simulation assumptions and the competency-estimate disclaimer intact.
+  `e2e/print.e2e.ts` pins it.
+- **No safe-area handling — §3.4.** `env(safe-area-inset-*)` appeared nowhere, and the viewport
+  meta lacked `viewport-fit=cover`, without which those values are always 0. Both landed together
+  (adding the CSS alone would have been dead code; adding the meta alone would have pushed the
+  pager under the home indicator). The pager, flow bar and help launcher now re-add the insets;
+  `env()` resolves to 0 on desktop, so nothing moved there.
+- **Two buttons named "Ask for a hint" — §3.5.** `exp04.action.request_hint` and
+  `ui.guidance.request_hint` carry the same English string, and the action list and the guidance
+  panel both rendered one in guided _and_ manual mode: an ambiguous accessible name for
+  screen-reader and keyboard users, and the same class of defect that previously broke locators
+  across three Playwright projects. The duplicate is gone from the action list — the guidance
+  panel's button is the better home, because it renders the returned hint directly underneath —
+  and that button gained the `busy` guard the typed action buttons already had, so one intent
+  cannot record two hint events (§5.3, "duplicate submissions must be prevented").
+- **New `e2e/a11y.e2e.ts`**, dependency-free: asserts every visible control has an accessible name
+  and that no two visible buttons on a screen share one, across dashboard, library, overview,
+  pre-lab, mode and the laboratory; plus that a 2D apparatus can be focused, shows a focus
+  indicator and is operable with Enter.
+
+Checked and found **already satisfying the spec, so left alone**: library search/filter and
+empty/error states (§3.2), dashboard continue-session, the report's sources, assumptions and
+scoring limitation, and the admin console (§15.1 P2) — which already shows per-field review
+chips, validation issue counts, Sinhala "Not started", duplicates, and an explicit
+"Simulation pending — Not runnable" panel stating that approving content never makes a practical
+runnable. The duplicated header seen mid-page in full-page screenshots is a Playwright stitching
+artifact of `position: sticky`, not a layout bug.
+
+## V3 final polish — laboratory visual and interaction quality (2026-10-20)
+
+Defects fixed, each diagnosed by measuring the real DOM rather than by eye.
+
+- **The stage no longer loses height when an apparatus is selected.** `.scene-frame` is a flex
+  column whose only growing child is `.lab-stage`, so the contextual dock — an ordinary in-flow
+  sibling — took its height straight out of the laboratory. Measured: the dock grew 32px → 134px
+  and the stage lost **111px at every desktop size** (606→495 at 1920x1080, 426→315 at 1440x900,
+  294→183 at 1366x768, where it was **38% of the stage** and every apparatus jumped under the
+  cursor). The dock is now a reserved fixed-height region that scrolls internally, so all three
+  viewports measure **0px lost**. `e2e/stage-stability.e2e.ts` asserts height _and_ top position.
+  - Trade-off worth stating plainly: the stage is now constant rather than large-then-small. At
+    1366x768 it is 241px always, versus the old 294px idle that collapsed to 183px the moment
+    anything was selected — bigger than the old working size, smaller than the old idle one.
+- **Help launcher no longer covers the stage zoom controls.** Below 900px the stage spans the full
+  width, so its bottom-right corner sits under the fixed launcher. Bottom-left and top-right were
+  both tried and both collided with something else (the reagent jar, then the close-up preset
+  buttons) — every corner of a full-width stage belongs to something — so on phones the cluster
+  stops being an overlay and becomes a right-aligned row beneath the laboratory.
+- **Sinhala "Save notebook" no longer sits behind the pager.** Measured at 1440x900: save bottom
+  815 vs pager top 797, an 18px clip. English cleared it by 39px, which is why it showed in one
+  locale only. The save row is now sticky to the bottom of the notebook panel; re-measured at 44px
+  clear. `e2e/overlap.e2e.ts` covers both locales plus keyboard focus.
+- **3D apparatus were pale and small.** Three causes, all addressed: glass at 0.3 opacity against a
+  near-white backdrop (`#e9f1f5`) and an equally light wall; no edges, which is where almost all of
+  a real glass vessel's visible structure comes from; and a distant camera. Added `GlassBody`,
+  which draws each vessel's profile a second time slightly larger with `side={BackSide}` so only
+  its far wall shows — a silhouette, with no post-processing pass and **no new dependency** (drei
+  is not installed and was not added). Backdrop and wall deepened, camera moved from
+  `[0, 3.8, 7.2]` to `[0, 2.85, 6.2]`, and the wall enlarged to 34x16 because the closer camera
+  saw past the old 22x7 panel into raw clear-colour.
+  - **This is improved procedural geometry, not authored assets.** No GLB/Blender models exist and
+    no realism claim is made.
+- **Mobile 2D readability — partially addressed, and the limit is worth recording.** On-screen size
+  is `panelWidth / viewBoxWidth`, so the only way to enlarge apparatus on a phone is to show less
+  width. A first attempt cropped to 760 units and put the four-beam balance (x=150) and the dropper
+  (x=1040) **outside the view entirely** — caught because the measurement probe could no longer
+  click the balance. The overview now crops only to the apparatus span (70–1130), so nothing
+  becomes unreachable, and the real inspection routes on a phone remain the close-up presets, the
+  zoom controls and the accessible equipment list. Touch targets raised 30px → 44px.
+- **Bench depth (2D):** contact shading where the worktop meets the back panel, and a lit front
+  lip. Presentation only — no apparatus invented, no session state involved.
+
+Animations were reviewed, not extended: `r1-prototype.e2e.ts` still asserts that a **rejected
+action does not animate success**, and it passes.
+
+## Phase 4 — verification checkpoint (2026-10-19)
+
+Feature work stopped here; this entry records what was verified rather than what was added.
+
+- **Scientific regression answered by the diff, not by assertion.** Every change in the working
+  tree is confined to `apps/web` plus `docs/`. `content/experiments`, `packages/simulation-core`,
+  `packages/contracts/src`, `apps/api` and `supabase` are **untouched**, which is what preserves
+  the Experiment 4 definition, the deterministic rules, the engine-side safety gate, event
+  recording, version pinning, verifier consistency and the RAG citation/refusal behaviour.
+- **Experiment 36 cannot run**: `content/experiments` contains only `exp04`, so there is no
+  definition to register — not merely a hidden flag.
+- **No external AI during tests**: `.env.example` ships `LAB_LLM_PROVIDER=disabled`,
+  `LAB_EMBEDDING_PROVIDER=disabled` and `LAB_ADMIN_MODE=disabled`. Live provider answering has
+  never been run and must not be demonstrated as working.
+- **`docs/DEMO.md`** added: start commands, offline vs API mode, the environment variables that
+  matter (no secrets), the full Experiment 4 demo sequence including the stopper in/out/in order
+  the engine requires, how to switch 2D/3D, the three modes, and an honest limitations list.
+- **Automatic mode had no end-to-end coverage at all.** Guided and manual were covered; the
+  demonstration mode was not, so its completability was an assumption. `e2e/automatic-demo.e2e.ts`
+  now drives it from the initial state and it **reaches `Stage 10 of 10: Complete` in 19 steps**,
+  producing a real report at 1 mol dm⁻³ with `Independence: not assessed` — correct, because the
+  system acted rather than the student. Start/Pause are asserted to actually take effect.
+- **The gate caught one failure, and it was in the new test code, not the product.** The Sinhala
+  screenshot test looked the step rail up by its **English** accessible name after switching
+  locale, so it timed out. Fixed to use the Sinhala string. Two further defects were my own test's
+  assumptions, also corrected: "Start" substring-matches "Restart", and `.scene-frame__caption` is
+  deliberately `display: none` in `.lab-studio` at desktop heights (the vertical space belongs to
+  the laboratory), so it is asserted as text content rather than visibility.
+- **Screenshot package: `apps/web/final-screens/`** (61 files), newly gitignored. It deliberately
+  does **not** live in `test-results/`, which Playwright wipes at the start of every run — the
+  admin suite was destroying the student suite's screenshots.
+- **Browser review findings** (from inspecting the images, not from passing tests): zero
+  `console.error` across the whole run; the only console output is a `THREE.Clock` deprecation
+  warning from `three@0.186.1` itself, not from our code. Remaining visual defects are recorded in
+  "Known limitations" below rather than fixed, because feature work stopped at this checkpoint.
+
+## Phase 3 — journey integration, and the pre/post comparison question settled (2026-10-19)
+
+- **`apps/web/e2e/student-journey.e2e.ts`** walks the whole workflow the way a student does —
+  dashboard → library → overview → pre-lab → mode + safety → laboratory → notebook → reflection →
+  report — and, more importantly, walks it **backwards**. Verified in the browser: pre-lab answers
+  and the prediction survive going back to the overview and forward again; a notebook conclusion
+  survives a trip to reflection and back; a reflection answer survives a trip to the notebook and
+  back; the chosen mode (guided/beginner) is still in force in the laboratory. State is in-memory
+  for the session's lifetime — there is no account storage, and the test asserts nothing beyond
+  that.
+- **The report step is gated in the step rail itself** (disabled until submission) rather than
+  opening an empty report. The first version of the journey test tried to click it and hung; the
+  gate was right and the test was wrong.
+- **Pre/post learning comparison: not built, deliberately.** The definition carries **no concept,
+  tag or objective linkage on questions at all** — they hold only `id`, `promptKey`,
+  `answerGuide`, `revealAnswerAfter` and `sourceRefs`. The content does not pair either: pre-lab
+  asks for a _definition_ of molar concentration while post-lab asks the student to _apply_ it to
+  NaOH and K₂C₂O₄; pre-lab's glassware question has no post-lab counterpart, and post-lab's
+  primary-standard questions have no pre-lab counterpart. Any pairing would be invented, so per
+  the brief the limitation is recorded and nothing was generated. A real comparison needs
+  teacher-approved concept mappings first.
+- **Pre-lab progress added** (`PredictionsFields`): a real count of answered questions plus a
+  progress bar, reusing the reflection progress string so no new Sinhala text was introduced.
+  The questions are **not** labelled required, because the definition has no optionality field and
+  `canStart()` does not gate on pre-lab answers — claiming "required" would be false.
+- **AI help widget verified in the browser:** absent before a session exists, then open →
+  minimise → reopen → close, with no footer overlap and no horizontal overflow.
+- **Admin console already meets the honesty bar** for this phase: a "Development only" eyebrow, a
+  banner stating nothing is published and that approved content is not runnable until a validated
+  simulation exists, only the two real operations offered (import, review), and an explicit note
+  that publishing, catalogue replacement and rollback need real authentication and persistent
+  storage. It inherits the Chemistry Studio palette through the shared tokens.
+
+## Phase 2 — Experiment 4 verified end to end through the real UI (2026-10-19)
+
+The question this phase existed to answer: does the actual practical work, performed the way a
+student performs it? It does, and there is now a permanent test that proves it.
+
+- **`apps/web/e2e/experiment4-golden-path.e2e.ts`** drives one complete valid attempt through the
+  real student UI in manual mode — 19 engine actions from apparatus selection to submission —
+  and asserts the chemistry, not just that pages render. Result: **Stage 2 → Stage 10 of 10
+  (Complete), zero rejected actions**, and the report shows an achieved concentration of
+  **1 mol dm⁻³**, equal to the source-backed target (NIE handbook PDF p. 29 / printed p. 21).
+  Competency estimate 87.8 / 100. The test reads the weighed watch-glass mass from the Results
+  panel exactly as a student would, rather than reaching into the store.
+- **The engine enforces real technique, which the first run exposed.** `dissolve_solute` has the
+  precondition `flask_stoppered`, `adjust_to_mark` requires `flask_unstoppered`, and
+  `mix_solution` requires stoppered again — so the stopper goes in to shake, comes out to make up
+  to the mark, and goes back in to mix. Dissolving before stoppering is correctly rejected. The
+  spec documents this so the sequence is not "fixed" by someone later.
+- **A 100× scientific error traced to the operator, not the code.** An early run produced
+  0.265 g transferred and 0.01 mol dm⁻³. Cause: `transfer_solid`'s form field is a percentage
+  (`unit="%"`, divided by 100 before dispatch) and the run entered `1`, i.e. 1 %. The engine had
+  faithfully modelled transferring one per cent of the solid. Entering `100` gives 26.5 g and
+  1 mol dm⁻³. Worth remembering: the renderer holds no masses or tolerances — every number in the
+  report came from the engine and the definition.
+- **Report wording is honest:** the rows are tagged `source-backed fact`, `your measurement` and
+  `calculated outcome`, and the overall figure is labelled a _practical competency estimate_. The
+  test asserts those distinctions exist.
+- **Final visual state matches confirmed engine state:** the flask is filled to the calibration
+  mark, stoppered and labelled; the watch glass sits used on the bench; the selected wash bottle
+  shows only its valid actions.
+
+## Chemistry Studio theme + UX-5 mode selection (2026-10-19)
+
+- **One palette, applied through the tokens rather than page by page.** The whole codebase already
+  styles from `--brand-*` / `--ink-*` / status tokens, so re-pointing those in `tokens.css` moved
+  every student page and the admin console onto the Chemistry Studio palette in one change: deep
+  teal `#087c86`, navy frame `#102837`, canvas `#f3f7fa`, text `#142b39` / `#526675`, success
+  `#17805d`.
+- **Contrast was measured before adopting, not assumed.** Deep teal 4.96:1 on white and 4.60:1 on
+  the new canvas; text 14.6/13.6; secondary 5.97/5.54; success 4.90/4.55; white on navy 15.2. Two
+  of the requested accents do **not** reach text contrast — cyan `#25a8b8` (2.85) and warning
+  `#d79224` (2.62) — so they are confined to fills, borders and indicators, with the dark
+  `--warning` kept for warning text. The token file records these numbers and the rule.
+- **Type scale lifted at the small end** (xs 13→14px, sm 14→15px, with body still 16px), because
+  instructional text was being set at 13px. Re-verified afterwards that the laboratory still fits:
+  `workbench` is not below the fold and there is no page scroll at 1440×900 or 1366×768.
+- **UX-5 mode selection, 1602px → 1262px.** The root cause of the tall page was the guidance-level
+  selector living _inside_ the Guided card: the grid matched all three cards to the tallest, so
+  Automatic and Manual each carried ~350px of empty space. The levels now sit in their own
+  three-across row below the comparison, still only while Guided is selected. The six safety
+  acknowledgements go two-across on desktop (every item full size — the brief's "do not shrink
+  safety content" line), and the "why Start is unavailable" message moved beside the Start button,
+  replacing a duplicate banner higher up the page. Automatic mode now fits one screen exactly
+  (900px at a 900px viewport); Manual with safety outstanding is 1087px.
+- **Safety behaviour unchanged and verified in the browser:** Automatic needs no acknowledgement
+  and Start is enabled; Manual hides the guidance levels, disables Start until every box is
+  ticked, then enables it; there is exactly one acknowledgement set on the page; selecting modes or
+  levels never starts a session. `canStart()` remains the authority — nothing was reimplemented in
+  the view. Keyboard verified: arrow keys move between modes, Space toggles an acknowledgement.
+- **Responsive:** no horizontal overflow at 1920×1080, 1440×900, 1366×768, 834×1112 or 390×844;
+  mobile stacks the cards, levels and checklist with labels intact.
+
+## UX-6 — sectioned notebook and reflection stepper (2026-10-19)
+
+Checkpoint 2 of the approved V3 UX programme. Checkpoint 1 (dashboard, shared flow width) is in
+the entry below this one.
+
+- **Notebook: eight sections, one at a time.** `NotebookView` was a single ~1911px-scrolling form
+  with eleven textareas; it is now a left section rail (Aim · Apparatus · Procedure · Observations
+  · Measurements and trials · Calculations · Result · Conclusion) beside the active section. Every
+  original field is kept and mapped into exactly one section — nothing was dropped or merged away.
+  Section names reuse the existing `ui.notebook.field.*` labels, so **no new Sinhala strings were
+  introduced**; the same is true of the pager, which reuses the V3-2 `ui.side.*` keys.
+- **One source of notebook state.** Each field still reads and writes the single `notebook.draft`
+  in the store through `editNotebook`, so switching sections (or leaving the page and returning)
+  cannot lose a draft, and there is no second copy of the notebook to drift. Section position is
+  local view state only and never touches the engine or its stage. The workbench's own seven-section
+  learning navigator is untouched and still reads the same data.
+- **Reflection: one question at a time, plus a review step.** Four large boxes at once became a
+  stepper with a real progress bar ("n / 4 answered", counted from saved answers only), Previous/
+  Next, and a final review listing every question with its answer or "—" for unanswered. Unanswered
+  questions are never shown as complete and nothing is graded. The single-question field was
+  extracted as `ReflectionQuestion` and is shared with the workbench's Reflection section, so both
+  write the same `postLab` answers.
+- **Fixes found by looking at the screenshots, not the tests:** the prefilled Aim was clipped at
+  two rows (it holds three source-backed objectives) — now six rows, verified unclipped by
+  comparing `scrollHeight` with `clientHeight` in the browser; the section heading rendered
+  "Stage 1 of 8: · Aim" because the reused key already ends in a colon and "Stage" is the engine's
+  word, not the notebook's; the floating "Need help?" button covered the pager's Next button on the
+  notebook and reflection pages, so the clearance rule written for the laboratory now covers all
+  three places that use this pager.
+- **Measured (1440×900), before → after:** notebook page scroll 1911px → **684px against a 680px
+  viewport** (it now essentially fits); textareas on screen at once 11 → **1**; reflection answer
+  boxes 4 → **1**; notebook width 940px → **1340px** (brief target 1100–1400). At 1920×1080 the
+  notebook holds at 1340px rather than stretching; at 1366×768 it is 1340px with 136px of scroll;
+  tablet 834px and phone 390px with no horizontal overflow.
+- **Mobile:** the section rail becomes a compact wrapped picker above the writing area, and the
+  measurement table becomes one labelled card per row (`data-label` + a stacked layout at ≤720px)
+  instead of scrolling sideways.
+- **Tests:** `tsc` and `eslint` clean; web `vitest` 265/265 — two notebook tests were updated to
+  open the relevant section first (same maintenance the V3-2 tab change needed), preserving their
+  original intent including the Sinhala language-switch draft check.
+
+## Fullscreen laboratory fit (2026-10-19)
+
+The previous slice (below) widened the laboratory but the student reported it still looked narrow,
+small and largely unchanged. They were right, and the earlier diagnosis was incomplete: it only
+ever measured **widths**. Measuring heights found the actual problem.
+
+- **Root cause.** At 1440×900 the flow body had `clientHeight 680` but `scrollHeight 1030`, and
+  `.workbench` was 978px tall with `belowFold: true` — the laboratory ran **222px past the bottom
+  of the window**. The visible top of the scene is the wall and shelf; the bench, where the
+  apparatus actually are, sat below the fold. So the student saw a mostly-empty picture and had no
+  reason to realise the rest existed. A second, independent defect: `.side-panel` was squeezed to
+  its column height with `overflow: hidden` and nothing inside it scrolled, so notebook sections
+  taller than the card (the Protocol section measured 6897px against an 874px box) were simply
+  unreachable.
+- **Fix — the workbench step is now a fixed-height app region**, not a tall page that scrolls.
+  `.app-main.flow-shell__body:has(.workbench)` is a flex column with `overflow: hidden`; the grid
+  takes the height that is actually left over; the laboratory scales to fit and the notebook
+  scrolls inside itself (`.side-panel__scroll`). The old `max-height: calc(100vh - ...)` caps were
+  wrong by ~220px because they ignored the shell's own top bar and pager — removed.
+  `margin: 0` on that body rule matters: the inherited `margin: 0 auto` silently disables stretch
+  for a grid item, which shrank the body to its content width the moment it became a flex box.
+- **The scene now fills its panel at any shape.** The drawing grows its own view box to the
+  measured panel aspect (`ResizeObserver` in `Laboratory2D`), showing more bench and wall rather
+  than sitting letterboxed inside empty bands; the backdrop is drawn well past the frame (`BLEED`)
+  so there is nothing to run out of. This also means `VIEW_H` no longer has to match the panel, so
+  it was cut 760 → 525 purely to make the apparatus bigger, and the shelf/bench rows were re-laid
+  out (shelf scale 0.8 → 0.95, bench rows 1.1/1.22 → 1.45/1.65).
+- **A cascade bug worth remembering:** the desktop `aspect-ratio: auto` override sat _earlier_ in
+  `workbench.css` than the base `.lab2d__svg` rule. Equal specificity, so the base rule kept
+  winning and the stage stayed 360px tall no matter what was changed. The override now sits after
+  it. The computed-style dump (`aspect=1280 / 760` long after that value had been edited) is what
+  exposed this.
+- **Measured, 1440×900, before → after:** body scrollHeight 1030 → 680 (nothing below the fold);
+  workbench width 1408 (97.8% of the viewport); scene column 1002 (71% of the workbench); notebook
+  394 (28%); stage SVG 938×468 → 984×386 **and now filling its panel instead of letterboxing**;
+  notebook scroll area 0 (clipped) → 292px. At 1366×768 the notebook scroll area was 44px before
+  the section nav was put into two columns, 160px after. Tablet stage 322 → 588px, phone 139 →
+  255px after giving narrow layouts a 4:3 frame instead of the desktop strip.
+- **Verification:** `tsc`, `eslint` clean; web `vitest run` 265/265; full Playwright across
+  desktop/tablet/mobile 26 run / 19 skipped by design; `test:e2e:admin` 2/2. A temporary spec
+  (deleted after use) additionally checked, on the real student route at 1440×900, 1366×768,
+  834×1112 and 390×844: no horizontal overflow, no page scroll on desktop, the notebook scroller
+  actually scrolls, a rejected weighing leaves the watch glass on the bench with no success
+  animation, the keyboard path reaches the same engine action, and Sinhala plus the 3D renderer
+  still render correctly.
+- **Remaining weaknesses, honestly:** the bench is still visibly empty early in the experiment —
+  at that point the engine genuinely has almost nothing on it, so this is state, not layout, but
+  it does read as a flat grey band. Selecting an apparatus expands the dock and shrinks the stage
+  by ~100px, which is a visible jump. At 1366×768 the stage is only 254px tall; that height class
+  is simply tight. The apparatus are still procedural SVG, not authored illustration — see the
+  note in the R1 entry about what separately-authored assets would require.
+
+## Production visual upgrade — laboratory sizing, apparatus art, animation (2026-10-19)
+
+Follows R1 below. The student reported that R1, being an isolated `/?r1=1` prototype, did not
+change what opening the real laboratory looks like — correct, and the point of R1 was only to
+de-risk the approach before touching production. This slice promotes the validated parts of that
+work into the actual student-facing `WorkbenchView`/`Laboratory2D`/`Apparatus2D`, verified in a
+real browser at the normal route, never `/?r1=1`.
+
+- **Root cause of "narrow laboratory, big margins" (found by measuring the real DOM, not
+  guessing):** two issues stacked. (1) `.app-main.flow-shell__body` capped every flow step,
+  including the workbench, at `max-width: var(--workbench-max)` (1680px) — right for a reading
+  page, wrong for a working scene; now overridden to `max-width: none` specifically on the
+  workbench step via `.app-main.flow-shell__body:has(.workbench)` (`flow.css`), leaving every
+  other step's readable cap untouched. (2) A second, unrelated `.lab2d__svg { max-height: max(300px, 52vh) }`
+  rule in `studio.css` (loaded after `workbench.css`, so it won by cascade order) silently
+  capped the 2D scene at exactly half the screen regardless of the column width or aspect ratio —
+  it pre-dated V3-1's own height safety net on `.workbench__scene` and had become redundant with
+  it. Removed.
+- **Measured before/after at 1440×900:** the 2D scene SVG grew from 938×468px to 954×566px
+  (height +21%) once both constraints were cleared, on top of the composition changes below. The
+  duplicate experiment title (shown once in the flow-shell top bar, then again as a full
+  eyebrow+h1 block in `WorkbenchView`'s own header) is gone — the heading is now
+  `visually-hidden` (kept for accessibility) and the visible header is just the session-fact chips.
+- **Scene composition** (`layout2d.ts`): the gap between the shelf ledge and the bench — pure
+  empty wall — shrank from 232 to 150 view-box units; apparatus display scale rose substantially
+  (shelf 0.8→0.92, bench back row 1.1→1.35, bench front row 1.22→1.55); the bench's own window
+  decoration was resized to fit the shorter wall. A real limitation found by screenshot review,
+  not by the passing tests: an early version of this pass made the bench _deeper_ without moving
+  items further into it, creating a new empty-bench-surface area — fixed by moving both bench rows
+  further toward the front edge, but some open bench surface remains below the front row; a
+  further composition pass could tighten this more.
+- **Apparatus illustration** (`Apparatus2D.tsx`, `Lab2DDefs.tsx`): every apparatus named in the
+  brief — four-beam balance, watch glass, 250 cm³ flask, beaker, funnel, wash bottle, dropper,
+  Na₂CO₃ container — gained a grounding drop-shadow, and the balance/funnel/beaker/dropper/reagent
+  container gained explicit, stronger strokes and a darkened shared metal gradient so the housing
+  no longer blends into the background (the same bug R1 found and fixed, now fixed here too). The
+  watch glass was redrawn from a thin, barely-recognizable crescent into an actual shallow dish.
+  The wash bottle and reagent container now use a distinct flatter "plastic" gradient
+  (`lab2d-plastic`) instead of the glassware's gradient, so material differs visibly, not just by
+  label. No PixiJS, no new dependency, no copied artwork — same conclusion as R1, reused here.
+- **Animation** (new `workbench/useSettleValue.ts`, promoted from the R1 prototype, now the single
+  shared implementation — R1 imports it rather than keeping its own copy): the balance needle and
+  the flask's liquid level now ease toward a new value over ~400–550ms (same cubic-ease idiom as
+  the 3D `CameraRig` flight) instead of snapping. Both values are read directly from the engine's
+  public projection (`model.balance.pointer`, `model.liquidLevel`), which only ever changes after
+  an accepted event — there is no "optimistic" or pre-confirmation path for either to animate from,
+  so a rejected action structurally cannot produce a false success animation (verified in the
+  browser: reject a weighing attempt before the apparatus is on the bench — the needle does not
+  move). Apparatus also now glide between shelf/bench/balance-pan positions via a CSS transition on
+  `.lab2d-item`, guarded by `@media (prefers-reduced-motion: no-preference)`.
+- **Not done this slice:** notebook-presentation polish (section 7 of the brief) was reviewed and
+  judged already reasonable from the V3-2 work, so no changes were made there — a deliberate scope
+  call to protect time for the sizing/art/animation work the student explicitly said was missing,
+  not an oversight.
+- **Verification:** `tsc` clean, `eslint` clean (including a real `react-hooks/set-state-in-effect`
+  violation in the first draft of the reduced-motion branch, fixed, not suppressed). Full web
+  `vitest run` 265/265 (the pre-existing `no-chemistry.test.ts` source scan again correctly caught
+  two coincidental literal-number matches — a decorative coordinate and a shadow opacity — fixed).
+  Full `pnpm exec playwright test` across desktop/tablet/mobile projects: 26 run / 19 skipped by
+  design, including the real pointer-drag weighing test, the WebGL pick-and-place test, guided vs.
+  manual assistance, Sinhala, and no-horizontal-overflow, all against the changed layout.
+  `pnpm test:e2e:admin` 2/2. A temporary verification spec (deleted after use, per this project's
+  established pattern) additionally confirmed, on the real route at all four mandated viewports
+  (1440×900, 1366×768, 834×1112, 390×844) and in automatic/guided/manual modes: no horizontal
+  overflow, a rejected action leaves the needle inactive, an accepted one reaches `on_balance`
+  placement, and Sinhala stays readable. Screenshots were inspected visually, not just measured.
+- **Performance:** production build main chunk 698.7 kB → 701.9 kB gzip (+~0.6 kB gzip); the 3D
+  `LabScene` chunk is byte-for-byte unchanged (947.74 kB), confirming the 3D renderer was not
+  touched. 2D/3D parity (the existing `scene-path`/`laboratory.e2e.ts` state-equality checks) still
+  passes.
+- **Honest remaining weaknesses:** some open bench surface remains below the front row of
+  apparatus (noted above); the funnel/beaker/dropper got shadows and material cues but not a full
+  redraw at the same depth as the balance/watch-glass/flask; no GLB/3D asset work (still proposal-
+  only, as in R1 — 3D visual parity is maintained by leaving the 3D renderer as-is, not by matching
+  the 2D improvements there); the notebook's own presentation was not revisited this slice.
+- **Files:** `apps/web/src/styles/{flow,studio,workbench}.css`, `apps/web/src/views/WorkbenchView.tsx`,
+  `apps/web/src/workbench/lab2d/{layout2d.ts,Laboratory2D.tsx,Apparatus2D.tsx,Lab2DDefs.tsx}`,
+  new `apps/web/src/workbench/useSettleValue.ts` (the R1 prototype's own copy was deleted; it now
+  imports this shared one too, so there is exactly one implementation).
+
+## R1 — advanced simulation graphics proof-of-quality prototype (2026-10-19)
+
+The student asked for the actual laboratory illustration/animation quality to improve (not another
+CSS pass), explicitly comparing it to professional LabXchange simulations, and asked for a small,
+isolated, honestly-graded prototype rather than a wholesale renderer swap. Delivered exactly that —
+see the chat transcript for the full report (file list, screenshots, test results, the honest
+visual-acceptance verdict). Summary:
+
+- **Isolated prototype** at `apps/web/src/dev/r1Prototype/` (new directory; `R1Prototype.tsx`,
+  `R1Stage.tsx`, `R1Apparatus.tsx`, `useR1Session.ts`, `useSettleValue.ts`, `r1.css`), reachable
+  only at `/?r1=1` in a dev build (`apps/web/src/App.tsx` gates it behind
+  `import.meta.env.DEV`). The production `LaboratoryViewport`/`Laboratory2D`/`LabScene` files were
+  **not touched**. Driven by a real `createLocalEngineAdapter()` session (the same deterministic
+  engine production uses), not a mock — the one demonstrated interaction (`weigh_watch_glass`,
+  after `select_apparatus`) is genuinely verified by the trusted engine, including its natural
+  rejection when attempted before the apparatus is on the bench.
+- **New, real capability the production renderer does not have:** a confirmed-state animation
+  (`useSettleValue`, the same cubic-ease idiom as the existing 3D `CameraRig` flight, no new
+  animation library) that only starts once the engine accepts the action — the balance needle
+  eases to its new angle and a numeric readout counts up, instead of snapping instantly as every
+  apparatus does today. A rejected attempt animates nothing.
+- **Honest visual-acceptance verdict (section 12 of the brief):** after one real revision pass
+  (the first attempt had a large dead-space layout bug and a balance illustration that blended
+  into its own background — both caught by manual screenshot review, not by the passing automated
+  tests), the apparatus illustration quality is roughly at parity with the shipped 2D renderer, not
+  a dramatic improvement. The clearest, demonstrable win is specifically the animation/confirmation
+  feedback above. Per the brief's own instruction, this is reported honestly rather than claimed as
+  a finished win, and the production renderer is unchanged.
+- **PixiJS was evaluated, not installed:** the shipped renderers' main weakness is illustration
+  detail and the total absence of confirm-gated animation, not an SVG rendering ceiling — SVG
+  already supports gradients/filters/shadows and gives keyboard accessibility for free, while
+  PixiJS (canvas/WebGL) would require re-implementing that accessibility layer and a duplicate
+  non-WebGL fallback for an unproven quality gain. SVG was retained for R1, as the brief explicitly
+  permits.
+- **3D asset pipeline:** documented as a proposal only (Blender → GLB → Three.js); no GLB asset was
+  authored, since no 3D authoring tool was available to verify the result, and the brief says not
+  to claim a 3D improvement without one.
+- **Tests:** `pnpm exec tsc` clean; full web `vitest run` 265/265 (includes the pre-existing
+  `no-chemistry.test.ts` source scan, which correctly caught two coincidental literal-number
+  matches in R1's own comments/decorative coordinates — fixed, not suppressed); new
+  `apps/web/e2e/r1-prototype.e2e.ts` 5/5 (loads, apparatus distinguishable, selection, the
+  rejected-vs-confirmed animation distinction, keyboard path, no uncaught JS errors, responsive at
+  1440×900/1366×768/834×1112/390×844 with no horizontal overflow).
+- **Production bundle impact:** one extra ~14 KB (gzip ~4.8 KB) lazy chunk exists on disk but is
+  never referenced or preloaded by `index.html` and is never fetched by a real visitor, since the
+  dev-only branch that would render it is unreachable in a production build.
+- **Known limitations / not done:** only 3 of 45 apparatus/experiments get the richer art (R1's
+  deliberately small scope); no Blender/GLB asset; PixiJS evaluated by reasoning, not by building a
+  second prototype; the balance/watch-glass composition could likely still be improved by another
+  iteration or two. R2 onward were not started, per the brief's completion boundary.
 
 ## V3-2 — seven-section laboratory notebook (2026-10-19)
 

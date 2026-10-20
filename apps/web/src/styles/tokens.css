@@ -1,40 +1,52 @@
 /*
- * Design tokens. Text colours are chosen for WCAG AA contrast on their intended backgrounds:
- * --brand-600 (#0f6f8a), --teal-600 (#096c61) and --ink-500 (#556672) stay above 4.5:1 on white
- * and on --canvas (verified with the browser contrast audit).
+ * Chemistry Studio design tokens — one palette for every page of the student app and the admin
+ * console. Measured contrast (sRGB, against both #ffffff and --canvas #f3f7fa):
+ *
+ *   --brand-600 #087c86  4.96 / 4.60  — AA for normal text, and white on it is 4.96
+ *   --ink-900   #142b39 14.64 / 13.59
+ *   --ink-500   #526675  5.97 / 5.54
+ *   --ok        #17805d  4.90 / 4.55
+ *   --navy-900  #102837 15.21 / 14.12
+ *
+ * The cyan highlight (#25a8b8, 2.85 on white) and the warning accent (#d79224, 2.62) do NOT reach
+ * text contrast, so they are deliberately confined to fills, borders and indicators; the text
+ * tokens beside them (--warning) stay dark enough to read. Do not swap those roles.
  */
 :root {
   color-scheme: light;
 
-  /* brand: teal-blue */
-  --brand-800: #083f50;
-  --brand-700: #0b5a70;
-  --brand-600: #0f6f8a;
-  --brand-500: #1586a5;
-  --brand-200: #b9e1ec;
-  --brand-100: #dff1f6;
-  --brand-50: #f0f8fb;
-  --teal-600: #096c61;
-  --teal-500: #0f9d8a;
-  --teal-100: #d9f3ee;
+  /* brand: deep teal */
+  --brand-800: #053f46;
+  --brand-700: #066069;
+  --brand-600: #087c86;
+  /* Cyan highlight: fills, indicators and gradients only — never body text. */
+  --brand-500: #25a8b8;
+  --brand-200: #a9dde3;
+  --brand-100: #d8f0f3;
+  --brand-50: #eef8fa;
+  --teal-600: #0a6f66;
+  --teal-500: #12a08c;
+  --teal-100: #d7f2ed;
 
   /* neutrals */
-  --ink-900: #13212b;
-  --ink-700: #2f414d;
-  --ink-500: #556672;
-  --ink-300: #9aa9b3;
-  --line: #d6e0e6;
-  --line-strong: #b7c6cf;
+  --navy-900: #102837;
+  --ink-900: #142b39;
+  --ink-700: #2f4555;
+  --ink-500: #526675;
+  --ink-300: #93a4b1;
+  --line: #d8e2e9;
+  --line-strong: #b5c5d0;
   --surface: #ffffff;
-  --surface-2: #f6f9fb;
-  --canvas: #eef3f6;
+  --surface-2: #f7fafc;
+  --canvas: #f3f7fa;
 
   /* status */
-  --ok: #1d7347;
-  --ok-soft: #e4f4ea;
-  --warning: #995605;
-  --warning-line: #d68b1e;
-  --warning-soft: #fff4df;
+  --ok: #17805d;
+  --ok-soft: #e2f4ec;
+  --warning: #8a5207;
+  /* Warning accent: borders and markers only (2.62 on white). */
+  --warning-line: #d79224;
+  --warning-soft: #fdf3e2;
   --danger: #b42318;
   --danger-soft: #fdecea;
   --info-soft: var(--brand-50);
@@ -53,13 +65,15 @@
   /* type */
   --font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-si: 'Noto Sans Sinhala', var(--font);
-  --text-xs: 0.8125rem;
-  --text-sm: 0.875rem;
+  /* Instructional text carries meaning here, so the small end of the scale starts at 14px rather
+   * than 13px; body stays at 16px. Nothing in the UI is allowed below --text-xs. */
+  --text-xs: 0.875rem;
+  --text-sm: 0.9375rem;
   --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: 2.125rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.4375rem;
+  --text-2xl: 1.8125rem;
+  --text-3xl: 2.25rem;
   --leading: 1.55;
   --leading-si: 1.75;
 
@@ -85,6 +99,10 @@
   /* layout */
   --content-max: 1280px;
   --workbench-max: 1680px;
+  /* Page templates differ by task: a questionnaire or report reads better at a document measure,
+   * the notebook is a wider structured workspace, and the laboratory takes the whole shell. */
+  --flow-step-max: 1240px;
+  --flow-notebook-max: 1340px;
   --header-h: 64px;
   --control-h: 44px;
 }

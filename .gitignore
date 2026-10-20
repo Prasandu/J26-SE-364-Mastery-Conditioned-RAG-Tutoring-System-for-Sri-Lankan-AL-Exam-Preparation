@@ -219,6 +219,9 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+# Manual visual-QA screenshot packages. Kept outside test-results/, which Playwright wipes at the
+# start of every run (so a later suite would delete an earlier suite's screenshots).
+final-screens/
 
 # Private derived research data (chunk text, embeddings) and model caches
 data/

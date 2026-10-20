@@ -53,10 +53,9 @@ export function SidePanel({ model }: { model: SceneModel }) {
   const goTo = (next: WorkbenchTab) => {
     setTab(next);
     // A new section starts scrolled to its own top, like opening a fresh page of the notebook.
-    // The notebook itself doesn't scroll (its nav and pager are `position: sticky` within it, so
-    // they stay visible); `.workbench__side` is the actual scrolling ancestor. (jsdom has no
-    // scrollTo; real browsers always do.)
-    const scroller = document.querySelector<HTMLElement>('.workbench__side');
+    // `.side-panel__scroll` is the notebook's own scroll region: the section nav above it and the
+    // pager below it stay put as fixed flex rows. (jsdom has no scrollTo; real browsers do.)
+    const scroller = document.querySelector<HTMLElement>('.side-panel__scroll');
     if (scroller && typeof scroller.scrollTo === 'function') scroller.scrollTo({ top: 0 });
     refs.current[next]?.focus();
   };

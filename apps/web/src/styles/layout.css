@@ -185,7 +185,14 @@
 
 .page-header__actions {
   display: flex;
+  flex: none;
+  align-items: center;
   gap: var(--space-2);
+}
+
+/* A hero call to action must not wrap mid-phrase when the illustration takes the rest of the row. */
+.page-header__actions .button {
+  white-space: nowrap;
 }
 
 .lead {
@@ -231,6 +238,33 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card-grid > li + li {
+  margin-top: 0;
+}
+
+/* Heading + one line of context above a group of cards. */
+.section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.section-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.section-heading .hint-text {
+  margin: 0;
 }
 
 .view-nav {

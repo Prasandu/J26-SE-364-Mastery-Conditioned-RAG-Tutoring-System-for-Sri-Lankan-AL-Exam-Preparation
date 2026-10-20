@@ -1,5 +1,5 @@
 import type { Locale } from '@vlab/contracts';
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatQuantity } from '../../lib/format';
 import { FLASK_MARK_Y } from '../flaskProfile';
@@ -11,6 +11,7 @@ import {
   BENCH_BACK_Y,
   BENCH_Y,
   FLASK_UNIT,
+  NARROW_PANEL_PX,
   OVERVIEW,
   SHELF_Y,
   VIEW_H,
@@ -19,6 +20,7 @@ import {
   focusView,
   itemBox,
   itemPosition,
+  narrowOverview,
   zoomView,
   type ViewBox,
 } from './layout2d';
@@ -28,39 +30,53 @@ type Preset = 'overview' | 'balance' | 'flask' | 'custom';
 /** Items drawn on top of other items come last so they stay visible and clickable. */
 const LAYER: Record<Placement, number> = { shelf: 0, bench: 1, on_balance: 2, on_flask: 2 };
 
+/**
+ * How far the room is drawn beyond the base frame on each side. The view box widens to the
+ * panel's shape (see `stageAspect`), so the wall, tiles and bench must keep going rather than
+ * stopping at `VIEW_W` and leaving blank bands.
+ */
+const BLEED = 700;
+const BLEED_W = VIEW_W + BLEED * 2;
+
 function Backdrop({ shelfLabel }: { shelfLabel: string }) {
   return (
     <g aria-hidden="true">
-      <rect width={VIEW_W} height={VIEW_H} fill="url(#lab2d-wall)" />
       <rect
-        x={0}
+        x={-BLEED}
+        y={-BLEED}
+        width={BLEED_W}
+        height={VIEW_H + BLEED * 2}
+        fill="url(#lab2d-wall)"
+      />
+      <rect
+        x={-BLEED}
         y={SHELF_Y + 40}
-        width={VIEW_W}
+        width={BLEED_W}
         height={BENCH_BACK_Y - SHELF_Y - 40}
         fill="url(#lab2d-tiles)"
       />
       <g className="lab2d-window">
         <rect
           x={1168}
-          y={36}
+          y={24}
           width={96}
-          height={214}
+          height={150}
           rx={6}
           fill="#cfe6f1"
           stroke="#b7c6cf"
           strokeWidth={4}
         />
-        <line x1={1216} y1={36} x2={1216} y2={249} stroke="#b7c6cf" strokeWidth={3} />
-        <line x1={1168} y1={142} x2={1264} y2={142} stroke="#b7c6cf" strokeWidth={3} />
+        <line x1={1216} y1={24} x2={1216} y2={174} stroke="#b7c6cf" strokeWidth={3} />
+        <line x1={1168} y1={99} x2={1264} y2={99} stroke="#b7c6cf" strokeWidth={3} />
         <path
-          d="M1176 60 L1206 44 M1176 90 L1210 72"
+          d="M1176 44 L1200 30 M1176 68 L1204 54"
           stroke="#ffffff"
           strokeWidth={3}
           opacity={0.7}
         />
       </g>
-      <rect x={36} y={SHELF_Y} width={1112} height={12} rx={2} fill="#b8c3ca" />
-      <rect x={36} y={SHELF_Y + 12} width={1112} height={6} fill="#8d9aa3" />
+      <rect x={-BLEED} y={SHELF_Y} width={BLEED_W} height={12} rx={2} fill="#b8c3ca" />
+      <rect x={-BLEED} y={SHELF_Y + 12} width={BLEED_W} height={6} fill="#8d9aa3" />
       {[90, 600, 1100].map((x) => (
         <path key={x} d={`M${x} ${SHELF_Y + 18} l0 26 l22 -26 Z`} fill="#8d9aa3" />
       ))}
@@ -78,16 +94,26 @@ function Backdrop({ shelfLabel }: { shelfLabel: string }) {
           {shelfLabel}
         </text>
       </g>
-      <rect x={0} y={BENCH_BACK_Y - 8} width={VIEW_W} height={8} fill="#8796a1" />
+      <rect x={-BLEED} y={BENCH_BACK_Y - 8} width={BLEED_W} height={8} fill="#8796a1" />
       <rect
-        x={0}
+        x={-BLEED}
         y={BENCH_BACK_Y}
-        width={VIEW_W}
+        width={BLEED_W}
         height={BENCH_Y - BENCH_BACK_Y}
         fill="url(#lab2d-bench)"
       />
-      <rect x={0} y={BENCH_Y} width={VIEW_W} height={4} fill="#9aa9b3" />
-      <rect x={0} y={BENCH_Y + 4} width={VIEW_W} height={VIEW_H - BENCH_Y - 4} fill="#3f4b54" />
+      {/* Depth cues on the worktop: shading under the back panel, then a lit front lip. Both are
+          presentation only — they draw no apparatus and depend on no session state. */}
+      <rect x={-BLEED} y={BENCH_BACK_Y} width={BLEED_W} height={26} fill="url(#lab2d-bench-ao)" />
+      <rect x={-BLEED} y={BENCH_Y - 10} width={BLEED_W} height={10} fill="url(#lab2d-bench-lip)" />
+      <rect x={-BLEED} y={BENCH_Y} width={BLEED_W} height={4} fill="#9aa9b3" />
+      <rect
+        x={-BLEED}
+        y={BENCH_Y + 4}
+        width={BLEED_W}
+        height={VIEW_H - BENCH_Y - 4 + BLEED}
+        fill="#3f4b54"
+      />
     </g>
   );
 }
@@ -118,9 +144,34 @@ export default function Laboratory2D({
   const [view, setView] = useState<ViewBox>(OVERVIEW);
   const [preset, setPreset] = useState<Preset>('overview');
   const svgRef = useRef<SVGSVGElement>(null);
+  /**
+   * Aspect ratio of the panel the stage is actually given. The drawing widens its view box to
+   * match, so the laboratory fills the panel edge to edge instead of being letterboxed inside it
+   * with empty bands at the sides — the drawing simply shows more bench and wall when the panel
+   * is wider than the base frame. 0 means "not measured yet"; the base frame is used until then.
+   */
+  const [stageAspect, setStageAspect] = useState(0);
+  /** Panel width in CSS pixels, used to pick a readable overview framing on a phone. */
+  const [stageWidth, setStageWidth] = useState(0);
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        setStageAspect(width / height);
+        setStageWidth(width);
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   /** Client (screen) coordinates to drawing coordinates. */
   const toSvg = (clientX: number, clientY: number) => {
@@ -230,7 +281,27 @@ export default function Laboratory2D({
       <svg
         ref={svgRef}
         className={ghost ? 'lab2d__svg lab2d__svg--dragging' : 'lab2d__svg'}
-        viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
+        viewBox={(() => {
+          // Grow (never crop) the current view to the panel's shape, keeping it centred, so the
+          // drawing fills the panel rather than sitting letterboxed inside it. A panel wider than
+          // the frame reveals more bench and wall to the sides; a taller one reveals more above
+          // and below. The backdrop is drawn well past the frame (`BLEED`) to cover both.
+          // On a phone the untouched overview draws the whole room into ~360px and the apparatus
+          // become unidentifiable, so the overview preset starts from a tighter frame there. Only
+          // the overview is substituted: once the student zooms or pans the preset is 'custom'
+          // and their own framing is respected.
+          const base =
+            preset === 'overview' && stageWidth > 0 && stageWidth < NARROW_PANEL_PX
+              ? narrowOverview()
+              : view;
+          if (stageAspect <= 0) return `${base.x} ${base.y} ${base.w} ${base.h}`;
+          if (base.w / base.h < stageAspect) {
+            const w = base.h * stageAspect;
+            return `${base.x - (w - base.w) / 2} ${base.y} ${w} ${base.h}`;
+          }
+          const h = base.w / stageAspect;
+          return `${base.x} ${base.y - (h - base.h) / 2} ${base.w} ${h}`;
+        })()}
         preserveAspectRatio="xMidYMid meet"
         role="group"
         aria-label={label}
@@ -244,9 +315,9 @@ export default function Laboratory2D({
         <Backdrop shelfLabel={t('ui.lab.shelf')} />
         <rect
           className="lab2d-bench-target"
-          x={0}
+          x={-BLEED}
           y={BENCH_BACK_Y}
-          width={VIEW_W}
+          width={BLEED_W}
           height={BENCH_Y - BENCH_BACK_Y}
           onClick={() => onPick(BENCH_TARGET)}
         />

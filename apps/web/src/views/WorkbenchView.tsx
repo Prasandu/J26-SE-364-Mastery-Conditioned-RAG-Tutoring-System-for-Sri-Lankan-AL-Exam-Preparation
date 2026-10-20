@@ -6,7 +6,7 @@ import { StatusMessage } from '../components/ui/StatusMessage';
 import { useSession } from '../store/StoreProvider';
 import { LaboratoryViewport } from '../workbench/LaboratoryViewport';
 import { buildSceneModel } from '../workbench/sceneModel';
-import { SidePanel } from '../workbench/SidePanel';
+import { NotebookSheet } from '../workbench/NotebookSheet';
 
 /**
  * Virtual laboratory: session header and safety first, then the 2D/3D laboratory stage, with the
@@ -61,30 +61,28 @@ export function WorkbenchView() {
 
   return (
     <section className="workbench lab-studio" aria-labelledby="workbench-title">
+      {/* The flow-shell top bar already shows the experiment title and step; this stays compact
+          and does not repeat it — just the session facts a student needs while working. */}
+      <h1 id="workbench-title" className="visually-hidden">
+        {t(engine.definition.titleKey)}
+      </h1>
       <header className="workbench__bar">
-        <div className="workbench__heading">
-          <p className="page-header__eyebrow">
-            {t('ui.card.experiment_number', { number: engine.definition.experimentNumber })} ·{' '}
-            {t('ui.workbench.eyebrow')}
-          </p>
-          <h1 id="workbench-title">{t(engine.definition.titleKey)}</h1>
-          <ul className="workbench__meta" aria-label={t('ui.workbench.session_facts')}>
-            <li className="chip chip--strong">{t(`ui.mode.${session.mode}.title`)}</li>
-            {session.guidanceLevel && (
-              <li className="chip">{t(`ui.level.${session.guidanceLevel}.title`)}</li>
-            )}
-            {session.attempt > 1 && (
-              <li className="chip">{t('ui.workbench.attempt', { attempt: session.attempt })}</li>
-            )}
-            {stage && (
-              <li className="chip chip--outline">
-                <Icon name="layers" size={14} />{' '}
-                {t('ui.protocol.stage_of', { current: stageIndex + 1, total: stages.length })}{' '}
-                {t(stage.titleKey)}
-              </li>
-            )}
-          </ul>
-        </div>
+        <ul className="workbench__meta" aria-label={t('ui.workbench.session_facts')}>
+          <li className="chip chip--strong">{t(`ui.mode.${session.mode}.title`)}</li>
+          {session.guidanceLevel && (
+            <li className="chip">{t(`ui.level.${session.guidanceLevel}.title`)}</li>
+          )}
+          {session.attempt > 1 && (
+            <li className="chip">{t('ui.workbench.attempt', { attempt: session.attempt })}</li>
+          )}
+          {stage && (
+            <li className="chip chip--outline">
+              <Icon name="layers" size={14} />{' '}
+              {t('ui.protocol.stage_of', { current: stageIndex + 1, total: stages.length })}{' '}
+              {t(stage.titleKey)}
+            </li>
+          )}
+        </ul>
       </header>
       <ConnectionBanner />
       <div className="workbench__safety">
@@ -99,7 +97,8 @@ export function WorkbenchView() {
           <LaboratoryViewport model={model} />
         </div>
         <aside className="workbench__side">
-          <SidePanel model={model} />
+          {/* A column beside the stage on a wide screen; a dismissible sheet on a phone. */}
+          <NotebookSheet model={model} />
         </aside>
       </div>
     </section>

@@ -39,12 +39,10 @@ describe('dashboard', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: tx('ui.dashboard.title') }),
     ).toBeInTheDocument();
-    const facts = screen.getByRole('list', { name: tx('ui.dashboard.facts') });
-    await waitFor(() =>
-      expect(
-        within(facts).getByText(tx('ui.dashboard.practicals_available')).nextSibling,
-      ).toHaveTextContent('1'),
-    );
+    // The real catalog entry is shown as a card the student can act on, not as a counter.
+    const catalog = await screen.findByRole('list', { name: tx('ui.library.title') });
+    await waitFor(() => expect(within(catalog).getAllByRole('article')).toHaveLength(1));
+    expect(within(catalog).getByRole('heading', { name: tx('exp04.title') })).toBeInTheDocument();
     // No continue card without a real session; no fabricated statistics.
     expect(screen.queryByText(tx('ui.dashboard.continue_title'))).toBeNull();
     expect(document.body.textContent).not.toMatch(/minutes|progress:|%/i);

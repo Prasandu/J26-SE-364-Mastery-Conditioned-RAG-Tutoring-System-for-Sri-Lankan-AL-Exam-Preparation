@@ -426,12 +426,14 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  /* Fills its column so the section nav and pager pin to the card's own edges and only the
+   * section content between them scrolls (see `.side-panel__scroll`). */
+  flex: 1;
+  min-height: 0;
 }
 
 .side-panel__toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
+  flex: none;
   background: var(--surface);
   padding: var(--space-4) var(--space-4) var(--space-2);
   border-bottom: 1px solid var(--line);
@@ -465,6 +467,17 @@
   margin: var(--space-2) 0 0;
   padding: 0;
   list-style: none;
+}
+
+/* Desktop: the seven sections stack into two columns. As one column they claimed ~290px of a
+ * fixed-height card, which left the section content itself only 44px to scroll in at 1366x768 —
+ * measured, and unusable. Two columns give that height back to the content. */
+@media (min-width: 901px) {
+  .notebook-nav ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px var(--space-1);
+  }
 }
 
 .notebook-nav__item {
@@ -530,7 +543,13 @@
   white-space: nowrap;
 }
 
+/* The notebook's one scroll region. Before this, `.side-panel` was squeezed to its column's
+ * height with `overflow: hidden` and nothing inside could scroll, so any section taller than the
+ * card — the Protocol section measured 6897px against an 874px box — was simply unreachable. */
 .side-panel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -561,10 +580,19 @@
 }
 
 /* ---------- notebook pager: Previous / Next section ---------- */
+/* The pager sits at the bottom-right of its card, where the floating "Need help?" button also
+ * lives; the extra right padding keeps "Next" clear of it instead of underneath it. Applies
+ * wherever this pager is used: the workbench notebook, the standalone notebook and reflection. */
+@media (min-width: 901px) {
+  .lab-studio .notebook-pager,
+  .view--notebook .notebook-pager,
+  .view--reflection .notebook-pager {
+    padding-right: 150px;
+  }
+}
+
 .notebook-pager {
-  position: sticky;
-  bottom: 0;
-  z-index: 3;
+  flex: none;
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
@@ -749,9 +777,8 @@
  * the default two-column thumbnail grid already fits without the horizontal-scroll treatment
  * that earlier suited a tray spanning the full stage width. */
 
-@media (min-width: 901px) {
-  /* Like the 3D canvas, the 2D stage never grows taller than about half the screen (it letterboxes). */
-  .lab2d__svg {
-    max-height: max(300px, 52vh);
-  }
-}
+/* A half-screen cap on the 2D stage used to live here, pre-dating V3-1's own height safety net
+ * (`.workbench__scene { max-height: calc(100vh - var(--space-6)); overflow-y: auto }` in
+ * workbench.css) — it was redundant with that and fought the laboratory's own aspect ratio,
+ * silently shrinking it well below the space actually available. Removed; `.workbench__scene`'s
+ * own bound is the one designated overflow guard for this column. */

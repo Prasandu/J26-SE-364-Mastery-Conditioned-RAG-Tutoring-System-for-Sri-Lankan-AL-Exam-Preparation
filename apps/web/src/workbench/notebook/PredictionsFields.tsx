@@ -18,9 +18,29 @@ export function PredictionsFields() {
   const saveAnswer = useSession((s) => s.savePreLabAnswer);
   const setPrediction = useSession((s) => s.setPrediction);
 
+  const total = definition.preLabQuestions.length;
+  const answered = definition.preLabQuestions.filter(
+    (q) => (preLab.answers[q.id] ?? '').trim() !== '',
+  ).length;
+
   return (
     <>
       <p className="hint-text">{t('ui.prelab.answers_after_submission')}</p>
+      {/* Counts answers the student has actually written. These questions prepare the student but
+          do not gate starting the practical, so nothing here is marked required. */}
+      <p className="prelab-progress" role="status" aria-live="polite">
+        {t('ui.reflection.progress', { answered, total })}
+      </p>
+      <div
+        className="reflection-step__progressbar"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={answered}
+        aria-label={t('ui.reflection.progress', { answered, total })}
+      >
+        <span style={{ width: `${total === 0 ? 0 : (answered / total) * 100}%` }} />
+      </div>
       {definition.preLabQuestions.map((q, i) => {
         const value = preLab.answers[q.id] ?? '';
         return (

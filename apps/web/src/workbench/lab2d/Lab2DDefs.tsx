@@ -31,10 +31,41 @@ export function Lab2DDefs() {
           <stop offset="0" stopColor="#56646e" />
           <stop offset="1" stopColor="#74838e" />
         </linearGradient>
+        {/* Contact shading where the bench meets the back panel. A flat worktop reads as a slab of
+            colour; darkening the few units nearest the wall is what gives it a surface. */}
+        <linearGradient id="lab2d-bench-ao" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#1b2630" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#1b2630" stopOpacity="0" />
+        </linearGradient>
+        {/* Light catching the front lip of the worktop, so the bench has a visible near edge. */}
+        <linearGradient id="lab2d-bench-lip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.34" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.05" />
+        </linearGradient>
         <linearGradient id="lab2d-metal" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#eef1f3" />
-          <stop offset="1" stopColor="#bfc8ce" />
+          <stop offset="0.45" stopColor="#c3ccd2" />
+          <stop offset="1" stopColor="#8d98a1" />
         </linearGradient>
+        <linearGradient id="lab2d-metal-dark" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5b6670" />
+          <stop offset="1" stopColor="#333c43" />
+        </linearGradient>
+        <linearGradient id="lab2d-plastic" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="0.5" stopColor="#dcebf2" />
+          <stop offset="1" stopColor="#b9d4e0" />
+        </linearGradient>
+        <radialGradient id="lab2d-base-shadow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#1a2630" stopOpacity="0.26" />
+          <stop offset="1" stopColor="#1a2630" stopOpacity="0" />
+        </radialGradient>
+        <filter id="lab2d-drop-shadow" x="-40%" y="-20%" width="180%" height="160%">
+          <feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#1a2630" floodOpacity="0.24" />
+        </filter>
+        <filter id="lab2d-soft-shadow" x="-60%" y="-60%" width="220%" height="220%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#1a2630" floodOpacity="0.2" />
+        </filter>
       </defs>
     </svg>
   );

@@ -10,6 +10,9 @@ export function GuidancePanel() {
   const session = useSession((s) => s.session);
   const log = useSession((s) => s.log);
   const requestHint = useSession((s) => s.requestHint);
+  // Same guard the typed action buttons use: a second dispatch while one is in flight would
+  // record a duplicate hint event (and bill the student a second hint) for one intent.
+  const busy = useSession((s) => s.ui.busy);
   if (!session) return null;
   const guidance = session.guidance;
   const stage = engine.definition.stages.find((s) => s.id === session.stage);
@@ -49,7 +52,12 @@ export function GuidancePanel() {
         <AutomaticControls />
       ) : (
         <>
-          <button type="button" className="button" onClick={() => void requestHint()}>
+          <button
+            type="button"
+            className="button"
+            disabled={busy}
+            onClick={() => void requestHint()}
+          >
             {t('ui.guidance.request_hint')}
           </button>
           {hintText && (

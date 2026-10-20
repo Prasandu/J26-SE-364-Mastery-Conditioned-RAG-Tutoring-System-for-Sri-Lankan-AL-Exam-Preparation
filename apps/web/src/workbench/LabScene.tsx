@@ -1,6 +1,6 @@
-import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useMemo, type ReactNode } from 'react';
-import { PMREMGenerator } from 'three';
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Group, PMREMGenerator, Vector3 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { BENCH_TARGET } from './interaction/gestures';
@@ -54,16 +54,84 @@ function Environment() {
   return <primitive attach="environment" object={texture} />;
 }
 
+/**
+ * Matches the 2D laboratory's placement transition so both renderers move at the same speed.
+ * Held in seconds because `useFrame` reports delta in seconds: converting inline would be an
+ * ad-hoc unit conversion in rendering code, which the project bans.
+ */
+const PLACEMENT_SECONDS = 0.42;
+
+/**
+ * Eases a group to an engine-confirmed position instead of snapping to it.
+ *
+ * The 2D laboratory already animates placement changes (a 420ms CSS transition on the item's
+ * `transform`), but the 3D apparatus were positioned directly from `itemPosition3D`, so the watch
+ * glass teleported onto the balance while the same action in 2D showed it travelling. This closes
+ * that gap without changing what is drawn: the target is still only ever an engine-confirmed
+ * position, so a rejected action moves nothing, and the first frame places the item outright
+ * rather than flying it in from the origin.
+ *
+ * The canvas renders on demand, so each in-flight frame has to ask for the next one.
+ */
+function SettledGroup({
+  name,
+  target,
+  reducedMotion,
+  children,
+}: {
+  name: string;
+  target: [number, number, number];
+  reducedMotion: boolean;
+  children: ReactNode;
+}) {
+  const ref = useRef<Group>(null);
+  const placed = useRef(false);
+  const invalidate = useThree((s) => s.invalidate);
+
+  useEffect(() => invalidate(), [target, invalidate]);
+
+  useFrame((_, delta) => {
+    const group = ref.current;
+    if (!group) return;
+    const [x, y, z] = target;
+    // Reduced motion, and the very first placement, jump straight to the settled state.
+    if (reducedMotion || !placed.current) {
+      group.position.set(x, y, z);
+      placed.current = true;
+      return;
+    }
+    const step = 1 - Math.exp((-delta * 5) / PLACEMENT_SECONDS);
+    group.position.x += (x - group.position.x) * step;
+    group.position.y += (y - group.position.y) * step;
+    group.position.z += (z - group.position.z) * step;
+    if (group.position.distanceTo(TARGET_VEC.set(x, y, z)) > 0.001) invalidate();
+    else group.position.set(x, y, z);
+  });
+
+  return (
+    <group ref={ref} name={name}>
+      {children}
+    </group>
+  );
+}
+
+/** Scratch vector reused every frame so easing allocates nothing. */
+const TARGET_VEC = new Vector3();
+
 function Room({ onBench }: { onBench: () => void }) {
   return (
     <group>
-      <mesh position={[0, 2.4, -3.05]} receiveShadow>
-        <planeGeometry args={[22, 7]} />
-        <meshStandardMaterial color="#e3ecf1" roughness={0.95} />
+      {/* Back wall: a mid tone, not near-white, so glassware in front of it keeps a visible
+          silhouette. The lower band is darker still, giving the bench a horizon to sit against. */}
+      {/* Deliberately oversized: the closer overview camera used to see past the old 22x7 panel,
+          leaving raw clear-colour in the upper corners where the room should be. */}
+      <mesh position={[0, 5, -3.05]} receiveShadow>
+        <planeGeometry args={[34, 16]} />
+        <meshStandardMaterial color="#b9cdd8" roughness={0.95} />
       </mesh>
       <mesh position={[0, 0.85, -3.03]}>
         <planeGeometry args={[22, 1.7]} />
-        <meshStandardMaterial color="#d7e3ea" roughness={0.8} />
+        <meshStandardMaterial color="#9db4c2" roughness={0.8} />
       </mesh>
       <mesh position={[4.9, 3.4, -3.02]}>
         <planeGeometry args={[2.4, 2.2]} />
@@ -211,14 +279,17 @@ export default function LabScene({
       dpr={[1, 1.75]}
       shadows="percentage"
     >
-      <color attach="background" args={['#e9f1f5']} />
+      {/* Pale glass needs something to read against. The backdrop was near-white (#e9f1f5), which
+          is why the apparatus looked washed out; a deeper slate keeps the room bright without
+          letting the glassware disappear into it. */}
+      <color attach="background" args={['#aec4d0']} />
       <Environment />
       <CameraRig initial={OVERVIEW_POSE} reducedMotion={reducedMotion} onReady={onCameraReady} />
-      <hemisphereLight args={['#ffffff', '#8a9aa5', 0.55]} />
+      <hemisphereLight args={['#ffffff', '#76889a', 0.5]} />
       <directionalLight
         castShadow
         position={[3.5, 7, 5]}
-        intensity={1.35}
+        intensity={1.5}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-bias={-0.0004}
@@ -235,12 +306,17 @@ export default function LabScene({
         // A picked-up item is drawn lifted above its place until the engine moves it.
         const lift = heldItemId === item.id ? HELD_LIFT : 0;
         return (
-          <group key={item.id} name={item.id} position={[x, y + lift, z]}>
+          <SettledGroup
+            key={item.id}
+            name={item.id}
+            target={[x, y + lift, z]}
+            reducedMotion={reducedMotion}
+          >
             <Pickable item={item} onPick={onPick}>
               {(placement === 'bench' || placement === 'shelf') && <Highlight item={item} />}
               <ItemMesh item={item} model={model} placement={placement} labelLines={labelLines} />
             </Pickable>
-          </group>
+          </SettledGroup>
         );
       })}
     </Canvas>

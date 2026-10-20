@@ -22,6 +22,17 @@ import { Lab2DDefs } from './workbench/lab2d/Lab2DDefs';
 
 /** Development-only admin tools: a separate chunk, loaded only when opened. */
 const AdminView = lazy(() => import('./admin/AdminView'));
+/**
+ * R1 advanced-simulation-graphics prototype (chemistry-lab-advanced-sim-r1): an isolated,
+ * dev-only proof-of-quality page at `/?r1=1`, never built into production bundles and never
+ * mounted alongside the real session store — it drives its own engine session. See
+ * `src/dev/r1Prototype/R1Prototype.tsx`.
+ */
+const R1Prototype = lazy(() =>
+  import('./dev/r1Prototype/R1Prototype').then((m) => ({ default: m.R1Prototype })),
+);
+const showR1Prototype =
+  import.meta.env.DEV && new URLSearchParams(window.location.search).has('r1');
 
 function CurrentView() {
   const view = useSession((s) => s.view);
@@ -86,6 +97,13 @@ export function App({
 }) {
   const [i18n] = useState(() => createI18n('en'));
   const [admin] = useState(() => (adminClient === undefined ? defaultAdminClient() : adminClient));
+  if (showR1Prototype) {
+    return (
+      <Suspense fallback={null}>
+        <R1Prototype />
+      </Suspense>
+    );
+  }
   return (
     <I18nextProvider i18n={i18n}>
       <StoreProvider {...(store ? { store } : {})}>

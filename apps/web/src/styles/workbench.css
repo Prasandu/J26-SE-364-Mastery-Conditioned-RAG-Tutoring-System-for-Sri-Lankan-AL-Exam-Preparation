@@ -2,7 +2,11 @@
 .workbench {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  /* Fills the flow body (flow.css) instead of overflowing it; `min-height: 0` is what lets the
+   * grid row below actually shrink to the space available rather than forcing a page scroll. */
+  flex: 1;
+  min-height: 0;
 }
 
 .workbench__bar {
@@ -38,10 +42,11 @@
  * 900px it scrolls with the page like a normal single column (see that breakpoint). */
 .workbench__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+  /* ~70 / ~30 of the workbench width, with a readable floor on the notebook. */
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 28%, 430px);
   grid-template-areas: 'scene side';
-  gap: var(--space-4);
-  align-items: start;
+  gap: var(--space-3);
+  align-items: stretch;
 }
 
 .workbench__scene {
@@ -54,24 +59,26 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding-right: 2px;
 }
 
 @media (min-width: 901px) {
-  .workbench__side {
-    position: sticky;
-    top: var(--space-3);
-    max-height: calc(100vh - var(--space-6));
-    overflow-y: auto;
+  /* The grid takes exactly the height left over below the session chips and the safety alert.
+   * Each column then manages its own overflow: the laboratory scales to fit (nothing is ever
+   * clipped out of reach — the SVG letterboxes rather than cropping), and the notebook scrolls
+   * inside itself. An earlier version capped these with `calc(100vh - ...)`, which was wrong by
+   * ~220px because it ignored the flow shell's own top bar and pager. */
+  .workbench__grid {
+    flex: 1;
+    min-height: 0;
   }
 
-  /* The stage's own content (toolbar, view, hint text, bench description) can be taller than a
-   * short/laptop viewport leaves room for once the always-visible chrome is accounted for; let it
-   * scroll internally too rather than silently clipping (which would make part of it, including
-   * the bench, impossible to reach at all). */
-  .workbench__scene {
-    max-height: calc(100vh - var(--space-6));
-    overflow-y: auto;
+  .workbench__scene,
+  .workbench__side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
   }
 }
 
@@ -110,6 +117,112 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-2);
+}
+
+/* Desktop: the laboratory is the hero of this screen, so the stage takes every pixel the card's
+ * own chrome (toolbars, hint, bench description) does not need. `min-height: 0` at each level is
+ * required or the flex items refuse to shrink below their content size. */
+@media (min-width: 901px) {
+  .scene-frame {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .lab-stage {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .lab2d,
+  .lab3d {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* `flex: 1 1 auto` + `height: auto` lets the stage grow into spare height and shrink when there
+   * is less. The element's own `aspect-ratio` is dropped here (see the later rule that actually
+   * sets it) because on desktop the drawing adapts its view box to the panel instead. */
+  .lab2d__svg {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+  }
+
+  .lab-canvas {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+
+  /* Vertical space on this screen belongs to the laboratory. The long instructional caption
+   * repeats the hint already shown under the stage, and the view-preset toolbar sits on the same
+   * row as the renderer switch instead of claiming a row of its own. */
+  .lab-studio .scene-frame__bar {
+    padding-bottom: 0;
+  }
+
+  .lab-studio .scene-frame__bar .scene-frame__caption {
+    display: none;
+  }
+
+  .lab-studio .lab-toolbar {
+    margin-bottom: var(--space-1);
+  }
+
+  .lab-studio .lab3d__hint,
+  .lab-studio .bench-details {
+    margin-top: var(--space-1);
+  }
+
+  /* The "nothing selected yet" placeholder is a hint, not a control: it does not need a full
+   * card's worth of height. (Once an apparatus IS selected the dock shows its real actions at
+   * full size — that rule is deliberately not touched.) */
+  /* The region below the stage is reserved at a constant height (see the rule after this one), so
+   * the empty state would otherwise read as a large blank card. Dropping its border and fill makes
+   * the reserved space look like deliberate breathing room until an apparatus is selected. */
+  .lab-studio .stage-dock--empty {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-xs);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  /*
+   * Reserved inspector region.
+   *
+   * `.scene-frame` is a flex column in which `.lab-stage` is the only `flex: 1` item, so the dock
+   * — an ordinary in-flow sibling — takes its height straight out of the stage. Measured before
+   * this rule: selecting an apparatus grew the dock from 32px to 134px and shrank the stage by
+   * 111px at every desktop size (606→495 at 1920x1080, 426→315 at 1440x900, and 294→183 at
+   * 1366x768, where the laboratory lost 38% of its height and the apparatus visibly jumped).
+   *
+   * Giving the dock one fixed height for all three of its states (empty, item actions, action
+   * form) makes the stage height constant: the region is reserved up front and its contents
+   * scroll inside it instead of pushing the laboratory around. It stays in flow rather than
+   * overlaying the stage, so the bench and every drag/drop target remain fully visible.
+   *
+   * This rule must stay AFTER `--empty` above: both selectors are two classes, so equal
+   * specificity means source order decides, and the empty state must not keep a different
+   * margin-top or it would reintroduce a small jump of its own.
+   */
+  .lab-studio .stage-dock {
+    display: flex;
+    flex-direction: column;
+    height: clamp(78px, 9.5vh, 132px);
+    margin-top: var(--space-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 .lab-canvas {
@@ -805,7 +918,13 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 9;
+  /* Stacked (narrow) layouts only. The drawing grows its own view box to whatever shape this
+   * box is, so this ratio just decides how much room the scene gets on a phone or tablet: a
+   * squat 2.4:1 strip would be unreadable there, so it is given a taller frame and simply shows
+   * more wall and bench. On desktop the ratio is cleared entirely (media query further down).
+   * NOTE: this rule sits later in the file than the desktop `.lab2d__svg` block above, so that
+   * later media query — not that block — is what clears it. */
+  aspect-ratio: 4 / 3;
   border-radius: var(--radius);
   background: #e4edf2;
   font-family: inherit;
@@ -815,6 +934,15 @@
 .lab2d-item {
   cursor: pointer;
   outline: none;
+}
+
+/* Apparatus move smoothly between shelf, bench and the balance pan once the engine confirms the
+ * placement change (the `transform` attribute only ever changes to an engine-confirmed position —
+ * see `placementOf`/`itemPosition` — so this never animates an unconfirmed or rejected action). */
+@media (prefers-reduced-motion: no-preference) {
+  .lab2d-item {
+    transition: transform 420ms cubic-bezier(0.33, 1, 0.68, 1);
+  }
 }
 
 .lab2d-item__ring {
@@ -987,19 +1115,39 @@
     columns: 1;
   }
 
+  /*
+   * On a phone the stage spans the full width, so an overlaid zoom cluster has nowhere safe to
+   * sit: bottom-right collided with the fixed "Need help?" launcher, bottom-left covered the
+   * reagent jar on the bench, and top-right covered the close-up preset buttons. Every corner of
+   * a full-width stage belongs to something.
+   *
+   * So it stops being an overlay here and becomes an ordinary right-aligned row beneath the
+   * laboratory. It cannot collide with anything, and the controls get a full-size touch target
+   * instead of competing with the drawing underneath them.
+   */
   .lab-zoom {
-    right: var(--space-2);
-    bottom: var(--space-2);
+    position: static;
+    width: fit-content;
+    margin: var(--space-2) 0 0 auto;
   }
 
+  /* Touch targets: 44px is the minimum comfortable size, and these were 30px. */
   .lab-zoom__button {
-    width: 30px;
-    height: 30px;
-    font-size: var(--text-base);
+    width: 44px;
+    height: 44px;
+    font-size: var(--text-lg);
   }
 }
 
 /* The desktop side column is narrow: one compact row per item in the accessible fallback list. */
+/* Must come after the base `.lab2d__svg` rule above, not before it: equal specificity, so source
+ * order decides. On desktop the drawing sizes its own view box to the stage panel. */
+@media (min-width: 901px) {
+  .lab2d__svg {
+    aspect-ratio: auto;
+  }
+}
+
 @media (min-width: 1361px) {
   .workbench__side .equipment-list ul {
     grid-template-columns: minmax(0, 1fr);
@@ -1012,5 +1160,120 @@
   .workbench__side .equipment-item__glyph {
     width: 36px;
     height: 36px;
+  }
+}
+
+/* ---------- notebook sheet (narrow screens) ---------- */
+/*
+ * One `<dialog>` serves both layouts. On a wide screen it is rendered non-modally and these rules
+ * strip every default a dialog brings (centring, border, backdrop, intrinsic sizing) so it behaves
+ * exactly like the plain panel it replaced. Below 900px it is opened with `showModal()` and
+ * becomes a full-height sheet over the stage; the focus trap, Escape handling, background
+ * inertness and focus restoration are the browser's, not ours.
+ */
+.notebook-sheet {
+  display: flex;
+  flex-direction: column;
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+.notebook-sheet__trigger,
+.notebook-sheet__head {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  /* The panel has to be able to shrink inside the workbench grid row and scroll internally. */
+  .notebook-sheet {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .notebook-sheet__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Closed: `display: none` is what a dialog without `open` already does — but it is spelled out
+     here because the desktop rule above sets `display: flex` unconditionally. */
+  .notebook-sheet:not([open]) {
+    display: none;
+  }
+
+  .notebook-sheet[open] {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 60;
+    width: 100%;
+    height: 92dvh;
+    padding: var(--space-3);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .notebook-sheet::backdrop {
+    background: rgb(16 40 55 / 55%);
+  }
+
+  .notebook-sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .notebook-sheet__title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--ink-900);
+  }
+
+  .notebook-sheet__close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-700);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  /* The sheet's own header already names the notebook; the panel's internal label would repeat
+     it two lines further down. */
+  .notebook-sheet[open] .side-panel__head {
+    display: none;
+  }
+
+  /* The sheet owns the height; the panel scrolls inside it. */
+  .notebook-sheet[open] .side-panel {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 }

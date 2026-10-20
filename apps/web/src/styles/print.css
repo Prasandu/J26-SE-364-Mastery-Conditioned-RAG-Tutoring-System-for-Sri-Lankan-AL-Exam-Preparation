@@ -1,32 +1,110 @@
+/*
+ * Print / PDF treatment.
+ *
+ * The practical runs inside `.flow-shell`, a fixed-height application frame: `height: 100dvh`
+ * with `overflow: hidden`, and exactly one scrolling region inside it. That is right on screen
+ * and fatal on paper — measured under print media, the shell reported height 900px with
+ * `overflow: hidden` and a navy background, and `.flow-shell__body` reported `overflow: hidden`
+ * at 844px. A printed report was therefore a single dark page with everything below the fold
+ * silently cut off, plus the pager and the floating help button printed over it.
+ *
+ * So printing has to undo the app shell and let the document flow onto as many pages as it needs.
+ */
+
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
 @media print {
+  /* ---------- let the shell become an ordinary document ---------- */
+  .flow-shell {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    background: #fff;
+  }
+
+  .app-main.flow-shell__body,
+  .app-main.flow-shell__body:has(.view--notebook),
+  .app-main.flow-shell__body:has(.workbench) {
+    display: block;
+    height: auto;
+    max-width: none;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    border-radius: 0;
+  }
+
+  body,
+  .app-shell {
+    background: #fff;
+  }
+
+  /* ---------- application chrome is not part of the document ---------- */
   .app-header,
   .session-nav,
   .no-print,
   .connection-banner,
-  .flow-steps {
+  .flow-steps,
+  .flow-shell__bar,
+  .flow-pager,
+  .help-widget,
+  .lab-toolbar,
+  .lab-switch,
+  .lab-zoom,
+  .stage-dock,
+  .bench-details,
+  .notebook-pager {
     display: none !important;
   }
 
-  body {
-    background: #fff;
+  /* Sticky and floating boxes must rejoin the flow or they repeat/overlap on every page. */
+  .notebook__save,
+  .side-panel__tabs,
+  .protocol-panel__stage {
+    position: static !important;
   }
 
-  .app-main {
-    padding: 0;
-    max-width: none;
+  /* Horizontal scrollers must show all their columns on paper. */
+  .table-scroll,
+  .side-panel__scroll {
+    overflow: visible !important;
   }
 
+  /* ---------- keep the evidence readable ---------- */
   .card,
   .panel,
   .report-summary,
-  .report__meta {
+  .report__meta,
+  .score,
+  .deduction,
+  .report-table tr {
     border-color: #999;
     box-shadow: none;
     break-inside: avoid;
   }
 
+  /* The tags are what separate a source-backed fact from a measurement or a derived value, so
+   * their fill must survive the browser's "remove backgrounds" default. */
+  .tag,
+  .notice {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Progress bars carry no information once the numeric score is printed beside them. */
   .score progress,
-  .meter {
+  .meter,
+  .reflection-step__progressbar {
     display: none;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
   }
 }

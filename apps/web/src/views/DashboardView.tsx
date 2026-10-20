@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ExperimentCard } from '../components/ExperimentCard';
 import { Icon } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
 import { LabIllustration } from '../workbench/lab2d/LabIllustration';
@@ -11,6 +12,12 @@ import { useSession } from '../store/StoreProvider';
  * session (if any). No invented progress or statistics, and nothing duplicated from a page a
  * click away (mode descriptions live on mode selection; the assistant is the floating "Need
  * help?" button reachable from every step of the practical, not a separate entry point here).
+ *
+ * The page leads straight to the one thing a student can actually do next: continue the session
+ * they already have, or open the practical itself — which is shown here as the real catalog card,
+ * not described in the abstract. Decorative counters ("1 practical available") and a restatement
+ * of the four-step learning path used to sit between the hero and that action; both were facts
+ * the student could not act on, so they are gone.
  */
 export function DashboardView() {
   const { t } = useTranslation();
@@ -35,30 +42,21 @@ export function DashboardView() {
         title={t('ui.dashboard.title')}
         lead={t('ui.dashboard.lead')}
         media={<LabIllustration />}
+        actions={
+          // Each button on this page needs its own accessible name. "Start a practical" belongs to
+          // the header nav (it goes to mode selection) and "Open experiment" to the catalog card
+          // below (it opens the practical), so the hero takes the third, distinct action: the
+          // catalog itself. Reusing either name here would give one page two identically-named
+          // buttons leading to different places.
+          <button
+            type="button"
+            className="button button--primary button--lg"
+            onClick={() => navigate('library')}
+          >
+            {t('ui.dashboard.browse')} <Icon name="arrow" size={18} />
+          </button>
+        }
       />
-
-      <ul className="stat-strip" aria-label={t('ui.dashboard.facts')}>
-        <li className="stat">
-          <span className="stat__icon">
-            <Icon name="flask" />
-          </span>
-          <span className="stat__label">{t('ui.dashboard.practicals_available')}</span>
-          <span className="stat__value">
-            {catalog.status === 'ready'
-              ? catalog.items.length
-              : catalog.status === 'error'
-                ? '—'
-                : t('ui.state.loading_short')}
-          </span>
-        </li>
-        <li className="stat">
-          <span className="stat__icon">
-            <Icon name="globe" />
-          </span>
-          <span className="stat__label">{t('ui.card.languages')}</span>
-          <span className="stat__value stat__value--text">{t('ui.card.languages_value')}</span>
-        </li>
-      </ul>
 
       {session ? (
         <section className="card card--accent" aria-labelledby="continue-title">
@@ -93,55 +91,41 @@ export function DashboardView() {
             )}
           </div>
         </section>
-      ) : (
-        <section className="card card--accent" aria-labelledby="start-title">
-          <h2 id="start-title" className="card__title">
-            <Icon name="book" /> {t('ui.dashboard.start_title')}
-          </h2>
-          <p>{t('ui.dashboard.start_text')}</p>
-          {catalog.status === 'error' && (
-            <StatusMessage tone="error" title={t('ui.library.error_title')}>
-              <p>{t('ui.library.error_text')}</p>
-            </StatusMessage>
-          )}
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={() => navigate('library')}
-          >
-            {t('ui.dashboard.browse')} <Icon name="arrow" size={18} />
-          </button>
-        </section>
-      )}
+      ) : null}
 
-      <section className="learning-path card" aria-labelledby="learning-path-title">
-        <div className="learning-path__intro">
-          <span className="learning-path__icon">
-            <Icon name="compass" size={24} />
-          </span>
-          <div>
-            <h2 id="learning-path-title">{t('ui.dashboard.learning_path_title')}</h2>
-            <p>{t('ui.dashboard.learning_path_text')}</p>
-          </div>
+      {/* The practicals themselves, from the real catalog — the page's actual purpose. */}
+      <section className="dashboard__catalog" aria-labelledby="dashboard-catalog-title">
+        <div className="section-heading">
+          <h2 id="dashboard-catalog-title">
+            <Icon name="book" /> {t('ui.library.title')}
+          </h2>
+          <p className="hint-text">{t('ui.dashboard.start_text')}</p>
         </div>
-        <ol className="learning-path__steps">
-          <li>
-            <strong>01</strong>
-            <span>{t('ui.dashboard.learning_step_overview')}</span>
-          </li>
-          <li>
-            <strong>02</strong>
-            <span>{t('ui.dashboard.learning_step_prelab')}</span>
-          </li>
-          <li>
-            <strong>03</strong>
-            <span>{t('ui.dashboard.learning_step_lab')}</span>
-          </li>
-          <li>
-            <strong>04</strong>
-            <span>{t('ui.dashboard.learning_step_reflect')}</span>
-          </li>
-        </ol>
+        {catalog.status === 'error' ? (
+          <StatusMessage
+            tone="error"
+            title={t('ui.library.error_title')}
+            action={
+              <button type="button" className="button" onClick={() => void loadCatalog()}>
+                {t('ui.connection.retry')}
+              </button>
+            }
+          >
+            <p>{t('ui.library.error_text')}</p>
+          </StatusMessage>
+        ) : catalog.status === 'ready' ? (
+          // Same horizontal card treatment as the library, so one practical still fills the row
+          // instead of sitting as a narrow column beside a wide empty gap.
+          <ul className="library-list" aria-label={t('ui.library.title')}>
+            {catalog.items.map((entry) => (
+              <li key={entry.experimentId}>
+                <ExperimentCard entry={entry} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="hint-text">{t('ui.library.loading')}</p>
+        )}
       </section>
     </section>
   );

@@ -21,7 +21,8 @@
   height: 100vh;
   height: 100dvh; /* mobile browser chrome-aware; 100vh above is the fallback */
   overflow: hidden;
-  background: var(--ink-900);
+  /* The practical runs inside the Chemistry Studio navy frame (white on it measures 15.2:1). */
+  background: var(--navy-900);
 }
 
 /* ---------- top bar: back, title, language ---------- */
@@ -187,11 +188,45 @@
 .app-main.flow-shell__body {
   min-height: 0; /* lets this grid row's content scroll instead of forcing the row to grow */
   overflow-y: auto;
-  max-width: var(--workbench-max);
+  /* `width: 100%` is required, not cosmetic: this is a grid item, and the `auto` side margins
+   * disable grid stretch, which left every flow step shrink-to-fit — measured at 940px inside a
+   * 1440px shell, which is where the notebook's "narrow form floating in big dark margins" came
+   * from. The step then chooses its own comfortable measure through `max-width` below. */
+  width: 100%;
+  max-width: var(--flow-step-max);
   margin: 0 auto;
   padding: var(--space-5) var(--space-6) var(--space-8);
   background: var(--canvas);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* The notebook is a structured workspace (fields, tables, measurements), not prose, so it gets a
+ * wider measure than the reading/questionnaire steps. */
+.app-main.flow-shell__body:has(.view--notebook) {
+  max-width: var(--flow-notebook-max);
+}
+
+/* The workbench step is a working scene, not a reading column: a text-width cap and generous side
+ * padding are right for pre-lab/notebook/reflection/report, but on the laboratory itself they are
+ * exactly the "narrow central column with large unused margins" the scene should not have. Widen
+ * only this step; every other flow step keeps the readable `--workbench-max` cap.
+ *
+ * It also must not SCROLL. Measured before this rule existed: at 1440x900 the body had
+ * clientHeight 680 but scrollHeight 1030, so the laboratory ran 222px past the bottom of the
+ * window and the student saw only the empty wall/shelf — the bench, where the apparatus actually
+ * are, was below the fold. This step is now a fixed-height flex column: the laboratory is sized
+ * to the space that exists, and the notebook scrolls inside its own column (see studio.css).
+ * V3-1 still holds — the top bar, step rail and pager are untouched and always visible. */
+.app-main.flow-shell__body:has(.workbench) {
+  display: flex;
+  flex-direction: column;
+  /* `margin: 0` matters: the inherited `margin: 0 auto` disables stretch for this grid item, so
+   * with `display: flex` the box would shrink to its content width instead of filling the shell. */
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: hidden;
+  padding: var(--space-3) var(--space-4);
 }
 
 /* Desktop workbench: `.workbench__side` (the notebook + equipment column) stays pinned near the
@@ -412,5 +447,51 @@
 
   .flow-pager__kicker {
     display: none;
+  }
+}
+
+/* ---------- safe areas (notch / home indicator) ---------- */
+/*
+ * `index.html` sets `viewport-fit=cover`, so the app paints edge to edge, including under a
+ * phone's rounded corners, notch and home indicator. That is only safe if every edge carrying a
+ * control gives the space back, which is what these rules do. `env()` resolves to 0 on hardware
+ * without insets and on desktop, so the padding below is additive and costs nothing elsewhere.
+ *
+ * The pager is the important one: it holds Previous/Next at the very bottom of the screen, which
+ * is exactly where the iOS home indicator sits.
+ */
+.flow-pager {
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  padding-left: calc(var(--space-6) + env(safe-area-inset-left));
+  padding-right: calc(var(--space-6) + env(safe-area-inset-right));
+}
+
+.flow-shell__bar {
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  padding-left: calc(var(--space-6) + env(safe-area-inset-left));
+  padding-right: calc(var(--space-6) + env(safe-area-inset-right));
+}
+
+/* The floating launcher clears the pager (see its own rule) and then the home indicator too. */
+.help-widget {
+  bottom: calc(76px + var(--space-3) + env(safe-area-inset-bottom));
+  right: calc(var(--space-4) + env(safe-area-inset-right));
+}
+
+@media (max-width: 900px) {
+  .flow-pager {
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    padding-left: calc(var(--space-3) + env(safe-area-inset-left));
+    padding-right: calc(var(--space-3) + env(safe-area-inset-right));
+  }
+
+  .flow-shell__bar {
+    padding-left: calc(var(--space-3) + env(safe-area-inset-left));
+    padding-right: calc(var(--space-3) + env(safe-area-inset-right));
+  }
+
+  .help-widget {
+    bottom: calc(64px + var(--space-2) + env(safe-area-inset-bottom));
+    right: calc(var(--space-2) + env(safe-area-inset-right));
   }
 }

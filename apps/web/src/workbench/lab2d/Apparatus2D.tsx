@@ -7,6 +7,7 @@ import {
   liquidProfile,
 } from '../flaskProfile';
 import type { Placement, PointerState, SceneItem, SceneModel } from '../sceneModel';
+import { useSettleValue } from '../useSettleValue';
 import { FLASK_HEIGHT, FLASK_UNIT } from './layout2d';
 
 /**
@@ -73,19 +74,29 @@ export function Flask2D({
   const s = FLASK_UNIT * item.scale;
   const working = model.workingFlaskId === item.id;
   const level = working ? model.liquidLevel : 0;
-  const h = liquidHeight(level);
+  // Only ever changes once the engine has confirmed a new `liquidLevel` in the projection — there
+  // is no earlier, unconfirmed value for this to ease from, so a rejected action never animates.
+  const animatedLevel = useSettleValue(level, 550);
+  const h = liquidHeight(animatedLevel);
   const surfaceR = Math.max(0.005, flaskRadiusAt(h) - 0.02) * s;
   const markR = flaskRadiusAt(FLASK_MARK_Y) * s;
   const top = FLASK_HEIGHT * s;
   const clipId = `lab2d-flask-clip-${useId().replace(/:/g, '')}`;
   const labelLines = working && model.label ? formatLabel(model.label) : [];
   return (
-    <g>
+    <g filter="url(#lab2d-drop-shadow)">
       <defs>
         <clipPath id={clipId}>
           <path d={mirrored(FLASK_PROFILE, s)} />
         </clipPath>
       </defs>
+      <ellipse
+        cx={0}
+        cy={4}
+        rx={0.5 * s}
+        ry={Math.max(6, 0.06 * s)}
+        fill="url(#lab2d-base-shadow)"
+      />
       <path d={mirrored(FLASK_PROFILE, s)} fill="url(#lab2d-glass)" />
       {h > 0 && (
         <g clipPath={`url(#${clipId})`}>
@@ -187,23 +198,45 @@ export function Flask2D({
 
 export function WatchGlass2D({ hasSolid, dirty }: { hasSolid: boolean; dirty: boolean }) {
   return (
-    <g>
-      <path
-        d="M-42 -20 Q0 8 42 -20 Q0 -6 -42 -20 Z"
+    <g filter="url(#lab2d-soft-shadow)">
+      <ellipse cx={0} cy={4} rx={46} ry={7} fill="url(#lab2d-base-shadow)" />
+      {/* A shallow dish seen in side profile (a wide ellipse), not a thin lens — the dish's own
+          base sits near y=0, in line with every other apparatus drawn on this baseline. */}
+      <ellipse
+        cx={0}
+        cy={-13}
+        rx={46}
+        ry={18}
         fill="url(#lab2d-glass)"
         stroke="#3f6576"
         strokeWidth={2.2}
       />
-      <path d="M-30 -16 Q-10 -9 8 -10" fill="none" stroke="#ffffff" strokeWidth={2} opacity={0.9} />
+      <ellipse
+        cx={0}
+        cy={-18}
+        rx={42}
+        ry={10}
+        fill="none"
+        stroke="#3f6576"
+        strokeWidth={1.4}
+        opacity={0.75}
+      />
+      <path
+        d="M-30 -15 Q-10 -23 8 -21"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth={2.2}
+        opacity={0.9}
+      />
       {hasSolid && (
         <g className="lab2d-solid">
-          <path d="M-22 -11 Q0 -36 22 -11 Q0 -7 -22 -11 Z" fill={SOLID} stroke={SOLID_EDGE} />
-          <circle cx={-6} cy={-19} r={1.2} fill={SOLID_EDGE} />
-          <circle cx={5} cy={-23} r={1} fill={SOLID_EDGE} />
-          <circle cx={9} cy={-15} r={1.1} fill={SOLID_EDGE} />
+          <path d="M-22 -9 Q0 -34 22 -9 Q0 -5 -22 -9 Z" fill={SOLID} stroke={SOLID_EDGE} />
+          <circle cx={-6} cy={-17} r={1.2} fill={SOLID_EDGE} />
+          <circle cx={5} cy={-21} r={1} fill={SOLID_EDGE} />
+          <circle cx={9} cy={-13} r={1.1} fill={SOLID_EDGE} />
         </g>
       )}
-      {dirty && <Smudges cx={0} cy={-12} spread={30} />}
+      {dirty && <Smudges cx={0} cy={-10} spread={30} />}
     </g>
   );
 }
@@ -211,11 +244,21 @@ export function WatchGlass2D({ hasSolid, dirty }: { hasSolid: boolean; dirty: bo
 export function Funnel2D({ placement, dirty }: { placement: Placement; dirty: boolean }) {
   const standing = placement !== 'on_flask';
   return (
-    <g>
+    <g filter="url(#lab2d-soft-shadow)">
       {standing && (
         <g className="lab2d-stand">
-          <rect x={-26} y={-5} width={52} height={5} rx={2} fill="#7d8a93" />
-          <rect x={-2} y={-62} width={4} height={58} fill="#9aa5ad" />
+          <ellipse cx={0} cy={0} rx={28} ry={5} fill="url(#lab2d-base-shadow)" />
+          <rect
+            x={-26}
+            y={-5}
+            width={52}
+            height={5}
+            rx={2}
+            fill="url(#lab2d-metal)"
+            stroke="#5b6670"
+            strokeWidth={0.8}
+          />
+          <rect x={-2} y={-62} width={4} height={58} fill="url(#lab2d-metal)" />
           <ellipse cx={0} cy={-62} rx={18} ry={3} fill="none" stroke="#7d8a93" strokeWidth={2.5} />
         </g>
       )}
@@ -242,7 +285,8 @@ export function Funnel2D({ placement, dirty }: { placement: Placement; dirty: bo
 
 export function Beaker2D({ dirty }: { dirty: boolean }) {
   return (
-    <g>
+    <g filter="url(#lab2d-soft-shadow)">
+      <ellipse cx={0} cy={2} rx={32} ry={6} fill="url(#lab2d-base-shadow)" />
       <path
         d="M-32 -82 L-38 -86 L-30 -84 L-30 -6 Q-30 0 -24 0 L24 0 Q30 0 30 -6 L30 -84 Z"
         fill="url(#lab2d-glass)"
@@ -261,14 +305,23 @@ export function Beaker2D({ dirty }: { dirty: boolean }) {
 
 export function WashBottle2D() {
   return (
-    <g>
+    <g filter="url(#lab2d-soft-shadow)">
+      <ellipse cx={0} cy={2} rx={28} ry={6} fill="url(#lab2d-base-shadow)" />
+      {/* Plastic, not glass: a flatter, less transmissive gradient than the glassware's. */}
       <path
         d="M-26 -78 Q-28 -88 -12 -90 L12 -90 Q28 -88 26 -78 L26 -8 Q26 0 18 0 L-18 0 Q-26 0 -26 -8 Z"
-        fill="#f4f8fa"
+        fill="url(#lab2d-plastic)"
         stroke="#8aa2ae"
         strokeWidth={1.5}
       />
       <path d="M-24 -50 L24 -50 L24 -8 Q24 -2 18 -2 L-18 -2 Q-24 -2 -24 -8 Z" fill="#d5ebf5" />
+      <path
+        d="M-20 -72 L-14 -56"
+        stroke="#ffffff"
+        strokeWidth={2.2}
+        opacity={0.75}
+        strokeLinecap="round"
+      />
       <rect x={-10} y={-100} width={20} height={11} rx={2} fill="#2f6f8f" />
       <path
         d="M0 -100 L0 -114 Q0 -120 8 -118 L36 -105 L40 -94"
@@ -283,22 +336,36 @@ export function WashBottle2D() {
 
 export function Dropper2D({ standing }: { standing: boolean }) {
   return (
-    <g transform={standing ? 'rotate(-90)' : undefined}>
+    <g filter="url(#lab2d-soft-shadow)" transform={standing ? 'rotate(-90)' : undefined}>
       <path
         d="M-52 -9 L-40 -11 L30 -11 L30 -5 L-40 -5 Z"
         fill="url(#lab2d-glass)"
         stroke={GLASS_STROKE}
       />
+      <line x1={-36} y1={-9.5} x2={20} y2={-9.5} stroke="#ffffff" strokeWidth={1} opacity={0.8} />
+      {/* Rubber bulb: matte, not glass. */}
       <ellipse cx={40} cy={-8} rx={12} ry={7} fill="#3b4650" />
+      <ellipse cx={37} cy={-10.5} rx={3.5} ry={1.6} fill="#5c6a76" opacity={0.8} />
     </g>
   );
 }
 
 export function Reagent2D({ formula }: { formula: string | null }) {
   return (
-    <g>
-      <rect x={-30} y={-78} width={60} height={78} rx={7} fill="#f2efe8" stroke="#b9b2a2" />
-      <rect x={-27} y={-92} width={54} height={15} rx={3} fill="#2f5d7c" />
+    <g filter="url(#lab2d-drop-shadow)">
+      <ellipse cx={0} cy={2} rx={32} ry={6} fill="url(#lab2d-base-shadow)" />
+      {/* An opaque reagent container (plastic, not glass): a flatter gradient than the glassware. */}
+      <rect
+        x={-30}
+        y={-78}
+        width={60}
+        height={78}
+        rx={7}
+        fill="url(#lab2d-plastic)"
+        stroke="#8ba2ae"
+        strokeWidth={1.4}
+      />
+      <rect x={-27} y={-92} width={54} height={15} rx={3} fill="url(#lab2d-metal-dark)" />
       <rect x={-24} y={-60} width={48} height={30} rx={3} fill="#ffffff" stroke="#c9bfa5" />
       {formula && (
         <text x={0} y={-40} textAnchor="middle" fontSize={13} fontWeight={700} fill={INK}>
@@ -312,12 +379,28 @@ export function Reagent2D({ formula }: { formula: string | null }) {
 const NEEDLE_DY: Record<PointerState, number> = { below: 9, at: 0, above: -9 };
 
 export function Balance2D({ pointer }: { pointer: PointerState | null }) {
-  const dy = pointer ? NEEDLE_DY[pointer] : 0;
+  const target = pointer ? NEEDLE_DY[pointer] : 0;
+  // Only moves once the engine has confirmed a pointer observation; a rejected weighing attempt
+  // leaves `pointer` (and so the needle) exactly where it was.
+  const dy = useSettleValue(target, 400);
   return (
-    <g>
-      <rect x={-118} y={-30} width={236} height={26} rx={8} fill="#3f4a52" />
+    <g filter="url(#lab2d-drop-shadow)">
+      <ellipse cx={-7} cy={0} rx={128} ry={10} fill="url(#lab2d-base-shadow)" />
+      <rect x={-118} y={-30} width={236} height={26} rx={8} fill="url(#lab2d-metal-dark)" />
       <rect x={-112} y={-6} width={16} height={6} rx={2} fill="#2b3339" />
       <rect x={96} y={-6} width={16} height={6} rx={2} fill="#2b3339" />
+      {/* Arm connecting the pan column to the beam housing, so the instrument reads as one
+          connected object rather than disjoint pieces. */}
+      <rect
+        x={-70}
+        y={-72}
+        width={38}
+        height={7}
+        rx={3}
+        fill="url(#lab2d-metal)"
+        stroke="#5b6670"
+        strokeWidth={1.2}
+      />
       <rect
         x={-34}
         y={-86}
@@ -325,7 +408,8 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
         height={56}
         rx={7}
         fill="url(#lab2d-metal)"
-        stroke="#8a959d"
+        stroke="#5b6670"
+        strokeWidth={1.6}
       />
       {[-74, -63, -52, -41].map((y) => (
         <g key={y}>
@@ -352,9 +436,35 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
           <path d={`M-26 ${y - 5} L-18 ${y - 5} L-20 ${y + 2} L-24 ${y + 2} Z`} fill="#c2862f" />
         </g>
       ))}
-      <rect x={-76} y={-100} width={8} height={70} fill="#9aa5ad" />
-      <ellipse cx={-72} cy={-102} rx={48} ry={7} fill="url(#lab2d-metal)" stroke="#7d8a93" />
-      <rect x={116} y={-92} width={8} height={62} rx={2} fill="#8a959d" />
+      <rect
+        x={-76}
+        y={-100}
+        width={8}
+        height={70}
+        fill="url(#lab2d-metal)"
+        stroke="#5b6670"
+        strokeWidth={0.8}
+      />
+      <ellipse
+        cx={-72}
+        cy={-102}
+        rx={48}
+        ry={7}
+        fill="url(#lab2d-metal)"
+        stroke="#5b6670"
+        strokeWidth={1.4}
+      />
+      <ellipse cx={-72} cy={-102} rx={28} ry={4} fill="#ffffff" opacity={0.35} />
+      <rect
+        x={116}
+        y={-92}
+        width={8}
+        height={62}
+        rx={2}
+        fill="url(#lab2d-metal)"
+        stroke="#5b6670"
+        strokeWidth={0.8}
+      />
       <rect x={124} y={-80} width={16} height={34} rx={2} fill="#ffffff" stroke="#8a959d" />
       <line x1={124} y1={-63} x2={140} y2={-63} stroke={INK} strokeWidth={1.2} />
       <text x={132} y={-49} textAnchor="middle" fontSize={8} fill={INK}>

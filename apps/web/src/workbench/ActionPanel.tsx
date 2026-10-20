@@ -18,10 +18,11 @@ const GROUPS: readonly [string, readonly ActionType[]][] = [
     'ui.actions.group.solution',
     ['add_water', 'stopper_flask', 'dissolve_solute', 'adjust_to_mark', 'mix_solution'],
   ],
-  [
-    'ui.actions.group.finish',
-    ['apply_label', 'request_hint', 'submit_experiment', 'restart_experiment'],
-  ],
+  // `request_hint` is deliberately absent: the guidance panel directly above this list already
+  // offers it, and renders the returned hint underneath the button. Listing it here too produced
+  // two visible buttons with the identical accessible name "Ask for a hint" in both guided and
+  // manual mode, which is ambiguous for screen-reader and keyboard users.
+  ['ui.actions.group.finish', ['apply_label', 'submit_experiment', 'restart_experiment']],
 ];
 
 const COMPACT = '(max-width: 760px)';

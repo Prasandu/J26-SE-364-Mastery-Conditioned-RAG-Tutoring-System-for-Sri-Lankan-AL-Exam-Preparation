@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { en, noHorizontalOverflow, shot, startExperiment } from './helpers';
 
 test('seven-section notebook: every section renders, no horizontal overflow at desktop', async ({
@@ -40,10 +40,17 @@ test('seven-section notebook: no horizontal overflow at tablet and mobile widths
   await noHorizontalOverflow(page);
 });
 
-test('seven-section notebook: nav is reachable by scrolling on a phone', async ({ page }) => {
+test('seven-section notebook: reachable on a phone through the sheet', async ({ page }) => {
   await startExperiment(page, 'manual');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator('.side-panel').scrollIntoViewIfNeeded();
+
+  // On a phone the notebook is a dismissible sheet rather than a column stacked below the stage,
+  // so "reachable" now means the trigger opens it — not that the page scrolls far enough.
+  const sheet = page.locator('.notebook-sheet');
+  await expect(sheet).toBeHidden();
+  await page.getByRole('button', { name: en('ui.side.open_notebook') }).click();
+  await expect(sheet).toBeVisible();
+  await expect(page.locator('.notebook-sheet .side-panel')).toBeVisible();
   await page.waitForTimeout(200);
   await shot(page, 'notebook-mobile-nav');
 });

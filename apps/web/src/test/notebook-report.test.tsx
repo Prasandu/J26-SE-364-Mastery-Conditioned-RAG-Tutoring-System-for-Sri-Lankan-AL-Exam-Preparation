@@ -14,17 +14,22 @@ describe('notebook view', () => {
     await startSession(store, 'manual');
     store.getState().navigate('notebook');
     const { user } = renderApp(store);
+    // The notebook shows one section at a time; Aim is the section it opens on.
     const aim = await screen.findByLabelText(tx('ui.notebook.field.aim'));
     expect((aim as HTMLTextAreaElement).value).toContain(
       tx('exp04.objective.aim_glassware_balance'),
     );
+    const section = (name: string) => screen.getByRole('tab', { name: new RegExp(name) });
+    await user.click(section(tx('ui.notebook.field.observations')));
     const observations = screen.getByLabelText(tx('ui.notebook.field.observations'));
     await user.type(observations, 'Clear solution; වර්ණයක් නැත');
     expect(screen.getByText(tx('ui.notebook.status.unsaved'))).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'සිංහල' }));
+    // The draft survives the language switch and the section it lives in is still open.
     const siObservations = screen.getByLabelText(si['ui.notebook.field.observations']!);
     expect(siObservations).toHaveValue('Clear solution; වර්ණයක් නැත');
+    await user.click(screen.getByRole('tab', { name: new RegExp(si['ui.notebook.field.aim']!) }));
     expect(
       (screen.getByLabelText(si['ui.notebook.field.aim']!) as HTMLTextAreaElement).value,
     ).toContain(tx('exp04.objective.aim_glassware_balance'));
@@ -39,9 +44,13 @@ describe('notebook view', () => {
     await startSession(store, 'manual');
     store.getState().navigate('notebook');
     const { user } = renderApp(store);
+    // Measurements are their own notebook section now.
     await user.click(
-      await screen.findByRole('button', { name: tx('ui.notebook.measurement.add') }),
+      await screen.findByRole('tab', {
+        name: new RegExp(tx('ui.notebook.field.measurements')),
+      }),
     );
+    await user.click(screen.getByRole('button', { name: tx('ui.notebook.measurement.add') }));
     await user.type(
       screen.getByLabelText(`${tx('ui.notebook.measurement.label')} 1`),
       'Watch glass',
@@ -144,9 +153,8 @@ describe('connectivity banner', () => {
     );
     const { user } = renderApp(onTab(store, 'protocol'));
     await user.click(
-      within(document.getElementById('action-form-request_hint')!).getByRole('button', {
-        name: tx('exp04.action.request_hint'),
-      }),
+      // The hint lives in the guidance panel; it is no longer duplicated in the action list.
+      screen.getByRole('button', { name: tx('ui.guidance.request_hint') }),
     );
     const banner = await screen.findByText(tx('ui.connection.network_unavailable'));
     expect(banner).toBeInTheDocument();
@@ -167,10 +175,7 @@ describe('connectivity banner', () => {
       return original(...args);
     });
     const { user } = renderApp(onTab(store, 'protocol'));
-    const button = within(document.getElementById('action-form-request_hint')!).getByRole(
-      'button',
-      { name: tx('exp04.action.request_hint') },
-    );
+    const button = screen.getByRole('button', { name: tx('ui.guidance.request_hint') });
     await user.click(button);
     await waitFor(() => expect(button).toBeDisabled());
     release();

@@ -72,35 +72,41 @@ export function ModeSelectView() {
               <span className="label">{t('ui.mode.support_label')}</span>{' '}
               {t(`ui.mode.${m}.support`)}
             </p>
-            {m === 'guided' && selection.mode === 'guided' && (
-              <fieldset className="level-options">
-                <legend>{t('ui.mode.level_legend')}</legend>
-                {LEVELS.map((l) => (
-                  <div
-                    className={
-                      selection.guidanceLevel === l ? 'level-option is-selected' : 'level-option'
-                    }
-                    key={l}
-                  >
-                    <input
-                      type="radio"
-                      id={`level-${l}`}
-                      name="level"
-                      checked={selection.guidanceLevel === l}
-                      onChange={() => selectMode('guided', l)}
-                      aria-describedby={`level-${l}-desc`}
-                    />
-                    <label htmlFor={`level-${l}`}>{t(`ui.level.${l}.title`)}</label>
-                    <span id={`level-${l}-desc`} className="hint-text">
-                      {t(`ui.level.${l}.description`)}
-                    </span>
-                  </div>
-                ))}
-              </fieldset>
-            )}
           </div>
         ))}
       </fieldset>
+
+      {/* The guidance levels sit below the comparison rather than inside the Guided card: nesting
+          them there stretched all three cards to the tallest one, leaving Automatic and Manual
+          with large empty areas. Still shown only while Guided is the selected mode. */}
+      {selection.mode === 'guided' && (
+        <fieldset className="level-options">
+          <legend>{t('ui.mode.level_legend')}</legend>
+          <div className="level-options__row">
+            {LEVELS.map((l) => (
+              <div
+                className={
+                  selection.guidanceLevel === l ? 'level-option is-selected' : 'level-option'
+                }
+                key={l}
+              >
+                <input
+                  type="radio"
+                  id={`level-${l}`}
+                  name="level"
+                  checked={selection.guidanceLevel === l}
+                  onChange={() => selectMode('guided', l)}
+                  aria-describedby={`level-${l}-desc`}
+                />
+                <label htmlFor={`level-${l}`}>{t(`ui.level.${l}.title`)}</label>
+                <span id={`level-${l}-desc`} className="hint-text">
+                  {t(`ui.level.${l}.description`)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )}
       {selection.mode === 'automatic' && (
         <p className="notice" role="note">
           {t('ui.mode.automatic_prelab_note')}
@@ -140,13 +146,10 @@ export function ModeSelectView() {
           </p>
         </section>
       )}
-      {!canStart && (
-        <p id="start-blocked" className="status status--pending">
-          {t('ui.mode.safety_required')}
-        </p>
-      )}
       {session && <p className="hint-text">{t('ui.mode.restart_note')}</p>}
-      <nav className="view-nav" aria-label={t('ui.nav.steps')}>
+      {/* The reason Start is unavailable belongs beside Start, not as a separate banner higher up
+          the page (which repeated the checklist's own status). `canStart()` stays authoritative. */}
+      <nav className="view-nav mode-actions" aria-label={t('ui.nav.steps')}>
         <button type="button" className="button" onClick={() => navigate('prelab')}>
           {t('ui.nav.back_prelab')}
         </button>
@@ -155,15 +158,22 @@ export function ModeSelectView() {
             {t('ui.nav.back_workbench')}
           </button>
         )}
-        <button
-          type="button"
-          className="button button--primary"
-          disabled={!canStart}
-          aria-describedby={canStart ? undefined : 'start-blocked'}
-          onClick={start}
-        >
-          {t(session ? 'ui.mode.start_new' : 'ui.mode.start')}
-        </button>
+        <div className="mode-actions__start">
+          {!canStart && (
+            <p id="start-blocked" className="status status--pending">
+              {t('ui.mode.safety_required')}
+            </p>
+          )}
+          <button
+            type="button"
+            className="button button--primary button--lg"
+            disabled={!canStart}
+            aria-describedby={canStart ? undefined : 'start-blocked'}
+            onClick={start}
+          >
+            {t(session ? 'ui.mode.start_new' : 'ui.mode.start')}
+          </button>
+        </div>
       </nav>
     </section>
   );

@@ -13,7 +13,7 @@ describe('student flow', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: tx('ui.dashboard.title') }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: tx('ui.dashboard.browse') }));
+    await user.click(screen.getByRole('button', { name: tx('ui.nav.library') }));
     expect(
       screen.getByRole('heading', { level: 1, name: tx('ui.library.title') }),
     ).toBeInTheDocument();

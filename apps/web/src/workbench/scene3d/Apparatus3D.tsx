@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import {
+  BackSide,
+  type BufferGeometry,
   CanvasTexture,
   CatmullRomCurve3,
   DoubleSide,
@@ -60,8 +62,11 @@ const GEOMETRY = {
 
 const GLASS_COLOR = '#e6f5fb';
 const SELECTED_COLOR = '#5cc8b6';
+/** Silhouette colours: a cool near-black for glass rims, the selection teal when picked. */
+const OUTLINE_COLOR = '#17323f';
+const OUTLINE_SELECTED = '#0b7f70';
 
-function Glass({ selected, opacity = 0.3 }: { selected: boolean; opacity?: number }) {
+function Glass({ selected, opacity = 0.36 }: { selected: boolean; opacity?: number }) {
   return (
     <meshPhysicalMaterial
       color={GLASS_COLOR}
@@ -73,10 +78,53 @@ function Glass({ selected, opacity = 0.3 }: { selected: boolean; opacity?: numbe
       clearcoatRoughness={0.04}
       envMapIntensity={1.5}
       transparent
-      opacity={selected ? opacity + 0.08 : opacity}
+      opacity={selected ? opacity + 0.1 : opacity}
       side={DoubleSide}
       depthWrite={false}
     />
+  );
+}
+
+/**
+ * A glass vessel drawn with a silhouette.
+ *
+ * Transparent glassware lit from in front reads as a faint smear: the 3D laboratory's apparatus
+ * were reported as "pale and too small", and the cause is that almost all of a glass vessel's
+ * visible structure in real life comes from edges and refraction, neither of which a cheap
+ * transparent material reproduces. Drawing the same profile a second time, slightly larger and
+ * with `side={BackSide}`, leaves only its far wall visible — a rim that traces the outline
+ * exactly. For a surface of revolution this is the cheapest readable silhouette available, and
+ * it needs no post-processing pass, no outline shader and no extra dependency.
+ *
+ * `depthWrite={false}` on both, with the outline at a lower `renderOrder`, keeps the existing
+ * transparency sorting behaviour unchanged.
+ */
+function GlassBody({
+  geometry,
+  selected,
+  opacity = 0.36,
+  outline = 1.03,
+}: {
+  geometry: BufferGeometry;
+  selected: boolean;
+  opacity?: number;
+  outline?: number;
+}) {
+  return (
+    <>
+      <mesh geometry={geometry} scale={outline} renderOrder={1}>
+        <meshBasicMaterial
+          color={selected ? OUTLINE_SELECTED : OUTLINE_COLOR}
+          side={BackSide}
+          transparent
+          opacity={selected ? 0.75 : 0.5}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh geometry={geometry} renderOrder={2}>
+        <Glass selected={selected} opacity={opacity} />
+      </mesh>
+    </>
   );
 }
 
@@ -184,9 +232,7 @@ export function Flask3D({
           ))}
         </group>
       )}
-      <mesh geometry={GEOMETRY.flask} renderOrder={2}>
-        <Glass selected={item.highlighted} />
-      </mesh>
+      <GlassBody geometry={GEOMETRY.flask} selected={item.highlighted} />
       <mesh position={[0, FLASK_MARK_Y, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={3}>
         <torusGeometry args={[markR, 0.0045, 6, 40]} />
         <meshBasicMaterial color="#1f2d36" />
@@ -247,9 +293,9 @@ export function Funnel3D({ item, placement }: { item: SceneItem; placement: Plac
           </mesh>
         </group>
       )}
-      <mesh geometry={GEOMETRY.funnel} position={[0, standing ? 0.06 : 0, 0]} renderOrder={2}>
-        <Glass selected={item.highlighted} opacity={0.34} />
-      </mesh>
+      <group position={[0, standing ? 0.06 : 0, 0]}>
+        <GlassBody geometry={GEOMETRY.funnel} selected={item.highlighted} opacity={0.4} />
+      </group>
       {item.cleanliness === 'dirty' && <Smudge y={0.5} radius={0.3} />}
     </group>
   );
@@ -258,9 +304,7 @@ export function Funnel3D({ item, placement }: { item: SceneItem; placement: Plac
 export function Beaker3D({ item }: { item: SceneItem }) {
   return (
     <group>
-      <mesh geometry={GEOMETRY.beaker} renderOrder={2}>
-        <Glass selected={item.highlighted} />
-      </mesh>
+      <GlassBody geometry={GEOMETRY.beaker} selected={item.highlighted} />
       {[0.16, 0.28, 0.4, 0.52].map((y) => (
         <mesh key={y} position={[0.21, y, 0.23]} rotation={[0, 0.74, 0]}>
           <boxGeometry args={[0.1, 0.008, 0.004]} />

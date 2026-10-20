@@ -43,6 +43,13 @@
   border-color: var(--brand-700);
 }
 
+/* Hero-weight call to action: the one obvious next step on a landing page. */
+.button--lg {
+  min-height: 52px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-lg);
+}
+
 .button--action {
   background: var(--brand-50);
   border-color: var(--brand-500);

@@ -5,20 +5,30 @@ import { placementOf, type Placement, type SceneItem, type SceneModel } from '..
  * 2D coordinates (SVG user units). Presentation only: the placement itself comes from the shared
  * `placementOf` rule, so the 2D and 3D renderers always show the same arrangement.
  */
+/**
+ * The drawing is deliberately wide and short (~2.1:1), because that is the shape of the stage the
+ * desktop workbench actually gives it — measured, not assumed. The previous 16:9-ish frame was
+ * letterboxed inside a much wider box, which both shrank the apparatus and left big empty bands
+ * at the sides. Keeping these in step means the scene fills its panel edge to edge.
+ */
 export const VIEW_W = 1280;
-export const VIEW_H = 720;
-export const SHELF_Y = 236;
-/** Back edge of the bench top (drawn in depth) and the front edge. */
-export const BENCH_BACK_Y = 468;
-export const BENCH_Y = 696;
+export const VIEW_H = 525;
+export const SHELF_Y = 225;
+/** Back edge of the bench top (drawn in depth) and the front edge. The band of plain wall between
+ * the shelf ledge and the bench — 232 units of nothing in the original layout — is now 75, and
+ * the apparatus occupy most of the frame instead of a thin strip along the bottom. */
+export const BENCH_BACK_Y = 340;
+export const BENCH_Y = 515;
 /** Pixels per flask-profile unit at scale 1. */
 export const FLASK_UNIT = 88;
 export const FLASK_HEIGHT = FLASK_PROFILE.at(-1)![1];
 
-/** Stored items are drawn smaller; front-row bench items larger (simple depth cue). */
-const SHELF_SCALE = 0.8;
-const BACK_ROW = { y: 556, s: 1.1 } as const;
-const FRONT_ROW = { y: 672, s: 1.22 } as const;
+/** Stored items are drawn smaller; front-row bench items larger (simple depth cue). Scales raised
+ * substantially from the original (0.8 / 1.1 / 1.22) so apparatus are easy to identify without
+ * zooming in — the single biggest lever on "apparatus look too small". */
+const SHELF_SCALE = 0.95;
+const BACK_ROW = { y: 435, s: 1.45 } as const;
+const FRONT_ROW = { y: 505, s: 1.65 } as const;
 
 const SHELF_X: Record<string, number> = {
   four_beam_balance: 150,
@@ -107,6 +117,33 @@ export interface ViewBox {
 
 export const OVERVIEW: ViewBox = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
 const MIN_W = 360;
+
+/**
+ * Below this panel width the full-room overview stops being readable: the whole 1280-unit frame
+ * drawn into ~360 CSS px puts the apparatus at roughly a quarter size, which is what made the
+ * laboratory unusable on a phone.
+ */
+export const NARROW_PANEL_PX = 560;
+
+/**
+ * The overview used when the panel is narrow: the apparatus span, with the empty margins of the
+ * room cropped away.
+ *
+ * On-screen size is `panelWidth / viewBoxWidth`, so the only way to draw the apparatus larger on a
+ * phone is to show less width — and cropping far enough to make a real difference starts hiding
+ * apparatus. An earlier 760-unit frame put the four-beam balance (x=150) and the dropper (x=1040)
+ * outside the view entirely, which is worse than small. This therefore crops only as far as the
+ * outermost apparatus allow, so nothing becomes unreachable; the close-up presets, the zoom
+ * controls and the accessible equipment list are the routes to inspecting an individual item.
+ */
+const APPARATUS_SPAN = { from: 70, to: 1130 } as const;
+export const narrowOverview = (): ViewBox =>
+  clampView({
+    x: APPARATUS_SPAN.from,
+    y: 0,
+    w: APPARATUS_SPAN.to - APPARATUS_SPAN.from,
+    h: 0,
+  });
 
 /** Keeps a view box inside the drawing and at the drawing's aspect ratio. */
 export const clampView = (v: ViewBox): ViewBox => {

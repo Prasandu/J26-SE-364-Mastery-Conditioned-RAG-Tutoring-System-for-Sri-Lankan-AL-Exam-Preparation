@@ -20,8 +20,9 @@ export function LoginPage() {
     setBusy(true);
     setProblem(null);
     try {
-      await login(email, password);
-      navigate("/", { replace: true });
+      const signedIn = await login(email, password);
+      // An admin has no business on the regular site - straight to their workspace.
+      navigate(signedIn.role === "admin" ? "/admin" : "/", { replace: true });
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
       setBusy(false);

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
-import { BackButton } from "@/components/BackButton";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,18 +24,11 @@ const SECTIONS = [
  */
 export function AdminLayout({ onSignOut, children }: { readonly onSignOut: () => void; readonly children: ReactNode }) {
   const { user } = useAuth();
-  const { pathname } = useLocation();
-  const currentSection = SECTIONS.find((s) => (s.end ? pathname === s.to : pathname.startsWith(s.to)));
 
   return (
     <div className="flex min-h-screen bg-slate-100">
       <aside className="flex w-60 shrink-0 flex-col bg-slate-900 text-slate-200">
-        <div className="flex items-center gap-2 px-5 py-5 text-white">
-          <Logo className="size-6" />
-          <span className="font-semibold tracking-tight">Admin</span>
-        </div>
-
-        <nav aria-label="Admin sections" className="flex-1 space-y-1 px-3">
+        <nav aria-label="Admin sections" className="flex-1 space-y-1 px-3 pt-5">
           {SECTIONS.map((section) => (
             <NavLink
               key={section.to}
@@ -65,16 +57,13 @@ export function AdminLayout({ onSignOut, children }: { readonly onSignOut: () =>
           <div className="flex items-center gap-2.5">
             <Logo className="size-5 text-brand-600" />
             <p className="text-sm font-semibold tracking-tight text-slate-800">
-              {currentSection?.label ?? "Admin"}
+              A/L Chemistry Assessment
             </p>
           </div>
           <AccountMenu user={user} onSignOut={onSignOut} />
         </header>
 
-        <main className="flex-1 p-6">
-          <BackButton fallbackTo={pathname === "/admin" ? "/" : "/admin"} />
-          {children}
-        </main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );

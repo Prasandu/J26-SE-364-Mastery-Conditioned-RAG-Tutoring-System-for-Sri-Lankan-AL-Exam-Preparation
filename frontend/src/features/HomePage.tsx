@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { Button } from "@/components/Button";
 import { GlassOrb } from "@/components/GlassOrb";
@@ -10,6 +10,12 @@ import { HowItWorks } from "./papers/HowItWorks";
 /** The welcome screen at "/" - not the papers list, which lives at /papers. */
 export function HomePage() {
   const { user } = useAuth();
+
+  // An admin has no use for the student/teacher landing page - straight to their
+  // own workspace, however they got to "/" (not just right after logging in).
+  if (user?.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
 
   return (
     <div className="space-y-14">

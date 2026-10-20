@@ -103,7 +103,57 @@ def _flatten_catalogue(data: Any) -> Any:
             flattened=flattened,
             depth=2,
         )
+    derived = _derive_exam_weights(units)
+    for record in flattened:
+        if not record.get("exam_weight") and record.get("id") in derived:
+            record["exam_weight"] = derived[record["id"]]
     return flattened
+
+
+def _derive_exam_weights(units: list[dict[str, Any]]) -> dict[str, float]:
+    """Turn per-unit ``exam_mark_share`` (percent of marks) into 0-1 exam weights.
+
+    The planner schedules leaf topics, so each unit's share is split evenly
+    across its leaves; a topic group gets the share of the leaves under it.
+    Shares are then rescaled within each level (units, groups, leaves) so the
+    largest is 1. Units without a share are left as authored.
+    """
+    shares: dict[str, tuple[str, float]] = {}
+    for unit in units:
+        share = unit.get("exam_mark_share")
+        if share is None:
+            continue
+        if isinstance(share, bool) or not isinstance(share, (int, float)) or share < 0:
+            raise ValueError(f"Unit {unit.get('id')!r} exam_mark_share must be a non-negative number.")
+        unit_leaves = _leaf_count(unit)
+        shares[unit["id"]] = ("unit", float(share))
+        for child in unit.get("topics", []):
+            _collect_child_shares(child, float(share) / unit_leaves, shares)
+
+    top_by_level: dict[str, float] = {}
+    for level, share in shares.values():
+        top_by_level[level] = max(top_by_level.get(level, 0.0), share)
+    return {
+        topic_id: round(share / top_by_level[level], 4) if top_by_level[level] > 0 else 0.0
+        for topic_id, (level, share) in shares.items()
+    }
+
+
+def _collect_child_shares(
+    node: dict[str, Any],
+    share_per_leaf: float,
+    shares: dict[str, tuple[str, float]],
+) -> None:
+    children = node.get("topics") or []
+    level = "group" if children else "leaf"
+    shares[node["id"]] = (level, share_per_leaf * _leaf_count(node))
+    for child in children:
+        _collect_child_shares(child, share_per_leaf, shares)
+
+
+def _leaf_count(node: dict[str, Any]) -> int:
+    children = node.get("topics") or []
+    return sum(_leaf_count(child) for child in children) if children else 1
 
 
 def _flatten_children(

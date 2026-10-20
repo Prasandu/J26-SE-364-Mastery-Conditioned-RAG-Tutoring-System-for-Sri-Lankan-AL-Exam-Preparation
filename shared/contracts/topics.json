@@ -1,6 +1,7 @@
 {
   "subject": "chemistry",
   "curriculum": "NIE Sri Lanka G.C.E. A/L",
+  "exam_mark_share_note": "Approximate percentage of A/L Chemistry marks per unit (Paper I + Paper II): midpoints of tiered past-paper estimates; chem-u7 (5) is a placeholder. Verify against NIE syllabus period allocations or real past papers before reporting. The topic seeder splits each unit's share across its leaf topics and rescales per level into exam_weight (0-1).",
   "units": [
     {
       "id": "chem-u1",
@@ -9,6 +10,7 @@
       "grade_level": "12",
       "description": "Subatomic particles, quantum numbers, electronic configurations, and ionization energies.",
       "exam_weight": 0,
+      "exam_mark_share": 2.5,
       "topics": [
         {
           "id": "chem-u1-subatomic-particles",
@@ -54,6 +56,7 @@
       "grade_level": "12",
       "description": "Ionic, covalent, and metallic bonding, intermolecular forces, and molecular shapes.",
       "exam_weight": 0,
+      "exam_mark_share": 4.5,
       "topics": [
         {
           "id": "chem-u2-ionic-bonding",
@@ -104,6 +107,7 @@
       "grade_level": "12",
       "description": "The mole concept, stoichiometry, volumetric analysis, and concentration calculations.",
       "exam_weight": 0,
+      "exam_mark_share": 4.5,
       "topics": [
         {
           "id": "chem-u3-mole-concept",
@@ -146,6 +150,7 @@
       "grade_level": "12",
       "description": "The ideal gas equation, Dalton's law, and the kinetic theory of gases.",
       "exam_weight": 0,
+      "exam_mark_share": 3.5,
       "topics": [
         {
           "id": "chem-u4-ideal-gas-equation",
@@ -180,6 +185,7 @@
       "grade_level": "12",
       "description": "Enthalpy changes, Hess's Law, Born-Haber cycles, entropy, and Gibbs free energy.",
       "exam_weight": 0,
+      "exam_mark_share": 7,
       "topics": [
         {
           "id": "chem-u5-enthalpy",
@@ -230,6 +236,7 @@
       "grade_level": "12-13",
       "description": "Periodic trends, group properties, transition elements, and complex compounds.",
       "exam_weight": 0,
+      "exam_mark_share": 19,
       "topics": [
         {
           "id": "chem-u6-periodic-trends",
@@ -272,6 +279,7 @@
       "grade_level": "12",
       "description": "Nomenclature, isomerism, reaction intermediates, and electronic effects.",
       "exam_weight": 0,
+      "exam_mark_share": 5,
       "topics": [
         {
           "id": "chem-u7-nomenclature",
@@ -314,6 +322,7 @@
       "grade_level": "12-13",
       "description": "Alkanes, alkenes, alkynes, benzene, and halogenoalkanes.",
       "exam_weight": 0,
+      "exam_mark_share": 9,
       "topics": [
         {
           "id": "chem-u8-alkanes",
@@ -364,6 +373,7 @@
       "grade_level": "13",
       "description": "Alcohols, carbonyl compounds, carboxylic acids, and their derivatives.",
       "exam_weight": 0,
+      "exam_mark_share": 7,
       "topics": [
         {
           "id": "chem-u9-alcohols",
@@ -406,6 +416,7 @@
       "grade_level": "13",
       "description": "Amines, nitro compounds, diazonium salts, amino acids, and proteins.",
       "exam_weight": 0,
+      "exam_mark_share": 5,
       "topics": [
         {
           "id": "chem-u10-amines",
@@ -456,6 +467,7 @@
       "grade_level": "13",
       "description": "Reaction rates, rate equations, activation energy, and catalysts.",
       "exam_weight": 0,
+      "exam_mark_share": 6,
       "topics": [
         {
           "id": "chem-u11-reaction-rates",
@@ -498,6 +510,7 @@
       "grade_level": "13",
       "description": "Reversible reactions, Kc, Kp, Le Chatelier's principle, ionic equilibrium, and buffers.",
       "exam_weight": 0,
+      "exam_mark_share": 13.5,
       "topics": [
         {
           "id": "chem-u12-reversible-reactions",
@@ -548,6 +561,7 @@
       "grade_level": "13",
       "description": "Electrode potentials, electrochemical cells, electrolysis, and commercial cells.",
       "exam_weight": 0,
+      "exam_mark_share": 7,
       "topics": [
         {
           "id": "chem-u13-electrode-potentials",
@@ -590,6 +604,7 @@
       "grade_level": "13",
       "description": "Industrial manufacturing processes, polymers, and environmental chemistry.",
       "exam_weight": 0,
+      "exam_mark_share": 9,
       "topics": [
         {
           "id": "chem-u14-industrial-processes",

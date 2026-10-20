@@ -1,8 +1,8 @@
 """Similarity search over published resource chunks.
 
-Cosine distance, via pgvector's `<=>` operator: scale-invariant, so it is unaffected
-by gemini-embedding-001's truncated output not being unit length (see
-app/ai/embeddings.py). A raw, parameterized SQL query is used for the actual search -
+Cosine distance, via pgvector's `<=>` operator: scale-invariant, so it compares
+embeddings by direction regardless of their length (see app/ai/embeddings.py). A raw,
+parameterized SQL query is used for the actual search -
 the embedding is always passed as a bound parameter, never interpolated into the
 query string - because pgvector's operators are not part of plain SQLAlemy Core, and
 the project's existing JSON_DOC columns show the same willingness to drop to a little
@@ -88,6 +88,13 @@ def search(
     none, when nothing in the library actually matches.
     """
     started = time.monotonic()
+    # SQLite (local development, and the test suite outside of the one dedicated
+    # integration test below) stores the embedding as plain JSON with no similarity
+    # operator at all - there is no query to run here, not just a worse one, so this
+    # is checked before paying for an embedding call that could not be used anyway.
+    if db.get_bind().dialect.name != "postgresql":
+        return SearchResult([], query_embedded=True, elapsed_seconds=time.monotonic() - started)
+
     result = embedder.embed([query])
     vector = result.vectors[0]
     if vector is None:

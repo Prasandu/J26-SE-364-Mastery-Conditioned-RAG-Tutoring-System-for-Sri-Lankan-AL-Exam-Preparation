@@ -25,20 +25,22 @@ try:
 except ImportError:  # pragma: no cover - the package is a hard dependency; this guards import order
     Vector = None  # type: ignore[assignment]
 
-# gemini-embedding-001 at this many dimensions: trained with Matryoshka Representation
-# Learning, so this is a genuinely reduced embedding, not a naive truncation, and it
-# is what was actually measured (see docs/rag-resources.md) - never assumed.
-EMBEDDING_DIMENSIONS = 768
+# BAAI/bge-m3's own fixed dense-output size (app/ai/embeddings.py) - not a choice,
+# unlike the Gemini embedding this replaced, which could be truncated to a smaller
+# size. Changing embedding model is a breaking change for every stored chunk: a
+# vector from one model is not comparable to one from another, so this is also a
+# migration (see the one that changed this column from vector(768)).
+EMBEDDING_DIMENSIONS = 1024
 
 JSON_DOC = JSON().with_variant(JSONB(), "postgresql")
-# Postgres stores a real vector(768) with pgvector's own operators. SQLite (tests
+# Postgres stores a real vector(1024) with pgvector's own operators. SQLite (tests
 # only) cannot: it gets a plain JSON array of floats, which is enough for the ORM
 # tests that never run a similarity search - that only ever happens against Postgres.
 #
 # none_as_null=True matters: SQLAlchemy's plain JSON type otherwise stores a Python
 # None as the JSON value "null", not a true SQL NULL, so "embedding IS NULL" (which
 # embed_pending_chunks relies on to find unembedded chunks) would never match on
-# SQLite without it. Postgres never sees this column at all - vector(768) there, via
+# SQLite without it. Postgres never sees this column at all - vector(1024) there, via
 # the "postgresql" branch of the same with_variant, created in the migration.
 EmbeddingColumn = Vector(EMBEDDING_DIMENSIONS).with_variant(JSON(none_as_null=True), "sqlite")
 
@@ -115,8 +117,8 @@ class ResourceChunk(Base):
     __table_args__ = (
         UniqueConstraint("resource_id", "chunk_index"),
         # HNSW over IVFFlat: it builds without a training step, which matters while
-        # this table is small. Cosine ops, because gemini-embedding-001 truncated to
-        # EMBEDDING_DIMENSIONS is not unit length and cosine distance is scale-invariant.
+        # this table is small. Cosine ops because embeddings are compared by
+        # direction, not size - true regardless of which embedding model produced them.
         Index(
             "ix_resource_chunks_embedding_cosine",
             "embedding",

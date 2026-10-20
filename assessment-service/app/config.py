@@ -85,10 +85,12 @@ class Settings(BaseSettings):
     vision_fallback_2_model: str | None = None
     vision_fallback_2_api_key: str | None = None
 
-    # Resource retrieval (RAG). Always Gemini: Groq has no embedding endpoint.
-    # 768, not the model's default 3072, after measuring both (see docs/rag-resources.md).
-    embedding_model: str = "gemini-embedding-001"
-    embedding_dimensions: int = Field(default=768, gt=0, le=3072)
+    # Resource retrieval (RAG). Local, via sentence-transformers - not an API call, so
+    # no key and no daily quota. 1024 is BAAI/bge-m3's own fixed output size, not a
+    # choice: unlike the Gemini embedding this replaced, this model has no smaller
+    # truncated size to opt into.
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_dimensions: int = Field(default=1024, gt=0, le=4096)
     # Below this cosine similarity a passage is not relevant enough to ground a
     # question with - excluded, not padded in as a low-quality result.
     resource_min_similarity: float = Field(default=0.5, ge=0, le=1)

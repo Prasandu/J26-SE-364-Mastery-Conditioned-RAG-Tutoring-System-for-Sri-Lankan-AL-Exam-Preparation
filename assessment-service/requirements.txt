@@ -18,3 +18,9 @@ pgvector>=0.3
 bcrypt>=4.0
 pyjwt>=2.9
 email-validator>=2.2
+# Resource-book embeddings (BAAI/bge-m3), run locally - see app/ai/embeddings.py.
+# Install torch's CPU-only build first, or `pip install -r requirements.txt` pulls
+# PyPI's default CUDA-bundled wheel instead (much larger, and unneeded - this project
+# never needs a GPU):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers>=3.0

@@ -156,8 +156,9 @@ def resource_passages(
 
     There is no literal user query at generation time, so each topic's own name and
     syllabus content stand in for one: it is what the question is meant to be about.
-    Without an embedder (no key configured) this returns nothing, and the rest of
-    generation carries on exactly as it would have before resources existed.
+    Without an embedder (no model available) this returns nothing, and the rest of
+    generation carries on exactly as it would have before resources existed. search()
+    itself has the same fallback for a database that cannot run a similarity search.
     """
     if embedder is None:
         return [], []

@@ -13,7 +13,7 @@ build, so swapping a provider never touches a service.
 from app.ai.author import QuestionAuthor, gemini_author, openai_compatible_author
 from app.ai.classify import TopicClassifier, openai_compatible_classifier
 from app.ai.critic import QuestionCritic, gemini_critic, openai_compatible_critic
-from app.ai.embeddings import EmbeddingModel, gemini_embedding
+from app.ai.embeddings import EmbeddingModel, local_embedding
 from app.ai.judge import (
     PROVIDERS,
     AnswerJudge,
@@ -103,12 +103,17 @@ def build_classifier(settings: Settings) -> TopicClassifier | None:
 def build_embedding_model(settings: Settings) -> EmbeddingModel | None:
     """The model that turns text into vectors for resource retrieval.
 
-    Gemini only: Groq (the configured judge/author provider) has no embedding
-    endpoint, so this never follows ai_provider the way the judge and author do.
+    Local only, via sentence-transformers - not an API call, so there is no key to
+    check and no provider choice to follow the way the judge and author do. The first
+    call loads the model's weights (a few seconds); local_embedding() caches the
+    instance so that only happens once per process. None if that load itself fails
+    (the package is not installed, the model cannot be found/downloaded) - resource
+    embedding and search then answer 503 instead of the whole app failing to start.
     """
-    if not settings.gemini_api_key:
+    try:
+        return local_embedding(settings.embedding_model)
+    except Exception:  # noqa: BLE001 - any load failure, not just the ones above
         return None
-    return gemini_embedding(settings.gemini_api_key, settings.embedding_model, settings.embedding_dimensions)
 
 
 def build_reader(settings: Settings) -> AnswerReader | None:

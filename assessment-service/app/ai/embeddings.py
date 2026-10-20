@@ -1,30 +1,26 @@
 """Turning text into vectors for similarity search.
 
-One provider for now: Gemini's gemini-embedding-001. Measured directly before being
-used here (see docs/rag-resources.md): 3072 dimensions by default, truncatable to a
-smaller size with output_dimensionality because the model is trained with Matryoshka
-Representation Learning, which makes a requested smaller size a real reduced
-embedding rather than a naive truncation. 768 was chosen for storage and retrieval
-cost. The truncated output is not unit length, which does not matter here because
-retrieval always compares by cosine distance, and cosine distance is scale-invariant.
+Local, not an API call: BAAI/bge-m3, run on this machine's CPU via
+sentence-transformers. Chosen over an embedding API for retrieval quality (BGE-M3 is
+a strong multilingual retrieval model), no daily quota to run out of, and working
+offline - the cost is a model (~2GB on disk) loaded into memory once per process, and
+CPU time per batch instead of a network round trip.
 
-Groq has no embedding endpoint, so this is deliberately not threaded through the same
-OpenAI-compatible path the judge and author use.
+The model's own dense output is a fixed 1024 dimensions - unlike Gemini's embedding
+model, BGE-M3 was not trained with Matryoshka Representation Learning, so there is no
+equivalent of truncating to a smaller size; EMBEDDING_DIMENSIONS exists to size the
+database column, not to configure the model.
 """
 
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
 
-from google import genai
-from google.genai import types
-
-from app.ai.tuning import RETRY_ATTEMPTS, RETRY_STATUS_CODES
 from app.models import EMBEDDING_DIMENSIONS
 
-# Measured at ~20 short passages per call in under 3 seconds (see docs/rag-resources.md).
-# Kept comfortably under that so one slow network hop does not time out a whole batch.
-MAX_BATCH = 16
+# CPU batches with no network round trip to amortise - this only bounds how much goes
+# through the model at once, so memory use stays predictable on a laptop.
+MAX_BATCH = 32
 
 
 @dataclass(frozen=True)
@@ -41,49 +37,43 @@ class EmbeddingModel(Protocol):
     def embed(self, texts: list[str]) -> EmbeddingResult: ...
 
 
-class GeminiEmbedding:
-    def __init__(self, api_key: str, model: str, dimensions: int = EMBEDDING_DIMENSIONS) -> None:
-        self.name = model
-        self.dimensions = dimensions
-        self._model = model
-        self._client = genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(
-                retry_options=types.HttpRetryOptions(
-                    attempts=RETRY_ATTEMPTS,
-                    initial_delay=2.0,
-                    max_delay=30.0,
-                    http_status_codes=RETRY_STATUS_CODES,
-                )
-            ),
-        )
+class LocalEmbedding:
+    """BAAI/bge-m3, loaded once and reused for every batch after that.
+
+    Building a SentenceTransformer re-reads the model's weights, so this happens once
+    in __init__, not per call - local_embedding() below caches the instance for
+    exactly that reason.
+    """
+
+    def __init__(self, model_name: str = "BAAI/bge-m3") -> None:
+        from sentence_transformers import SentenceTransformer  # heavy import, deferred until actually used
+
+        self.name = model_name
+        self.dimensions = EMBEDDING_DIMENSIONS
+        self._model = SentenceTransformer(model_name)
 
     def embed(self, texts: list[str]) -> EmbeddingResult:
-        """Embed every text, batching under the provider's practical limit.
+        """Embed every text in one batched call.
 
-        One batch's failure (a quota error, a timeout) does not lose the batches
-        around it: each batch is tried on its own, and a failed one leaves `None` in
-        its places with the reason recorded, so the caller can see exactly what to
-        retry rather than losing the whole run.
+        A local model does not fail per-batch the way a rate-limited API does - if it
+        fails at all (out of memory, a bad input), it fails for everything asked of it
+        this call, so there is one failure message for the whole list rather than
+        per-batch ones.
         """
-        vectors: list[list[float] | None] = [None] * len(texts)
-        failures: list[str] = []
-        for start in range(0, len(texts), MAX_BATCH):
-            batch = texts[start : start + MAX_BATCH]
-            try:
-                response = self._client.models.embed_content(
-                    model=self._model,
-                    contents=batch,
-                    config=types.EmbedContentConfig(output_dimensionality=self.dimensions),
-                )
-            except Exception as error:  # noqa: BLE001 - any provider failure, none of it fatal to the run
-                failures.append(f"texts {start}-{start + len(batch) - 1}: {error}")
-                continue
-            for offset, embedding in enumerate(response.embeddings):
-                vectors[start + offset] = list(embedding.values)
-        return EmbeddingResult(vectors, self.name, failures)
+        if not texts:
+            return EmbeddingResult([], self.name, [])
+        try:
+            vectors = self._model.encode(
+                texts,
+                batch_size=MAX_BATCH,
+                normalize_embeddings=True,  # cosine distance expects this; BGE-M3's own convention
+                show_progress_bar=False,
+            )
+        except Exception as error:  # noqa: BLE001 - any local failure, none of it fatal to the caller's run
+            return EmbeddingResult([None] * len(texts), self.name, [f"texts 0-{len(texts) - 1}: {error}"])
+        return EmbeddingResult([[float(x) for x in vector] for vector in vectors], self.name, [])
 
 
 @lru_cache
-def gemini_embedding(api_key: str, model: str, dimensions: int = EMBEDDING_DIMENSIONS) -> GeminiEmbedding:
-    return GeminiEmbedding(api_key, model, dimensions)
+def local_embedding(model_name: str) -> LocalEmbedding:
+    return LocalEmbedding(model_name)

@@ -7,6 +7,7 @@ export interface PlanFormValues {
   topics: string[];
   availability: AvailabilityWindow[];
   maxSessionMinutes: number;
+  maxDailyMinutes?: number;
 }
 
 export function validatePlanForm(
@@ -31,6 +32,13 @@ export function validatePlanForm(
   }
   if (values.maxSessionMinutes < 15 || values.maxSessionMinutes > 180) {
     errors.push("Session length must be between 15 and 180 minutes.");
+  }
+  if (values.maxDailyMinutes !== undefined) {
+    if (values.maxDailyMinutes < 15 || values.maxDailyMinutes > 600) {
+      errors.push("Daily study limit must be between 15 minutes and 10 hours.");
+    } else if (values.maxDailyMinutes < values.maxSessionMinutes) {
+      errors.push("Daily study limit cannot be shorter than one session.");
+    }
   }
   if (values.availability.length === 0) {
     errors.push("Add at least one weekly availability window.");

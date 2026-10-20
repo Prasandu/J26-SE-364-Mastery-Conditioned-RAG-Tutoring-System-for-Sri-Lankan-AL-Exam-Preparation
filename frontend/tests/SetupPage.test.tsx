@@ -132,3 +132,34 @@ describe("weekly availability with several slots per day", () => {
     await waitFor(() => expect(createPlan).toHaveBeenCalled());
   });
 });
+
+describe("daily study limit", () => {
+  beforeEach(() => {
+    vi.mocked(createPlan).mockReset().mockResolvedValue(existingPlan);
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [] });
+  });
+
+  it("sends the chosen daily limit instead of a fixed 180 minutes", async () => {
+    renderSetupPage();
+
+    fireEvent.change(screen.getByLabelText(/Maximum study per day/), { target: { value: "300" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    await waitFor(() =>
+      expect(createPlan).toHaveBeenCalledWith(expect.objectContaining({ max_daily_minutes: 300 })),
+    );
+    expect(screen.getByRole("option", { name: "5 hours" })).toBeInTheDocument();
+  });
+
+  it("blocks a daily limit shorter than one session", async () => {
+    renderSetupPage();
+
+    fireEvent.change(screen.getByLabelText(/Maximum study per day/), { target: { value: "30" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    expect(
+      await screen.findByText("Daily study limit cannot be shorter than one session."),
+    ).toBeInTheDocument();
+    expect(createPlan).not.toHaveBeenCalled();
+  });
+});

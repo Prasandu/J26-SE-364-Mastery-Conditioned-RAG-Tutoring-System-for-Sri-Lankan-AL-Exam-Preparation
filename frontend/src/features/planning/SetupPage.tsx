@@ -34,6 +34,15 @@ interface AvailabilityEntry {
 }
 
 const MAX_SLOTS_PER_DAY = 4;
+const DAILY_LIMIT_OPTIONS = [30, 60, 90, 120, 150, 180, 240, 300, 360, 480];
+
+function formatDailyLimit(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!hours) return `${rest} minutes`;
+  const hourText = `${hours} hour${hours === 1 ? "" : "s"}`;
+  return rest ? `${hourText} ${rest} minutes` : hourText;
+}
 
 function futureDate(days: number): string {
   const date = new Date();
@@ -67,6 +76,7 @@ export default function PlanningSetupPage() {
   const [targetGrade, setTargetGrade] = useState("A");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [maxSession, setMaxSession] = useState(60);
+  const [maxDaily, setMaxDaily] = useState(180);
   const [availability, setAvailability] = useState<AvailabilityEntry[]>(
     weekdays.map((_, day) => ({
       enabled: day === 0 || day === 2 || day === 5,
@@ -136,6 +146,7 @@ export default function PlanningSetupPage() {
       topics: selectedTopics,
       availability: windows,
       maxSessionMinutes: maxSession,
+      maxDailyMinutes: maxDaily,
     });
     setValidationErrors(errors);
     if (errors.length > 0) return;
@@ -148,7 +159,7 @@ export default function PlanningSetupPage() {
       topics: mode === "manual" ? selectedTopics : [],
       availability_windows: windows,
       max_session_minutes: maxSession,
-      max_daily_minutes: 180,
+      max_daily_minutes: maxDaily,
       timezone: "Asia/Colombo",
       preferred_times: [],
       fixed_commitments: [],
@@ -368,20 +379,39 @@ export default function PlanningSetupPage() {
           </div>
         </fieldset>
 
-        <label className="block max-w-sm text-sm font-medium text-slate-700">
-          Maximum session length
-          <select
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5"
-            onChange={(event) => setMaxSession(Number(event.target.value))}
-            value={maxSession}
-          >
-            {[15, 30, 45, 60, 90, 120, 150, 180].map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {minutes} minutes
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="block text-sm font-medium text-slate-700">
+            Maximum session length
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5"
+              onChange={(event) => setMaxSession(Number(event.target.value))}
+              value={maxSession}
+            >
+              {[15, 30, 45, 60, 90, 120, 150, 180].map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes} minutes
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            Maximum study per day
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5"
+              onChange={(event) => setMaxDaily(Number(event.target.value))}
+              value={maxDaily}
+            >
+              {DAILY_LIMIT_OPTIONS.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {formatDailyLimit(minutes)}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              The plan never schedules more than this on one day.
+            </span>
+          </label>
+        </div>
 
         {validationErrors.length > 0 ? (
           <div

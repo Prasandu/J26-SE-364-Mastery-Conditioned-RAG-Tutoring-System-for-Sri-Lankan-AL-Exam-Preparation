@@ -74,6 +74,8 @@ class PlanInput(BaseModel):
             raise ValueError("exam_date must be in the future")
         if len(set(self.topics)) != len(self.topics):
             raise ValueError("topics must not contain duplicates")
+        if self.max_daily_minutes < self.max_session_minutes:
+            raise ValueError("max_daily_minutes cannot be shorter than max_session_minutes")
         priority_topic_ids = [item.topic_id for item in self.priorities]
         if len(set(priority_topic_ids)) != len(priority_topic_ids):
             raise ValueError("priorities must not contain duplicate topic IDs")

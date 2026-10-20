@@ -242,6 +242,7 @@ def test_unknown_topic_is_rejected(client: TestClient) -> None:
     [
         ({"exam_date": date.today().isoformat()}, "future"),
         ({"max_session_minutes": 10}, "max_session_minutes"),
+        ({"max_session_minutes": 90, "max_daily_minutes": 60}, "max_daily_minutes"),
         (
             {
                 "availability_windows": [

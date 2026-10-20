@@ -73,3 +73,15 @@ describe("validatePlanForm", () => {
     );
   });
 });
+
+describe("daily study limit", () => {
+  it("must be within range and at least one session long", () => {
+    expect(validatePlanForm({ ...validManualPlan, maxDailyMinutes: 240 }, "2026-10-14")).toEqual([]);
+    expect(validatePlanForm({ ...validManualPlan, maxDailyMinutes: 30 }, "2026-10-14")).toContain(
+      "Daily study limit cannot be shorter than one session.",
+    );
+    expect(validatePlanForm({ ...validManualPlan, maxDailyMinutes: 900 }, "2026-10-14")).toContain(
+      "Daily study limit must be between 15 minutes and 10 hours.",
+    );
+  });
+});

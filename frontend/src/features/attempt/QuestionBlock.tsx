@@ -17,6 +17,7 @@ interface Props {
   reading: AnswerOut | null;
   attemptId: string;
   disabled: boolean;
+  mcqOptionLabels: string[];
   onChoose: (option: string) => void;
   onWrite: (text: string) => void;
   onRead: (answer: AnswerOut) => void;
@@ -30,6 +31,7 @@ export function QuestionBlock({
   reading,
   attemptId,
   disabled,
+  mcqOptionLabels,
   onChoose,
   onWrite,
   onRead,
@@ -43,7 +45,7 @@ export function QuestionBlock({
       <div className="flex gap-3">
         <span className="mt-0.5 w-12 shrink-0 font-mono text-sm text-brand-700">{label}</span>
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap text-sm text-slate-800">{question.text}</p>
+          {question.text && <p className="whitespace-pre-wrap text-sm text-slate-800">{question.text}</p>}
           {question.table && (
             <div className="overflow-x-auto">
               <DataTable table={question.table} />
@@ -59,7 +61,13 @@ export function QuestionBlock({
 
       <div className="mt-3 pl-15">
         {isMcq(item) ? (
-          <McqOptions question={question} chosen={chosen} disabled={disabled} onChoose={onChoose} />
+          <McqOptions
+            question={question}
+            chosen={chosen}
+            disabled={disabled}
+            fallbackLabels={mcqOptionLabels}
+            onChoose={onChoose}
+          />
         ) : (
           <div className="space-y-2">
             <WrittenAnswer

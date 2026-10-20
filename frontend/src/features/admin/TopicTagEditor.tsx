@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { approveSuggestion, classifyTopics, listTopicSuggestions, rejectSuggestion, setQuestionTopics } from "@/api/admin";
 import { ApiError } from "@/api/client";
@@ -11,14 +11,24 @@ interface Props {
   topics: string[]; // current topic codes
   allTopics: Topic[];
   onChanged: (codes: string[]) => void;
+  // A pending suggestion already fetched for the whole paper (e.g. by "Suggest
+  // topics for all questions"), shown right away instead of waiting for this
+  // question's own "Suggest" to be clicked.
+  initialSuggestion?: TopicSuggestion | null;
 }
 
 /** Add or remove one question's syllabus topic tags. Works on a paper of any status. */
-export function TopicTagEditor({ questionId, topics, allTopics, onChanged }: Props) {
+export function TopicTagEditor({ questionId, topics, allTopics, onChanged, initialSuggestion }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
-  const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(null);
+  const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(initialSuggestion ?? null);
+
+  useEffect(() => {
+    if (initialSuggestion) {
+      setSuggestion(initialSuggestion);
+    }
+  }, [initialSuggestion]);
 
   const available = allTopics.filter((topic) => !topics.includes(topic.code));
 

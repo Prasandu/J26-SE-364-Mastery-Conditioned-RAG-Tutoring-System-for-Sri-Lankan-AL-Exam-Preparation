@@ -38,10 +38,18 @@ function walk(
   });
 }
 
-/** MCQ questions are answered by clicking; everything else by writing. */
+/** MCQ questions are answered by clicking; everything else by writing. A past
+ * paper's own question can be MCQ with no options recorded at all (its real
+ * options are only printed on the stored PDF, never transcribed) - it is still
+ * answered by clicking, just from DEFAULT_MCQ_OPTION_LABELS instead of its own
+ * option text; see optionLabels. */
 export function isMcq(item: Answerable): boolean {
-  return item.mode === "mcq" && (item.question.options?.length ?? 0) > 0;
+  return item.mode === "mcq";
 }
+
+/** Sri Lankan A/L MCQ papers print five numbered options - the fallback used when
+ * nothing in the paper's own data says otherwise (see optionLabels). */
+export const DEFAULT_MCQ_OPTION_LABELS = ["1", "2", "3", "4", "5"];
 
 /** The option labels this paper uses, e.g. 1..5 or A..E. */
 export function optionLabels(paper: PaperDetail): string[] {
@@ -50,7 +58,7 @@ export function optionLabels(paper: PaperDetail): string[] {
       return item.question.options.map((option) => option.label);
     }
   }
-  return [];
+  return DEFAULT_MCQ_OPTION_LABELS;
 }
 
 export function hasMcq(paper: PaperDetail): boolean {

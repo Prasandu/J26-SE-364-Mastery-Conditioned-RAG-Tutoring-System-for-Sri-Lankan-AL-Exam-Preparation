@@ -4,14 +4,48 @@ interface Props {
   question: Question;
   chosen: string | null;
   disabled: boolean;
+  // Used only when the question has no options of its own - a past paper's MCQ
+  // question created from its answer key names no option text, only which one is
+  // correct, so the real wording is never in reach of this page (see
+  // app/lib/questions.ts's optionLabels); the student reads it off the PDF shown
+  // alongside instead, and picks the matching number here.
+  fallbackLabels: string[];
   onChoose: (option: string) => void;
 }
 
-/** The options of one MCQ, as clickable rows. */
-export function McqOptions({ question, chosen, disabled, onChoose }: Props) {
+/** The options of one MCQ: its own, as clickable rows with their wording - or, if
+ * it has none, a plain numbered picker from fallbackLabels. */
+export function McqOptions({ question, chosen, disabled, fallbackLabels, onChoose }: Props) {
+  if (!question.options?.length) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {fallbackLabels.map((label) => {
+          const picked = chosen === label;
+          return (
+            <button
+              key={label}
+              type="button"
+              disabled={disabled}
+              aria-pressed={picked}
+              aria-label={`Option ${label}`}
+              onClick={() => onChoose(label)}
+              className={`size-9 rounded-full border text-sm transition ${
+                picked
+                  ? "border-brand-600 bg-brand-600 font-medium text-white"
+                  : "border-slate-300 text-slate-600 hover:border-brand-400 hover:bg-brand-50"
+              } ${disabled ? "cursor-default" : "cursor-pointer"}`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1">
-      {(question.options ?? []).map((option) => {
+      {question.options.map((option) => {
         const picked = chosen === option.label;
         return (
           <label

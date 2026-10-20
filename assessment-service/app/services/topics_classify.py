@@ -19,15 +19,25 @@ never reaches Question.topics until a named person approves it.
 """
 
 import logging
+import tempfile
 from collections.abc import Sequence
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.classify import QuestionToClassify, TopicClassifier
+from app.ai.vision import Image
+from app.ai.vision_classify import VisionTopicClassifier
 from app.errors import ConflictError, ContentValidationError, NotFoundError, ProviderError
-from app.models import Question, SuggestionStatus, TopicSuggestion, utcnow
+from app.models import MarkingPoint, ModelAnswer, Paper, Question, SuggestionStatus, TopicSuggestion, utcnow
+from app.services.pdf import render_pages_for_classification
+from app.services.storage import FileStore
 from app.services.topics import topics_by_code
+
+# The one fixed description every MCQ answer-key point gets (see
+# app/services/drafts.py's _answer_key) - real subject content, never this.
+_GENERIC_MCQ_DESCRIPTION = "Correct option"
 
 logger = logging.getLogger(__name__)
 
@@ -53,35 +63,85 @@ def untagged_questions(db: Session, *, limit: int = MOST_PER_RUN) -> Sequence[Qu
     ).all()
 
 
+def _classification_text(db: Session, question: Question) -> str:
+    """What to show the classifier for this question.
+
+    A past paper's own question is often textless (see
+    app/services/papers.py's create_past_paper_shell) - the real wording lives only
+    in its stored PDF, never as data. When that happens, the marking scheme's own
+    OCR'd content (what earns each mark, and the model answer) is real subject text
+    and the next best thing to classify from - except for an MCQ answer key, which
+    never carries any ("Correct option" says nothing about the chemistry).
+    """
+    if question.text:
+        return question.text
+
+    descriptions = db.scalars(
+        select(MarkingPoint.description).where(
+            MarkingPoint.question_id == question.id, MarkingPoint.description != _GENERIC_MCQ_DESCRIPTION
+        )
+    ).all()
+    model_answer = db.scalars(
+        select(ModelAnswer.answer_text).where(ModelAnswer.question_id == question.id)
+    ).first()
+    return "\n".join(part for part in [model_answer, *descriptions] if part)
+
+
 def classify_questions(
     db: Session,
     classifier: TopicClassifier,
     question_ids: Sequence[int] | None = None,
     *,
     limit: int = MOST_PER_RUN,
+    vision_classifier: VisionTopicClassifier | None = None,
+    store: FileStore | None = None,
 ) -> list[TopicSuggestion]:
     """Classify the given questions, or every untagged one when none are named.
 
     A question that already has a pending suggestion is skipped - this is what makes
     running the same batch twice safe rather than making a duplicate every time.
+
+    A question with real text to classify from (its own, or - failing that - its
+    marking scheme's, see _classification_text) goes to the text classifier, batched.
+    A question with neither (a pure MCQ answer key names no subject content at all)
+    goes to vision_classifier instead, when one is given - batched by paper, one
+    call per paper covering every such question on it, since they share the same
+    page images - otherwise skipped rather than asking either model to guess.
     """
     known = topics_by_code(db)
     if not known:
         raise ContentValidationError("Cannot classify", ["No syllabus topics exist yet"])
 
     if question_ids is not None:
-        questions = [q for q in db.scalars(select(Question).where(Question.id.in_(question_ids))).all()]
+        questions = list(db.scalars(select(Question).where(Question.id.in_(question_ids))).all())
     else:
         questions = list(untagged_questions(db, limit=limit))
 
-    to_ask = [q for q in questions if pending_suggestion(db, q.id) is None]
-    if not to_ask:
-        return []
+    pending_free = [q for q in questions if pending_suggestion(db, q.id) is None]
+    texts = {q.id: _classification_text(db, q) for q in pending_free}
 
+    text_batch = [q for q in pending_free if texts[q.id]]
+    vision_batch = (
+        [q for q in pending_free if not texts[q.id]]
+        if vision_classifier is not None and store is not None
+        else []
+    )
+
+    created: list[TopicSuggestion] = []
+    if text_batch:
+        created.extend(_classify_by_text(db, classifier, text_batch, texts, known))
+    if vision_batch:
+        created.extend(_classify_by_vision(db, vision_classifier, store, vision_batch, known))
+    return created
+
+
+def _classify_by_text(
+    db: Session, classifier: TopicClassifier, to_ask: list[Question], texts: dict[int, str], known: dict
+) -> list[TopicSuggestion]:
     topic_list = [(topic.code, topic.name) for topic in known.values()]
     try:
         answers = classifier.classify(
-            [QuestionToClassify(question_id=q.id, label=q.full_label, text=q.text) for q in to_ask],
+            [QuestionToClassify(question_id=q.id, label=q.full_label, text=texts[q.id]) for q in to_ask],
             topic_list,
         )
     except Exception as error:  # network, quota, or a reply that is not valid JSON
@@ -112,6 +172,69 @@ def classify_questions(
         created.append(suggestion)
     db.commit()
     return created
+
+
+def _classify_by_vision(
+    db: Session,
+    vision_classifier: VisionTopicClassifier,
+    store: FileStore,
+    to_ask: list[Question],
+    known: dict,
+) -> list[TopicSuggestion]:
+    """One vision call per paper, covering every pending question on it at once -
+    unlike one call per question, a 50-question MCQ paper then costs one call (and
+    one PDF render) instead of 50. A failure for one paper's batch is logged and
+    skipped rather than failing the whole run, so the rest still get classified."""
+    topic_list = [(topic.code, topic.name) for topic in known.values()]
+    by_paper: dict[int, list[Question]] = {}
+    for question in to_ask:
+        by_paper.setdefault(question.section.paper_id, []).append(question)
+
+    created = []
+    for questions in by_paper.values():
+        images = _render_paper_pages(store, questions[0].section.paper)
+        if not images:
+            continue
+        labels = [q.full_label for q in questions]
+        try:
+            results = vision_classifier.classify_pages(labels=labels, topics=topic_list, images=images)
+        except Exception:
+            logger.exception("Vision topic classifier failed for %d question(s)", len(questions))
+            continue
+        for question in questions:
+            result = results.get(question.full_label)
+            if result is None:
+                continue
+            valid_codes = [choice.code for choice in result.topics if choice.code in known]
+            suggestion = TopicSuggestion(
+                question_id=question.id,
+                suggested_codes=valid_codes,
+                confidence=result.confidence,
+                reason=result.reason,
+                model=vision_classifier.name,
+                question_text=question.text,
+                status=SuggestionStatus.PENDING,
+            )
+            db.add(suggestion)
+            created.append(suggestion)
+    db.commit()
+    return created
+
+
+def _render_paper_pages(store: FileStore, paper: Paper) -> list[Image]:
+    """Every page of the paper's stored PDF - the one shared image set every
+    pending vision question on it is classified from in a single call. Empty when
+    there is no PDF, or no page count recorded for it."""
+    if paper.file_key is None or not paper.page_count:
+        return []
+    pdf_bytes = store.load(paper.file_key)
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(pdf_bytes)
+        path = Path(tmp.name)
+    try:
+        return render_pages_for_classification(path, list(range(1, paper.page_count + 1)))
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def list_suggestions(

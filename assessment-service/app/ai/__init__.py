@@ -22,6 +22,7 @@ from app.ai.judge import (
     openai_compatible_judge,
 )
 from app.ai.vision import FallbackVisionModel, VisionModel, gemini_vision, openai_compatible_vision
+from app.ai.vision_classify import VisionTopicClassifier
 from app.config import ProviderName, Settings
 from app.errors import ConfigurationError
 from app.services.drawing_judge import DrawingJudge, VisionDrawingJudge
@@ -139,6 +140,14 @@ def build_drawing_judge(settings: Settings) -> DrawingJudge | None:
     """
     model = build_vision_model_with_fallback(settings)
     return VisionDrawingJudge(model) if model else None
+
+
+def build_vision_classifier(settings: Settings) -> VisionTopicClassifier | None:
+    """The vision model that reads a question's topic off its own PDF page, or None
+    when no vision model is configured (a textless question then has nothing to be
+    classified from - see app/services/topics_classify.py)."""
+    model = build_vision_model_with_fallback(settings)
+    return VisionTopicClassifier(model) if model else None
 
 
 def build_vision_model(settings: Settings) -> VisionModel | None:

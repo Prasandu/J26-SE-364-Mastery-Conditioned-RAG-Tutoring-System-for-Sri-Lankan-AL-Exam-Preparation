@@ -15,6 +15,11 @@ interface Props {
   attemptId: string;
   optionLabels: string[];
   onSaved: () => void;
+  // Told whenever a photo's answers are being reviewed (between a successful read
+  // and either confirming or leaving to try another one) - while true, the
+  // question list below hides its own MCQ pickers, since correcting a choice here
+  // is the same action as clicking it there, just shown twice (see AttemptPage.tsx).
+  onReviewingChange?: (reviewing: boolean) => void;
 }
 
 /**
@@ -23,7 +28,7 @@ interface Props {
  * What the reader saw is shown as a draft the student can change. Nothing is stored
  * until they press the button, so a misread bubble never becomes a mark by itself.
  */
-export function AnswerSheetUpload({ attemptId, optionLabels, onSaved }: Props) {
+export function AnswerSheetUpload({ attemptId, optionLabels, onSaved, onReviewingChange }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [read, setRead] = useState<SheetRead | null>(null);
   const [chosen, setChosen] = useState<Record<number, string>>({});
@@ -41,6 +46,7 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved }: Props) {
     try {
       const result = await readAnswerSheet(attemptId, file);
       setRead(result);
+      onReviewingChange?.(true);
       setChosen(
         Object.fromEntries(
           result.answers.filter((a) => a.option).map((a) => [a.question_id, a.option!]),
@@ -68,6 +74,7 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved }: Props) {
     try {
       await saveAnswers(attemptId, answers);
       setRead(null);
+      onReviewingChange?.(false);
       onSaved();
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : String(cause));
@@ -190,9 +197,9 @@ function ReadReview({ read, chosen, optionLabels, busy, onPick, onConfirm }: Rev
         chosen one again to clear it.
       </p>
 
-      {/* Blocks of ten, side by side, the way the printed sheet is laid out. */}
-      <div className="mt-4 grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
-        {inTens(read.answers).map((block) => (
+      {/* Blocks of 25, side by side, the way the printed sheet's two columns are laid out. */}
+      <div className="mt-4 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+        {inBlocks(read.answers).map((block) => (
           <section key={block[0].question_id}>
             <h3 className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-400">
               {block[0].label} &ndash; {block[block.length - 1].label}
@@ -291,10 +298,11 @@ function rowNote(answer: SheetAnswer, chosen: string | null, changed: boolean) {
   return null;
 }
 
-const BLOCK = 10;
+// Sri Lankan A/L answer sheets print their 50 bubbles as two columns of 25.
+const BLOCK = 25;
 
-/** Split the rows into blocks of ten, like the columns on a printed sheet. */
-function inTens(answers: SheetAnswer[]): SheetAnswer[][] {
+/** Split the rows into blocks of 25, like the columns on a printed sheet. */
+function inBlocks(answers: SheetAnswer[]): SheetAnswer[][] {
   const blocks: SheetAnswer[][] = [];
   for (let start = 0; start < answers.length; start += BLOCK) {
     blocks.push(answers.slice(start, start + BLOCK));

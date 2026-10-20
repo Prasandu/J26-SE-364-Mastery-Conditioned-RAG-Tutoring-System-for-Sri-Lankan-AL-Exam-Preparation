@@ -40,6 +40,10 @@ export function AttemptPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [submitting, setSubmitting] = useState(false);
+  // While reviewing an uploaded answer sheet, the mcq questions below hide their
+  // own pickers - correcting a choice happens in the review grid instead, not in
+  // two places that could disagree about what is actually chosen.
+  const [reviewingUpload, setReviewingUpload] = useState(false);
   const inFlight = useRef(0);
 
   const reload = useCallback(
@@ -260,39 +264,45 @@ export function AttemptPage() {
               attemptId={attemptId}
               optionLabels={mcqOptionLabels}
               onSaved={() => void reload()}
+              onReviewingChange={setReviewingUpload}
             />
           )}
 
           <Card>
-            {items.map((item, index) => {
-              const previous = items[index - 1];
-              const newStem = item.stem.join("\n") !== (previous?.stem.join("\n") ?? "");
-              return (
-                <div key={item.question.id}>
-                  {newStem && item.stem.length > 0 && (
-                    <div className="mt-6 border-t border-slate-200 pt-5 first:mt-0 first:border-t-0">
-                      {item.stem.map((line) => (
-                        <p key={line} className="whitespace-pre-wrap text-sm text-slate-600">
-                          {line}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  <QuestionBlock
-                    item={item}
-                    chosen={given[item.question.id]?.option ?? null}
-                    text={given[item.question.id]?.text ?? ""}
-                    reading={readings[item.question.id] ?? null}
-                    attemptId={attemptId}
-                    disabled={locked}
-                    mcqOptionLabels={mcqOptionLabels}
-                    onChoose={(option) => choose(item.question.id, option)}
-                    onWrite={(text) => write(item.question.id, text)}
-                    onRead={(answer) => handleRead(item.question.id, answer)}
-                  />
-                </div>
-              );
-            })}
+            {/* While a just-uploaded sheet is still being reviewed above, mcq
+             * questions are left out here - correcting them happens in that
+             * review grid, not twice. */}
+            {items
+              .filter((item) => !(reviewingUpload && isMcq(item)))
+              .map((item, index, visible) => {
+                const previous = visible[index - 1];
+                const newStem = item.stem.join("\n") !== (previous?.stem.join("\n") ?? "");
+                return (
+                  <div key={item.question.id}>
+                    {newStem && item.stem.length > 0 && (
+                      <div className="mt-6 border-t border-slate-200 pt-5 first:mt-0 first:border-t-0">
+                        {item.stem.map((line) => (
+                          <p key={line} className="whitespace-pre-wrap text-sm text-slate-600">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <QuestionBlock
+                      item={item}
+                      chosen={given[item.question.id]?.option ?? null}
+                      text={given[item.question.id]?.text ?? ""}
+                      reading={readings[item.question.id] ?? null}
+                      attemptId={attemptId}
+                      disabled={locked}
+                      mcqOptionLabels={mcqOptionLabels}
+                      onChoose={(option) => choose(item.question.id, option)}
+                      onWrite={(text) => write(item.question.id, text)}
+                      onRead={(answer) => handleRead(item.question.id, answer)}
+                    />
+                  </div>
+                );
+              })}
           </Card>
         </>
       )}

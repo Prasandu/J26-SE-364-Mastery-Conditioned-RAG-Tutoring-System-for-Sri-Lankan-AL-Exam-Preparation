@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-import type { Question, Topic } from "@/api/types";
+import type { Question, Topic, TopicSuggestion } from "@/api/types";
 import { Badge } from "@/components/Badge";
 import { DataTable } from "@/components/DataTable";
 import { fullLabel, marks } from "@/lib/format";
@@ -9,13 +9,16 @@ import { fullLabel, marks } from "@/lib/format";
 import { TopicTagEditor } from "./TopicTagEditor";
 
 interface Props {
-  questions: Question[];
-  allTopics: Topic[];
-  parentLabel?: string;
+  readonly questions: Question[];
+  readonly allTopics: Topic[];
+  readonly parentLabel?: string;
+  // Pending suggestions already fetched for the whole paper, keyed by question id -
+  // shown right away instead of waiting for each question's own "Suggest" click.
+  readonly pendingSuggestions?: Record<number, TopicSuggestion>;
 }
 
 /** The same tree as the public QuestionTree, with an editable topic tag on every leaf. */
-export function AdminQuestionTree({ questions, allTopics, parentLabel = "" }: Props) {
+export function AdminQuestionTree({ questions, allTopics, parentLabel = "", pendingSuggestions = {} }: Props) {
   // Topic edits are applied straight to local state, so the tree does not have to
   // reload the whole paper after every tag change.
   const [overrides, setOverrides] = useState<Record<number, string[]>>({});
@@ -63,6 +66,7 @@ export function AdminQuestionTree({ questions, allTopics, parentLabel = "" }: Pr
                         questionId={question.id}
                         topics={topicsFor(question)}
                         allTopics={allTopics}
+                        initialSuggestion={pendingSuggestions[question.id]}
                         onChanged={(next) =>
                           setOverrides((current) => ({ ...current, [question.id]: next }))
                         }

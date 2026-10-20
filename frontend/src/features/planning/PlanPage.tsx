@@ -10,6 +10,7 @@ import {
   getSchedule,
   runCheckpoint,
   timerAction,
+  undoTaskOutcome,
   updateTaskStatus,
   type PlanResponse,
   type RoadmapResponse,
@@ -159,6 +160,7 @@ function TaskCard({
   onPartialMinutesChange,
   onStatus,
   onTimer,
+  onUndo,
 }: {
   task: ScheduledTask;
   busy: boolean;
@@ -166,6 +168,7 @@ function TaskCard({
   onPartialMinutesChange: (minutes: number) => void;
   onStatus: (task: ScheduledTask, status: TaskStatus) => void;
   onTimer: (task: ScheduledTask, action: TimerAction) => void;
+  onUndo: (task: ScheduledTask) => void;
 }) {
   const [showReason, setShowReason] = useState(false);
   const style =
@@ -321,6 +324,25 @@ function TaskCard({
       ) : null}
 
       <TimerControls busy={busy} onAction={onTimer} task={task} />
+
+      {task.status !== "planned" && task.can_undo && task.id ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3 text-sm">
+          <span className="opacity-80">
+            {task.status === "missed"
+              ? "Did you actually study this?"
+              : "Recorded by mistake?"}
+          </span>
+          <button
+            aria-label={`Undo ${task.status} for ${displayTopic}`}
+            className="rounded-lg border border-current/30 bg-white/70 px-3 py-1.5 font-semibold hover:bg-white disabled:opacity-50"
+            disabled={busy}
+            onClick={() => onUndo(task)}
+            type="button"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
 
       {actionable ? (
         <div className="mt-4 flex flex-col gap-2 border-t border-current/10 pt-3 sm:flex-row sm:items-center">
@@ -604,6 +626,28 @@ export default function PlanningPage() {
     await updateStatus(task, status, minutes);
   }
 
+  async function undoOutcome(task: ScheduledTask) {
+    if (!task.id) return;
+    setBusyTaskId(task.id);
+    setError("");
+    setToast([]);
+    try {
+      const result = await undoTaskOutcome(task.id);
+      setToast([
+        result.removed_task_ids.length
+          ? "Session restored and its make-up session removed. Record it again when you're ready."
+          : "Session restored. Record it again when you're ready.",
+      ]);
+      if (currentPlanId) setSchedule(await getSchedule(currentPlanId));
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError ? cause.message : "This session could not be restored.",
+      );
+    } finally {
+      setBusyTaskId(null);
+    }
+  }
+
   async function updateStatus(
     task: ScheduledTask,
     status: TaskStatus,
@@ -671,6 +715,8 @@ export default function PlanningPage() {
   }
 
   const tasks = schedule?.tasks ?? [];
+  // Entries from movedTasks look like "activity · topic — date"; anything else is a plain notice.
+  const toastIsSessionList = toast.length > 0 && toast.every((item) => item.includes(" — "));
   const groupedTasks = tasks.reduce<Record<string, ScheduledTask[]>>(
     (groups, task) => {
       const key = new Date(task.start_at).toLocaleDateString();
@@ -768,11 +814,9 @@ export default function PlanningPage() {
             >
               <p className="font-semibold">Plan updated</p>
               <p className="mt-1 text-sm">
-                {toast.length === 1 && toast[0].startsWith("The schedule")
-                  ? toast[0]
-                  : "Moved or added sessions:"}
+                {toastIsSessionList ? "Moved or added sessions:" : toast.join(" ")}
               </p>
-              {!(toast.length === 1 && toast[0].startsWith("The schedule")) ? (
+              {toastIsSessionList ? (
                 <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
                   {toast.map((item) => (
                     <li key={item}>{item}</li>
@@ -856,6 +900,7 @@ export default function PlanningPage() {
                           void updateStatus(item, status)
                         }
                         onTimer={(item, action) => void runTimer(item, action)}
+                        onUndo={(item) => void undoOutcome(item)}
                         partialMinutes={
                           task.id
                             ? partialMinutes[task.id] ??
@@ -901,6 +946,7 @@ export default function PlanningPage() {
                                 onTimer={(item, action) =>
                                   void runTimer(item, action)
                                 }
+                                onUndo={(item) => void undoOutcome(item)}
                                 partialMinutes={
                                   task.id
                                     ? partialMinutes[task.id] ??

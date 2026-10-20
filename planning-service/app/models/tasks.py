@@ -86,6 +86,10 @@ class StudyTask(Base):
     last_resumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     paused_total_sec: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # When the outcome (completed/partial/missed) was recorded, for the undo window.
+    outcome_recorded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Set when the student undoes an outcome; such sessions are never auto-marked missed.
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ReplanLog(Base):

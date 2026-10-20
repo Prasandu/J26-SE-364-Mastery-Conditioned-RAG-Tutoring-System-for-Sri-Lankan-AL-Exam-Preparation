@@ -107,6 +107,19 @@ export interface ScheduledTask {
   timer_state?: TimerState;
   timer_started_at?: string | null;
   timer_elapsed_sec?: number;
+  can_undo?: boolean;
+}
+
+export interface UndoOutcomeResponse {
+  task: ScheduledTask;
+  removed_task_ids: string[];
+}
+
+export function undoTaskOutcome(taskId: string) {
+  return planningRequest<UndoOutcomeResponse>(
+    `/api/v1/tasks/${encodeURIComponent(taskId)}/undo`,
+    { method: "POST" },
+  );
 }
 
 export type TimerState = "idle" | "running" | "paused" | "finished";

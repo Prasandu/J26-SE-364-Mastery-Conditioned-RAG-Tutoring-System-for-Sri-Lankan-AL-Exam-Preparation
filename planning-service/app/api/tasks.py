@@ -10,9 +10,10 @@ from app.schemas.tasks import (
     TaskStatusUpdate,
     TimerFinishRequest,
     TimerResponse,
+    UndoOutcomeResponse,
 )
 from app.security import get_student_id
-from app.services.task_outcomes import update_task_status
+from app.services.task_outcomes import undo_task_outcome, update_task_status
 from app.services.timer import finish_timer, pause_timer, resume_timer, start_timer
 
 router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
@@ -58,3 +59,9 @@ def finish_task_timer(
         task_id,
         confirmed_minutes=data.confirmed_minutes if data is not None else None,
     )
+
+
+@router.post("/{task_id}/undo", response_model=UndoOutcomeResponse)
+def undo_task(task_id: UUID, session: DbSession, student_id: StudentId) -> UndoOutcomeResponse:
+    """Undo a done/partial/missed outcome recorded in the last 24 hours."""
+    return undo_task_outcome(session, student_id, task_id)

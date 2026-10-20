@@ -94,3 +94,6 @@ MOTIVATION_CONSISTENCY_MIN_DAYS = 3  # study days in the last week for consisten
 
 # Predictions
 PREDICTION_RUNS_TO_KEEP = 5  # older prediction runs per student are deleted
+
+# Outcome undo
+UNDO_WINDOW_HOURS = 24  # a recorded outcome can be undone for this long

@@ -101,9 +101,12 @@ def sweep(
             StudyTask.student_id == student_id,
             StudyTask.status == "planned",
             StudyTask.timer_state == "idle",
+            StudyTask.undone_at.is_(None),
             StudyTask.start_at <= now + lead,
         )
     ).all()
+    # A session the student undid is theirs to record; never auto-mark it missed again.
+    candidates = [task for task in candidates if getattr(task, "undone_at", None) is None]
     missed = [
         task for task in candidates if task.start_at + timedelta(minutes=task.duration_min) + grace <= now
     ]
@@ -203,6 +206,7 @@ def _process_missed(
         stop_timer_for_outcome(task, now)
         task.status = "missed"
         task.actual_duration_min = None
+        task.outcome_recorded_at = now
         by_plan[task.plan_id].append(task)
     session.flush()
 

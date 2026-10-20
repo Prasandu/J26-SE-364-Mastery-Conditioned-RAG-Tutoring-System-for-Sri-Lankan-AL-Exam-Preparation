@@ -79,6 +79,8 @@ class ScheduledTaskResponse(BaseModel):
     timer_started_at: datetime | None = None
     # Seconds of active study measured by the server when this response was built.
     timer_elapsed_sec: int = 0
+    # True while a recorded outcome can still be undone.
+    can_undo: bool = False
 
 
 class ScheduleResponse(BaseModel):
@@ -128,3 +130,8 @@ class TimerResponse(BaseModel):
     suggested_actual_minutes: int | None = None
     requires_confirmation: bool = False
     confirmation_reason: str | None = None
+
+
+class UndoOutcomeResponse(BaseModel):
+    task: ScheduledTaskResponse
+    removed_task_ids: list[UUID] = Field(default_factory=list)

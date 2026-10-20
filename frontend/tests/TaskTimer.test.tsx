@@ -7,6 +7,7 @@ import {
   getRoadmap,
   getSchedule,
   timerAction,
+  undoTaskOutcome,
   updateTaskStatus,
   type ScheduledTask,
   type TimerResponse,
@@ -23,6 +24,7 @@ vi.mock("../src/api/planning", () => ({
   getSchedule: vi.fn(),
   runCheckpoint: vi.fn(),
   timerAction: vi.fn(),
+  undoTaskOutcome: vi.fn(),
   updateTaskStatus: vi.fn(),
 }));
 
@@ -296,5 +298,38 @@ describe("rescheduling after a missed session", () => {
     await waitFor(() => expect(getSchedule).toHaveBeenCalledTimes(2));
     expect(screen.getAllByRole("article")).toHaveLength(3);
     expect(screen.getByText(/Neutrons/)).toBeInTheDocument();
+  });
+});
+
+describe("undoing a recorded outcome", () => {
+  beforeEach(() => {
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [plan] });
+    vi.mocked(getRoadmap).mockReset().mockRejectedValue(new Error("not needed"));
+    vi.mocked(getSchedule).mockReset();
+    vi.mocked(undoTaskOutcome).mockReset();
+  });
+
+  it("offers Undo on a recent missed session and restores it", async () => {
+    vi.mocked(getSchedule)
+      .mockResolvedValueOnce(schedule([task({ status: "missed", can_undo: true })]))
+      .mockResolvedValue(schedule([task()]));
+    vi.mocked(undoTaskOutcome).mockResolvedValue({ task: task(), removed_task_ids: ["task-9"] });
+    renderPage();
+
+    expect(await screen.findByText("Did you actually study this?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Undo missed/ }));
+
+    expect(await screen.findByText(/Session restored and its make-up session removed/)).toBeInTheDocument();
+    expect(screen.queryByText("Moved or added sessions:")).toBeNull();
+    expect(undoTaskOutcome).toHaveBeenCalledWith("task-1");
+    expect(await screen.findByRole("button", { name: "Start" })).toBeInTheDocument();
+  });
+
+  it("hides Undo once the window has passed", async () => {
+    vi.mocked(getSchedule).mockResolvedValue(schedule([task({ status: "completed", can_undo: false })]));
+    renderPage();
+
+    await waitFor(() => expect(document.querySelector('[data-status="completed"]')).not.toBeNull());
+    expect(screen.queryByRole("button", { name: /Undo/ })).toBeNull();
   });
 });

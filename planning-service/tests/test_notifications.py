@@ -362,3 +362,13 @@ def test_notification_routes_are_registered() -> None:
     assert "/api/v1/notifications" in paths
     assert "/api/v1/notifications/{notification_id}/read" in paths
     assert {"get", "put"}.issubset(paths["/api/v1/notifications/preferences"])
+
+
+def test_session_the_student_undid_is_never_auto_marked_missed(replanner: dict[str, Any]) -> None:
+    undone = make_task(NOW - timedelta(hours=3))
+    undone.undone_at = NOW - timedelta(minutes=5)
+    session = FakeSession(undone)
+
+    list_notifications(session, "student-1", now=NOW)  # type: ignore[arg-type]
+
+    assert undone.status == "planned" and replanner["count"] == 0

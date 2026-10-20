@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.errors import Conflict, NotFound
 from app.models import (
     LearnerTopicState,
+    Notification,
     ReplanLog,
     StudyPlan,
     StudyTask,
@@ -20,6 +21,7 @@ from app.schemas.tasks import (
     ScheduleResponse,
     TaskStatusResponse,
     TaskStatusUpdate,
+    UndoOutcomeResponse,
     WeeklyReplanResponse,
 )
 from app.services.achievability import effective_exam_weight
@@ -33,9 +35,10 @@ from app.services.roadmap import (
     start_window,
 )
 from app.services.scheduling import generate_plan_schedule
-from app.services.task_views import scheduled_task_response
+from app.services.task_views import can_undo_outcome, scheduled_task_response
 from app.services.timer import stop_timer_for_outcome
 from app.services.topic_lookup import preload_topics
+from app.services.weights import UNDO_WINDOW_HOURS
 
 
 def update_task_status(
@@ -56,6 +59,7 @@ def update_task_status(
 
     stop_timer_for_outcome(task)
     task.status = data.status
+    task.outcome_recorded_at = datetime.now(UTC)
     task.actual_duration_min = (
         task.duration_min
         if data.status == "completed" and data.actual_duration_min is None
@@ -115,6 +119,71 @@ def update_task_status(
         actual_minutes=task.actual_duration_min or 0,
         replanned=bool(remaining_minutes),
         schedule=schedule,
+    )
+
+
+def undo_task_outcome(
+    session: Session,
+    student_id: str,
+    task_id: UUID,
+    *,
+    now: datetime | None = None,
+) -> UndoOutcomeResponse:
+    """Return a recorded session to planned so the student can record it again.
+
+    Allowed for ``UNDO_WINDOW_HOURS``. The make-up session created for missed
+    or partial time is removed (unless it has already been started), and the
+    session is protected from being auto-marked missed again.
+    """
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    task = session.get(StudyTask, task_id)
+    if task is None or task.student_id != student_id:
+        raise NotFound("Study task not found.")
+    if task.status == "planned":
+        raise Conflict("This session has no recorded outcome to undo.")
+    if not can_undo_outcome(task, current):
+        raise Conflict(f"Outcomes can only be undone within {UNDO_WINDOW_HOURS} hours.")
+
+    makeups = session.scalars(
+        select(StudyTask).where(
+            StudyTask.replanned_from == task.id,
+            StudyTask.status == "planned",
+        )
+    ).all()
+    removed = [makeup for makeup in makeups if (getattr(makeup, "timer_state", None) or "idle") == "idle"]
+    for makeup in removed:
+        session.delete(makeup)
+    for notification in session.scalars(
+        select(Notification).where(Notification.task_id == task.id, Notification.read_at.is_(None))
+    ).all():
+        notification.read_at = current
+
+    previous = task.status
+    task.status = "planned"
+    task.actual_duration_min = None
+    task.score_before = None
+    task.score_after = None
+    task.outcome_recorded_at = None
+    task.undone_at = current
+    session.add(
+        ReplanLog(
+            student_id=student_id,
+            plan_id=task.plan_id,
+            task_id=task.id,
+            reason=f"Student undid a {previous} outcome.",
+            changes=[
+                {
+                    "topic_id": task.topic_id,
+                    "previous_status": previous,
+                    "removed_makeup_task_ids": [str(item.id) for item in removed],
+                }
+            ],
+        )
+    )
+    session.commit()
+    return UndoOutcomeResponse(
+        task=_task_response(task, _topic_priority(session, task.plan_id, task.topic_id)),
+        removed_task_ids=[item.id for item in removed],
     )
 
 

@@ -126,6 +126,10 @@ def _as_example(question, points: list[MarkingPoint]) -> str:
     parts = [f"Q{question.full_label}: {question.text.strip()}"]
     for option in question.options or []:
         parts.append(f"  ({option['label']}) {option['text']}")
+    if question.table:
+        parts.append(f"  table: {' | '.join(question.table['headers'])}")
+        for row in question.table["rows"]:
+            parts.append(f"    {' | '.join(row)}")
     for point in sorted(points, key=lambda p: p.order_no)[:MOST_POINTS_SHOWN]:
         parts.append(f"  {point.code} [{point.point_type.value}, {point.marks:g}] {_says(point)}")
     return "\n".join(parts)

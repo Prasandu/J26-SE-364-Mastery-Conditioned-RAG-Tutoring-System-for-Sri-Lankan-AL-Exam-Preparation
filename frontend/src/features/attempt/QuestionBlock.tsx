@@ -1,5 +1,6 @@
 import type { AnswerOut } from "@/api/types";
 import { Badge } from "@/components/Badge";
+import { DataTable } from "@/components/DataTable";
 import type { Answerable } from "@/lib/questions";
 import { isMcq } from "@/lib/questions";
 import { marks } from "@/lib/format";
@@ -43,6 +44,11 @@ export function QuestionBlock({
         <span className="mt-0.5 w-12 shrink-0 font-mono text-sm text-brand-700">{label}</span>
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap text-sm text-slate-800">{question.text}</p>
+          {question.table && (
+            <div className="overflow-x-auto">
+              <DataTable table={question.table} />
+            </div>
+          )}
           {question.max_marks !== null && (
             <div className="mt-2">
               <Badge tone="good">{marks(question.max_marks)}</Badge>

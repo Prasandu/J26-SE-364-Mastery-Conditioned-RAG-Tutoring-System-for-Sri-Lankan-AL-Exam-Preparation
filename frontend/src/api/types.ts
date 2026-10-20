@@ -17,12 +17,21 @@ export interface PaperSummary {
 // The backend stores options as a plain string map, usually {label, text}.
 export type QuestionOption = Record<string, string>;
 
+// Tabulated data a question refers to (e.g. experimental readings) - the only kind
+// of visual content a question can actually show (see app/ai/author.py's
+// SYSTEM_PROMPT: no graph or diagram can be shown).
+export interface QuestionTable {
+  headers: string[];
+  rows: string[][];
+}
+
 export interface Question {
   id: number;
   label: string;
   text: string;
   max_marks: number | null;
   options: QuestionOption[] | null;
+  table: QuestionTable | null;
   topics: string[];
   sub_questions: Question[];
 }

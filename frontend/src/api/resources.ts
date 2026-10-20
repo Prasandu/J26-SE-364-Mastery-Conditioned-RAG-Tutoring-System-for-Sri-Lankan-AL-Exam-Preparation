@@ -13,9 +13,10 @@ export interface UploadResourceInput {
   subject: string;
   topicCode?: string;
   file: File;
-  createdBy: string;
 }
 
+// created_by is not sent - the backend fills it in from the signed-in admin account
+// (see app/api/resources.py), the same way student_ref works for an attempt.
 export function uploadResource(input: UploadResourceInput): Promise<IngestResult> {
   const form = new FormData();
   form.append("code", input.code);
@@ -24,7 +25,6 @@ export function uploadResource(input: UploadResourceInput): Promise<IngestResult
   if (input.topicCode) {
     form.append("topic_code", input.topicCode);
   }
-  form.append("created_by", input.createdBy);
   form.append("file", input.file);
   return request<IngestResult>("/admin/resources", { method: "POST", form });
 }

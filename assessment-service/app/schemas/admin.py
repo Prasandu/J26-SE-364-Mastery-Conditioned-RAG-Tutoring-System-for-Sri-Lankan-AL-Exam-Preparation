@@ -37,11 +37,20 @@ class OptionIn(_Input):
     text: str = Field(min_length=1)
 
 
+class TableIn(_Input):
+    """Tabulated data a question refers to, e.g. a set of experimental readings -
+    the only way to show tabular data at all (see QuestionIn.table)."""
+
+    headers: list[str] = Field(min_length=1)
+    rows: list[list[str]] = Field(min_length=1)
+
+
 class QuestionIn(_Input):
     label: Code = Field(examples=["1", "(a)", "(i)"])
     text: str = ""
     max_marks: float | None = Field(default=None, gt=0)
     options: list[OptionIn] | None = None  # MCQ sections only
+    table: TableIn | None = None
     topics: list[str] = []  # topic codes
     sub_questions: list["QuestionIn"] = []
 

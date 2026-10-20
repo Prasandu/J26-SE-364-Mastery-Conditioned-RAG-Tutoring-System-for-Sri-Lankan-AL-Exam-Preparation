@@ -84,6 +84,8 @@ def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_to
     elif question.options is not None:
         errors.append(f"{where}: options are only allowed in MCQ sections")
 
+    errors += _check_table(where, question)
+
     if unknown := sorted(set(question.topics) - known_topics):
         errors.append(f"{where}: unknown topic(s) {', '.join(unknown)}")
 
@@ -96,6 +98,16 @@ def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_to
                 f"but the question is worth {question.max_marks:g}"
             )
     return errors
+
+
+def _check_table(where: str, question: QuestionIn) -> list[str]:
+    if question.table is None:
+        return []
+    width = len(question.table.headers)
+    bad_rows = [i for i, row in enumerate(question.table.rows) if len(row) != width]
+    if not bad_rows:
+        return []
+    return [f"{where}: table row(s) {', '.join(str(i) for i in bad_rows)} do not match the {width} header(s)"]
 
 
 def check_new_questions(

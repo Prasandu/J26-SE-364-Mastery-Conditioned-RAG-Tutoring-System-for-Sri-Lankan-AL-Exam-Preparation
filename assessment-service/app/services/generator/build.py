@@ -32,6 +32,7 @@ from app.schemas.admin import (
     QuestionSchemeIn,
     RuleIn,
     SectionIn,
+    TableIn,
 )
 from app.services.generator.blueprint import Blueprint, SectionPlan
 from app.services.verify.checks import duplicate_of
@@ -230,6 +231,9 @@ def _unusable(question: WrittenQuestion, plan: SectionPlan) -> str | None:
         if point.point_type not in POINT_TYPES:
             return f"unknown marking point type '{point.point_type}'"
 
+    if question.table and any(len(row) != len(question.table.headers) for row in question.table.rows):
+        return "table row(s) do not match its header count"
+
     if plan.answer_mode == AnswerMode.MCQ:
         return _unusable_mcq(question)
     if any(point.point_type == PointType.MCQ_KEY.value for point in question.points):
@@ -269,6 +273,9 @@ def _section(plan: SectionPlan, questions: list[WrittenQuestion], topics: list[s
                     if plan.answer_mode == AnswerMode.MCQ
                     else None
                 ),
+                table=TableIn(headers=question.table.headers, rows=question.table.rows)
+                if question.table
+                else None,
                 topics=[question.topic_code] if question.topic_code in topics else [],
                 sub_questions=[],
             )

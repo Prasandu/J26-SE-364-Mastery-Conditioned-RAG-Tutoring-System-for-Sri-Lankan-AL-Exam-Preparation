@@ -67,12 +67,18 @@ class PapersPageOut(BaseModel):
     page_size: int
 
 
+class TableOut(BaseModel):
+    headers: list[str]
+    rows: list[list[str]]
+
+
 class QuestionOut(BaseModel):
     id: int
     label: str
     text: str
     max_marks: float | None
     options: list[dict[str, str]] | None
+    table: TableOut | None
     topics: list[str]
     sub_questions: list["QuestionOut"]
 

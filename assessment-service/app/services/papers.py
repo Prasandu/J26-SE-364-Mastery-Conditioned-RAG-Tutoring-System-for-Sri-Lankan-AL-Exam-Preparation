@@ -185,6 +185,7 @@ def _question_in(question: Question) -> dict:
         "text": question.text,
         "max_marks": question.max_marks,
         "options": question.options,
+        "table": question.table,
         "topics": [topic.code for topic in question.topics],
         "sub_questions": [_question_in(sub) for sub in question.sub_questions],
     }
@@ -271,6 +272,7 @@ def question_out(question: Question) -> QuestionOut:
         text=question.text,
         max_marks=question.max_marks,
         options=question.options,
+        table=question.table,
         topics=[topic.code for topic in question.topics],
         sub_questions=[question_out(sub) for sub in question.sub_questions],
     )
@@ -312,6 +314,7 @@ def _add_questions(
             text=item.text,
             max_marks=item.max_marks,
             options=[option.model_dump() for option in item.options] if item.options else None,
+            table=item.table.model_dump() if item.table else None,
             order_no=start_order + offset,
             topics=[topics[code] for code in item.topics],
         )

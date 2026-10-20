@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import type { Question, Topic } from "@/api/types";
 import { Badge } from "@/components/Badge";
+import { DataTable } from "@/components/DataTable";
 import { fullLabel, marks } from "@/lib/format";
 
 import { TopicTagEditor } from "./TopicTagEditor";
@@ -47,6 +48,12 @@ export function AdminQuestionTree({ questions, allTopics, parentLabel = "" }: Pr
                         </li>
                       ))}
                     </ul>
+                  )}
+
+                  {question.table && (
+                    <div className="overflow-x-auto">
+                      <DataTable table={question.table} />
+                    </div>
                   )}
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">

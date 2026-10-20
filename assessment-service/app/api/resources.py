@@ -13,7 +13,7 @@ from app.ai import build_embedding_model
 from app.ai.embeddings import EmbeddingModel
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import Resource
+from app.models import Resource, User
 from app.schemas.resources import (
     EmbedResultOut,
     IngestResultOut,
@@ -53,15 +53,18 @@ async def upload_resource(
     subject: str = Form(default="chemistry", max_length=50),
     topic_code: str | None = Form(default=None, max_length=30),
     file: UploadFile = File(description="The resource PDF"),
-    created_by: str = Form(min_length=1, max_length=64, description="Who is uploading this"),
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
     store: FileStore = Depends(get_resource_store),
+    user: User = Depends(require_admin),
 ):
     """Ingest a resource PDF as a new version, or do nothing if it is unchanged.
 
     The chunks are not embedded here - that is its own step (POST .../embed), so a
     large upload is never blocked on a slow or quota-limited provider call.
+
+    created_by always comes from the signed-in account, never the request body -
+    same reason app/api/attempts.py does this for student_ref.
     """
     pdf = await _read_upload(file, settings.max_resource_upload_mb)
     result = ingest_resource(
@@ -72,7 +75,7 @@ async def upload_resource(
         topic_code=topic_code,
         subject=subject,
         pdf=pdf,
-        created_by=created_by,
+        created_by=user.email,
     )
     return IngestResultOut(
         resource=result.resource,
@@ -94,7 +97,7 @@ def embed_resource(
     resource = _get_version(db, code, version)
     if embedder is None:
         raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "No embedding model is configured. Set GEMINI_API_KEY."
+            status.HTTP_503_SERVICE_UNAVAILABLE, "The local embedding model could not be loaded."
         )
     embedded, failures = embed_pending_chunks(db, embedder, resource_id=resource.id)
     still_pending = sum(1 for chunk in resource.chunks if chunk.embedding is None)
@@ -126,7 +129,7 @@ def search(
     """
     if embedder is None:
         raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "No embedding model is configured. Set GEMINI_API_KEY."
+            status.HTTP_503_SERVICE_UNAVAILABLE, "The local embedding model could not be loaded."
         )
     result = search_resources(
         db,

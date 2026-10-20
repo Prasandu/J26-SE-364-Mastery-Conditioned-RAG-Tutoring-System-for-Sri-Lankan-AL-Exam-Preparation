@@ -78,11 +78,23 @@ class WrittenEcf(BaseModel):
     depends_on: list[str] = Field(description="The earlier point codes it follows from, e.g. ['P1']")
 
 
+class WrittenTable(BaseModel):
+    """Tabulated data the question refers to, e.g. a set of experimental readings -
+    the only way to show tabular data at all (see SYSTEM_PROMPT)."""
+
+    headers: list[str]
+    rows: list[list[str]] = Field(description="Each row has exactly one cell per header, in order")
+
+
 class WrittenQuestion(BaseModel):
     label: str = Field(description='"1", "2" ... within the section')
     text: str
     topic_code: str = Field(description="The syllabus topic this question tests")
     options: list[WrittenOption] = Field(default_factory=list, description="Multiple choice only")
+    table: WrittenTable | None = Field(
+        default=None,
+        description="Only if the question is built around tabulated data the student must read from",
+    )
     answer: str = Field(description="The full model answer")
     points: list[WrittenPoint]
     carried_forward: list[WrittenEcf] = Field(
@@ -123,7 +135,11 @@ Rules:
 9. Where real past questions are shown, follow their style, difficulty and the way their
    marks are split. Do not copy them.
 10. A question must contain every number needed to answer it. Never refer to a diagram,
-   graph, table or figure, because none can be shown.
+   graph or figure, because none of those can be shown. A table is the one exception:
+   if the question is naturally built around tabulated data (e.g. a set of
+   experimental readings), put it in the table field - do not write it into the
+   question text as a sentence, and do not also describe a table you put in the
+   table field.
 11. For a calculation point, give expected_value, expected_unit, and working: the
    arithmetic that produces the value, numbers and operators only (no units, no words).
    The working is recomputed, so it must agree with expected_value.

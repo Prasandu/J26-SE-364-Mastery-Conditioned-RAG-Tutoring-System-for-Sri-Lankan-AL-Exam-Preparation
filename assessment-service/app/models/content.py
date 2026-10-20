@@ -132,6 +132,12 @@ class Question(Base):
     text: Mapped[str] = mapped_column(Text, default="")
     max_marks: Mapped[float | None] = mapped_column(Float)
     options: Mapped[list[dict[str, str]] | None] = mapped_column(JSON_DOC)  # MCQ only
+    # {"headers": [...], "rows": [[...], ...]} - tabulated data the question refers to
+    # (e.g. experimental readings). The only way to show tabular data at all: a
+    # question can describe a graph's axes in words, but cannot show a graph or a
+    # diagram, so those still have to be asked about without one (see
+    # app/ai/author.py's SYSTEM_PROMPT).
+    table: Mapped[dict | None] = mapped_column(JSON_DOC)
     order_no: Mapped[int] = mapped_column(Integer, default=0)
 
     section: Mapped[Section] = relationship(back_populates="questions")

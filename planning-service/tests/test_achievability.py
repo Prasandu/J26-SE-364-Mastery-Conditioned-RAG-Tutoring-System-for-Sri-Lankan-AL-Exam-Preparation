@@ -441,3 +441,40 @@ def test_unset_exam_weights_are_neutral_so_hours_are_spread_by_weakness() -> Non
     assert effective_exam_weight(0.8) == 0.8
     assert sum(1 for hours in allocated.values() if hours > 0) >= 2
     assert allocated["chem-u0"] >= allocated["chem-u3"]
+
+
+def test_coaching_focus_topics_and_reasons_are_never_cut_mid_phrase() -> None:
+    coaching = build_coaching_message(
+        student_name="Uvindu",
+        days_left=90,
+        best_range="C (59–69%)",
+        target_grade="B",
+        status="out_of_reach",
+        focus_topics=[
+            {"topic": "Amines, Reactions of amines", "reason": "steady practice will strengthen recall"},
+            {
+                "topic": "Industrial manufacturing processes, Sulfuric acid by the contact process",
+                "reason": "high exam weight",
+            },
+        ],
+        suggested_hours_per_day=1,
+    )
+
+    first, long_one = coaching.focus_topics
+    assert first.topic == "Amines, Reactions of amines"
+    assert first.reason == "steady practice will strengthen recall"
+    assert long_one.topic.endswith("…") and len(long_one.topic) <= 60
+    full_name = "Industrial manufacturing processes, Sulfuric acid by the contact process"
+    assert full_name.startswith(long_one.topic[:-1])
+    assert coaching.body.endswith("as a realistic goal.")
+
+
+def test_long_body_is_trimmed_by_whole_sentences() -> None:
+    from app.services.achievability import _whole_sentences
+
+    text = "First short sentence here. Second sentence that is quite a bit longer than the first one is."
+
+    assert _whole_sentences(text, 6) == "First short sentence here."
+    assert _whole_sentences("One very long sentence without any break at all here", 3) == (
+        "One very long sentence without any break at all here"
+    )

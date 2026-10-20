@@ -207,11 +207,9 @@ def build_plan_achievability(
             reason = "high exam weight"
         else:
             reason = "steady practice will strengthen recall"
-        parent_id = getattr(topic, "parent_id", None)
-        parent = session.get(Topic, parent_id) if parent_id else None
-        name = getattr(topic, "name", topic_id)
-        if parent is not None:
-            name = f"{getattr(parent, 'name', topic_id)}, {name}"
+        # Sub-topic names stand on their own ("Reactions of transition elements");
+        # prefixing the parent repeats words and makes the coaching card cramped.
+        name = getattr(topic, "name", None) or topic_id
         focus_topics.append(
             (
                 expected_gain_per_hour(topics[-1]),

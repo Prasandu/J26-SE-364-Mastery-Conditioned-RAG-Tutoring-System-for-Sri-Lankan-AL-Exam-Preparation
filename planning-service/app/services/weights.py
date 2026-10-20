@@ -98,3 +98,7 @@ PREDICTION_RUNS_TO_KEEP = 5  # older prediction runs per student are deleted
 
 # Outcome undo
 UNDO_WINDOW_HOURS = 24  # a recorded outcome can be undone for this long
+
+# Coaching message
+COACHING_MAX_FOCUS_CHARS = 60  # focus topic names/reasons are shortened (with "…") only beyond this
+COACHING_MAX_FOCUS_WORDS = 5  # ...or beyond this many words

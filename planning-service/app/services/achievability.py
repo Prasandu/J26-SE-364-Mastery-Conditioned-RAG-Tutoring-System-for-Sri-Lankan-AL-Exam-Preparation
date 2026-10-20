@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from math import floor, isfinite
 from typing import Literal, TypedDict
@@ -24,6 +25,8 @@ from app.services.weights import (
     ACHIEVABILITY_STRETCH_MULTIPLIER,
     ACHIEVABILITY_UNCERTAINTY_EVIDENCE_DECAY,
     ACHIEVABILITY_UNMET_PREREQUISITE_PENALTY,
+    COACHING_MAX_FOCUS_CHARS,
+    COACHING_MAX_FOCUS_WORDS,
     NEUTRAL_EXAM_WEIGHT,
 )
 
@@ -116,8 +119,8 @@ def build_coaching_message(
 
     focus = tuple(
         CoachingFocusTopic(
-            topic=_limit_words(item["topic"], 3),
-            reason=_limit_words(item["reason"], 3),
+            topic=_shorten(item["topic"], COACHING_MAX_FOCUS_CHARS),
+            reason=_shorten(item["reason"], COACHING_MAX_FOCUS_CHARS),
         )
         for item in focus_topics[:3]
     )
@@ -125,9 +128,9 @@ def build_coaching_message(
         suggested_hours_per_day=suggested_hours_per_day,
     )
     return CoachingMessage(
-        greeting=f"Dear {_limit_words(student_name.strip() or 'there', 1)},",
-        headline=_limit_words(headline, 8),
-        body=_limit_words(body, 22),
+        greeting=f"Dear {(student_name.strip() or 'there').split()[0]},",
+        headline=_whole_sentences(headline, 8),
+        body=_whole_sentences(body, 22),
         focus_topics=focus,
         daily_suggestion=daily_suggestion,
         tone=tone,
@@ -150,8 +153,32 @@ def _daily_suggestion(*, suggested_hours_per_day: float) -> str:
     return f"Aim for about {amount} a day, using the time available in your plan."
 
 
-def _limit_words(value: str, maximum: int) -> str:
-    return " ".join(value.split()[:maximum])
+def _whole_sentences(value: str, maximum_words: int) -> str:
+    """Keep whole sentences within ``maximum_words``; never cut mid-sentence.
+
+    If even the first sentence is longer, it is kept complete.
+    """
+    if len(value.split()) <= maximum_words:
+        return value
+    sentences = re.split(r"(?<=[.!?])\s+", value.strip())
+    kept: list[str] = []
+    for sentence in sentences:
+        if kept and len(" ".join([*kept, sentence]).split()) > maximum_words:
+            break
+        kept.append(sentence)
+    return " ".join(kept)
+
+
+def _shorten(value: str, maximum_chars: int, maximum_words: int = COACHING_MAX_FOCUS_WORDS) -> str:
+    """Shorten long labels at a word boundary, marking the cut with an ellipsis."""
+    words = value.split()
+    text = " ".join(words)
+    if len(text) <= maximum_chars and len(words) <= maximum_words:
+        return text
+    cut = " ".join(words[:maximum_words])
+    if len(cut) > maximum_chars - 1:
+        cut = cut[: maximum_chars - 1].rsplit(" ", 1)[0]
+    return f"{cut.rstrip(',;:')}…"
 
 
 def effective_exam_weight(value: float | None) -> float:

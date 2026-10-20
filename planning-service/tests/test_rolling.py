@@ -670,3 +670,49 @@ def test_replanning_keeps_sessions_being_timed_and_blocks_their_time(
         item.start_at == timed.start_at and item.end_at == timed.start_at + timedelta(minutes=60)
         for item in captured["commitments"]
     )
+
+
+def test_rescheduling_missed_work_keeps_every_other_session_in_place(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = make_plan()
+    tomorrow = SimpleNamespace(
+        id=uuid4(),
+        status="planned",
+        timer_state="idle",
+        start_at=NOW + timedelta(days=1, hours=14),
+        duration_min=60,
+    )
+    session = FakeSession(plan, topics=TOPICS, slots=every_day_slots(plan.id))
+    deleted: list[Any] = []
+    session.delete = deleted.append  # type: ignore[method-assign]
+    base_scalars = _with_empty(session.scalars, Question, TopicEvidence)
+
+    def scalars(statement: Any) -> Scalars:
+        if statement.column_descriptions[0]["entity"] is StudyTask:
+            return Scalars([tomorrow])
+        return base_scalars(statement)
+
+    session.scalars = scalars  # type: ignore[method-assign]
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        scheduling,
+        "schedule_tasks",
+        lambda **kwargs: captured.update(kwargs) or ScheduleResult((), False, 0, {}),
+    )
+
+    scheduling.generate_plan_schedule(  # type: ignore[arg-type]
+        session,
+        "student-1",
+        plan.id,
+        horizon_days=7,
+        now=NOW,
+        duration_overrides={"mid": 45},
+        keep_existing=True,
+    )
+
+    assert deleted == []
+    assert [(item.topic_id, item.duration_minutes) for item in captured["priorities"]] == [("mid", 45)]
+    assert any(item.start_at == tomorrow.start_at for item in captured["commitments"])
+    tomorrow_local = tomorrow.start_at.astimezone(scheduling.ZoneInfo("UTC")).date()
+    assert captured["existing_daily_minutes"] == {tomorrow_local: 60}

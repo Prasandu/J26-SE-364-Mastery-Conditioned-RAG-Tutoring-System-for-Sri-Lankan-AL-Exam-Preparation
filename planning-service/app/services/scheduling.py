@@ -70,12 +70,18 @@ def generate_plan_schedule(
     priority_overrides: dict[str, float] | None = None,
     replanned_from: dict[str, Any] | None = None,
     excluded_topics: set[str] | None = None,
+    keep_existing: bool = False,
 ) -> ScheduleResponse:
     """Generate detailed tasks for the next ``horizon_days``.
 
     Topics deferred by overload compression are skipped (unless that would
     leave nothing to study), and tasks in the final week never contain new
     theory.
+
+    With ``keep_existing`` (used when rescheduling missed or partial work),
+    every planned session stays where it is and only the ``duration_overrides``
+    minutes are placed into free time, so one missed session does not
+    reshuffle the student's whole window.
     """
     plan = _owned_plan(session, student_id, plan_id)
     current = (now or datetime.now(UTC)).astimezone(UTC)
@@ -95,8 +101,9 @@ def generate_plan_schedule(
     in_progress = [
         task for task in existing_planned if (getattr(task, "timer_state", None) or "idle") != "idle"
     ]
+    kept = list(existing_planned) if keep_existing else in_progress
     for task in existing_planned:
-        if task not in in_progress:
+        if task not in kept:
             session.delete(task)
 
     priorities = _ranked_topics(
@@ -138,8 +145,31 @@ def generate_plan_schedule(
             start_at=task.start_at.astimezone(UTC),
             end_at=(task.start_at + timedelta(minutes=task.duration_min)).astimezone(UTC),
         )
-        for task in in_progress
+        for task in kept
     ]
+    existing_daily_minutes: dict[date, int] = {}
+    for task in kept:
+        day = task.start_at.astimezone(local_zone).date()
+        existing_daily_minutes[day] = existing_daily_minutes.get(day, 0) + task.duration_min
+    if keep_existing:
+        priorities = _only_rescheduled_topics(priorities, duration_overrides)
+        if not priorities:
+            return ScheduleResponse(tasks=[], infeasible=False, shortfall_minutes=0, unscheduled_minutes={})
+        return _schedule_and_store(
+            session,
+            plan,
+            student_id,
+            priorities,
+            windows=windows,
+            commitments=commitments,
+            exam_deadline=exam_deadline,
+            max_session_minutes=max_session_minutes,
+            daily_cap_minutes=daily_cap_minutes,
+            existing_daily_minutes=existing_daily_minutes,
+            current=current,
+            local_zone=local_zone,
+            replanned_from=replanned_from,
+        )
     effective_minutes_by_day: dict[date, int] = {}
     for window in windows:
         duration = int((window.end_at - window.start_at).total_seconds() // 60)
@@ -204,6 +234,51 @@ def generate_plan_schedule(
         )
         for topic in priorities
     ]
+    return _schedule_and_store(
+        session,
+        plan,
+        student_id,
+        priorities,
+        windows=windows,
+        commitments=commitments,
+        exam_deadline=exam_deadline,
+        max_session_minutes=max_session_minutes,
+        daily_cap_minutes=daily_cap_minutes,
+        existing_daily_minutes=existing_daily_minutes,
+        current=current,
+        local_zone=local_zone,
+        replanned_from=replanned_from,
+    )
+
+
+def _only_rescheduled_topics(
+    priorities: list[RankedTopic],
+    duration_overrides: dict[str, int],
+) -> list[RankedTopic]:
+    """Keep just the topics being rescheduled, with exactly their missing minutes."""
+    return [
+        replace(topic, duration_minutes=duration_overrides[topic.topic_id], prerequisites=())
+        for topic in priorities
+        if duration_overrides.get(topic.topic_id, 0) > 0
+    ]
+
+
+def _schedule_and_store(
+    session: Session,
+    plan: StudyPlan,
+    student_id: str,
+    priorities: list[RankedTopic],
+    *,
+    windows: list[TimeWindow],
+    commitments: list[SchedulerCommitment],
+    exam_deadline: datetime,
+    max_session_minutes: int,
+    daily_cap_minutes: int,
+    existing_daily_minutes: dict[date, int],
+    current: datetime,
+    local_zone: ZoneInfo,
+    replanned_from: dict[str, Any] | None,
+) -> ScheduleResponse:
     result = schedule_tasks(
         priorities=priorities,
         availability=windows,
@@ -212,6 +287,7 @@ def generate_plan_schedule(
         max_session_minutes=max_session_minutes,
         daily_cap_minutes=daily_cap_minutes,
         now=current,
+        existing_daily_minutes=existing_daily_minutes,
     )
 
     priority_by_topic = {item.topic_id: item.priority for item in priorities}

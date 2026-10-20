@@ -628,15 +628,17 @@ export default function PlanningPage() {
         ...(minutes !== null ? { actual_duration_min: minutes } : {}),
       });
       if (result.schedule) {
-        setSchedule(result.schedule);
+        // The response holds only the newly placed session(s); every other
+        // session stayed put, so reload the full list rather than replace it.
         const changed = movedTasks(before, result.schedule.tasks);
         setToast(
           result.replanned
             ? changed.length > 0
               ? changed
-              : ["Remaining study time was replanned; no additional sessions moved."]
+              : ["No free slot was left in this window for the remaining time."]
             : [],
         );
+        if (currentPlanId) setSchedule(await getSchedule(currentPlanId));
       } else if (schedule) {
         setSchedule({
           ...schedule,

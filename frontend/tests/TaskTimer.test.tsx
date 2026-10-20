@@ -263,3 +263,38 @@ describe("formatElapsed", () => {
     expect(formatElapsed(-5)).toBe("0:00");
   });
 });
+
+describe("rescheduling after a missed session", () => {
+  beforeEach(() => {
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [plan] });
+    vi.mocked(getRoadmap).mockReset().mockRejectedValue(new Error("not needed"));
+    vi.mocked(getSchedule).mockReset();
+    vi.mocked(updateTaskStatus).mockReset();
+  });
+
+  it("keeps the other sessions and adds only the moved one", async () => {
+    const missedTask = task({ id: "task-1" });
+    const otherTask = task({ id: "task-2", topic_id: "chem-u1-neutrons", start_at: "2026-10-22T10:30:00Z" });
+    const moved = task({ id: "task-3", start_at: "2026-10-23T11:30:00Z", replanned_from: "task-1" });
+    vi.mocked(getSchedule)
+      .mockResolvedValueOnce(schedule([missedTask, otherTask]))
+      .mockResolvedValue(schedule([task({ id: "task-1", status: "missed" }), otherTask, moved]));
+    vi.mocked(updateTaskStatus).mockResolvedValue({
+      task: task({ id: "task-1", status: "missed" }),
+      score_change: null,
+      planned_minutes: 60,
+      actual_minutes: 0,
+      replanned: true,
+      schedule: schedule([moved]),
+    });
+    renderPage();
+
+    const cards = await screen.findAllByRole("button", { name: "Missed" });
+    fireEvent.click(cards[0]);
+
+    expect(await screen.findByText("Moved or added sessions:")).toBeInTheDocument();
+    await waitFor(() => expect(getSchedule).toHaveBeenCalledTimes(2));
+    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getByText(/Neutrons/)).toBeInTheDocument();
+  });
+});

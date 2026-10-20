@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
@@ -74,6 +74,7 @@ class GreedyScheduler:
         max_session_minutes: int,
         daily_cap_minutes: int,
         now: datetime,
+        existing_daily_minutes: Mapping[date, int] | None = None,
     ) -> ScheduleResult:
         _validate_scheduler_input(priorities, availability, commitments, exam_deadline, now)
         if max_session_minutes <= 0 or daily_cap_minutes <= 0:
@@ -87,7 +88,8 @@ class GreedyScheduler:
             exam_deadline,
         )
         scheduled: list[ScheduledTask] = []
-        daily_minutes: dict[date, int] = defaultdict(int)
+        # Minutes already booked per day (sessions that are kept) count toward the cap.
+        daily_minutes: dict[date, int] = defaultdict(int, existing_daily_minutes or {})
         remaining_by_topic = {topic.topic_id: topic.duration_minutes for topic in ordered_topics}
 
         weekly_topics: dict[tuple[int, int], set[str]] = defaultdict(set)
@@ -230,6 +232,7 @@ def schedule_tasks(
     max_session_minutes: int,
     daily_cap_minutes: int,
     now: datetime,
+    existing_daily_minutes: Mapping[date, int] | None = None,
 ) -> ScheduleResult:
     """Stable scheduler entry point, currently backed by the greedy implementation."""
     return GreedyScheduler().schedule(
@@ -240,6 +243,7 @@ def schedule_tasks(
         max_session_minutes=max_session_minutes,
         daily_cap_minutes=daily_cap_minutes,
         now=now,
+        existing_daily_minutes=existing_daily_minutes,
     )
 
 

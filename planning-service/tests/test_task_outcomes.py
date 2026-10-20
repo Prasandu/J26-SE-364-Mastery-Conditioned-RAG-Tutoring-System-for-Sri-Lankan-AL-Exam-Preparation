@@ -90,6 +90,7 @@ def test_partial_outcome_replans_only_remaining_minutes(monkeypatch: pytest.Monk
     )
 
     assert captured["duration_overrides"] == {task.topic_id: 35}
+    assert captured["keep_existing"] is True  # only the missing minutes move
     assert captured["replanned_from"] == {task.topic_id: task.id}
     assert captured["priority_overrides"] == {task.topic_id: 0.85}
     assert result.actual_minutes == 25

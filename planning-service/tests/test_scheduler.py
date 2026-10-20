@@ -150,3 +150,22 @@ def test_single_remaining_topic_continues_on_later_days() -> None:
     assert sum(task.duration_min for task in result.tasks) == 360
     assert list(sessions_per_day.values()) == [2, 2, 2]
     assert not result.infeasible
+
+
+def test_minutes_already_booked_count_toward_the_daily_cap() -> None:
+    now = datetime(2026, 10, 19, 8, tzinfo=UTC)
+    windows = [TimeWindow(now, now + timedelta(hours=4))]
+
+    result = schedule_tasks(
+        priorities=[RankedTopic("ketones", "theory", 0.9, 120, "missed work")],
+        availability=windows,
+        commitments=[],
+        exam_deadline=now + timedelta(days=14),
+        max_session_minutes=60,
+        daily_cap_minutes=120,
+        now=now,
+        existing_daily_minutes={now.date(): 90},
+    )
+
+    assert sum(task.duration_min for task in result.tasks) == 30
+    assert result.unscheduled_minutes == {"ketones": 90}

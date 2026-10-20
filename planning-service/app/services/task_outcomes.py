@@ -88,6 +88,7 @@ def update_task_status(
             duration_overrides={task.topic_id: remaining_minutes},
             priority_overrides={task.topic_id: min(priority + 0.25, 1.0)},
             replanned_from={task.topic_id: task.id},
+            keep_existing=True,
         )
         session.add(
             ReplanLog(

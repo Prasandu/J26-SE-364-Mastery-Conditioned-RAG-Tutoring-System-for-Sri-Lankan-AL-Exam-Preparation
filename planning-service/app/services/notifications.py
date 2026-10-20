@@ -270,6 +270,7 @@ def _replan_missed(
                 topic_id: min(priorities.get(topic_id, 0.0) + 0.25, 1.0) for topic_id in durations
             },
             replanned_from=origins,
+            keep_existing=True,
         )
     except PlanningError:
         return {}

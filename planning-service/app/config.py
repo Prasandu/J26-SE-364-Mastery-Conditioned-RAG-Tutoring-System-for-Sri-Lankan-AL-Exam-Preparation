@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     supabase_jwks_url: str = ""
     ingest_api_key: str
     demo_mode: bool = False
+    # Comma-separated frontend origins allowed to call the API (CORS),
+    # e.g. "http://localhost:5173,https://alstudyhub.example.lk".
+    cors_origins: str = "http://localhost:5173"
     demo_student_ids: str = ""
     model_dir: Path = Path("models")
     assessment_service_url: AnyHttpUrl | None = None
@@ -36,6 +39,10 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
+
+    @property
+    def allowed_cors_origins(self) -> list[str]:
+        return [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def allowed_demo_student_ids(self) -> set[str]:

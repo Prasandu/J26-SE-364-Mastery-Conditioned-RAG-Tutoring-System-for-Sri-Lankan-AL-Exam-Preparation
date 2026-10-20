@@ -10,6 +10,7 @@ from app.api.plans import router as plans_router
 from app.api.predictions import router as predictions_router
 from app.api.students import router as students_router
 from app.api.tasks import router as tasks_router
+from app.config import settings
 from app.errors import register_error_handlers
 
 app = FastAPI(
@@ -20,7 +21,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.allowed_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import Computed, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -20,4 +21,8 @@ class KnowledgeChunk(Base):
     language: Mapped[str] = mapped_column(String(5), default="en")
     content: Mapped[str] = mapped_column(Text)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
+    # DB-generated (see migration b7c3f1a9d2e4) — never set from Python, used for hybrid retrieval.
+    content_tsv: Mapped[str | None] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', content)", persisted=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))

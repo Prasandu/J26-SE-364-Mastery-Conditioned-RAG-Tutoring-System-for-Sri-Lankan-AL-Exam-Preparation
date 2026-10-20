@@ -12,11 +12,13 @@ docs/
 infra/
 shared/
 CLAUDE.md
+.claude/
 
 # Python  ->  assessment-service/
 __pycache__/
 *.py[cod]
 .venv/
+.venv_local/
 venv/
 env/
 tests/

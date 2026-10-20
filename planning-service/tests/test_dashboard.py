@@ -325,3 +325,39 @@ def test_dashboard_does_not_predict_below_minimum_evidence(monkeypatch) -> None:
     assert not response.has_prediction
     assert response.minimum_assessed_topics == 1
     assert calls == {"predictions": 0, "dashboard": 1}
+
+
+def test_dashboard_fetches_only_the_newest_overall_prediction() -> None:
+    from app.services.dashboard import _latest_overall_prediction
+
+    captured = {}
+
+    class Session:
+        def scalars(self, statement):
+            captured["sql"] = str(statement)
+            return SimpleNamespace(all=lambda: [SimpleNamespace(topic_id=None, predicted_score=0.64)])
+
+    latest = _latest_overall_prediction(Session(), "student-1")
+
+    assert latest.predicted_score == 0.64
+    sql = captured["sql"]
+    assert "topic_id IS NULL" in sql and "ORDER BY planning.predictions.created_at DESC" in sql
+    assert "LIMIT" in sql
+
+
+def test_saving_predictions_prunes_old_runs() -> None:
+    from sqlalchemy.dialects import postgresql
+
+    from app.services.predictions import _prune_old_predictions
+
+    executed = []
+
+    class Session:
+        def execute(self, statement):
+            executed.append(statement)
+
+    _prune_old_predictions(Session(), "student-1")  # type: ignore[arg-type]
+
+    sql = str(executed[0].compile(dialect=postgresql.dialect()))
+    assert sql.startswith("DELETE FROM planning.predictions")
+    assert "OFFSET" in sql and "created_at <" in sql

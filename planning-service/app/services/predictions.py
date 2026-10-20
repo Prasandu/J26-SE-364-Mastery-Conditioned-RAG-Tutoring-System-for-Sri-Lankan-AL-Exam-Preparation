@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.ai.prediction.features import (
@@ -27,6 +27,7 @@ from app.schemas.predictions import (
     StudentPredictionResponse,
     TopicPrediction,
 )
+from app.services.weights import PREDICTION_RUNS_TO_KEEP
 
 LOGGER = logging.getLogger(__name__)
 _MODEL_VERSION = "rule-based-fallback-v1"
@@ -200,6 +201,7 @@ def predict_student(
             model_version=model_version,
         )
     )
+    _prune_old_predictions(session, authenticated_student_id)
     session.add_all(prediction_rows)
     if commit:
         session.commit()
@@ -250,3 +252,22 @@ def _fallback_factors(features: tuple[float, ...]) -> list[dict[str, float | str
 
 def _grade_for(score: float) -> str:
     return next(grade for threshold, grade in _GRADE_BANDS if score >= threshold)
+
+
+def _prune_old_predictions(session: Session, student_id: str) -> None:
+    """Keep only the newest prediction runs so the table cannot grow without limit.
+
+    All rows of one run share a transaction timestamp, so runs are identified
+    by the overall prediction's ``created_at``.
+    """
+    cutoff = (
+        select(Prediction.created_at)
+        .where(Prediction.student_id == student_id, Prediction.topic_id.is_(None))
+        .order_by(Prediction.created_at.desc())
+        .offset(PREDICTION_RUNS_TO_KEEP - 1)
+        .limit(1)
+        .scalar_subquery()
+    )
+    session.execute(
+        delete(Prediction).where(Prediction.student_id == student_id, Prediction.created_at < cutoff)
+    )

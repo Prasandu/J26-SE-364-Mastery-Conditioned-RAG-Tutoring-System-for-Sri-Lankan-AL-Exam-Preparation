@@ -56,6 +56,9 @@ class DemoSession:
         elif isinstance(record, Prediction):
             self.predictions.append(record)
 
+    def execute(self, _statement: Any) -> None:
+        return None
+
     def add_all(self, records: list[Any]) -> None:
         for record in records:
             self.add(record)

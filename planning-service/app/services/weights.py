@@ -91,3 +91,6 @@ MOTIVATION_DECLINE_RECENT_DAYS = 14  # a decline alert this recent means recover
 MOTIVATION_CELEBRATION_ADHERENCE = 0.8  # last-7-day adherence for celebration
 MOTIVATION_CELEBRATION_MIN_MINUTES = 60  # ...over at least this many planned minutes
 MOTIVATION_CONSISTENCY_MIN_DAYS = 3  # study days in the last week for consistency (else effort)
+
+# Predictions
+PREDICTION_RUNS_TO_KEEP = 5  # older prediction runs per student are deleted

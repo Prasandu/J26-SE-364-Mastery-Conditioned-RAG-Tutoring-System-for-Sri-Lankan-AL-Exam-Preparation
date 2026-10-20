@@ -50,6 +50,9 @@ class FakeSession:
     def add_all(self, rows: list[object]) -> None:
         self.added.extend(rows)
 
+    def execute(self, statement: object) -> None:
+        self.executed = getattr(self, "executed", []) + [statement]
+
     def commit(self) -> None:
         self.committed = True
 

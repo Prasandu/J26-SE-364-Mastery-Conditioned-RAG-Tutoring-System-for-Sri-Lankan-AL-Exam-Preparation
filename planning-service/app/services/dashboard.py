@@ -280,13 +280,24 @@ def _latest_plan(plans):
     return max(plans, key=lambda plan: getattr(plan, "updated_at", getattr(plan, "exam_date", None)))
 
 
+def _latest_overall_prediction(session, student_id: str):
+    """Newest overall (topic_id IS NULL) prediction, fetched as a single row."""
+    rows = _all(
+        session,
+        select(Prediction)
+        .where(Prediction.student_id == student_id, Prediction.topic_id.is_(None))
+        .order_by(Prediction.created_at.desc())
+        .limit(1),
+    )
+    return next((row for row in rows if getattr(row, "topic_id", None) is None), None)
+
+
 def _current_prediction_score(session, student_id: str) -> float:
-    latest = _all(session, select(Prediction).where(Prediction.student_id == student_id))
-    for row in reversed(latest):
-        if getattr(row, "topic_id", None) is None:
-            value = float(getattr(row, "predicted_score", 0.0))
-            if isfinite(value):
-                return _clamp(value)
+    latest = _latest_overall_prediction(session, student_id)
+    if latest is not None:
+        value = float(getattr(latest, "predicted_score", 0.0))
+        if isfinite(value):
+            return _clamp(value)
     states = _all(session, select(LearnerTopicState).where(LearnerTopicState.student_id == student_id))
     if not states:
         return 0.5
@@ -294,8 +305,7 @@ def _current_prediction_score(session, student_id: str) -> float:
 
 
 def _has_overall_prediction(session, student_id: str) -> bool:
-    rows = _all(session, select(Prediction).where(Prediction.student_id == student_id))
-    return any(getattr(row, "topic_id", None) is None for row in rows)
+    return _latest_overall_prediction(session, student_id) is not None
 
 
 def _target_grade_for_student(session, student_id: str) -> str:

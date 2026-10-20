@@ -19,7 +19,7 @@ from app.models import (
     Topic,
     utcnow,
 )
-from app.schemas.admin import PaperIn, QuestionIn
+from app.schemas.admin import PaperIn, PastPaperShellIn, QuestionIn
 from app.schemas.content import AdminPaperDetail, PaperDetail, PaperSummary, QuestionOut, SectionOut
 from app.services.pdf import page_count_bytes
 from app.services.storage import PDF_CONTENT_TYPE, FileStore
@@ -106,20 +106,28 @@ def create_paper(db: Session, data: PaperIn) -> Paper:
     return paper
 
 
-def create_past_paper_with_file(db: Session, data: PaperIn, pdf: bytes, store: FileStore) -> Paper:
-    """A past paper shown to students as its own PDF, not OCR'd text - the admin
-    types in a skeleton (label, marks, answer mode, start page) per question instead
-    of transcribing the wording. See app/api/papers.py's GET .../file for how the
-    PDF then reaches the student."""
-    if data.kind != PaperKind.PAST:
-        raise ContentValidationError("Only past papers can be created from a PDF this way", [])
+PAST_PAPER_SECTION_CODE = "I"
+
+
+def create_past_paper_shell(db: Session, data: PastPaperShellIn, pdf: bytes, store: FileStore) -> Paper:
+    """A past paper shown to students as its own PDF, not OCR'd text - created with
+    no questions yet. The admin adds them afterward, one at a time (see
+    append_questions), once they know the real paper's layout, instead of typing a
+    full skeleton up front. See app/api/papers.py's GET .../file for how the PDF
+    then reaches the student."""
     key = store.save(pdf, PDF_CONTENT_TYPE)
-    paper = Paper(status=ContentStatus.DRAFT, file_key=key, page_count=page_count_bytes(pdf))
-    try:
-        _fill_paper(db, paper, data)
-    except ContentValidationError:
-        store.delete(key)
-        raise
+    paper = Paper(
+        status=ContentStatus.DRAFT,
+        title=data.title,
+        kind=PaperKind.PAST,
+        year=data.year,
+        subject=data.subject,
+        file_key=key,
+        page_count=page_count_bytes(pdf),
+    )
+    paper.sections.append(
+        Section(code=PAST_PAPER_SECTION_CODE, title="Questions", answer_mode=data.answer_mode, order_no=0)
+    )
     db.add(paper)
     db.commit()
     return paper
@@ -154,8 +162,11 @@ def append_questions(db: Session, paper_id: int, section_code: str, questions: l
 
     topics = topics_by_code(db)
     existing_labels = {q.full_label for q in section.questions}
+    # A past paper's own PDF shows the real MCQ options, so a question added this
+    # way does not need them recorded as data too.
+    options_required = paper.file_key is None
     if errors := check_new_questions(
-        section_code, existing_labels, questions, section.answer_mode, set(topics)
+        section_code, existing_labels, questions, section.answer_mode, set(topics), options_required
     ):
         raise ContentValidationError("Cannot add these questions", errors)
 
@@ -164,6 +175,31 @@ def append_questions(db: Session, paper_id: int, section_code: str, questions: l
     _add_questions(section, questions, parent=None, topics=topics, start_order=start_order)
     db.commit()
     return paper
+
+
+def ensure_mcq_question_skeletons(
+    db: Session, paper_id: int, section_code: str, labels: list[str], marks: float | None
+) -> None:
+    """Auto-create a bare MCQ question skeleton (label and marks, no wording) for
+    any of these labels not already in this section - so importing an MCQ answer
+    key does not first require typing in every one of its question rows by hand.
+    Silently does nothing if the section does not exist or the paper is not a
+    draft - the scheme import itself reports that problem in a way the admin
+    already understands.
+    """
+    paper = get_paper(db, paper_id)
+    if paper.status != ContentStatus.DRAFT:
+        return
+    section = next((s for s in paper.sections if s.code == section_code), None)
+    if section is None:
+        return
+
+    existing = {q.full_label for q in section.questions if q.parent is None}
+    missing = [label for label in dict.fromkeys(labels) if label not in existing]
+    if not missing:
+        return
+    skeletons = [QuestionIn(label=label, max_marks=marks) for label in missing]
+    append_questions(db, paper_id, section_code, skeletons)
 
 
 def copy_paper(db: Session, paper_id: int) -> Paper:

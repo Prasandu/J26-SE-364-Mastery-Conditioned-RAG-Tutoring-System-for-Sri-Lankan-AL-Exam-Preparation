@@ -98,6 +98,9 @@ class McqAnswer(BaseModel):
 class ExtractedSchemePage(BaseModel):
     questions: list[ExtractedScheme] = []
     mcq_answers: list[McqAnswer] = Field(default_factory=list, description="An answer key table")
+    mcq_marks: float | None = Field(
+        default=None, description="Marks for one correct MCQ answer, if the page states it"
+    )
     notes: list[str] = []
 
 
@@ -135,7 +138,10 @@ Rules:
 6. Fill expected only with what code can check: option for an answer key, value and unit for a
    numeric answer, equation for a balanced equation. Leave the rest empty.
 7. Put any instruction to the examiner, such as "deduct 01 mark if ...", into notes.
-8. For an answer key table, list every question and its correct option in mcq_answers.
+8. For an answer key table, list every question and its correct option in mcq_answers, and set
+   mcq_marks to the marks awarded for one correct answer if the page states it anywhere (e.g.
+   "each correct response: 01 mark", or a total divided evenly across the questions listed).
+   Leave mcq_marks empty if the page never says.
 """
 
 

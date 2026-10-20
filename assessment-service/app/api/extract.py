@@ -7,6 +7,7 @@ the better tool for a large, multi-file import (many sections, resumable across
 days against a daily quota); this is the one-PDF-at-a-time path for the admin UI.
 """
 
+import logging
 import tempfile
 from pathlib import Path
 from typing import Literal
@@ -15,11 +16,12 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.ai import build_vision_model_with_fallback
+from app.ai import build_classifier, build_vision_model_with_fallback
 from app.ai.vision import VisionModel
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.errors import ContentValidationError
+from app.models import MarkingScheme
 from app.schemas.admin import MarkingSchemeIn, PaperIn, QuestionIn, QuestionSchemeIn
 from app.schemas.content import AdminPaperDetail, MarkingSchemeOut
 from app.schemas.extract import (
@@ -31,10 +33,12 @@ from app.schemas.extract import (
     SchemeFromExtractionIn,
 )
 from app.security import require_admin
-from app.services import papers, schemes
-from app.services.drafts import paper_section_from_extraction, scheme_from_extraction
+from app.services import papers, schemes, topics_classify
+from app.services.drafts import clean_label, paper_section_from_extraction, scheme_from_extraction
 from app.services.extractor import READ_ERRORS, ContentExtractor
 from app.services.pdf import page_count, parse_pages, render_pages
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/extract", tags=["extract"], dependencies=[Depends(require_admin)])
 
@@ -127,10 +131,14 @@ def create_paper_from_extraction(data: PaperFromExtractionIn, db: Session = Depe
     "/papers/{paper_id}/marking-schemes", response_model=MarkingSchemeOut, status_code=status.HTTP_201_CREATED
 )
 def create_scheme_from_extraction(
-    paper_id: int, data: SchemeFromExtractionIn, db: Session = Depends(get_db)
+    paper_id: int,
+    data: SchemeFromExtractionIn,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ):
     """Turn a reviewed scheme extraction into the next draft version, the same way
     create_paper_from_extraction does for a paper - see its docstring."""
+    _ensure_mcq_skeletons(db, paper_id, data)
     try:
         body = MarkingSchemeIn.model_validate(
             scheme_from_extraction(
@@ -144,7 +152,9 @@ def create_scheme_from_extraction(
         )
     except ValidationError as error:
         raise ContentValidationError("The marking scheme has problems", _messages(error)) from error
-    return schemes.to_scheme_out(schemes.create_scheme(db, paper_id, body))
+    scheme = schemes.create_scheme(db, paper_id, body)
+    _auto_classify(db, settings, scheme)
+    return schemes.to_scheme_out(scheme)
 
 
 @router.post(
@@ -190,10 +200,12 @@ def append_scheme_questions_from_extraction(
     version: int,
     data: AppendSchemeQuestionsFromExtractionIn,
     db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ):
     """Add more reviewed scheme entries (from a later OCR session) to an existing
     editable scheme version - the scheme-side half of resuming an import after a
     daily AI quota resets. See append_paper_questions_from_extraction above."""
+    _ensure_mcq_skeletons(db, paper_id, data)
     built = scheme_from_extraction(
         data.questions,
         data.mcq_answers,
@@ -204,7 +216,41 @@ def append_scheme_questions_from_extraction(
         entries = [QuestionSchemeIn.model_validate(q) for q in built["questions"]]
     except ValidationError as error:
         raise ContentValidationError("The marking scheme has problems", _messages(error)) from error
-    return schemes.to_scheme_out(schemes.append_to_scheme(db, paper_id, version, entries))
+    scheme = schemes.append_to_scheme(db, paper_id, version, entries)
+    _auto_classify(db, settings, scheme)
+    return schemes.to_scheme_out(scheme)
+
+
+def _auto_classify(db: Session, settings: Settings, scheme: MarkingScheme) -> None:
+    """Suggest topics for every question this scheme just gave real content to -
+    so importing a scheme is also when topic tagging happens, instead of a separate
+    manual pass afterward (see topics_classify.classify_questions). Best-effort: no
+    classifier configured, or the call failing, never breaks the scheme import
+    itself - topic suggestion is a convenience on top of it, not part of it.
+    """
+    classifier = build_classifier(settings)
+    if classifier is None:
+        return
+    question_ids = sorted({point.question_id for point in scheme.points})
+    if not question_ids:
+        return
+    try:
+        topics_classify.classify_questions(db, classifier, question_ids)
+    except Exception:
+        logger.exception("Auto topic classification failed for scheme %s", scheme.id)
+
+
+def _ensure_mcq_skeletons(
+    db: Session, paper_id: int, data: SchemeFromExtractionIn | AppendSchemeQuestionsFromExtractionIn
+) -> None:
+    """A past paper's questions are typed in by hand (see PastPaperShellIn), but an
+    MCQ answer key already names every question it covers - so importing one
+    auto-creates whichever of those labels aren't already in the paper, instead of
+    making the admin type in 50 bare question rows first just to satisfy the
+    marking scheme's own validation."""
+    labels = [clean_label(answer["question"]) for answer in data.mcq_answers]
+    if labels:
+        papers.ensure_mcq_question_skeletons(db, paper_id, data.section_code, labels, data.mcq_marks)
 
 
 def _messages(error: ValidationError) -> list[str]:
@@ -219,6 +265,7 @@ def _read_all(
     merged: dict = {"questions": [], "notes": []}
     if kind == "scheme":
         merged["mcq_answers"] = []
+        merged["mcq_marks"] = None
 
     pages_read: list[int] = []
     failed: list[FailedPageOut] = []
@@ -235,6 +282,8 @@ def _read_all(
         merged["notes"].extend(data["notes"])
         if kind == "scheme":
             merged["mcq_answers"].extend(data["mcq_answers"])
+            if merged["mcq_marks"] is None:
+                merged["mcq_marks"] = data.get("mcq_marks")
 
     notes = merged.pop("notes")
     return pages_read, notes, failed, merged

@@ -469,5 +469,8 @@ export interface ExtractResult {
   extracted: {
     questions: Record<string, unknown>[];
     mcq_answers?: Record<string, unknown>[];
+    // Marks for one correct MCQ answer, read from the page itself (e.g. "each
+    // correct response: 01 mark") - null if the page never states it.
+    mcq_marks?: number | null;
   };
 }

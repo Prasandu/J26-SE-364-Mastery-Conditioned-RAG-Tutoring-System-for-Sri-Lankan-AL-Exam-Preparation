@@ -72,15 +72,14 @@ def _check_section(section: SectionIn, known_topics: set[str]) -> list[str]:
     return errors
 
 
-def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_topics: set[str]) -> list[str]:
+def _check_question(
+    where: str, question: QuestionIn, mode: AnswerMode, known_topics: set[str], options_required: bool = True
+) -> list[str]:
     errors = []
     if mode == AnswerMode.MCQ:
         if question.sub_questions:
             errors.append(f"{where}: MCQ questions cannot have sub-questions")
-        if not question.options or len(question.options) < 2:
-            errors.append(f"{where}: MCQ questions need at least 2 options")
-        elif duplicated := _duplicates(option.label for option in question.options):
-            errors.append(f"{where}: option label(s) {', '.join(duplicated)} used more than once")
+        errors += _check_mcq_options(where, question, options_required)
     elif question.options is not None:
         errors.append(f"{where}: options are only allowed in MCQ sections")
 
@@ -100,6 +99,18 @@ def _check_question(where: str, question: QuestionIn, mode: AnswerMode, known_to
     return errors
 
 
+def _check_mcq_options(where: str, question: QuestionIn, options_required: bool) -> list[str]:
+    if not question.options:
+        if options_required:
+            return [f"{where}: MCQ questions need at least 2 options"]
+        return []  # no options recorded - e.g. a past paper's own PDF shows them instead
+    if len(question.options) < 2:
+        return [f"{where}: MCQ questions need at least 2 options"]
+    if duplicated := _duplicates(option.label for option in question.options):
+        return [f"{where}: option label(s) {', '.join(duplicated)} used more than once"]
+    return []
+
+
 def _check_table(where: str, question: QuestionIn) -> list[str]:
     if question.table is None:
         return []
@@ -116,11 +127,17 @@ def check_new_questions(
     new_questions: list[QuestionIn],
     mode: AnswerMode,
     known_topics: set[str],
+    options_required: bool = True,
 ) -> list[str]:
     """Checked when adding more questions to an existing draft section - e.g.
     resuming an OCR import split across several AI-quota-limited sessions. Same
     per-question rules check_paper runs, plus: a label already used in this
-    section is rejected instead of silently duplicated."""
+    section is rejected instead of silently duplicated.
+
+    options_required is False for a past paper with its own stored PDF - the real
+    options are shown there, not recorded as data (see app/services/papers.py's
+    append_questions).
+    """
     labelled = list(_walk_input(new_questions))
     errors = [
         f"Section {section_code}: question '{label}' appears more than once"
@@ -132,7 +149,7 @@ def check_new_questions(
             "section - use a different label, or edit the existing question instead"
         )
     for label, question in labelled:
-        errors += _check_question(_where(section_code, label), question, mode, known_topics)
+        errors += _check_question(_where(section_code, label), question, mode, known_topics, options_required)
     return errors
 
 
@@ -188,7 +205,9 @@ def _check_points(where: str, points: list[PointIn], question: Question) -> list
             option = (key.expected or {}).get("option")
             if option is None:
                 errors.append(f"{where}: mcq_key needs an expected.option")
-            elif unknown := sorted({option, *key.alternatives} - set(option_labels)):
+            # No recorded options (e.g. a past paper's own PDF shows them instead) -
+            # nothing to check the answer key's option against, so it is trusted.
+            elif option_labels and (unknown := sorted({option, *key.alternatives} - set(option_labels))):
                 valid = ", ".join(option_labels)
                 errors.append(f"{where}: mcq_key option(s) {', '.join(unknown)} must be one of {valid}")
     elif keys:

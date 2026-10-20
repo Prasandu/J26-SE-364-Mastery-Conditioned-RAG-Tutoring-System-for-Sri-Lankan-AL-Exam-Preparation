@@ -37,3 +37,26 @@ export function publishResource(code: string, version: number): Promise<PublishR
     method: "POST",
   });
 }
+
+export interface UpdateResourceInput {
+  title?: string;
+  topicCode?: string;
+}
+
+/** Correct a resource's title or topic filing without re-uploading the PDF. */
+export function updateResource(code: string, version: number, input: UpdateResourceInput): Promise<ResourceSummary> {
+  const form = new FormData();
+  if (input.title !== undefined) {
+    form.append("title", input.title);
+  }
+  if (input.topicCode !== undefined) {
+    form.append("topic_code", input.topicCode);
+  }
+  return request<ResourceSummary>(`/admin/resources/${code}/${version}`, { method: "PATCH", form });
+}
+
+/** Remove one version's stored PDF and chunks. A published version must be
+ * replaced by publishing a different one first. */
+export function deleteResource(code: string, version: number): Promise<void> {
+  return request<void>(`/admin/resources/${code}/${version}`, { method: "DELETE" });
+}

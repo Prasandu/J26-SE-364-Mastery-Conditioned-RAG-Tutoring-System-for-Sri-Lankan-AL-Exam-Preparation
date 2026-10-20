@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { listResources, publishResource, uploadResource } from "@/api/resources";
+import { deleteResource, listResources, publishResource, updateResource, uploadResource } from "@/api/resources";
 import { ApiError } from "@/api/client";
 import type { IngestResult, ResourceStatus, ResourceSummary } from "@/api/types";
 import { Badge, type BadgeTone } from "@/components/Badge";
@@ -169,6 +169,10 @@ function ResourceRow({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [embedded, setEmbedded] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(resource.title);
+  const [topicCode, setTopicCode] = useState(resource.topic_code ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function publish() {
     setBusy(true);
@@ -183,6 +187,68 @@ function ResourceRow({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function saveEdit() {
+    setBusy(true);
+    setProblem(null);
+    try {
+      await updateResource(resource.code, resource.version, { title: title.trim(), topicCode: topicCode.trim() });
+      setEditing(false);
+      onChanged();
+    } catch (cause) {
+      setProblem(cause instanceof ApiError ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    setBusy(true);
+    setProblem(null);
+    try {
+      await deleteResource(resource.code, resource.version);
+      onChanged();
+    } catch (cause) {
+      setProblem(cause instanceof ApiError ? cause.message : String(cause));
+      setConfirmingDelete(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Field id={`resource-edit-title-${resource.id}`} label="Title">
+            <input
+              id={`resource-edit-title-${resource.id}`}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            />
+          </Field>
+          <Field id={`resource-edit-topic-${resource.id}`} label="Topic code">
+            <input
+              id={`resource-edit-topic-${resource.id}`}
+              value={topicCode}
+              onChange={(event) => setTopicCode(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+            />
+          </Field>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button disabled={busy} onClick={() => void saveEdit()}>
+            {busy ? "Saving..." : "Save"}
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => setEditing(false)}>
+            Cancel
+          </Button>
+        </div>
+        {problem && <p className="text-xs text-rose-700">{problem}</p>}
+      </div>
+    );
   }
 
   return (
@@ -203,6 +269,29 @@ function ResourceRow({
         {resource.status === "draft" && (
           <Button disabled={busy} onClick={() => void publish()}>
             {busy ? "Publishing..." : "Embed & publish"}
+          </Button>
+        )}
+        <Button variant="secondary" disabled={busy} onClick={() => setEditing(true)}>
+          Edit
+        </Button>
+        {confirmingDelete ? (
+          <>
+            <span className="text-xs text-rose-700">Delete this version?</span>
+            <Button variant="secondary" disabled={busy} onClick={() => void confirmDelete()}>
+              {busy ? "Deleting..." : "Confirm"}
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setConfirmingDelete(false)}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            disabled={resource.status === "published"}
+            title={resource.status === "published" ? "Publish a different version first" : undefined}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            Delete
           </Button>
         )}
       </div>

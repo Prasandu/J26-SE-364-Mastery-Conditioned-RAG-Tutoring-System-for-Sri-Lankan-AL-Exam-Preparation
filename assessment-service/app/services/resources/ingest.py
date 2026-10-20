@@ -24,7 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.embeddings import EmbeddingModel
-from app.errors import ContentValidationError
+from app.errors import ConflictError, ContentValidationError
 from app.models import (
     EMBEDDING_DIMENSIONS,
     ExtractionQuality,
@@ -205,6 +205,39 @@ def publish_resource(db: Session, code: str, version: int) -> Resource:
     ):
         other.status = ResourceStatus.RETIRED
     resource.status = ResourceStatus.PUBLISHED
+    db.commit()
+    return resource
+
+
+def delete_resource(db: Session, store: FileStore, code: str, version: int) -> None:
+    """Remove one version's chunks and its stored PDF.
+
+    A published version has to be retired first (publish a different version) -
+    deleting the one version retrieval currently points at would silently break
+    question generation's grounding without any warning.
+    """
+    resource = db.scalars(select(Resource).where(Resource.code == code, Resource.version == version)).first()
+    if resource is None:
+        raise ContentValidationError("No such resource version", [f"{code} v{version} does not exist"])
+    if resource.status == ResourceStatus.PUBLISHED:
+        raise ConflictError("Publish a different version first - a published resource cannot be deleted.")
+    store.delete(resource.file_key)
+    db.delete(resource)
+    db.commit()
+
+
+def update_resource_metadata(
+    db: Session, code: str, version: int, *, title: str | None = None, topic_code: str | None = None
+) -> Resource:
+    """Correct a resource's title or topic filing without re-uploading - the PDF
+    and its chunks are untouched; only this small amount of metadata changes."""
+    resource = db.scalars(select(Resource).where(Resource.code == code, Resource.version == version)).first()
+    if resource is None:
+        raise ContentValidationError("No such resource version", [f"{code} v{version} does not exist"])
+    if title is not None:
+        resource.title = title
+    if topic_code is not None:
+        resource.topic_code = topic_code or None
     db.commit()
     return resource
 

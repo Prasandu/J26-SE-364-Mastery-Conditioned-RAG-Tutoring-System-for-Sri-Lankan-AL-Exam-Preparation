@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import {
   approveScheme,
   copyScheme,
+  deleteScheme,
   publishScheme,
   retireScheme,
   validateScheme,
@@ -38,7 +40,15 @@ export function SchemePanel({ paperId, schemes, onChanged }: Props) {
     <Card>
       <SectionHeading hint={`${schemes.length} version(s)`}>Marking schemes</SectionHeading>
       {schemes.length === 0 ? (
-        <p className="text-sm text-slate-500">No marking scheme has been created yet.</p>
+        <div>
+          <p className="text-sm text-slate-500">No marking scheme has been created yet.</p>
+          <Link
+            to={`/admin/import?paperId=${paperId}`}
+            className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline"
+          >
+            Import a marking scheme for this paper &rarr;
+          </Link>
+        </div>
       ) : (
         <ol className="space-y-4">
           {schemes.map((scheme) => (
@@ -64,6 +74,10 @@ function SchemeRow({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [approver, setApprover] = useState(readAdminRef());
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const editable =
+    scheme.status === "draft" || scheme.status === "validated" || scheme.status === "validation_failed";
 
   async function run(name: string, action: () => Promise<unknown>) {
     setBusy(name);
@@ -172,6 +186,27 @@ function SchemeRow({
         >
           {busy === "copy" ? "Copying..." : "Copy to a new draft version"}
         </Button>
+
+        {editable &&
+          (confirmingDelete ? (
+            <>
+              <span className="text-xs text-rose-700">Delete this version?</span>
+              <Button
+                variant="secondary"
+                disabled={busy !== null}
+                onClick={() => void run("delete", () => deleteScheme(paperId, scheme.version))}
+              >
+                {busy === "delete" ? "Deleting..." : "Confirm"}
+              </Button>
+              <Button variant="ghost" disabled={busy !== null} onClick={() => setConfirmingDelete(false)}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button variant="ghost" disabled={busy !== null} onClick={() => setConfirmingDelete(true)}>
+              Delete
+            </Button>
+          ))}
       </div>
     </div>
   );

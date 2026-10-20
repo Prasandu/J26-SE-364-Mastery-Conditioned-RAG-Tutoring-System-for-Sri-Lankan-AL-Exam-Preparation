@@ -25,10 +25,12 @@ from app.schemas.resources import (
 )
 from app.security import require_admin
 from app.services.resources.ingest import (
+    delete_resource,
     embed_and_publish,
     embed_pending_chunks,
     ingest_resource,
     publish_resource,
+    update_resource_metadata,
 )
 from app.services.resources.retrieve import DEFAULT_LIMIT
 from app.services.resources.retrieve import search as search_resources
@@ -132,6 +134,27 @@ def publish_with_embedding(
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_EMBEDDER)
     resource, embedded, failures = embed_and_publish(db, embedder, code, version)
     return PublishResultOut(resource=resource, embedded=embedded, failures=failures)
+
+
+@router.patch("/{code}/{version}", response_model=ResourceSummaryOut)
+def update_metadata(
+    code: str,
+    version: int,
+    title: str | None = Form(default=None, min_length=1, max_length=300),
+    topic_code: str | None = Form(default=None, max_length=30),
+    db: Session = Depends(get_db),
+):
+    """Correct a resource's title or topic filing without re-uploading the PDF."""
+    return update_resource_metadata(db, code, version, title=title, topic_code=topic_code)
+
+
+@router.delete("/{code}/{version}", status_code=status.HTTP_204_NO_CONTENT)
+def delete(
+    code: str, version: int, db: Session = Depends(get_db), store: FileStore = Depends(get_resource_store)
+) -> None:
+    """Remove one version's stored PDF and chunks. A published version must be
+    replaced by publishing a different one first."""
+    delete_resource(db, store, code, version)
 
 
 @router.get("/search", response_model=SearchResultOut)

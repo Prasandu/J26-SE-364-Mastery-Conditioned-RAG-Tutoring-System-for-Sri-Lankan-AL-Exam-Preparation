@@ -68,6 +68,8 @@ class FakeSession:
             return Result(sorted(plans, key=lambda plan: (plan.created_at, str(plan.id)), reverse=True))
         if model is LearnerTopicState:
             return Result([state for state in self.states if state.student_id == "student-1"])
+        if model is Topic:
+            return Result(list(self.topics.values()))
         if model is AvailabilitySlot:
             return Result(list(self.slots))
         if model is StudyTask:
@@ -199,13 +201,30 @@ def test_predicted_mode_uses_stored_mastery(
     assert priority["reason"]
 
 
-def test_predicted_mode_requires_mastery_data(client: TestClient) -> None:
+def test_predicted_mode_for_a_new_student_starts_from_neutral_estimates(client: TestClient) -> None:
     response = client.post(
         "/api/v1/plans",
-        json=valid_plan(mode="predicted", priorities=[]),
+        json=valid_plan(mode="predicted", topics=[], priorities=[]),
     )
 
-    assert response.status_code == 409
+    assert response.status_code == 201
+    priorities = response.json()["constraints"]["priorities"]
+    assert [item["topic_id"] for item in priorities] == ["chem-u1", "chem-u2"]
+    assert all(item["mastery"] == 0.3 for item in priorities)
+    assert all(item["reason"].startswith("No results yet") for item in priorities)
+    # Higher exam weight ranks higher while there is no evidence (chem-u2: 0.8 > chem-u1: 0.6).
+    by_id = {item["topic_id"]: item["priority"] for item in priorities}
+    assert by_id["chem-u2"] > by_id["chem-u1"]
+
+
+def test_new_student_adaptive_plan_respects_selected_topics(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/plans",
+        json=valid_plan(mode="predicted", topics=["chem-u2"], priorities=[]),
+    )
+
+    assert response.status_code == 201
+    assert [item["topic_id"] for item in response.json()["constraints"]["priorities"]] == ["chem-u2"]
 
 
 def test_unknown_topic_is_rejected(client: TestClient) -> None:

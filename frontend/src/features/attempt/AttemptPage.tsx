@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { getAttempt, saveAnswer, submitAttempt } from "@/api/attempts";
 import { ApiError } from "@/api/client";
-import { getPaper } from "@/api/papers";
+import { getPaper, getPaperFile } from "@/api/papers";
 import type { AnswerInput, AnswerOut, Attempt, PaperDetail } from "@/api/types";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -14,6 +14,7 @@ import { answerableQuestions, hasMcq, isMcq, optionLabels } from "@/lib/question
 
 import { AnswerSheetUpload } from "./AnswerSheetUpload";
 import { MarkingProgress } from "./MarkingProgress";
+import { PdfViewer } from "./PdfViewer";
 import { Progress } from "./Progress";
 import { QuestionBlock } from "./QuestionBlock";
 import { ResultList } from "./ResultList";
@@ -78,6 +79,33 @@ export function AttemptPage() {
     void reload(controller.signal);
     return () => controller.abort();
   }, [reload]);
+
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!paper?.has_pdf) {
+      return;
+    }
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
+    getPaperFile(paper.id, controller.signal)
+      .then((blob) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        objectUrl = URL.createObjectURL(blob);
+        setPdfUrl(objectUrl);
+      })
+      .catch(() => {
+        // Nothing to show if this fails; the question list still works without it.
+      });
+    return () => {
+      controller.abort();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [paper?.id, paper?.has_pdf]);
 
   const send = useCallback(
     async (questionId: number, answer: AnswerInput) => {
@@ -172,25 +200,14 @@ export function AttemptPage() {
   const marking = attempt.status === "submitted" && points.some((point) => point.status === "pending");
   const needsTeacherCount = points.filter((point) => point.status === "needs_review").length;
   const items = answerableQuestions(paper);
+  const mcqOptionLabels = optionLabels(paper);
   const answered = items.filter((item) => {
     const value = given[item.question.id];
     return isMcq(item) ? Boolean(value?.option) : Boolean(value?.text.trim());
   }).length;
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <Link to={`/papers/${paper.id}`} className="text-sm text-brand-700 hover:underline">
-          &larr; Back to the paper
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>
-        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <span>Student {attempt.student_ref}</span>
-          <Badge tone={locked ? "good" : "neutral"}>{attempt.status.replace("_", " ")}</Badge>
-          <span>marking scheme v{attempt.scheme_version}</span>
-        </p>
-      </div>
-
+  const body = (
+    <>
       {marking ? (
         <MarkingProgress attempt={attempt} />
       ) : locked ? (
@@ -241,7 +258,7 @@ export function AttemptPage() {
           {hasMcq(paper) && (
             <AnswerSheetUpload
               attemptId={attemptId}
-              optionLabels={optionLabels(paper)}
+              optionLabels={mcqOptionLabels}
               onSaved={() => void reload()}
             />
           )}
@@ -268,6 +285,7 @@ export function AttemptPage() {
                     reading={readings[item.question.id] ?? null}
                     attemptId={attemptId}
                     disabled={locked}
+                    mcqOptionLabels={mcqOptionLabels}
                     onChoose={(option) => choose(item.question.id, option)}
                     onWrite={(text) => write(item.question.id, text)}
                     onRead={(answer) => handleRead(item.question.id, answer)}
@@ -277,6 +295,37 @@ export function AttemptPage() {
             })}
           </Card>
         </>
+      )}
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Link to={`/papers/${paper.id}`} className="text-sm text-brand-700 hover:underline">
+          &larr; Back to the paper
+        </Link>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <span>Student {attempt.student_ref}</span>
+          <Badge tone={locked ? "good" : "neutral"}>{attempt.status.replace("_", " ")}</Badge>
+          <span>marking scheme v{attempt.scheme_version}</span>
+        </p>
+      </div>
+
+      {paper.has_pdf ? (
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <div className="h-[75vh] lg:sticky lg:top-4">
+            {pdfUrl ? (
+              <PdfViewer fileUrl={pdfUrl} />
+            ) : (
+              <Spinner label="Loading the paper..." />
+            )}
+          </div>
+          <div className="space-y-6">{body}</div>
+        </div>
+      ) : (
+        <div className="space-y-6">{body}</div>
       )}
     </div>
   );

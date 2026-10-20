@@ -12,3 +12,8 @@ pgvector==0.3.6
 PyMuPDF==1.24.13
 sentence-transformers==3.3.1
 groq==0.13.1
+hf_xet==1.7.0
+faster-whisper==1.2.1
+av==19.0.1  # newer than faster-whisper expects; patched around in transcription.py
+python-multipart==0.0.17
+sympy==1.13.3

@@ -262,10 +262,14 @@ def build_plan_achievability(
         topic
         for _, topic in sorted(focus_topics, key=lambda item: item[0], reverse=True)[:3]
     ]
-    suggested_hours_per_day = min(
-        max(report.hours_needed / 7, min(report.hours_available / 7, 1.5)),
-        report.hours_available / 7,
+    # Weekly hours worth suggesting (never more than the time the student has),
+    # spread over the days they actually study rather than all seven.
+    suggested_weekly_hours = min(
+        max(report.hours_needed, min(report.hours_available, 1.5 * 7)),
+        report.hours_available,
     )
+    study_days = len({slot.weekday for slot in slots if getattr(slot, "weekday", None) is not None})
+    suggested_hours_per_day = suggested_weekly_hours / study_days if study_days else 0.0
     coaching = build_coaching_message(
         student_name=student_name,
         days_left=days_remaining,
@@ -278,6 +282,7 @@ def build_plan_achievability(
         status=report.status,
         focus_topics=ordered_focus_topics,
         suggested_hours_per_day=suggested_hours_per_day,
+        study_days_per_week=study_days or None,
     )
     return {
         **asdict(report),

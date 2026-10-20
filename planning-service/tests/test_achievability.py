@@ -478,3 +478,23 @@ def test_long_body_is_trimmed_by_whole_sentences() -> None:
     assert _whole_sentences("One very long sentence without any break at all here", 3) == (
         "One very long sentence without any break at all here"
     )
+
+
+def test_daily_suggestion_speaks_about_the_students_study_days() -> None:
+    def suggestion(hours: float, days: int | None) -> str:
+        return build_coaching_message(
+            student_name="Uvindu",
+            days_left=60,
+            best_range="C (55–65%)",
+            target_grade="B",
+            status="stretch",
+            focus_topics=[],
+            suggested_hours_per_day=hours,
+            study_days_per_week=days,
+        ).daily_suggestion
+
+    tail = ", using the time available in your plan."
+    assert suggestion(2, 3) == "Aim for about 2 hours on each of your 3 study days" + tail
+    assert suggestion(1.5, 1) == "Aim for about 1 hour 30 minutes on your study day" + tail
+    assert suggestion(1, 7) == "Aim for about 1 hour a day" + tail
+    assert suggestion(1, None) == "Aim for about 1 hour a day" + tail

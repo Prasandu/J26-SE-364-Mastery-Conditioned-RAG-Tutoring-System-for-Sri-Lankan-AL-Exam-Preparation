@@ -88,8 +88,14 @@ def build_coaching_message(
     status: str,
     focus_topics: list[dict[str, str]],
     suggested_hours_per_day: float,
+    study_days_per_week: int | None = None,
 ) -> CoachingMessage:
-    """Build a warm, concise study message using the student's current plan."""
+    """Build a warm, concise study message using the student's current plan.
+
+    With ``study_days_per_week``, ``suggested_hours_per_day`` means hours on
+    each study day, so a Mon/Wed/Sat student is told "2 hours on each of your
+    3 study days" rather than an average over all seven days.
+    """
     if days_left < 0:
         raise ValueError("days_left cannot be negative.")
     _validate_nonnegative_finite("suggested_hours_per_day", suggested_hours_per_day)
@@ -126,6 +132,7 @@ def build_coaching_message(
     )
     daily_suggestion = _daily_suggestion(
         suggested_hours_per_day=suggested_hours_per_day,
+        study_days_per_week=study_days_per_week,
     )
     return CoachingMessage(
         greeting=f"Dear {(student_name.strip() or 'there').split()[0]},",
@@ -137,7 +144,7 @@ def build_coaching_message(
     )
 
 
-def _daily_suggestion(*, suggested_hours_per_day: float) -> str:
+def _daily_suggestion(*, suggested_hours_per_day: float, study_days_per_week: int | None = None) -> str:
     if suggested_hours_per_day <= 0:
         return "Use the study time available in your plan for short, focused sessions."
     daily_minutes = floor(suggested_hours_per_day * 60 / 5) * 5
@@ -150,6 +157,10 @@ def _daily_suggestion(*, suggested_hours_per_day: float) -> str:
         amount = f"{hours} hour{'s' if hours != 1 else ''}"
     else:
         amount = f"{minutes} minutes"
+    if study_days_per_week is not None and 0 < study_days_per_week < 7:
+        days = "study day" if study_days_per_week == 1 else f"{study_days_per_week} study days"
+        each = "on your" if study_days_per_week == 1 else "on each of your"
+        return f"Aim for about {amount} {each} {days}, using the time available in your plan."
     return f"Aim for about {amount} a day, using the time available in your plan."
 
 

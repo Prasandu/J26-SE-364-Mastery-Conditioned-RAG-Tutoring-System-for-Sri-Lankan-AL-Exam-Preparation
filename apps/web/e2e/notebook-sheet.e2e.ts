@@ -91,3 +91,33 @@ test('notebook sheet: on a desktop the notebook is a panel, not a dialog', async
   const modal = await page.locator('.notebook-sheet').evaluate((el) => el.matches(':modal'));
   expect(modal, 'the desktop notebook is a modal dialog').toBe(false);
 });
+
+/**
+ * The trigger must be on screen without scrolling. Playwright scrolls an element into view before
+ * clicking it, so a click-based test passes even when the control sits below the fold: measured at
+ * 834x1112 its bottom was 1186, and 1043 in a 844-tall phone viewport. To a student that is a
+ * laboratory with no visible route to the notebook, so this asserts the geometry directly.
+ */
+for (const [name, width, height] of [
+  ['tablet 834x1112', 834, 1112],
+  ['phone 390x844', 390, 844],
+] as const) {
+  test(`notebook sheet: the trigger is visible without scrolling at ${name}`, async ({
+    page,
+  }, info) => {
+    test.skip(info.project.name !== 'desktop', 'viewport is set explicitly');
+    await page.setViewportSize({ width, height });
+    await startExperiment(page, 'manual');
+    await page.waitForTimeout(400);
+
+    const box = await page.locator('.notebook-sheet__trigger').boundingBox();
+    expect(box, 'the sheet trigger is not rendered').not.toBeNull();
+    expect(box!.y, `${name}: trigger starts above the viewport`).toBeGreaterThanOrEqual(0);
+    expect(
+      box!.y + box!.height,
+      `${name}: trigger sits below the fold, so the notebook looks unreachable`,
+    ).toBeLessThanOrEqual(height);
+    // Touch target, not just visible.
+    expect(box!.height, `${name}: trigger is too small to tap`).toBeGreaterThanOrEqual(44);
+  });
+}

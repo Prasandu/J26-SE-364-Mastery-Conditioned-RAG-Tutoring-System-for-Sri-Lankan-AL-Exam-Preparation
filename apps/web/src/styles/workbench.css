@@ -738,11 +738,18 @@
 }
 
 @media (max-width: 900px) {
+  /*
+   * The side column holds only the sheet trigger here, and the stage is tall: measured at 834px,
+   * the trigger's bottom was 1186 in a 1112 viewport, and 1043 in 844 at phone width — present,
+   * scrollable to, but off-screen, so the laboratory appeared to have no route to the notebook.
+   * Putting that one row above the stage makes it visible without scrolling. The stage still
+   * leads the screen, since the trigger is a single 44px control.
+   */
   .workbench__grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'scene'
-      'side';
+      'side'
+      'scene';
   }
 
   .workbench__bottom {

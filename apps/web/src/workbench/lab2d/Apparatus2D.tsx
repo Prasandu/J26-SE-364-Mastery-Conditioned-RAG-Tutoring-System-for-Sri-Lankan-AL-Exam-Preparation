@@ -41,6 +41,23 @@ function Smudges({ cx, cy, spread }: { cx: number; cy: number; spread: number })
   );
 }
 
+/**
+ * Undissolved solid, faded in and out rather than popped.
+ *
+ * `useSettleValue` eases toward the target opacity and collapses to it instantly under
+ * `prefers-reduced-motion`, so the settled picture is identical either way. The group stays
+ * mounted at zero opacity so there is no layout change to animate against.
+ */
+function DissolvingSolid({ visible, width, y }: { visible: boolean; width: number; y: number }) {
+  const opacity = useSettleValue(visible ? 1 : 0, 520);
+  if (opacity <= 0.01) return null;
+  return (
+    <g opacity={opacity}>
+      <Crystals width={width} y={y} />
+    </g>
+  );
+}
+
 function Crystals({ width, y }: { width: number; y: number }) {
   const xs = [-0.42, -0.2, 0.02, 0.22, 0.4, -0.3, 0.12];
   return (
@@ -112,7 +129,11 @@ export function Flask2D({
           />
         </g>
       )}
-      {working && model.undissolvedVisible && <Crystals width={0.5 * s} y={-3} />}
+      {/* Solid appearing in the flask (transfer) and clearing from it (dissolving) are the two
+          steps a student otherwise only reads about. Both are driven by `undissolvedVisible`, an
+          engine observation, so a rejected transfer or a failed dissolve animates nothing; the
+          fade only ever follows a confirmed change. */}
+      {working && <DissolvingSolid visible={model.undissolvedVisible} width={0.5 * s} y={-3} />}
       <path
         d={mirrored(FLASK_PROFILE, s)}
         fill="none"

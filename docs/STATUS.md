@@ -1,6 +1,6 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-20 (mobile notebook sheet, 3D placement motion — see "Mobile notebook sheet" below)_
+_Last updated: 2026-10-20 (sheet trigger reachability, dissolve motion — see the top entry)_
 
 ## Slices
 
@@ -31,6 +31,26 @@ _Last updated: 2026-10-20 (mobile notebook sheet, 3D placement motion — see "M
 | V3-1  | Full-viewport laboratory shell, bounded notebook scroll | ✅ done (first of the approved V3-1..V3-8 stages) |
 | V3-2  | Seven-section laboratory notebook, in-panel navigation  | ✅ done                                           |
 | R1    | Advanced simulation graphics proof-of-quality prototype | ⚠️ isolated, honest verdict: not yet a clear win  |
+
+## Sheet trigger reachability and dissolve motion (2026-10-20, after 96e0800)
+
+- **The notebook sheet trigger was off screen on tablet and phone.** The sheet shipped in 96e0800,
+  but its trigger lives in the side column, which stacks _below_ a tall stage: measured, its bottom
+  was 1186 in an 834x1112 viewport and 1043 in a 390x844 one. The flow shell clips rather than
+  scrolls the page, so a student saw a laboratory with no visible route to the notebook. The
+  trigger row now comes before the stage at narrow widths and measures on screen at both sizes.
+  - Worth recording why this slipped through: `notebook-sheet.e2e.ts` only _clicked_ the trigger,
+    and Playwright scrolls an element into view before clicking, so a control below the fold still
+    passes. The two new cases assert the bounding box against the viewport instead, which a click
+    can never check.
+- **Transfer and dissolving are now visible (§6.2, §15.1 P1).** Undissolved solid fades in and out
+  over 520ms through `useSettleValue`, driven by `undissolvedVisible` — an engine observation — so
+  a rejected transfer animates nothing and reduced motion collapses to the settled picture.
+  Verified in a real run: at Stage 4 of 10 the crystals are drawn in the flask alongside the
+  engine's own "Undissolved white solid is visible in the flask" observation.
+
+Gate after these changes: `pnpm check` 0, `pnpm test:e2e` 0 (47 passed, 61 skipped),
+`pnpm test:e2e:admin` 0.
 
 ## Mobile notebook sheet and 3D placement motion (2026-10-20, later)
 

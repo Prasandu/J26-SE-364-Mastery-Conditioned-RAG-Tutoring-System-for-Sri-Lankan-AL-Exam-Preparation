@@ -81,6 +81,9 @@ class QuestionOut(BaseModel):
     table: TableOut | None
     topics: list[str]
     sub_questions: list["QuestionOut"]
+    # Which page of the paper's PDF this question starts on (past papers shown as a
+    # PDF instead of this text) - empty for model papers and older past papers.
+    start_page: int | None = None
 
 
 class SectionOut(BaseModel):
@@ -95,6 +98,10 @@ class SectionOut(BaseModel):
 
 class PaperDetail(PaperSummary):
     sections: list[SectionOut]
+    # Whether GET /papers/{id}/file has a PDF to serve, and how many pages it has -
+    # empty for model papers and past papers imported before this existed.
+    has_pdf: bool
+    page_count: int | None
 
 
 class AdminPaperDetail(PaperDetail):

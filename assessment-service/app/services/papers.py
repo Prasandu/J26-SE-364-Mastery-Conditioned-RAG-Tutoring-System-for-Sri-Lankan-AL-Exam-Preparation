@@ -21,6 +21,8 @@ from app.models import (
 )
 from app.schemas.admin import PaperIn, QuestionIn
 from app.schemas.content import AdminPaperDetail, PaperDetail, PaperSummary, QuestionOut, SectionOut
+from app.services.pdf import page_count_bytes
+from app.services.storage import PDF_CONTENT_TYPE, FileStore
 from app.services.topics import topics_by_code
 from app.services.validation import check_new_questions, check_paper, check_paper_ready
 
@@ -104,6 +106,25 @@ def create_paper(db: Session, data: PaperIn) -> Paper:
     return paper
 
 
+def create_past_paper_with_file(db: Session, data: PaperIn, pdf: bytes, store: FileStore) -> Paper:
+    """A past paper shown to students as its own PDF, not OCR'd text - the admin
+    types in a skeleton (label, marks, answer mode, start page) per question instead
+    of transcribing the wording. See app/api/papers.py's GET .../file for how the
+    PDF then reaches the student."""
+    if data.kind != PaperKind.PAST:
+        raise ContentValidationError("Only past papers can be created from a PDF this way", [])
+    key = store.save(pdf, PDF_CONTENT_TYPE)
+    paper = Paper(status=ContentStatus.DRAFT, file_key=key, page_count=page_count_bytes(pdf))
+    try:
+        _fill_paper(db, paper, data)
+    except ContentValidationError:
+        store.delete(key)
+        raise
+    db.add(paper)
+    db.commit()
+    return paper
+
+
 def replace_paper(db: Session, paper_id: int, data: PaperIn) -> Paper:
     """Replace a draft paper's details and all its questions."""
     paper = get_paper(db, paper_id)
@@ -153,7 +174,13 @@ def copy_paper(db: Session, paper_id: int) -> Paper:
     against it stays traceable to exactly what a student saw. Its marking
     schemes are not copied - add a new one to the copy separately.
     """
-    return create_paper(db, to_paper_in(get_paper(db, paper_id)))
+    original = get_paper(db, paper_id)
+    copy = create_paper(db, to_paper_in(original))
+    if original.file_key is not None:
+        copy.file_key = original.file_key
+        copy.page_count = original.page_count
+        db.commit()
+    return copy
 
 
 def to_paper_in(paper: Paper) -> PaperIn:
@@ -188,6 +215,7 @@ def _question_in(question: Question) -> dict:
         "table": question.table,
         "topics": [topic.code for topic in question.topics],
         "sub_questions": [_question_in(sub) for sub in question.sub_questions],
+        "start_page": question.start_page,
     }
 
 
@@ -218,6 +246,8 @@ def to_paper_detail(paper: Paper) -> PaperDetail:
     """Student view of a paper: questions only, never answers."""
     return PaperDetail(
         **PaperSummary.model_validate(paper).model_dump(),
+        has_pdf=paper.file_key is not None,
+        page_count=paper.page_count,
         sections=[
             SectionOut(
                 id=section.id,
@@ -275,6 +305,7 @@ def question_out(question: Question) -> QuestionOut:
         table=question.table,
         topics=[topic.code for topic in question.topics],
         sub_questions=[question_out(sub) for sub in question.sub_questions],
+        start_page=question.start_page,
     )
 
 
@@ -317,6 +348,7 @@ def _add_questions(
             table=item.table.model_dump() if item.table else None,
             order_no=start_order + offset,
             topics=[topics[code] for code in item.topics],
+            start_page=item.start_page,
         )
         # SQLAlchemy only saves objects appended to a collection, not ones linked back.
         section.questions.append(question)

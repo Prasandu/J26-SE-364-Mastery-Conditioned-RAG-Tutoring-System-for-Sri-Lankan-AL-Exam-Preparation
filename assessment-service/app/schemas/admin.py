@@ -53,6 +53,9 @@ class QuestionIn(_Input):
     table: TableIn | None = None
     topics: list[str] = []  # topic codes
     sub_questions: list["QuestionIn"] = []
+    # Which page of the paper's PDF this question starts on - past papers shown as a
+    # PDF instead of `text` (see PaperIn.file_key).
+    start_page: int | None = Field(default=None, gt=0)
 
 
 class SectionIn(_Input):

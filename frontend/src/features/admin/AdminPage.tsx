@@ -8,6 +8,7 @@ import { GeneratePage } from "../generate/GeneratePage";
 import { ImportPage } from "./ImportPage";
 import { PaperDetailPage } from "./PaperDetailPage";
 import { PapersListPage } from "./PapersListPage";
+import { PastPaperImportPage } from "./PastPaperImportPage";
 import { ResourcesPage } from "./ResourcesPage";
 import { SuggestionsPage } from "./SuggestionsPage";
 import { UsersPage } from "./UsersPage";
@@ -28,6 +29,7 @@ export function AdminPage() {
         <Route path="suggestions" element={<SuggestionsPage />} />
         <Route path="resources" element={<ResourcesPage />} />
         <Route path="import" element={<ImportPage />} />
+        <Route path="past-papers" element={<PastPaperImportPage />} />
         <Route path="generate" element={<GeneratePage />} />
         <Route path="users" element={<UsersPage />} />
       </Routes>

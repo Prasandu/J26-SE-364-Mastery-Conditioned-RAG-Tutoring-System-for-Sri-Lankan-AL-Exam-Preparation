@@ -44,6 +44,7 @@ data/raw/
 data/private/
 uploads/
 assessment-service/resources/
+assessment-service/papers/
 samples/
 assessment-service/samples/
 drafts/

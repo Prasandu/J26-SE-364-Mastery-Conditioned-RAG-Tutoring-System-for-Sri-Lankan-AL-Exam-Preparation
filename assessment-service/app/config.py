@@ -97,6 +97,10 @@ class Settings(BaseSettings):
     resource_passages_per_topic: int = Field(default=2, ge=0, le=10)
     resources_dir: Path = Path("resources")  # original PDFs; never served to a browser
     max_resource_upload_mb: float = Field(default=40.0, gt=0, le=200)
+    # Original past-paper PDFs - unlike resources_dir, these ARE served to students
+    # (see GET /papers/{id}/file), so a student can view the real exam paper.
+    papers_dir: Path = Path("papers")
+    max_paper_upload_mb: float = Field(default=40.0, gt=0, le=200)
     upload_dir: Path = Path("uploads")
     max_upload_mb: float = Field(default=8.0, gt=0, le=50)
 

@@ -5,7 +5,8 @@ Every route needs a signed-in admin account (see app/security.py).
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -48,6 +49,7 @@ from app.security import require_admin
 from app.services import attempts, auth, export, papers, schemes, topics, topics_classify
 from app.services.generator import api as generator
 from app.services.generator import practice
+from app.services.storage import FileStore, LocalFileStore
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -183,6 +185,42 @@ def list_papers(
 def create_paper(data: PaperIn, db: Session = Depends(get_db)):
     """Create a draft paper with all its sections and questions."""
     return papers.to_admin_paper_detail(papers.create_paper(db, data))
+
+
+def get_paper_store(settings: Settings = Depends(get_settings)) -> FileStore:
+    """Where original past-paper PDFs live - unlike resources, these ARE served to
+    students (see GET /papers/{id}/file in app/api/papers.py)."""
+    return LocalFileStore(settings.papers_dir)
+
+
+@router.post("/papers/past", response_model=AdminPaperDetail, status_code=status.HTTP_201_CREATED)
+async def create_past_paper(
+    paper: str = Form(description="PaperIn JSON: title, year, subject, sections with question skeletons"),
+    file: UploadFile = File(description="The past paper's own PDF"),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    store: FileStore = Depends(get_paper_store),
+):
+    """Create a past paper shown to students as its own PDF, not OCR'd text - the
+    admin types a skeleton (label, marks, answer mode, start page) per question
+    instead of transcribing the wording. Marking schemes are unaffected; they are
+    still imported via OCR (see app/api/extract.py)."""
+    try:
+        data = PaperIn.model_validate_json(paper)
+    except ValidationError as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, error.errors()) from None
+    pdf = await _read_upload(file, settings.max_paper_upload_mb)
+    return papers.to_admin_paper_detail(papers.create_past_paper_with_file(db, data, pdf, store))
+
+
+async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
+    limit = int(max_mb * 1024 * 1024)
+    data = await file.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, f"The PDF must be under {max_mb} MB")
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "The uploaded file is empty")
+    return data
 
 
 @router.get("/papers/{paper_id}", response_model=AdminPaperDetail)

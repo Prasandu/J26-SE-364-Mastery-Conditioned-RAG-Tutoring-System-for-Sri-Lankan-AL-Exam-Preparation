@@ -15,6 +15,11 @@ const TASKS = [
     body: "Upload a scanned PDF, review what the model read, then create the paper or the next scheme version.",
   },
   {
+    to: "/admin/past-papers",
+    title: "Add a past paper (PDF)",
+    body: "Upload the real exam PDF and type a skeleton for its questions - students see the PDF itself.",
+  },
+  {
     to: "/admin/resources",
     title: "Upload a resource book",
     body: "Add trusted reference material for question generation to ground itself in.",

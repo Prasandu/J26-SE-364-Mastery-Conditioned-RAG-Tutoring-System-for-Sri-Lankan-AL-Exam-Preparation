@@ -9,6 +9,7 @@ const SECTIONS = [
   { to: "/admin", label: "Dashboard", end: true },
   { to: "/admin/papers", label: "Papers & schemes", end: false },
   { to: "/admin/import", label: "Import a PDF", end: false },
+  { to: "/admin/past-papers", label: "Past paper (PDF)", end: false },
   { to: "/admin/resources", label: "Resource books", end: false },
   { to: "/admin/suggestions", label: "Topic suggestions", end: false },
   { to: "/admin/generate", label: "Generate a paper", end: false },

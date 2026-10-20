@@ -1,6 +1,7 @@
 """Student-facing endpoints: published papers only, and never any answers."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.ai import build_author, build_critic, build_embedding_model
@@ -15,6 +16,7 @@ from app.services import mastery, papers, topics
 from app.services.generator import api as generator
 from app.services.generator import practice
 from app.services.generator.api import plan as plan_shape
+from app.services.storage import FileStore, LocalFileStore
 
 router = APIRouter(prefix="/papers", tags=["papers"])
 
@@ -103,6 +105,23 @@ def make_practice(
 def get_paper(paper_id: int, db: Session = Depends(get_db)):
     """One published paper with its sections and question tree."""
     return papers.to_paper_detail(papers.get_paper(db, paper_id, published_only=True))
+
+
+def get_paper_store(settings: Settings = Depends(get_settings)) -> FileStore:
+    return LocalFileStore(settings.papers_dir)
+
+
+@router.get("/{paper_id}/file")
+def get_paper_file(
+    paper_id: int, db: Session = Depends(get_db), store: FileStore = Depends(get_paper_store)
+):
+    """The original PDF for a past paper, shown to the student directly instead of
+    a transcription. 404 if this paper has none (a model paper, or a past paper
+    imported before this existed)."""
+    paper = papers.get_paper(db, paper_id, published_only=True)
+    if paper.file_key is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "This paper has no stored PDF")
+    return Response(content=store.load(paper.file_key), media_type="application/pdf")
 
 
 def _as_generate(data: PracticeIn):

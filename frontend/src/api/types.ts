@@ -34,6 +34,9 @@ export interface Question {
   table: QuestionTable | null;
   topics: string[];
   sub_questions: Question[];
+  // Which page of the paper's PDF this question starts on - past papers shown as a
+  // PDF instead of this text (see PaperDetail.has_pdf). Null for model papers.
+  start_page: number | null;
 }
 
 export interface Section {
@@ -48,6 +51,10 @@ export interface Section {
 
 export interface PaperDetail extends PaperSummary {
   sections: Section[];
+  // Whether GET /papers/{id}/file has a PDF to serve, and how many pages it has -
+  // false/null for model papers and past papers imported before this existed.
+  has_pdf: boolean;
+  page_count: number | null;
 }
 
 export interface Health {

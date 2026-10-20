@@ -7,9 +7,10 @@ Keys are short on purpose: "ab/cdef...jpg". Windows refuses paths over 260
 characters, and a project folder plus an attempt id would already be close to it.
 The first two characters spread the files over folders, so no single folder grows huge.
 
-Nothing under here is served by any route - a resource's original PDF and an
-answer's photo are both read back only through this interface's own `load`, never by
-a browser given the key directly.
+A resource's original PDF and an answer's photo are read back only through this
+interface's own `load`, never served to a browser by key. A past paper's PDF is the
+deliberate exception - see GET /papers/{id}/file in app/api/papers.py - because the
+student is meant to see the real exam paper directly, not a transcription of it.
 """
 
 import uuid

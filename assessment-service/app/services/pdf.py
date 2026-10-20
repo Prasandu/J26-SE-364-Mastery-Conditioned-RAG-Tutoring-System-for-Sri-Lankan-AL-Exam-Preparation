@@ -26,6 +26,16 @@ def page_count(path: Path) -> int:
         pdf.close()
 
 
+def page_count_bytes(data: bytes) -> int:
+    """Same as page_count, for a PDF already in memory (e.g. an upload) - avoids
+    writing a temp file just to count pages."""
+    pdf = pdfium.PdfDocument(data)
+    try:
+        return len(pdf)
+    finally:
+        pdf.close()
+
+
 def render_pages(path: Path, pages: list[int], scale: float = DEFAULT_SCALE) -> list[Image]:
     """Render the given 1-based page numbers to PNG images."""
     pdf = pdfium.PdfDocument(path)

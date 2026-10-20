@@ -184,3 +184,44 @@ export function publishPaper(paperId: number): Promise<unknown> {
 export function copyPaper(paperId: number): Promise<AdminPaperDetail> {
   return request<AdminPaperDetail>(`/admin/papers/${paperId}/copy`, { method: "POST" });
 }
+
+export interface PastPaperSkeletonQuestion {
+  label: string;
+  max_marks?: number | null;
+  start_page?: number | null;
+}
+
+export interface CreatePastPaperInput {
+  title: string;
+  year: number;
+  sectionCode: string;
+  sectionTitle: string;
+  answerMode: "mcq" | "structured" | "essay";
+  questions: PastPaperSkeletonQuestion[];
+  file: File;
+}
+
+/** A past paper shown to students as its own PDF, not OCR'd text - the admin types
+ * a skeleton (label, marks, which page it starts on) per question instead of
+ * transcribing the wording. See app/api/admin.py's POST /admin/papers/past. */
+export function createPastPaper(input: CreatePastPaperInput): Promise<AdminPaperDetail> {
+  const form = new FormData();
+  form.append(
+    "paper",
+    JSON.stringify({
+      title: input.title,
+      kind: "past",
+      year: input.year,
+      sections: [
+        {
+          code: input.sectionCode,
+          title: input.sectionTitle,
+          answer_mode: input.answerMode,
+          questions: input.questions,
+        },
+      ],
+    }),
+  );
+  form.append("file", input.file);
+  return request<AdminPaperDetail>("/admin/papers/past", { method: "POST", form });
+}

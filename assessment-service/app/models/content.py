@@ -86,6 +86,11 @@ class Paper(Base):
     # system's own record of what it looked up - never the model's say-so about what
     # it used, which is not something an AI reply can be trusted to report honestly.
     grounded_in: Mapped[list[dict]] = mapped_column(JSON_DOC, default=list)
+    # The original PDF, for past papers shown to students as-is instead of OCR'd text
+    # (see app/services/storage.py). Empty for model papers, and for past papers
+    # imported before this existed.
+    file_key: Mapped[str | None] = mapped_column(String(300))
+    page_count: Mapped[int | None] = mapped_column(Integer)
 
     sections: Mapped[list["Section"]] = relationship(
         back_populates="paper", order_by="Section.order_no", cascade=CASCADE_ALL
@@ -139,6 +144,9 @@ class Question(Base):
     # app/ai/author.py's SYSTEM_PROMPT).
     table: Mapped[dict | None] = mapped_column(JSON_DOC)
     order_no: Mapped[int] = mapped_column(Integer, default=0)
+    # Which page of the paper's stored PDF this question starts on (past papers shown
+    # as a PDF instead of OCR'd text). Empty for model papers and plain-text questions.
+    start_page: Mapped[int | None] = mapped_column(Integer)
 
     section: Mapped[Section] = relationship(back_populates="questions")
     parent: Mapped["Question | None"] = relationship(back_populates="sub_questions", remote_side=[id])

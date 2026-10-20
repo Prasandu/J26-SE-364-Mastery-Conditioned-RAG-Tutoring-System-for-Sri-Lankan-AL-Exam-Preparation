@@ -72,6 +72,7 @@ COMPRESSION_MIN_TOPIC_HOURS = 1.0  # kept topics need at least this many hours a
 COMPRESSED_SESSION_FACTOR = 0.75  # compressed plans shorten sessions by this factor
 MIN_COMPRESSED_SESSION_MINUTES = 25
 RANGE_CHANGE_EPSILON = 0.01  # projected-score change treated as "moved" at a checkpoint
+EVIDENCE_CHECKPOINT_MIN_DAYS = 3  # a new full paper re-plans early only this long after the last checkpoint
 
 # Study timer
 TIMER_CONFIRM_MULTIPLIER = 3  # sessions longer than this x planned duration need confirmation

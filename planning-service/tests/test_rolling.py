@@ -716,3 +716,25 @@ def test_rescheduling_missed_work_keeps_every_other_session_in_place(
     assert any(item.start_at == tomorrow.start_at for item in captured["commitments"])
     tomorrow_local = tomorrow.start_at.astimezone(scheduling.ZoneInfo("UTC")).date()
     assert captured["existing_daily_minutes"] == {tomorrow_local: 60}
+
+
+def test_new_results_replan_early_only_for_full_papers_and_not_too_often() -> None:
+    recent = window_plan(window_end="2026-10-25", last_checkpoint_at="2026-10-18T00:00:00+00:00")
+    session = FakeSession(recent, raw_events=["paper-event"])
+
+    # Last checkpoint was yesterday: a new paper waits instead of reshuffling again.
+    assert rolling.checkpoint_status(session, "student-1", recent, now=NOW) == (False, None)  # type: ignore[arg-type]
+
+    older = window_plan(window_end="2026-10-25", last_checkpoint_at="2026-10-15T00:00:00+00:00")
+    captured: dict[str, Any] = {}
+    paper_session = FakeSession(older, raw_events=["paper-event"])
+    base_scalars = paper_session.scalars
+
+    def scalars(statement: Any) -> Scalars:
+        captured["sql"] = str(statement)
+        return base_scalars(statement)
+
+    paper_session.scalars = scalars  # type: ignore[method-assign]
+    assert rolling.checkpoint_status(paper_session, "student-1", older, now=NOW) == (True, "new_evidence")  # type: ignore[arg-type]
+    # Quizzes (assessments without a paper) do not count.
+    assert "raw_events.paper_id IS NOT NULL" in captured["sql"]

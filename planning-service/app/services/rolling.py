@@ -28,7 +28,7 @@ from app.services.roadmap import (
 )
 from app.services.scheduling import generate_plan_schedule
 from app.services.task_outcomes import measure_adherence, refresh_predicted_priorities
-from app.services.weights import RANGE_CHANGE_EPSILON
+from app.services.weights import EVIDENCE_CHECKPOINT_MIN_DAYS, RANGE_CHANGE_EPSILON
 
 
 def checkpoint_status(
@@ -57,16 +57,22 @@ def checkpoint_status(
         return True, "window_end"
     last_checkpoint = state.get("last_checkpoint_at")
     if last_checkpoint:
-        newer_assessment = session.scalars(
+        # Only a full paper re-plans early, and not more often than every few
+        # days, so daily quizzes do not keep reshuffling the committed window.
+        last_checkpoint_at = datetime.fromisoformat(last_checkpoint)
+        if now - last_checkpoint_at < timedelta(days=EVIDENCE_CHECKPOINT_MIN_DAYS):
+            return False, None
+        newer_paper = session.scalars(
             select(RawEvent.event_id)
             .where(
                 RawEvent.student_id == student_id,
                 RawEvent.event_type == "assessment",
-                RawEvent.received_at > datetime.fromisoformat(last_checkpoint),
+                RawEvent.paper_id.is_not(None),
+                RawEvent.received_at > last_checkpoint_at,
             )
             .limit(1)
         ).first()
-        if newer_assessment is not None:
+        if newer_paper is not None:
             return True, "new_evidence"
     return False, None
 

@@ -45,11 +45,7 @@ export function AdminLayout({ onSignOut, children }: { readonly onSignOut: () =>
           ))}
         </nav>
 
-        <div className="border-t border-slate-800 px-3 py-4">
-          <NavLink to="/" className="block rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800">
-            &larr; Back to the main site
-          </NavLink>
-        </div>
+        <SidebarProfile user={user} onSignOut={onSignOut} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -65,6 +61,50 @@ export function AdminLayout({ onSignOut, children }: { readonly onSignOut: () =>
 
         <main className="flex-1 p-6">{children}</main>
       </div>
+    </div>
+  );
+}
+
+/** The signed-in admin's profile and a way to sign out, anchored to the bottom of
+ * the sidebar - where "Back to the main site" used to be. An admin does not need a
+ * way back to the student/teacher site (see HomePage's own redirect for them), but
+ * does need to see who they are signed in as and a direct way to sign out. */
+function SidebarProfile({
+  user,
+  onSignOut,
+}: {
+  readonly user: { name: string; email: string } | null;
+  readonly onSignOut: () => void;
+}) {
+  const initials = user ? getInitials(user.name) : "A";
+
+  return (
+    <div className="border-t border-slate-800 px-3 py-4">
+      <div className="flex items-center gap-2.5 px-2 py-1.5">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-white">{user?.name ?? "Admin"}</p>
+          <p className="truncate text-xs text-slate-400">{user?.email ?? "Signed in with the admin key"}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onSignOut}
+        className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
+      >
+        <svg viewBox="0 0 20 20" fill="none" className="size-4 shrink-0" aria-hidden="true">
+          <path
+            d="M7.5 3H4.5A1.5 1.5 0 0 0 3 4.5v11A1.5 1.5 0 0 0 4.5 17h3M13 13.5l3.5-3.5m0 0L13 6.5m3.5 3.5H7.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Sign out
+      </button>
     </div>
   );
 }

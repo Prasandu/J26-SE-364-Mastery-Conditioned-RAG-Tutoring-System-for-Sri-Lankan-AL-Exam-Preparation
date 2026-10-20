@@ -175,6 +175,13 @@ export function publishScheme(paperId: number, version: number): Promise<unknown
     method: "POST" });
 }
 
+/** Only a draft, validated or validation-failed scheme can be deleted - an
+ * approved, published or retired one is permanent (see app/services/schemes.py's
+ * ensure_editable). */
+export function deleteScheme(paperId: number, version: number): Promise<void> {
+  return request<void>(`/admin/papers/${paperId}/marking-schemes/${version}`, { method: "DELETE" });
+}
+
 export function publishPaper(paperId: number): Promise<unknown> {
   return request(`/admin/papers/${paperId}/publish`, { method: "POST" });
 }
@@ -185,43 +192,49 @@ export function copyPaper(paperId: number): Promise<AdminPaperDetail> {
   return request<AdminPaperDetail>(`/admin/papers/${paperId}/copy`, { method: "POST" });
 }
 
-export interface PastPaperSkeletonQuestion {
-  label: string;
-  max_marks?: number | null;
-  start_page?: number | null;
+/** Only a draft paper can be deleted - a published one is permanent (see
+ * app/services/papers.py's ensure_draft). */
+export function deletePaper(paperId: number): Promise<void> {
+  return request<void>(`/admin/papers/${paperId}`, { method: "DELETE" });
 }
 
 export interface CreatePastPaperInput {
   title: string;
   year: number;
-  sectionCode: string;
-  sectionTitle: string;
   answerMode: "mcq" | "structured" | "essay";
-  questions: PastPaperSkeletonQuestion[];
   file: File;
 }
 
-/** A past paper shown to students as its own PDF, not OCR'd text - the admin types
- * a skeleton (label, marks, which page it starts on) per question instead of
- * transcribing the wording. See app/api/admin.py's POST /admin/papers/past. */
+/** A past paper shown to students as its own PDF, not OCR'd text - and no question
+ * text or skeleton either: just the paper's own details and its PDF. It starts
+ * with one section ("I") and no questions - add those afterward with
+ * appendQuestions, once the real paper's layout is known. See app/api/admin.py's
+ * POST /admin/papers/past. */
 export function createPastPaper(input: CreatePastPaperInput): Promise<AdminPaperDetail> {
   const form = new FormData();
-  form.append(
-    "paper",
-    JSON.stringify({
-      title: input.title,
-      kind: "past",
-      year: input.year,
-      sections: [
-        {
-          code: input.sectionCode,
-          title: input.sectionTitle,
-          answer_mode: input.answerMode,
-          questions: input.questions,
-        },
-      ],
-    }),
-  );
+  form.append("title", input.title);
+  form.append("year", String(input.year));
+  form.append("answer_mode", input.answerMode);
   form.append("file", input.file);
   return request<AdminPaperDetail>("/admin/papers/past", { method: "POST", form });
+}
+
+export interface QuestionSkeleton {
+  label: string;
+  max_marks?: number | null;
+  start_page?: number | null;
+}
+
+/** Add one or more question skeletons (label, marks, starting page - no wording)
+ * to an existing draft section - for a past paper whose questions are typed in
+ * rather than OCR'd, same as "resume an OCR import" does for the other kind. */
+export function appendQuestions(
+  paperId: number,
+  sectionCode: string,
+  questions: QuestionSkeleton[],
+): Promise<AdminPaperDetail> {
+  return request<AdminPaperDetail>(`/admin/papers/${paperId}/sections/${sectionCode}/questions`, {
+    method: "POST",
+    body: { questions },
+  });
 }

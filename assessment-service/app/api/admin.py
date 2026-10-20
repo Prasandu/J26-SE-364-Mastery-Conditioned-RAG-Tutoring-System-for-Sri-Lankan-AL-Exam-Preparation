@@ -10,7 +10,13 @@ from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.ai import build_author, build_classifier, build_critic, build_embedding_model
+from app.ai import (
+    build_author,
+    build_classifier,
+    build_critic,
+    build_embedding_model,
+    build_vision_classifier,
+)
 from app.ai.author import QuestionAuthor
 from app.ai.classify import TopicClassifier
 from app.ai.critic import QuestionCritic
@@ -18,12 +24,13 @@ from app.ai.judge import AnswerJudge
 from app.api.deps import get_drawing_judge, get_file_store, get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import ContentStatus, PaperKind, SuggestionStatus, User, UserRole
+from app.models import AnswerMode, ContentStatus, PaperKind, SuggestionStatus, User, UserRole
 from app.schemas.admin import (
     AppendQuestionsIn,
     AppendSchemeQuestionsIn,
     MarkingSchemeIn,
     PaperIn,
+    PastPaperShellIn,
     QuestionTopicsIn,
     TopicIn,
 )
@@ -196,22 +203,26 @@ def get_paper_store(settings: Settings = Depends(get_settings)) -> FileStore:
 
 @router.post("/papers/past", response_model=AdminPaperDetail, status_code=status.HTTP_201_CREATED)
 async def create_past_paper(
-    paper: str = Form(description="PaperIn JSON: title, year, subject, sections with question skeletons"),
+    title: str = Form(min_length=1, max_length=200),
+    year: int = Form(ge=1950, le=2100),
+    answer_mode: AnswerMode = Form(...),
+    subject: str = Form(default="chemistry", max_length=50),
     file: UploadFile = File(description="The past paper's own PDF"),
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
     store: FileStore = Depends(get_paper_store),
 ):
-    """Create a past paper shown to students as its own PDF, not OCR'd text - the
-    admin types a skeleton (label, marks, answer mode, start page) per question
-    instead of transcribing the wording. Marking schemes are unaffected; they are
-    still imported via OCR (see app/api/extract.py)."""
+    """Create a past paper shown to students as its own PDF, not OCR'd text - with
+    no questions yet. Add them afterward, one at a time (see POST
+    /papers/{id}/sections/{code}/questions), once the real paper's layout is known.
+    Marking schemes are unaffected; they are still imported via OCR (see
+    app/api/extract.py)."""
     try:
-        data = PaperIn.model_validate_json(paper)
+        data = PastPaperShellIn(title=title, year=year, subject=subject, answer_mode=answer_mode)
     except ValidationError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, error.errors()) from None
     pdf = await _read_upload(file, settings.max_paper_upload_mb)
-    return papers.to_admin_paper_detail(papers.create_past_paper_with_file(db, data, pdf, store))
+    return papers.to_admin_paper_detail(papers.create_past_paper_shell(db, data, pdf, store))
 
 
 async def _read_upload(file: UploadFile, max_mb: float) -> bytes:
@@ -371,8 +382,13 @@ def classify_topics(
     data: ClassifyIn,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
+    store: FileStore = Depends(get_paper_store),
 ):
     """Ask the model to suggest topics for questions that have none.
+
+    A question with no text anywhere - its own, or its marking scheme's (a pure MCQ
+    answer key names no subject content at all) - is classified from its own PDF
+    page instead, when the paper has one and a vision model is configured.
 
     Safe to call again: a question that already has a suggestion waiting for review
     is skipped, so an interrupted run can simply be repeated.
@@ -382,7 +398,10 @@ def classify_topics(
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "No AI model is configured. Set AI_API_KEY in .env."
         )
-    return topics_classify.classify_questions(db, classifier, data.question_ids)
+    vision_classifier = build_vision_classifier(settings)
+    return topics_classify.classify_questions(
+        db, classifier, data.question_ids, vision_classifier=vision_classifier, store=store
+    )
 
 
 @router.get("/topics/suggestions", response_model=list[TopicSuggestionOut])

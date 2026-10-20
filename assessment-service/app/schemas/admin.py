@@ -74,6 +74,17 @@ class AppendQuestionsIn(_Input):
     questions: list[QuestionIn] = Field(min_length=1)
 
 
+class PastPaperShellIn(_Input):
+    """A past paper's own details and PDF, with no questions yet - see
+    app.services.papers.create_past_paper_shell. Add its questions afterward, one
+    at a time, with AppendQuestionsIn, once the real paper's layout is known."""
+
+    title: Title
+    year: int = Field(ge=1950, le=2100)
+    subject: str = Field(default="chemistry", min_length=1, max_length=50)
+    answer_mode: AnswerMode
+
+
 class PaperIn(_Input):
     title: Title
     kind: PaperKind

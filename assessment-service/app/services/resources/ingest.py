@@ -151,6 +151,44 @@ def embed_pending_chunks(
     return embedded, result.failures
 
 
+MOST_EMBED_ROUNDS = 20  # 20 * the 200-chunk batch = 4000 chunks; a safety cap, not a real ceiling
+
+
+def embed_and_publish(
+    db: Session, embedder: EmbeddingModel, code: str, version: int
+) -> tuple[Resource, int, list[str]]:
+    """Embed every chunk this version still needs, then publish it - one admin
+    action instead of two, and it is no longer possible to publish a version that
+    is not actually searchable yet (see embed_pending_chunks for why a failure
+    leaves a chunk pending rather than half-written).
+
+    Returns (resource, embedded, failures). If any chunk could not be embedded,
+    nothing is published - a half-embedded version going live silently, with no
+    error and nothing to show it happened, is worse than refusing and saying why.
+    """
+    resource = db.scalars(select(Resource).where(Resource.code == code, Resource.version == version)).first()
+    if resource is None:
+        raise ContentValidationError("No such resource version", [f"{code} v{version} does not exist"])
+
+    total_embedded = 0
+    failures: list[str] = []
+    for _ in range(MOST_EMBED_ROUNDS):
+        embedded, round_failures = embed_pending_chunks(db, embedder, resource_id=resource.id)
+        total_embedded += embedded
+        failures += round_failures
+        if embedded == 0:
+            break  # nothing left, or nothing more this embedder can do right now
+
+    still_pending = sum(1 for chunk in resource.chunks if chunk.embedding is None)
+    if still_pending:
+        raise ContentValidationError(
+            f"{still_pending} chunk(s) could not be embedded, so this version was not published",
+            failures or [f"{still_pending} chunk(s) have no embedding"],
+        )
+
+    return publish_resource(db, code, version), total_embedded, failures
+
+
 def publish_resource(db: Session, code: str, version: int) -> Resource:
     """Make one version of a resource retrievable, and retire any earlier version.
 

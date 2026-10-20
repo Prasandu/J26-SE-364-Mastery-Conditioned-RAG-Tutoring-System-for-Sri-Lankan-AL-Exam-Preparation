@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { embedResource, listResources, publishResource, uploadResource } from "@/api/resources";
+import { listResources, publishResource, uploadResource } from "@/api/resources";
 import { ApiError } from "@/api/client";
 import type { IngestResult, ResourceStatus, ResourceSummary } from "@/api/types";
 import { Badge, type BadgeTone } from "@/components/Badge";
@@ -170,30 +170,13 @@ function ResourceRow({
   const [problem, setProblem] = useState<string | null>(null);
   const [embedded, setEmbedded] = useState<string | null>(null);
 
-  async function embed() {
+  async function publish() {
     setBusy(true);
     setProblem(null);
     setEmbedded(null);
     try {
-      const result = await embedResource(resource.code, resource.version);
-      setEmbedded(
-        result.still_pending > 0
-          ? `Embedded ${result.embedded}, ${result.still_pending} left - run Embed again.`
-          : `Embedded ${result.embedded}. Ready to publish.`,
-      );
-      onChanged();
-    } catch (cause) {
-      setProblem(cause instanceof ApiError ? cause.message : String(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function publish() {
-    setBusy(true);
-    setProblem(null);
-    try {
-      await publishResource(resource.code, resource.version);
+      const result = await publishResource(resource.code, resource.version);
+      setEmbedded(`Embedded ${result.embedded} chunk(s) and published.`);
       onChanged();
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
@@ -218,14 +201,9 @@ function ResourceRow({
       <div className="flex items-center gap-2">
         <Badge tone={STATUS_TONE[resource.status]}>{resource.status}</Badge>
         {resource.status === "draft" && (
-          <>
-            <Button variant="secondary" disabled={busy} onClick={() => void embed()}>
-              Embed
-            </Button>
-            <Button disabled={busy} onClick={() => void publish()}>
-              Publish
-            </Button>
-          </>
+          <Button disabled={busy} onClick={() => void publish()}>
+            {busy ? "Publishing..." : "Embed & publish"}
+          </Button>
         )}
       </div>
     </div>

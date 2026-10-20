@@ -1,7 +1,7 @@
-// Resource books (RAG): upload, embed, publish, search. Admin only.
+// Resource books (RAG): upload, embed + publish, search. Admin only.
 
 import { request } from "./client";
-import type { EmbedResult, IngestResult, ResourceSummary } from "./types";
+import type { IngestResult, PublishResult, ResourceSummary } from "./types";
 
 export function listResources(signal?: AbortSignal): Promise<ResourceSummary[]> {
   return request<ResourceSummary[]>("/admin/resources", { signal });
@@ -29,12 +29,11 @@ export function uploadResource(input: UploadResourceInput): Promise<IngestResult
   return request<IngestResult>("/admin/resources", { method: "POST", form });
 }
 
-export function embedResource(code: string, version: number): Promise<EmbedResult> {
-  return request<EmbedResult>(`/admin/resources/${code}/${version}/embed`, {
-    method: "POST" });
-}
-
-export function publishResource(code: string, version: number): Promise<ResourceSummary> {
-  return request<ResourceSummary>(`/admin/resources/${code}/${version}/publish`, {
-    method: "POST" });
+// One admin action: embed whatever still needs it, then publish. Refuses (and
+// leaves the version as a draft) if any chunk could not be embedded - see
+// app/services/resources/ingest.py's embed_and_publish.
+export function publishResource(code: string, version: number): Promise<PublishResult> {
+  return request<PublishResult>(`/admin/resources/${code}/${version}/embed-and-publish`, {
+    method: "POST",
+  });
 }

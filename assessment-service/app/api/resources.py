@@ -19,16 +19,24 @@ from app.schemas.resources import (
     IngestResultOut,
     PageReportOut,
     PassageOut,
+    PublishResultOut,
     ResourceSummaryOut,
     SearchResultOut,
 )
 from app.security import require_admin
-from app.services.resources.ingest import embed_pending_chunks, ingest_resource, publish_resource
+from app.services.resources.ingest import (
+    embed_and_publish,
+    embed_pending_chunks,
+    ingest_resource,
+    publish_resource,
+)
 from app.services.resources.retrieve import DEFAULT_LIMIT
 from app.services.resources.retrieve import search as search_resources
 from app.services.storage import FileStore, LocalFileStore
 
 router = APIRouter(prefix="/admin/resources", tags=["resources"], dependencies=[Depends(require_admin)])
+
+NO_EMBEDDER = "The local embedding model could not be loaded."
 
 
 def get_embedder(settings: Settings = Depends(get_settings)) -> EmbeddingModel | None:
@@ -96,9 +104,7 @@ def embed_resource(
     """Embed every chunk of this resource version that does not have an embedding yet."""
     resource = _get_version(db, code, version)
     if embedder is None:
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "The local embedding model could not be loaded."
-        )
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_EMBEDDER)
     embedded, failures = embed_pending_chunks(db, embedder, resource_id=resource.id)
     still_pending = sum(1 for chunk in resource.chunks if chunk.embedding is None)
     return EmbedResultOut(embedded=embedded, still_pending=still_pending, failures=failures)
@@ -108,6 +114,24 @@ def embed_resource(
 def publish(code: str, version: int, db: Session = Depends(get_db)):
     """Make this version retrievable, retiring whichever version was published before."""
     return publish_resource(db, code, version)
+
+
+@router.post("/{code}/{version}/embed-and-publish", response_model=PublishResultOut)
+def publish_with_embedding(
+    code: str,
+    version: int,
+    db: Session = Depends(get_db),
+    embedder: EmbeddingModel | None = Depends(get_embedder),
+):
+    """Embed whatever this version still needs, then publish it - one admin action.
+
+    Refuses to publish if any chunk could not be embedded, rather than quietly
+    going live with gaps (see app.services.resources.ingest.embed_and_publish).
+    """
+    if embedder is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_EMBEDDER)
+    resource, embedded, failures = embed_and_publish(db, embedder, code, version)
+    return PublishResultOut(resource=resource, embedded=embedded, failures=failures)
 
 
 @router.get("/search", response_model=SearchResultOut)
@@ -128,9 +152,7 @@ def search(
     thing that awards a mark).
     """
     if embedder is None:
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "The local embedding model could not be loaded."
-        )
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NO_EMBEDDER)
     result = search_resources(
         db,
         embedder,

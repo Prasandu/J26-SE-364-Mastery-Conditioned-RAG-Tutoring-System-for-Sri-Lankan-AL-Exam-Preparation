@@ -439,6 +439,13 @@ export interface EmbedResult {
   failures: string[];
 }
 
+// Embed-then-publish in one admin action - see POST .../embed-and-publish.
+export interface PublishResult {
+  resource: ResourceSummary;
+  embedded: number;
+  failures: string[];
+}
+
 // Reading a scanned PDF into a paper or marking scheme draft
 
 export interface FailedPage {

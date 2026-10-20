@@ -45,6 +45,14 @@ class EmbedResultOut(BaseModel):
     failures: list[str]
 
 
+class PublishResultOut(BaseModel):
+    """Embed-then-publish in one action - see app.services.resources.ingest.embed_and_publish."""
+
+    resource: ResourceSummaryOut
+    embedded: int
+    failures: list[str]
+
+
 class PassageOut(BaseModel):
     chunk_id: int
     resource_code: str

@@ -98,11 +98,25 @@ class McqAnswer(BaseModel):
     option: str = Field(description='Correct option number, e.g. "4"')
 
 
+class QuestionTotal(BaseModel):
+    """A total the page prints for a whole question, e.g. a boxed "4(c) 22 Marks".
+
+    The scheme's own checksum: if the points read off that question do not add up
+    to this, something on the page was missed (see drafts.py's _mark_totals).
+    """
+
+    question: str = Field(description='Full label as printed, e.g. "4(c)"')
+    marks: float = Field(description="The total printed for that whole question, e.g. 22")
+
+
 class ExtractedSchemePage(BaseModel):
     questions: list[ExtractedScheme] = []
     mcq_answers: list[McqAnswer] = Field(default_factory=list, description="An answer key table")
     mcq_marks: float | None = Field(
         default=None, description="Marks for one correct MCQ answer, if the page states it"
+    )
+    question_totals: list[QuestionTotal] = Field(
+        default_factory=list, description="Totals the page prints for a whole question"
     )
     notes: list[str] = []
 
@@ -146,6 +160,12 @@ Rules:
    mcq_marks to the marks awarded for one correct answer if the page states it anywhere (e.g.
    "each correct response: 01 mark", or a total divided evenly across the questions listed).
    Leave mcq_marks empty if the page never says.
+9. Where the page prints a total for a whole question, such as a boxed "4(c) 22 Marks" or
+   "3(a) 70 marks", copy it into question_totals. That is the scheme's own total for the
+   question, so never also list it as a marking point.
+10. Read every mark the page awards, including ones written beside a drawn structure, beside a
+   curved arrow in a mechanism, or against one line of a worked calculation. A circled "(03)"
+   next to an arrow is a marking point just as much as a sentence is.
 """
 
 
@@ -164,16 +184,30 @@ class ContentExtractor:
             shape=ExtractedPaper,
         )
 
-    def read_scheme(self, images: Sequence[Image], hint: str | None = None) -> ExtractedSchemePage:
+    def read_scheme(
+        self, images: Sequence[Image], hint: str | None = None, continuing_from: str | None = None
+    ) -> ExtractedSchemePage:
         return self._model.ask(
             system=SCHEME_PROMPT,
-            user=_user_prompt("marking scheme", len(images), hint),
+            user=_user_prompt("marking scheme", len(images), hint, continuing_from),
             images=images,
             shape=ExtractedSchemePage,
         )
 
 
-def _user_prompt(kind: str, count: int, hint: str | None) -> str:
+def _user_prompt(kind: str, count: int, hint: str | None, continuing_from: str | None = None) -> str:
     pages = "this page" if count == 1 else f"these {count} pages, in order"
-    prompt = f"Copy the {kind} content from {pages}."
-    return f"{prompt}\n\nContext: {hint}" if hint else prompt
+    parts = [f"Copy the {kind} content from {pages}."]
+    if continuing_from:
+        # A scheme rarely repeats the whole label on a continuation page: a part
+        # printed as just "(iii)" here is "1(b)(iii)" if the last page ended in
+        # "1(b)(ii)". Without this the part comes back as its own question.
+        parts.append(
+            f"The previous page ended inside question {continuing_from}. A part printed on this "
+            f'page as just "(iii)", "(c)" or "II." continues that same question, so give it its '
+            f"full label in the same style as {continuing_from} - never the bare part on its own. "
+            f"Working that carries straight on from the previous page belongs to that question too."
+        )
+    if hint:
+        parts.append(f"Context: {hint}")
+    return "\n\n".join(parts)

@@ -18,6 +18,10 @@ class ExtractResultOut(BaseModel):
     page_count: int  # pages in the uploaded PDF, so a bad --pages range is easy to spot
     pages_read: list[int]
     notes: list[str]  # anything the model flagged for a person to check
+    # Where the points read off a question do not add up to the total the scheme
+    # printed for it - the page's own checksum catching marks that were missed
+    # (see app/services/drafts.py's _mark_totals).
+    short_reads: list[str] = []
     failed: list[FailedPageOut]
     # ExtractedPaper or ExtractedSchemePage (app/services/extractor.py), as a plain
     # dict: the admin edits this freely in the browser before it becomes a real

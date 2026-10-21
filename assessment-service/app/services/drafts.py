@@ -8,6 +8,7 @@ import itertools
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import isclose
 from pathlib import Path
 from typing import Any
 
@@ -352,7 +353,7 @@ def draft_problems(
     parts = draft.get("extracted", [])
     if draft.get("kind") == "scheme":
         numbered = [(answer["question"], part) for part in parts for answer in part.get("mcq_answers") or []]
-        return _numbering_gaps(numbered)
+        return _numbering_gaps(numbered) + _mark_totals(parts)
 
     numbered = [(question["label"], part) for part in parts for question in part.get("questions") or []]
     return (
@@ -360,6 +361,43 @@ def draft_problems(
         + _missing_options(parts, covered or (lambda _: False))
         + _figure_questions(parts)
     )
+
+
+def _mark_totals(parts: list[dict[str, Any]]) -> list[DraftProblem]:
+    """Points read off a question against the total the scheme printed for it.
+
+    A marking scheme states its own total per question ("4(c) 22 Marks"), so it
+    carries its own checksum: when the points add up to less, the page had marks
+    on it that were not read - typically ones written beside a drawn structure or
+    a mechanism arrow rather than in a sentence. Reported, never corrected
+    silently: only the page itself says which marks were missed.
+    """
+    read: dict[str, float] = {}
+    where: dict[str, list[int]] = {}
+    for part in parts:
+        for question in part.get("questions") or []:
+            label = clean_label(question["question"])
+            read[label] = read.get(label, 0) + sum(p.get("marks") or 0 for p in question.get("points") or [])
+            where.setdefault(label, part.get("pages", []))
+
+    problems = []
+    for part in parts:
+        for total in part.get("question_totals") or []:
+            label = clean_label(total["question"])
+            printed = total.get("marks")
+            if printed is None or label not in read:
+                continue
+            if not isclose(read[label], printed):
+                problems.append(
+                    DraftProblem(
+                        f"{label}: the page prints {printed:g} marks but only {read[label]:g} "
+                        f"were read - marks beside a structure, an arrow or a line of working "
+                        f"are easy to miss",
+                        where.get(label) or part.get("pages", []),
+                        blocking=False,
+                    )
+                )
+    return problems
 
 
 def _numbering_gaps(labelled: list[tuple[str, dict[str, Any]]]) -> list[DraftProblem]:

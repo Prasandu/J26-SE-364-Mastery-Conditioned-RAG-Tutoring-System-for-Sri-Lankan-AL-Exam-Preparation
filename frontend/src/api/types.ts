@@ -465,6 +465,9 @@ export interface ExtractResult {
   page_count: number;
   pages_read: number[];
   notes: string[];
+  // Questions whose points do not add up to the total the scheme printed for them
+  // - the page's own checksum catching marks that were missed.
+  short_reads: string[];
   failed: FailedPage[];
   extracted: {
     questions: Record<string, unknown>[];

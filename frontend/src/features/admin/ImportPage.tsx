@@ -208,6 +208,23 @@ function ExtractSummary({
           </p>
         )}
 
+      {(result.short_reads ?? []).length > 0 && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="font-medium">
+            These questions came out short of the total the scheme itself prints for them:
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {result.short_reads.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            Check those questions against the real page before submitting - marks written beside a
+            drawn structure, a mechanism arrow or one line of working are the ones usually missed.
+          </p>
+        </div>
+      )}
+
       {result.notes.length > 0 && (
         <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
           <p className="font-medium text-slate-700">The model flagged, check these:</p>

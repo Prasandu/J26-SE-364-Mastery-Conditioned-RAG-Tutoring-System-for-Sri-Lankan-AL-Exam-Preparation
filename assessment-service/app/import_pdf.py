@@ -49,10 +49,13 @@ def main() -> None:
     parts: list[dict[str, Any]] = []
     failed: list[dict[str, Any]] = []
     batches = _batches(pages, args.batch)
+    last_label: str | None = None
     for index, batch in enumerate(batches):
         print(f"  pages {batch[0]}-{batch[-1]} ...", end=" ", flush=True)
         try:
-            parts.append(_read_batch(extractor, args, batch))
+            part = _read_batch(extractor, args, batch, last_label)
+            parts.append(part)
+            last_label = _last_label(part) or last_label
             print("done")
         except READ_ERRORS as error:
             print(f"failed ({type(error).__name__})")
@@ -140,10 +143,26 @@ def _parse_args() -> argparse.Namespace:
     return args
 
 
-def _read_batch(extractor: ContentExtractor, args: argparse.Namespace, batch: list[int]) -> dict:
+def _read_batch(
+    extractor: ContentExtractor,
+    args: argparse.Namespace,
+    batch: list[int],
+    continuing_from: str | None = None,
+) -> dict:
     images = render_pages(args.pdf, batch)
-    read = extractor.read_paper if args.kind == "paper" else extractor.read_scheme
-    return {"pages": batch, **read(images, args.hint).model_dump()}
+    if args.kind == "paper":
+        page = extractor.read_paper(images, args.hint)
+    else:
+        # What the previous page ended on, so a part printed as just "(iii)" here
+        # keeps the question it belongs to (see extractor.py's _user_prompt).
+        page = extractor.read_scheme(images, args.hint, continuing_from=continuing_from)
+    return {"pages": batch, **page.model_dump()}
+
+
+def _last_label(part: dict[str, Any]) -> str | None:
+    """The question this batch ended inside, to carry into the next batch."""
+    questions = part.get("questions") or []
+    return questions[-1].get("question") if questions else None
 
 
 def _report(args: argparse.Namespace, draft: dict[str, Any]) -> None:

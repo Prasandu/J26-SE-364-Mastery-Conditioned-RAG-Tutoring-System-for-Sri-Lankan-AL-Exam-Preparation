@@ -34,7 +34,12 @@ from app.schemas.extract import (
 )
 from app.security import require_admin
 from app.services import papers, schemes, topics_classify
-from app.services.drafts import clean_label, paper_section_from_extraction, scheme_from_extraction
+from app.services.drafts import (
+    clean_label,
+    draft_problems,
+    paper_section_from_extraction,
+    scheme_from_extraction,
+)
 from app.services.extractor import READ_ERRORS, ContentExtractor
 from app.services.pdf import page_count, parse_pages, render_pages
 
@@ -84,7 +89,9 @@ async def extract(
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 f"This PDF has {total_pages} pages; asked for {out_of_range}",
             )
-        pages_read, notes, failed, extracted = _read_all(model, kind, path, page_numbers, hint)
+        pages_read, notes, failed, extracted, short_reads = _read_all(
+            model, kind, path, page_numbers, hint
+        )
     finally:
         path.unlink(missing_ok=True)
 
@@ -93,6 +100,7 @@ async def extract(
         page_count=total_pages,
         pages_read=pages_read,
         notes=notes,
+        short_reads=short_reads,
         failed=failed,
         extracted=extracted,
     )
@@ -283,9 +291,8 @@ def _messages(error: ValidationError) -> list[str]:
 
 def _read_all(
     model: VisionModel, kind: str, path: Path, page_numbers: list[int], hint: str | None
-) -> tuple[list[int], list[str], list[FailedPageOut], dict]:
+) -> tuple[list[int], list[str], list[FailedPageOut], dict, list[str]]:
     extractor = ContentExtractor(model)
-    read = extractor.read_paper if kind == "paper" else extractor.read_scheme
     merged: dict = {"questions": [], "notes": []}
     if kind == "scheme":
         merged["mcq_answers"] = []
@@ -293,24 +300,43 @@ def _read_all(
 
     pages_read: list[int] = []
     failed: list[FailedPageOut] = []
+    parts: list[dict] = []  # per batch, for the checks in app/services/drafts.py
+    last_label: str | None = None
     for batch in _batches(page_numbers, BATCH_SIZE):
         images = render_pages(path, batch)
         try:
-            result = read(images, hint)
+            if kind == "paper":
+                result = extractor.read_paper(images, hint)
+            else:
+                # The label the previous page ended on: a scheme rarely repeats the
+                # whole label when a question runs over a page break.
+                result = extractor.read_scheme(images, hint, continuing_from=last_label)
         except READ_ERRORS as error:
             failed.append(FailedPageOut(pages=batch, error=str(error)))
             continue
         pages_read.extend(batch)
         data = result.model_dump()
+        parts.append({"pages": batch, **data})
         merged["questions"].extend(data["questions"])
         merged["notes"].extend(data["notes"])
         if kind == "scheme":
             merged["mcq_answers"].extend(data["mcq_answers"])
             if merged["mcq_marks"] is None:
                 merged["mcq_marks"] = data.get("mcq_marks")
+            last_label = _last_label(data) or last_label
 
     notes = merged.pop("notes")
-    return pages_read, notes, failed, merged
+    short_reads = [
+        problem.message for problem in draft_problems({"kind": kind, "extracted": parts})
+        if not problem.blocking
+    ]
+    return pages_read, notes, failed, merged, short_reads
+
+
+def _last_label(data: dict) -> str | None:
+    """The question this page ended inside, to carry into the next page's prompt."""
+    questions = data.get("questions") or []
+    return questions[-1].get("question") if questions else None
 
 
 def _batches(pages: list[int], size: int) -> list[list[int]]:

@@ -122,8 +122,12 @@ function Preview({ definition, onClose }: { definition: TeachingDefinition; onCl
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
+    const previous = document.activeElement;
     element?.showModal();
-    return () => element?.close();
+    return () => {
+      element?.close();
+      if (previous instanceof HTMLElement) requestAnimationFrame(() => previous.focus());
+    };
   }, []);
   return (
     <dialog ref={dialog} className="simulation-author__preview" onCancel={onClose}>
@@ -191,9 +195,10 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
   const change = (mutate: (d: TeachingDefinition) => void) => {
     setDraft((current) => {
       const next = structuredClone(current);
+      mutate(next);
+      if (JSON.stringify(next) === JSON.stringify(current)) return current;
       if (record && next.revision <= record.definition.revision)
         next.revision = record.definition.revision + 1;
-      mutate(next);
       return next;
     });
     setAttest(false);
@@ -235,6 +240,19 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
         reviewer.trim(),
       );
       load(active, active.definition);
+      await refresh();
+    } catch {
+      setNotice('teaching.author.save_failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const deactivate = async () => {
+    if (!record || !client.deactivateLocalSimulation) return;
+    setBusy(true);
+    try {
+      const staged = await client.deactivateLocalSimulation(record.id, record.version);
+      load(staged, staged.definition);
       await refresh();
     } catch {
       setNotice('teaching.author.save_failed');
@@ -576,7 +594,7 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
               <label>
                 {t('teaching.author.concentrations')}
                 <input
-                  key={record?.id ?? example}
+                  key={`${draft.id}-${draft.concentrationsMolDm3.join(',')}`}
                   defaultValue={draft.concentrationsMolDm3.join(', ')}
                   onBlur={(e) =>
                     change((d) => {
@@ -683,6 +701,93 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
                         </select>
                       </label>
                     </div>
+                    <details>
+                      <summary>{t('teaching.author.phase')}</summary>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={!!step.appearance}
+                          onChange={(e) =>
+                            change((d) => {
+                              const target = d.tests[i]!.steps[j]!;
+                              if (e.target.checked)
+                                target.appearance = {
+                                  solutionColour: 'clear',
+                                  precipitateColour: null,
+                                  visual: 'none',
+                                  sourceIndexes: [0],
+                                };
+                              else delete target.appearance;
+                            })
+                          }
+                        />
+                        {t('teaching.author.enable_phase')}
+                      </label>
+                      {step.appearance && (
+                        <div className="simulation-author__columns">
+                          {(['solutionColour', 'precipitateColour'] as const).map((key) => (
+                            <label key={key}>
+                              {t(`teaching.author.${key}`)}
+                              <select
+                                value={step.appearance![key] ?? ''}
+                                onChange={(e) =>
+                                  change((d) => {
+                                    d.tests[i]!.steps[j]!.appearance![key] = (e.target.value ||
+                                      null) as typeof step.appearance.solutionColour;
+                                  })
+                                }
+                              >
+                                {key === 'precipitateColour' && (
+                                  <option value="">{t('teaching.author.none')}</option>
+                                )}
+                                {TeachingColourSchema.options.map((c) => (
+                                  <option key={c} value={c}>
+                                    {t(`teaching.colour.${c}`)}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          ))}
+                          <label>
+                            {t('teaching.author.visual')}
+                            <select
+                              value={step.appearance.visual}
+                              onChange={(e) =>
+                                change((d) => {
+                                  d.tests[i]!.steps[j]!.appearance!.visual = e.target
+                                    .value as NonNullable<typeof step.appearance>['visual'];
+                                })
+                              }
+                            >
+                              {(['none', 'bubbles', 'precipitate', 'silver_mirror'] as const).map(
+                                (v) => (
+                                  <option key={v} value={v}>
+                                    {t(`teaching.visual.${v}`)}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </label>
+                          <label>
+                            {t('teaching.author.source_refs')}
+                            <input
+                              key={step.appearance.sourceIndexes.join(',')}
+                              defaultValue={step.appearance.sourceIndexes
+                                .map((n) => n + 1)
+                                .join(', ')}
+                              onBlur={(e) =>
+                                change((d) => {
+                                  d.tests[i]!.steps[j]!.appearance!.sourceIndexes =
+                                    e.target.value.trim()
+                                      ? e.target.value.split(',').map((v) => Number(v.trim()) - 1)
+                                      : [];
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </details>
                     <button
                       className="button"
                       type="button"
@@ -769,7 +874,7 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
                 <label>
                   {t('teaching.author.pages')}
                   <input
-                    key={`${record?.id}-${i}`}
+                    key={`${draft.id}-${i}-${source.pdfPages.join(',')}`}
                     defaultValue={source.pdfPages.join(', ')}
                     onBlur={(e) =>
                       change((d) => {
@@ -802,6 +907,28 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
                     }
                   />
                 </label>
+                <button
+                  type="button"
+                  className="button"
+                  disabled={draft.sources.length <= 1}
+                  onClick={() =>
+                    change((d) => {
+                      d.sources.splice(i, 1);
+                      for (const outcome of d.outcomes)
+                        outcome.sourceIndexes = outcome.sourceIndexes
+                          .filter((n) => n !== i)
+                          .map((n) => (n > i ? n - 1 : n));
+                      for (const test of d.tests)
+                        for (const step of test.steps)
+                          if (step.appearance)
+                            step.appearance.sourceIndexes = step.appearance.sourceIndexes
+                              .filter((n) => n !== i)
+                              .map((n) => (n > i ? n - 1 : n));
+                    })
+                  }
+                >
+                  {t('teaching.author.remove')}
+                </button>
               </section>
             ))}
             <button
@@ -873,19 +1000,18 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
                       })
                     }
                   >
-                    {(['none', 'bubbles', 'precipitate', 'silver_mirror', 'layers'] as const).map(
-                      (v) => (
-                        <option key={v} value={v}>
-                          {t(`teaching.visual.${v}`)}
-                        </option>
-                      ),
-                    )}
+                    {(['none', 'bubbles', 'precipitate', 'silver_mirror'] as const).map((v) => (
+                      <option key={v} value={v}>
+                        {t(`teaching.visual.${v}`)}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
                   {t('teaching.author.source_refs')}
                   <input
                     defaultValue={o.sourceIndexes.map((n) => n + 1).join(', ')}
+                    key={o.sourceIndexes.join(',')}
                     onBlur={(e) =>
                       change((d) => {
                         d.outcomes[i]!.sourceIndexes = e.target.value.trim()
@@ -971,6 +1097,19 @@ export function SimulationAuthor({ client }: { client: AdminClient }) {
               onClick={() => void activate()}
             >
               {t('teaching.author.activate')}
+            </button>
+            <button
+              type="button"
+              className="button"
+              disabled={
+                busy ||
+                dirty ||
+                record?.status !== 'local_active' ||
+                !client.deactivateLocalSimulation
+              }
+              onClick={() => void deactivate()}
+            >
+              {t('teaching.author.deactivate')}
             </button>
           </>
         )}

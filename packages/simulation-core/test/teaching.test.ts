@@ -72,6 +72,11 @@ describe('declarative simulations 21–30', () => {
     expect(s.step).toBe(0);
     const rejected = transitionTeaching(d, s, action, s.sequence);
     expect(rejected.state.events.at(-1)).toMatchObject({ accepted: false, error: 'temperature' });
+    s = apply(d, s, { type: 'temperature', value: 2 });
+    for (const next of d.tests[0]!.steps)
+      s = apply(d, s, { type: 'step', stepId: next.id, apparatusId: next.apparatusId });
+    s = apply(d, s, { type: 'temperature', value: 12 });
+    expect(transitionTeaching(d, s, { type: 'record' }, s.sequence).error).toBe('temperature');
   });
   it('has no default kinetics measurements and derives order only from entered data', () => {
     const d = definitions[9]!;
@@ -82,6 +87,20 @@ describe('declarative simulations 21–30', () => {
     expect(calculateKinetics(d.concentrationsMolDm3, own)!.rSquared).toBeCloseTo(1, 10);
     own['1'] = 0;
     expect(calculateKinetics(d.concentrationsMolDm3, own)).toBeNull();
+  });
+  it('projects sourced intermediate appearances without inventing kinetic curves', () => {
+    const d = definitions[3]!;
+    let s = apply(d, initialTeachingRun(d), { type: 'safety', value: true });
+    for (const step of d.tests[0]!.steps.slice(0, 2))
+      s = apply(d, s, { type: 'step', stepId: step.id, apparatusId: step.apparatusId });
+    expect(projectTeaching(d, s).scene.solutionColour).toBe('orange');
+    expect(projectTeaching(d, s).outcome).toBeNull();
+    for (const step of d.tests[0]!.steps.slice(2))
+      s = apply(d, s, { type: 'step', stepId: step.id, apparatusId: step.apparatusId });
+    expect(projectTeaching(d, s).scene.solutionColour).toBe(d.outcomes[0]!.solutionColour);
+    const invalid = structuredClone(d);
+    invalid.tests[0]!.steps[1]!.appearance!.sourceIndexes = [999];
+    expect(() => parseTeachingDefinition(invalid)).toThrow('outcome_source');
   });
   it('rejects missing outcomes, dangling sources, unsupported instruments and scripts', () => {
     const d = definitions[0]!;

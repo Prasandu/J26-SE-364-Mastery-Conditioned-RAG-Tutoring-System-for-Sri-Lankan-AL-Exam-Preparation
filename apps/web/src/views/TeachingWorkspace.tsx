@@ -29,7 +29,12 @@ function TrialResult({ trial }: { trial: TeachingTrial }) {
   return (
     <section className="teaching-results">
       <p>{t('teaching.proxy_note')}</p>
-      <div className="table-scroll">
+      <div
+        className="table-scroll"
+        role="region"
+        aria-label={t('teaching.times_table')}
+        tabIndex={0}
+      >
         <table>
           <caption>{t('teaching.times_table')}</caption>
           <thead>
@@ -43,7 +48,11 @@ function TrialResult({ trial }: { trial: TeachingTrial }) {
             {result.points.map((p) => (
               <tr key={p.concentration}>
                 <td>{p.concentration}</td>
-                <td>{p.time}</td>
+                <td title={String(p.time)}>
+                  {new Intl.NumberFormat(locale === 'si' ? 'si-LK' : 'en-GB', {
+                    maximumSignificantDigits: 6,
+                  }).format(p.time)}
+                </td>
                 <td>{p.inverseTime.toPrecision(5)}</td>
               </tr>
             ))}
@@ -117,16 +126,21 @@ export function TeachingWorkspace({
   );
   const [inputError, setInputError] = useState<TeachingError | null>(null);
   const p = teachingPractice.project(d, run);
-  const execute = () => {
+  const execute = (record = false) => {
     setInputError(null);
     if (p.test.temperatureRangeC) {
-      if (!temperature.trim() || !Number.isFinite(Number(temperature))) {
+      if (
+        !temperature.trim() ||
+        !Number.isFinite(Number(temperature)) ||
+        Number(temperature) < p.test.temperatureRangeC[0] ||
+        Number(temperature) > p.test.temperatureRangeC[1]
+      ) {
         setInputError('temperature');
         return;
       }
       if (!onAction({ type: 'temperature', value: Number(temperature) })) return;
     }
-    if (p.nextStep?.effect === 'measure' && d.template === 'fixed_volume_kinetics') {
+    if ((p.nextStep?.effect === 'measure' || record) && d.template === 'fixed_volume_kinetics') {
       for (const c of d.concentrationsMolDm3) {
         const raw = times[String(c)];
         if (!raw?.trim() || !Number.isFinite(Number(raw)) || Number(raw) <= 0) {
@@ -136,7 +150,8 @@ export function TeachingWorkspace({
         if (!onAction({ type: 'measurement', concentration: c, time: Number(raw) })) return;
       }
     }
-    if (p.nextStep) onAction({ type: 'step', stepId: p.nextStep.id, apparatusId: selected });
+    if (record) onAction({ type: 'record' });
+    else if (p.nextStep) onAction({ type: 'step', stepId: p.nextStep.id, apparatusId: selected });
   };
   const list = (items: readonly LocalText[]) => (
     <ul>
@@ -287,7 +302,7 @@ export function TeachingWorkspace({
                   </div>
                 )}
               </div>
-              <div className="teaching-stage">
+              <div className={`teaching-stage teaching-stage--${dimension}`}>
                 {dimension === '2d' ? (
                   <TeachingScene2D
                     definition={d}
@@ -435,7 +450,7 @@ export function TeachingWorkspace({
                     type="button"
                     className="button button--primary teaching-execute"
                     disabled={!run.safety || run.completed}
-                    onClick={execute}
+                    onClick={() => execute()}
                   >
                     {t('teaching.perform_step')}
                   </button>
@@ -459,7 +474,7 @@ export function TeachingWorkspace({
                   type="button"
                   className="button button--primary"
                   disabled={!p.finished || run.recorded || run.completed}
-                  onClick={() => onAction({ type: 'record' })}
+                  onClick={() => execute(true)}
                 >
                   {t('labs.record')}
                 </button>

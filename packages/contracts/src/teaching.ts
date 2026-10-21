@@ -58,6 +58,14 @@ const Step = z.strictObject({
   instruction: LocalTextSchema,
   apparatusId: Identifier,
   effect: z.enum(['prepare', 'add', 'mix', 'heat', 'cool', 'observe', 'measure']),
+  appearance: z
+    .strictObject({
+      solutionColour: TeachingColourSchema,
+      precipitateColour: TeachingColourSchema.nullable(),
+      visual: z.enum(['none', 'bubbles', 'precipitate', 'silver_mirror']),
+      sourceIndexes: z.array(z.int().nonnegative()).min(1).max(12),
+    })
+    .optional(),
 });
 export const TeachingDefinitionSchema = z.strictObject({
   schemaVersion: z.literal('1.0.0'),
@@ -119,7 +127,7 @@ export const TeachingDefinitionSchema = z.strictObject({
         observation: LocalTextSchema,
         solutionColour: TeachingColourSchema,
         precipitateColour: TeachingColourSchema.nullable(),
-        visual: z.enum(['none', 'bubbles', 'precipitate', 'silver_mirror', 'layers']),
+        visual: z.enum(['none', 'bubbles', 'precipitate', 'silver_mirror']),
         sourceIndexes: z.array(z.int().nonnegative()).min(1).max(12),
       }),
     )
@@ -153,6 +161,7 @@ export const TeachingActivateSchema = z.strictObject({
   reviewer: z.string().trim().min(1).max(120),
   reviewedSources: z.literal(true),
 });
+export const TeachingDeactivateSchema = z.strictObject({ expectedVersion: z.int().positive() });
 
 /** Cross-field checks shared with the API validator; structural schema alone is insufficient. */
 export function teachingIssues(d: TeachingDefinition): string[] {
@@ -160,13 +169,20 @@ export function teachingIssues(d: TeachingDefinition): string[] {
   const unique = (items: readonly { id: string }[]) =>
     new Set(items.map((x) => x.id)).size === items.length;
   if (![d.apparatus, d.samples, d.tests].every(unique)) issues.push('duplicate_id');
-  if (new Set(d.apparatus.map(a => a.kind)).size !== d.apparatus.length) issues.push('duplicate_instrument_kind');
-  const required = d.layout === 'gas_collection'
-    ? ['boiling_tube','retort_stand','burner','delivery_tube','gas_collector','water_bath']
-    : d.layout === 'ice_bath' ? ['ice_bath','test_tube']
-    : d.layout === 'inverted_tube' ? ['gas_collector','beaker','stopwatch'] : ['test_tube'];
-  if (required.some(kind => !d.apparatus.some(a => a.kind === kind))) issues.push('layout_instruments');
-  if (d.template === 'fixed_volume_kinetics' && d.layout !== 'inverted_tube') issues.push('kinetics_layout');
+  if (new Set(d.apparatus.map((a) => a.kind)).size !== d.apparatus.length)
+    issues.push('duplicate_instrument_kind');
+  const required =
+    d.layout === 'gas_collection'
+      ? ['boiling_tube', 'retort_stand', 'burner', 'delivery_tube', 'gas_collector', 'water_bath']
+      : d.layout === 'ice_bath'
+        ? ['ice_bath', 'test_tube']
+        : d.layout === 'inverted_tube'
+          ? ['gas_collector', 'beaker', 'stopwatch']
+          : ['test_tube'];
+  if (required.some((kind) => !d.apparatus.some((a) => a.kind === kind)))
+    issues.push('layout_instruments');
+  if (d.template === 'fixed_volume_kinetics' && d.layout !== 'inverted_tube')
+    issues.push('kinetics_layout');
   for (const s of d.sources) if (!s.pdfPages.length && !s.url) issues.push('source_reference');
   for (const test of d.tests) {
     if (!unique(test.steps)) issues.push('duplicate_step');
@@ -174,10 +190,20 @@ export function teachingIssues(d: TeachingDefinition): string[] {
       issues.push('unknown_apparatus');
     if (test.temperatureRangeC && test.temperatureRangeC[0] > test.temperatureRangeC[1])
       issues.push('temperature_range');
+    for (const step of test.steps)
+      if (step.appearance) {
+        if (step.appearance.sourceIndexes.some((i) => !d.sources[i])) issues.push('outcome_source');
+        if (
+          (step.appearance.visual === 'precipitate') !==
+          (step.appearance.precipitateColour !== null)
+        )
+          issues.push('precipitate_appearance');
+      }
   }
   const seen = new Set<string>();
   for (const o of d.outcomes) {
-    if ((o.visual === 'precipitate') !== (o.precipitateColour !== null)) issues.push('precipitate_appearance');
+    if ((o.visual === 'precipitate') !== (o.precipitateColour !== null))
+      issues.push('precipitate_appearance');
     const key = `${o.sampleId}/${o.testId}`;
     if (seen.has(key)) issues.push('duplicate_outcome');
     seen.add(key);

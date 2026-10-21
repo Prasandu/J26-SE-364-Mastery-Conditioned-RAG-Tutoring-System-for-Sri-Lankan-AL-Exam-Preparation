@@ -133,6 +133,7 @@
   "teaching.author.reviewer": "දේශීය සමාලෝචන ප්‍රකාශයේ නම",
   "teaching.author.attest": "රසායනය, මූලාශ්‍ර, උපකරණ හා දසුන් දෙක සමාලෝචනය කළෙමි. මෙය දේශීය ප්‍රකාශයකි; සත්‍යාපිත ගුරු අනන්‍යතාවක් නොවේ.",
   "teaching.author.activate": "දේශීයව ලබාදෙන්න",
+  "teaching.author.deactivate": "දේශීය ලබාගැනීම ඉවත් කරන්න",
   "teaching.author.activate_notice": "මෙය ආරක්ෂිත දේශීය පුහුණු නාමාවලියට පමණි. කෙටුම්පතක් අනුමත කිරීම, ප්‍රායෝගිකයක් ප්‍රකාශනය, නිෂ්පාදන සත්‍යාපනය හෝ නව භෞතික ආකෘතියක් සෑදීම නොවේ.",
   "teaching.author.download": "ආකෘති JSON අපනයනය කරන්න",
   "teaching.author.import": "ආකෘති JSON ආයාත කරන්න",
@@ -187,5 +188,7 @@
   "teaching.visual.bubbles": "වායු බුබුළු",
   "teaching.visual.precipitate": "ඝන අවක්ෂේපය",
   "teaching.visual.silver_mirror": "රිදී දර්පණය",
-  "teaching.visual.layers": "වෙන් වූ ස්තර"
+  "teaching.visual.layers": "වෙන් වූ ස්තර",
+  "teaching.author.phase": "මෙම පියවරෙන් පසු පෙනුම",
+  "teaching.author.enable_phase": "මූලාශ්‍රගත අතරමැදි පෙනුමක් පෙන්වන්න"
 }

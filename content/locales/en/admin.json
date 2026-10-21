@@ -315,6 +315,7 @@
   "admin.section.import": "Import",
   "admin.section.knowledge": "Knowledge base",
   "admin.section.library": "Library status",
+  "admin.section.simulations": "Simulation authoring",
   "admin.section.overview": "Overview",
   "admin.section.review": "Review",
   "admin.section.settings": "Settings",

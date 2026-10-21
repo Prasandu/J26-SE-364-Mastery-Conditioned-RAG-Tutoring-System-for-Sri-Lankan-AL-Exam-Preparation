@@ -4,7 +4,7 @@ import enHandbook from '../../../content/locales/en/handbook.json' with { type: 
 import siHandbook from '../../../content/locales/si/handbook.json' with { type: 'json' };
 import { en, si, noHorizontalOverflow } from './helpers';
 
-test('first 20 practicals distinguish local teaching models from the existing Experiment 4 in both languages', async ({
+test('first 30 practicals distinguish local teaching models from the existing Experiment 4 in both languages', async ({
   page,
 }, info) => {
   test.setTimeout(120_000);
@@ -14,8 +14,8 @@ test('first 20 practicals distinguish local teaching models from the existing Ex
     const text = locale === 'en' ? en : si;
     const labels = (locale === 'en' ? enHandbook : siHandbook) as Record<string, unknown>;
     await page.locator(`.language-switcher button[lang="${locale}"]`).click();
-    await expect(page.locator('.library-list > article')).toHaveCount(20);
-    await expect(page.locator('.handbook-card')).toHaveCount(19);
+    await expect(page.locator('.library-list > article')).toHaveCount(30);
+    await expect(page.locator('.handbook-card')).toHaveCount(29);
     await expect(page.getByRole('button', { name: text('ui.card.start') })).toHaveCount(1);
     for (const [i, entry] of handbook.entries.entries()) {
       await expect(page.locator('.library-list > article').nth(i).getByRole('heading')).toHaveText(
@@ -28,7 +28,7 @@ test('first 20 practicals distinguish local teaching models from the existing Ex
       fullPage: true,
     });
     await page.getByLabel(text('ui.library.unit_filter')).selectOption('6');
-    await expect(page.locator('.library-list > article')).toHaveCount(12);
+    await expect(page.locator('.library-list > article')).toHaveCount(15);
     const search = page.getByLabel(text('ui.library.search_label'));
     await search.fill('KMnO₄');
     await expect(page.locator('.library-list > article')).toHaveCount(1);
@@ -45,7 +45,7 @@ test('first 20 practicals distinguish local teaching models from the existing Ex
     await search.fill('no-such-practical');
     await expect(page.getByText(text('ui.library.no_match_title'))).toBeVisible();
     await page.getByRole('button', { name: text('ui.library.clear_filters') }).click();
-    await expect(page.locator('.library-list > article')).toHaveCount(20);
+    await expect(page.locator('.library-list > article')).toHaveCount(30);
   }
   await page.getByRole('button', { name: si('ui.card.start') }).click();
   await expect(page.getByRole('heading', { level: 1, name: si('exp04.title') })).toBeVisible();

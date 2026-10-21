@@ -30,7 +30,7 @@ describe('first 20 handbook practicals', () => {
     const store = makeStore();
     store.getState().navigate('library');
     renderApp(store);
-    await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(20));
+    await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(30));
     const cards = screen.getAllByRole('article');
     for (const [i, entry] of handbook.entries.entries()) {
       expect(
@@ -48,9 +48,9 @@ describe('first 20 handbook practicals', () => {
     const { user } = renderApp(store);
     await screen.findByRole('button', { name: en['ui.card.start']! });
     const unit = screen.getByLabelText(en['ui.library.unit_filter']!);
-    expect(within(unit).getAllByRole('option')).toHaveLength(7);
+    expect(within(unit).getAllByRole('option')).toHaveLength(11);
     await user.selectOptions(unit, '6');
-    expect(screen.getAllByRole('article')).toHaveLength(12);
+    expect(screen.getAllByRole('article')).toHaveLength(15);
     await user.type(screen.getByLabelText(en['ui.library.search_label']!), 'KMnO₄');
     expect(screen.getAllByRole('article')).toHaveLength(1);
     expect(
@@ -74,7 +74,7 @@ describe('first 20 handbook practicals', () => {
     const store = makeStore(42, { ...makeLocalAdapter(), listExperiments: async () => [] });
     store.getState().navigate('library');
     renderApp(store);
-    await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(20));
+    await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(30));
     expect(screen.queryByRole('button', { name: en['ui.card.start']! })).toBeNull();
     expect(screen.getAllByText(en['ui.handbook.reference']!)).toHaveLength(1);
     expect(screen.getAllByText(en['labs.available']!)).toHaveLength(19);

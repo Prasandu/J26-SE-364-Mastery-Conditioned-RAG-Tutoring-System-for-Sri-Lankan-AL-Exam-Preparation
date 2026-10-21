@@ -4,6 +4,7 @@ import {
   TeachingRecordSchema,
   TeachingSaveSchema,
   TeachingActivateSchema,
+  TeachingDeactivateSchema,
 } from '../src/teaching';
 import {
   ActionResultSchema,
@@ -62,6 +63,7 @@ export const SCHEMAS = {
   'api-teaching-record.v1.json': TeachingRecordSchema,
   'api-teaching-save.v1.json': TeachingSaveSchema,
   'api-teaching-activate.v1.json': TeachingActivateSchema,
+  'api-teaching-deactivate.v1.json': TeachingDeactivateSchema,
   'experiment-definition.v1.json': ExperimentDefinitionSchema,
   'assessment-definition.v1.json': AssessmentDefinitionSchema,
   'source-registry.v1.json': SourceRegistrySchema,

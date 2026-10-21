@@ -66,6 +66,7 @@ export interface AdminClient {
     expectedVersion: number,
     reviewer: string,
   ): Promise<TeachingRecord>;
+  deactivateLocalSimulation?(id: string, expectedVersion: number): Promise<TeachingRecord>;
   status(): Promise<AdminStatus>;
   drafts(): Promise<AdminDraftSummary[]>;
   draft(id: string): Promise<AdminDraftDetail>;
@@ -198,6 +199,13 @@ export const createAdminClient = ({
         `/simulation-models/${encodeURIComponent(recordId)}/activate-local`,
         TeachingRecordSchema,
         { expectedVersion, reviewer, reviewedSources: true },
+      ),
+    deactivateLocalSimulation: (recordId, expectedVersion) =>
+      call(
+        'POST',
+        `/simulation-models/${encodeURIComponent(recordId)}/deactivate-local`,
+        TeachingRecordSchema,
+        { expectedVersion },
       ),
     status: () => call('GET', '/status', AdminStatusSchema),
     drafts: () => call('GET', '/drafts', listOf(AdminDraftSummarySchema)),

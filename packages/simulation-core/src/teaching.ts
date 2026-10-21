@@ -117,6 +117,10 @@ export function projectTeaching(d: TeachingDefinition, s: TeachingRun) {
   const test = d.tests.find((t) => t.id === s.testId)!;
   const sample = d.samples.find((x) => x.id === s.sampleId)!;
   const finished = s.step === test.steps.length;
+  const appearance = test.steps
+    .slice(0, s.step)
+    .reverse()
+    .find((step) => step.appearance)?.appearance;
   const outcome = finished
     ? (d.outcomes.find((o) => o.sampleId === s.sampleId && o.testId === s.testId) ?? null)
     : null;
@@ -126,9 +130,11 @@ export function projectTeaching(d: TeachingDefinition, s: TeachingRun) {
     nextStep: test.steps[s.step] ?? null,
     outcome,
     scene: {
-      solutionColour: outcome?.solutionColour ?? sample.colour,
-      precipitateColour: outcome?.precipitateColour ?? null,
-      visual: outcome?.visual ?? 'none',
+      solutionColour: outcome?.solutionColour ?? appearance?.solutionColour ?? sample.colour,
+      precipitateColour: outcome
+        ? outcome.precipitateColour
+        : (appearance?.precipitateColour ?? null),
+      visual: outcome?.visual ?? appearance?.visual ?? 'none',
       phase: test.steps[Math.max(0, s.step - 1)]!.effect,
     },
     kinetics:
@@ -213,6 +219,14 @@ export function transitionTeaching(
       break;
     case 'record':
       if (!p.finished || s.recorded) return fail('recorded');
+      if (
+        p.test.temperatureRangeC &&
+        (s.temperatureC === null ||
+          s.temperatureC < p.test.temperatureRangeC[0] ||
+          s.temperatureC > p.test.temperatureRangeC[1])
+      )
+        return fail('temperature');
+      if (d.template === 'fixed_volume_kinetics' && !p.kinetics) return fail('measurements');
       next.trials = [
         ...s.trials,
         {

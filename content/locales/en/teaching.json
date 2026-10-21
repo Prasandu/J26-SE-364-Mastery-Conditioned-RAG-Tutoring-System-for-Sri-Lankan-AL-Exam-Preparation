@@ -133,6 +133,7 @@
   "teaching.author.reviewer": "Local review attestation name",
   "teaching.author.attest": "I reviewed the chemistry, sources, apparatus and both rendered views. This is a local attestation, not authenticated teacher identity.",
   "teaching.author.activate": "Make available locally",
+  "teaching.author.deactivate": "Remove local availability",
   "teaching.author.activate_notice": "This affects only the guarded local practice catalog. It does not approve a draft, publish a practical, enable production authentication or make a new physics model.",
   "teaching.author.download": "Export model JSON",
   "teaching.author.import": "Import model JSON",
@@ -187,5 +188,7 @@
   "teaching.visual.bubbles": "Gas bubbles",
   "teaching.visual.precipitate": "Solid precipitate",
   "teaching.visual.silver_mirror": "Silver mirror",
-  "teaching.visual.layers": "Separate layers"
+  "teaching.visual.layers": "Separate layers",
+  "teaching.author.phase": "Appearance after this step",
+  "teaching.author.enable_phase": "Show a sourced intermediate appearance"
 }

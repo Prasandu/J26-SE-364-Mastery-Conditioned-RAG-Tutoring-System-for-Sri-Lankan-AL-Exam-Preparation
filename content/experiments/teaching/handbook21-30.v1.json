@@ -46,14 +46,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Write the electron configurations of Cu(II), Ni(II) and Co(II).",
+        "si": "Cu(II), Ni(II) හා Co(II) ඉලෙක්ට්‍රෝන වින්‍යාස ලියන්න."
+      },
+      {
+        "en": "Why can these metal ions form coordination complexes?",
+        "si": "මෙම ලෝහ අයන සම්බන්ධීකරණ සංකීර්ණ සාදන්නේ ඇයි?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Give the formula, geometry and name of each complex identified.",
+        "si": "හඳුනාගත් සෑම සංකීර්ණයකම සූත්‍රය, ජ්‍යාමිතිය හා නම දෙන්න."
       }
     ],
     "sources": [
@@ -483,14 +487,22 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Compare manganese electron configurations at the selected oxidation states.",
+        "si": "තෝරාගත් ඔක්සිකරණ අංකවල මැංගනීස් ඉලෙක්ට්‍රෝන වින්‍යාස සසඳන්න."
+      },
+      {
+        "en": "How do acidic and basic media affect permanganate reduction products?",
+        "si": "ආම්ලික හා භාෂ්මික මාධ්‍ය පර්මැංගනේට් ඔක්සිහරණ ඵලවලට බලපාන්නේ කෙසේද?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Balance the half-reactions for the observed changes.",
+        "si": "නිරීක්ෂිත වෙනස්කම් සඳහා අර්ධ ප්‍රතික්‍රියා තුලනය කරන්න."
+      },
+      {
+        "en": "Compare peroxide, sulfide and sulfur dioxide as reducing agents under the stated conditions.",
+        "si": "සඳහන් තත්ත්ව යටතේ පෙරොක්සයිඩ්, සල්ෆයිඩ් හා සල්ෆර් ඩයොක්සයිඩ් ඔක්සිහාරක ලෙස සසඳන්න."
       }
     ],
     "sources": [
@@ -643,7 +655,13 @@
               "si": "අත්පොතේ දැඩි භාෂ්මික පරිවර්තන තත්ත්ව අනුගමනය කරන්න. මෙය ගුණාත්මක අවස්ථා සැසඳීමකි; ප්‍රතික්‍රියක මාත්‍රා ක්‍රමාංකනයක් නොවේ."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "green",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -695,17 +713,42 @@
             "effect": "prepare"
           },
           {
-            "id": "add",
+            "id": "alkaline_stage",
             "title": {
-              "en": "Add the selected reagent",
-              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+              "en": "Form the alkaline manganate stage",
+              "si": "ක්ෂාරීය මැංගනේට් අවස්ථාව සකසන්න"
             },
             "instruction": {
-              "en": "First prepare the alkaline manganate stage, then add the prescribed peroxide portion.",
-              "si": "පළමුව භාෂ්මික මැංගනේට් අවස්ථාව සකසා නියමිත පෙරොක්සයිඩ් කොටස එක් කරන්න."
+              "en": "Follow the handbook conversion under strongly alkaline conditions. Compare the green manganate stage before proceeding; this illustration does not calculate reagent doses.",
+              "si": "අත්පොතේ දැක්වෙන ප්‍රබල ක්ෂාරීය තත්ත්ව යටතේ පරිවර්තනය සිදු කරන්න. ඉදිරියට යාමට පෙර කොළ මැංගනේට් අවස්ථාව සසඳන්න; මෙම නිරූපණයෙන් ප්‍රතික්‍රියාකාරක මාත්‍රා ගණනය නොකෙරේ."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "green",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
+          },
+          {
+            "id": "peroxide_stage",
+            "title": {
+              "en": "Compare the peroxide conversion",
+              "si": "පෙරොක්සයිඩ් පරිවර්තනය සසඳන්න"
+            },
+            "instruction": {
+              "en": "Add the prescribed peroxide portion to the alkaline stage and compare the brown manganese dioxide solid.",
+              "si": "ක්ෂාරීය අවස්ථාවට නියමිත පෙරොක්සයිඩ් කොටස එක් කර දුඹුරු මැංගනීස් ඩයොක්සයිඩ් ඝනය සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "clear",
+              "precipitateColour": "brown",
+              "visual": "precipitate",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -755,6 +798,44 @@
             },
             "apparatusId": "test_tube",
             "effect": "prepare"
+          },
+          {
+            "id": "alkaline_stage",
+            "title": {
+              "en": "Form the alkaline manganate stage",
+              "si": "ක්ෂාරීය මැංගනේට් අවස්ථාව සකසන්න"
+            },
+            "instruction": {
+              "en": "Follow the handbook conversion under strongly alkaline conditions. Compare the green manganate stage before proceeding; this illustration does not calculate reagent doses.",
+              "si": "අත්පොතේ දැක්වෙන ප්‍රබල ක්ෂාරීය තත්ත්ව යටතේ පරිවර්තනය සිදු කරන්න. ඉදිරියට යාමට පෙර කොළ මැංගනේට් අවස්ථාව සසඳන්න; මෙම නිරූපණයෙන් ප්‍රතික්‍රියාකාරක මාත්‍රා ගණනය නොකෙරේ."
+            },
+            "apparatusId": "dropper",
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "green",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
+          },
+          {
+            "id": "peroxide_stage",
+            "title": {
+              "en": "Compare the peroxide conversion",
+              "si": "පෙරොක්සයිඩ් පරිවර්තනය සසඳන්න"
+            },
+            "instruction": {
+              "en": "Add the prescribed peroxide portion to the alkaline stage and compare the brown manganese dioxide solid.",
+              "si": "ක්ෂාරීය අවස්ථාවට නියමිත පෙරොක්සයිඩ් කොටස එක් කර දුඹුරු මැංගනීස් ඩයොක්සයිඩ් ඝනය සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "clear",
+              "precipitateColour": "brown",
+              "visual": "precipitate",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "add",
@@ -896,14 +977,22 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Write the electron configurations of the five selected ions.",
+        "si": "තෝරාගත් අයන පහේ ඉලෙක්ට්‍රෝන වින්‍යාස ලියන්න."
+      },
+      {
+        "en": "Which soluble compounds could supply these ions?",
+        "si": "මෙම අයන සැපයිය හැකි ද්‍රාව්‍ය සංයෝග මොනවාද?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Explain the precipitate and excess-reagent observations with equations.",
+        "si": "අවක්ෂේප හා අතිරික්ත ප්‍රතික්‍රියක නිරීක්ෂණ සමීකරණවලින් පැහැදිලි කරන්න."
+      },
+      {
+        "en": "Explain how alkaline peroxide can convert chromium(III) to chromate; distinguish this guide question from the tests implemented here.",
+        "si": "භාෂ්මික පෙරොක්සයිඩ් ක්‍රෝමියම්(III) ක්‍රෝමේට් බවට පරිවර්තනය කරන්නේ කෙසේදැයි පැහැදිලි කර මෙම ප්‍රශ්නය මෙහි අනුකරණය කරන පරීක්ෂණවලින් වෙන් කරන්න."
       }
     ],
     "sources": [
@@ -1543,14 +1632,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Distinguish alkane, alkene, alkyne and aromatic structures.",
+        "si": "ඇල්කේන, ඇල්කීන, ඇල්කයින හා ඇරෝමැටික ව්‍යුහ වෙන් කරන්න."
+      },
+      {
+        "en": "How could terminal and internal alkynes be distinguished in supervised analytical chemistry?",
+        "si": "අධීක්ෂිත විශ්ලේෂණ රසායනයේ අන්ත හා අභ්‍යන්තර ඇල්කයින වෙන් කර හඳුනාගන්නේ කෙසේද?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Explain the bromine and permanganate observations and the need for very dilute alkaline reagent.",
+        "si": "බ්‍රෝමීන් හා පර්මැංගනේට් නිරීක්ෂණ සහ ඉතා තනුක භාෂ්මික ප්‍රතික්‍රියකයේ අවශ්‍යතාව පැහැදිලි කරන්න."
       }
     ],
     "sources": [
@@ -1700,7 +1793,13 @@
               "si": "වෙන්ව රැස් කළ වායු කොටසක් බ්‍රෝමීන් ජල පරීක්ෂාව හරහා යවන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "orange",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -1762,7 +1861,13 @@
               "si": "නැවුම් වායු කොටසක් ආම්ලික පර්මැංගනේට් සමඟ යොදන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "purple",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -1824,7 +1929,13 @@
               "si": "නියමිත ඉතා තනුක භාෂ්මික ප්‍රතික්‍රියකය හා නැවුම් වායු කොටසක් භාවිත කරන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "purple",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -1981,14 +2092,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Which structural feature defines an alcohol?",
+        "si": "ඇල්කොහොලයක් නිර්වචනය කරන ව්‍යුහාත්මක ලක්ෂණය කුමක්ද?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Propose a simple test to distinguish an alcohol from an alkene.",
+        "si": "ඇල්කොහොලයක් හා ඇල්කීනයක් වෙන් කිරීමට සරල පරීක්ෂාවක් යෝජනා කරන්න."
+      },
+      {
+        "en": "What role does concentrated sulfuric acid play in esterification? This branch is a guide question, not a simulated odour test.",
+        "si": "එස්ටරීකරණයේ සාන්ද්‍ර සල්ෆියුරික් අම්ලයේ කාර්යය කුමක්ද? මෙය මාර්ගෝපදේශ ප්‍රශ්නයකි; සුවඳ අනුකරණයක් නොවේ."
       }
     ],
     "sources": [
@@ -2226,7 +2341,26 @@
               "si": "වෙනම නියැදිය නියමිත ඔක්සිකාරකය සමඟ ජල තාපකයක උණු කරන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "orange",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
+          },
+          {
+            "id": "warm",
+            "title": {
+              "en": "Warm the test portion in the water bath",
+              "si": "පරීක්ෂක කොටස ජල තාපකයේ උණු කරන්න"
+            },
+            "instruction": {
+              "en": "Use the prescribed water-bath warming conditions; do not apply a flame to the organic sample.",
+              "si": "නියමිත ජල තාපක තත්ත්ව භාවිත කරන්න; කාබනික නියැදියට දැල්ල සෘජුව නොයොදන්න."
+            },
+            "apparatusId": "water_bath",
+            "effect": "heat"
           },
           {
             "id": "mix",
@@ -2288,7 +2422,13 @@
               "si": "නැවුම් ඇල්කොහොල් කොටසක් ආම්ලික පර්මැංගනේට් සමඟ පරීක්ෂා කරන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "purple",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -2469,14 +2609,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Which tests distinguish an alcohol from phenol?",
+        "si": "ඇල්කොහොලයක් ෆීනෝල්වලින් වෙන් කරන්නේ කුමන පරීක්ෂණද?"
+      },
+      {
+        "en": "Why is phenol more acidic than an alcohol?",
+        "si": "ෆීනෝල් ඇල්කොහොලයකට වඩා ආම්ලික වන්නේ ඇයි?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Explain each observation using chemical reactions and identify limits of a colour test.",
+        "si": "රසායනික ප්‍රතික්‍රියාවලින් නිරීක්ෂණ පැහැදිලි කර වර්ණ පරීක්ෂාවක සීමා හඳුනාගන්න."
       }
     ],
     "sources": [
@@ -2579,7 +2723,13 @@
               "si": "නැවුම් ෆීනෝල් කොටසකට බ්‍රෝමීන් ප්‍රතික්‍රියකය එක් කරන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "orange",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -2824,14 +2974,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Compare aldehyde and ketone reactions with carbonyl reagent, dichromate and Tollens reagent.",
+        "si": "කාබොනයිල් ප්‍රතික්‍රියකය, ඩයික්‍රෝමේට් හා ටොලන්ස් සමඟ ඇල්ඩිහයිඩ් හා කීටෝන ප්‍රතික්‍රියා සසඳන්න."
+      },
+      {
+        "en": "How does molecular structure influence water solubility?",
+        "si": "අණුක ව්‍යුහය ජල ද්‍රාව්‍යතාවට බලපාන්නේ කෙසේද?"
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Use the results to distinguish the selected aldehydes and ketones; explain why a single positive carbonyl test is insufficient.",
+        "si": "තෝරාගත් ඇල්ඩිහයිඩ් හා කීටෝන වෙන් කර තනි ධන කාබොනයිල් පරීක්ෂාවක් ප්‍රමාණවත් නොවන්නේ ඇයිදැයි පැහැදිලි කරන්න."
       }
     ],
     "sources": [
@@ -3023,7 +3177,13 @@
               "si": "වෙනම නැවුම් නියැදියක් ආම්ලික ඩයික්‍රෝමේට් සමඟ පරීක්ෂා කරන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "orange",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -3086,6 +3246,19 @@
             },
             "apparatusId": "dropper",
             "effect": "add"
+          },
+          {
+            "id": "warm",
+            "title": {
+              "en": "Warm the test portion in the water bath",
+              "si": "පරීක්ෂක කොටස ජල තාපකයේ උණු කරන්න"
+            },
+            "instruction": {
+              "en": "Use the prescribed water-bath warming conditions; do not apply a flame to the organic sample.",
+              "si": "නියමිත ජල තාපක තත්ත්ව භාවිත කරන්න; කාබනික නියැදියට දැල්ල සෘජුව නොයොදන්න."
+            },
+            "apparatusId": "water_bath",
+            "effect": "heat"
           },
           {
             "id": "mix",
@@ -3310,14 +3483,22 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Give two water-soluble carboxylic acids and predict the product of benzoic acid with NaOH.",
+        "si": "ජලයේ ද්‍රාව්‍ය කාබොක්සිලික් අම්ල දෙකක් දක්වා බෙන්සොයික් අම්ලය හා NaOH ඵලය පුරෝකථනය කරන්න."
+      },
+      {
+        "en": "Identify alcohol/acid combinations that form familiar esters.",
+        "si": "හුරුපුරුදු එස්ටර සාදන ඇල්කොහොල්/අම්ල යුගල හඳුනාගන්න."
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Compare the properties of carboxylic acids and esters.",
+        "si": "කාබොක්සිලික් අම්ල හා එස්ටර ගුණ සසඳන්න."
+      },
+      {
+        "en": "Propose a separation for a benzoic-acid/benzophenone mixture using acid–base behaviour.",
+        "si": "අම්ල–භෂ්ම හැසිරීමෙන් බෙන්සොයික් අම්ල/බෙන්සොෆිනෝන් මිශ්‍රණයක් වෙන් කිරීම යෝජනා කරන්න."
       }
     ],
     "sources": [
@@ -3578,7 +3759,13 @@
               "si": "නැවුම් අම්ල කොටසක් ආම්ලික පර්මැංගනේට් සමඟ සසඳන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "purple",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "mix",
@@ -3641,6 +3828,19 @@
             },
             "apparatusId": "dropper",
             "effect": "add"
+          },
+          {
+            "id": "warm",
+            "title": {
+              "en": "Warm the test portion in the water bath",
+              "si": "පරීක්ෂක කොටස ජල තාපකයේ උණු කරන්න"
+            },
+            "instruction": {
+              "en": "Use the prescribed water-bath warming conditions; do not apply a flame to the organic sample.",
+              "si": "නියමිත ජල තාපක තත්ත්ව භාවිත කරන්න; කාබනික නියැදියට දැල්ල සෘජුව නොයොදන්න."
+            },
+            "apparatusId": "water_bath",
+            "effect": "heat"
           },
           {
             "id": "mix",
@@ -3869,14 +4069,18 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Draw the diazonium ion and predict what can happen above the prescribed cold range.",
+        "si": "ඩයසෝනියම් අයනය ඇඳ නියමිත සීතල පරාසයෙන් ඉහළ සිදුවිය හැකි දේ පුරෝකථනය කරන්න."
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Draw the azo-coupling product and explain the alkaline coupling medium.",
+        "si": "ඇසෝ යුග්මන ඵලය ඇඳ භාෂ්මික යුග්මන මාධ්‍යය පැහැදිලි කරන්න."
+      },
+      {
+        "en": "Could an aliphatic amine give the same stable diazonium route? Explain.",
+        "si": "ඇලිෆැටික ඇමීනයක් එම ස්ථායී ඩයසෝනියම් මාර්ගය දෙයිද? පැහැදිලි කරන්න."
       }
     ],
     "sources": [
@@ -4003,7 +4207,13 @@
               "si": "සිසිල් නයිට්‍රයිට් සීතල ආම්ලික ඇනිලීන්ට එක් කර තාපකය නියමිත පරාසයේ තබන්න."
             },
             "apparatusId": "dropper",
-            "effect": "add"
+            "effect": "add",
+            "appearance": {
+              "solutionColour": "yellow",
+              "precipitateColour": null,
+              "visual": "none",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "couple",
@@ -4016,7 +4226,13 @@
               "si": "කලතමින් ඩයසෝනියම් ද්‍රාවණය සීතල භාෂ්මික යුග්මකයට එක් කරන්න."
             },
             "apparatusId": "glass_rod",
-            "effect": "mix"
+            "effect": "mix",
+            "appearance": {
+              "solutionColour": "clear",
+              "precipitateColour": "orange",
+              "visual": "precipitate",
+              "sourceIndexes": [0]
+            }
           },
           {
             "id": "observe",
@@ -4099,14 +4315,22 @@
     ],
     "preLab": [
       {
-        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
-        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+        "en": "Define initial, instantaneous and average reaction rate.",
+        "si": "ආරම්භක, ක්ෂණික හා සාමාන්‍ය ප්‍රතික්‍රියා වේග නිර්වචනය කරන්න."
+      },
+      {
+        "en": "Sketch concentration–time patterns for different reaction orders.",
+        "si": "විවිධ ප්‍රතික්‍රියා පෙළ සඳහා සාන්ද්‍රණ–කාල රටා අඳින්න."
       }
     ],
     "postLab": [
       {
-        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
-        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+        "en": "Explain which variables must stay fixed for inverse time to compare initial-rate behaviour.",
+        "si": "ප්‍රතිලෝම කාලයෙන් ආරම්භක වේගය සැසඳීමට නියතව තැබිය යුතු විචල්‍ය පැහැදිලි කරන්න."
+      },
+      {
+        "en": "Interpret the fitted concentration order and discuss uncertainty in your measured times.",
+        "si": "සවි කළ සාන්ද්‍රණ පෙළ අර්ථ දක්වා මනින ලද කාලවල අවිනිශ්චිතතාව සාකච්ඡා කරන්න."
       }
     ],
     "sources": [

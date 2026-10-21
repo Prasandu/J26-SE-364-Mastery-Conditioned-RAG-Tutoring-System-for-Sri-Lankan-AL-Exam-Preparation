@@ -221,3 +221,40 @@ Source conflicts/limits retained:
 - Full experiment-specific definitions, richer apparatus interactions, continuous measurements,
   error consequences and all handbook branches remain prerequisites for claiming 19 additional
   validated simulations. The library labels these entries “Guided 2D practice” accordingly.
+
+## Experiments 21–30: local guided teaching definitions
+
+`content/experiments/teaching/handbook21-30.v1.json` retains bilingual guides, source identities,
+apparatus, ordered actions and the supported qualitative comparison matrix. These are bounded
+teaching models, pending chemistry/translation review, rather than validated predictive physics.
+The handbook checksum remains `1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe`.
+
+| Experiment | Handbook PDF / printed pages | Model coverage                                                                                                          |
+| ---------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 21         | 77–78 / 69–70                | Cu(II), Ni(II), Co(II): chloride and limited/excess ammonia comparisons.                                                |
+| 22         | 79–80 / 71–72                | Mn(VII/VI/IV/II) qualitative stages, including intermediate appearances.                                                |
+| 23         | 81–82 / 73–74                | Five cations with limited/excess hydroxide and ammonia. Other confirmatory branches excluded.                           |
+| 24         | 83–85 / 75–77                | Ethene/ethyne with bromine and acid/alkaline permanganate; apparatus schematic, no gas-yield model or acetylide branch. |
+| 25         | 86–88 / 78–80                | Ethanol/propan-2-ol comparisons; unspecified butyl isomers and ester odours excluded.                                   |
+| 26         | 89–90 / 81–82                | Phenol: bromine, carbonate, neutral ferric chloride.                                                                    |
+| 27         | 91–93 / 83–85                | Four carbonyl compounds: DNPH, dichromate and freshly prepared Tollens; Fehling branch excluded.                        |
+| 28         | 94–95 / 86–87                | Three carboxylic acids: carbonate, hydroxide, permanganate and Tollens comparisons.                                     |
+| 29         | 96–97 / 88–89                | Aniline diazotization/2-naphthol coupling; learner-entered bath temperature guarded at 0–5 °C.                          |
+| 30         | 98–100 / 90–92               | Equal exposed magnesium lengths and fixed gas-volume timing. All times start blank; learner measurements only.          |
+
+NIE Grade 12 Resource Book PDF 181–185 supports transition-metal observations. Its checksum is
+`805b9e585bbbd9d012d0f8a8dd1864b525542fb1b9927e8ff91490429f4afe86`.
+Handbook blank observation tables are supplemented by primary teaching references recorded on
+each relevant definition: [RSC functional-group tests](https://edu.rsc.org/practical/qualitative-tests-for-organic-functional-groups-practical-videos-16-18-students/4014327.article),
+[University of Colorado phenol test](https://www.colorado.edu/lab/lecture-demo-manual/o638-identification-phenols-ferric-chloride-test),
+[University of Anbar phenol notes](https://www.uoanbar.edu.iq/eStoreImages/Bank/32459.pdf) and
+[TIU carboxylic-acid notes](https://lecture-notes.tiu.edu.iq/wp-content/uploads/2025/02/Org.Chem_.2Lab.Grade2_.Week2_.pdf).
+These references are not automatically approved or inserted into the tutoring knowledge base.
+
+Conflicts and limits:
+
+- Experiment 22's printed alkaline equation is unbalanced; no reaction equation or quantitative dose is inferred from it.
+- Experiment 25's table of contents differs from the chapter pagination; the chapter starts at printed page 78.
+- Experiment 29 prints coupling instructions before diazotization steps. The model orders diazotization before coupling and records that interpretation in its limitations.
+- Experiment 30's fixed collection mark has no stated numerical volume: `1/time` is a relative-rate proxy in s⁻¹, never an absolute concentration rate or rate constant. The inconsistent calcium-carbonate numerical pre-lab example and mass-loss extension are excluded.
+- Rendered fill levels, colours, bubbles and apparatus dimensions are illustrative, not calibrated measurements. No time-dependent reaction curves or invented teacher approvals are supplied.

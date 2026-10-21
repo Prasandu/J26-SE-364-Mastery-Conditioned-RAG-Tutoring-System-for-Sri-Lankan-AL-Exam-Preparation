@@ -48,7 +48,7 @@ export function teachingPlacement(d: TeachingDefinition, id: string): TeachingPl
       y: d.apparatus.some((x) => ['water_bath', 'ice_bath'].includes(x.kind)) ? 0.3 : 0,
     },
     glass_rod: { x: 1.5, rotate: -0.35 },
-    dropper: { x: 2.5, rotate: 0.25 },
+    dropper: { x: 2.5, rotate: 0.24 },
     reagent_bottle: { x: -2 },
     water_bath: { x: 0 },
     ice_bath: { x: 0 },
@@ -149,7 +149,11 @@ export function TeachingScene2D({
                     strokeWidth="2"
                   />
                   <path
-                    d="M-14-63V-18Q-14-3 0-3Q14-3 14-18V-63Z"
+                    d={
+                      a.kind === 'gas_collector'
+                        ? 'M-14-125V-64H14V-125Z'
+                        : 'M-14-63V-18Q-14-3 0-3Q14-3 14-18V-63Z'
+                    }
                     fill={a.kind === 'gas_collector' ? '#a3cbdc' : paint}
                     opacity=".85"
                   />
@@ -249,7 +253,7 @@ export function TeachingScene2D({
               ) : null}
             </g>
             <g
-              transform={`translate(${a.kind === 'test_tube' ? -35 : 0} ${a.kind === 'gas_collector' ? -14 : 29})`}
+              transform={`translate(${a.kind === 'test_tube' ? -35 : a.kind === 'delivery_tube' ? -72 : 0} ${a.kind === 'gas_collector' ? -14 : a.kind === 'delivery_tube' ? -171 : 29})`}
             >
               <circle r="12" fill={selected === a.id ? '#e3f5ff' : '#174461'} stroke="#9bbfda" />
               <text

@@ -83,12 +83,14 @@ function Camera({ zoom, reset }: { zoom: number; reset: number }) {
     const distance = Math.max(9, 13 / Math.max(0.4, size.width / size.height)) / zoom;
     camera.position.set(0, distance * 0.5, distance);
     controls.target.set(0, 0.8, 0);
-    controls.enablePan = false;
-    controls.enableDamping = false;
-    controls.minDistance = 5;
-    controls.maxDistance = 24;
-    controls.minPolarAngle = 0.4;
-    controls.maxPolarAngle = 1.4;
+    Object.assign(controls, {
+      enablePan: false,
+      enableDamping: false,
+      minDistance: 5,
+      maxDistance: 24,
+      minPolarAngle: 0.4,
+      maxPolarAngle: 1.4,
+    });
     controls.update();
     invalidate();
   }, [camera, controls, invalidate, size.width, size.height, zoom, reset]);
@@ -105,13 +107,14 @@ function Camera({ zoom, reset }: { zoom: number; reset: number }) {
 function Glass({ selected }: { selected: boolean }) {
   return (
     <meshPhysicalMaterial
-      color="#eaf6fd"
+      color="#acd2e5"
       roughness={0.12}
       metalness={0}
-      transmission={0.72}
+      transmission={0.3}
       thickness={0.06}
       transparent
-      opacity={0.72}
+      opacity={0.42}
+      envMapIntensity={0.55}
       side={DoubleSide}
       depthWrite={false}
       emissive={selected ? '#236987' : '#000000'}
@@ -123,15 +126,26 @@ function Liquid({
   colour,
   radius = 0.145,
   height = 0.6,
+  base = 0.08,
+  opacity = 0.9,
 }: {
   colour: string;
   radius?: number;
   height?: number;
+  base?: number;
+  opacity?: number;
 }) {
   return (
-    <mesh position={[0, height / 2 + 0.08, 0]} renderOrder={1}>
+    <mesh position={[0, height / 2 + base, 0]} renderOrder={1}>
       <cylinderGeometry args={[radius, radius, height, 28]} />
-      <meshPhysicalMaterial color={colour} transparent opacity={0.75} roughness={0.18} />
+      <meshPhysicalMaterial
+        color={colour}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        roughness={0.22}
+        envMapIntensity={0.4}
+      />
     </mesh>
   );
 }
@@ -143,6 +157,7 @@ function Tool({
   mirror,
   heating,
   sealed,
+  bubbles,
 }: {
   kind: TeachingApparatusKind;
   selected: boolean;
@@ -151,6 +166,7 @@ function Tool({
   mirror: boolean;
   heating: boolean;
   sealed: boolean;
+  bubbles: boolean;
 }) {
   if (['test_tube', 'boiling_tube', 'gas_collector'].includes(kind))
     return (
@@ -158,21 +174,43 @@ function Tool({
         <mesh geometry={TUBE} renderOrder={3}>
           <Glass selected={selected} />
         </mesh>
-        <Liquid colour={kind === 'gas_collector' ? '#a6d2e4' : colour} />
+        <mesh position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.17, 0.012, 8, 36]} />
+          <meshStandardMaterial
+            color={selected ? '#31b9e7' : '#729db7'}
+            roughness={0.22}
+            metalness={0.2}
+          />
+        </mesh>
+        <Liquid
+          colour={kind === 'gas_collector' ? '#a6d2e4' : colour}
+          base={kind === 'gas_collector' ? 0.65 : 0.08}
+          opacity={kind === 'gas_collector' || colour === TEACHING_COLOURS.clear ? 0.35 : 0.9}
+        />
+        {bubbles &&
+          kind === 'test_tube' &&
+          [0, 1, 2].map((n) => (
+            <mesh key={n} position={[n % 2 ? 0.05 : -0.04, 0.2 + n * 0.14, 0.1]}>
+              <sphereGeometry args={[0.035, 12, 8]} />
+              <meshPhysicalMaterial color="#e6f5ff" transparent opacity={0.5} roughness={0.1} />
+            </mesh>
+          ))}
         {kind !== 'gas_collector' && precipitate && (
-          <mesh position={[0, 0.1, 0]}>
+          <mesh position={[0, 0.1, 0]} renderOrder={4}>
             <sphereGeometry args={[0.135, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color={precipitate} roughness={0.85} />
+            <meshStandardMaterial color={precipitate} roughness={0.85} transparent opacity={0.98} />
           </mesh>
         )}
         {mirror && kind === 'test_tube' && (
-          <mesh position={[0, 0.4, 0]}>
+          <mesh position={[0, 0.4, 0]} renderOrder={4}>
             <cylinderGeometry args={[0.157, 0.157, 0.5, 32, 1, true]} />
             <meshStandardMaterial
               color="#d4dce1"
               metalness={1}
               roughness={0.12}
               side={DoubleSide}
+              transparent
+              opacity={0.98}
             />
           </mesh>
         )}
@@ -190,7 +228,7 @@ function Tool({
         <mesh geometry={BEAKER} renderOrder={3}>
           <Glass selected={selected} />
         </mesh>
-        <Liquid colour="#b7dbe9" radius={0.54} height={0.38} />
+        <Liquid colour="#b7dbe9" radius={0.54} height={0.38} opacity={0.3} />
         {kind === 'ice_bath' &&
           [-0.32, 0, 0.32].map((x) => (
             <mesh key={x} position={[x, 0.48, 0.15]} rotation={[0.2, x, 0.3]}>
@@ -350,24 +388,24 @@ export default function TeachingScene3D({
           gl.domElement.dataset.ready = 'true';
         }}
       >
-        <color attach="background" args={['#d6e4ed']} />
+        <color attach="background" args={['#124969']} />
         <Studio />
         <Camera zoom={zoom} reset={reset} />
-        <ambientLight intensity={0.6} />
+        <ambientLight intensity={0.45} />
         <directionalLight
           position={[2, 7, 5]}
-          intensity={2}
+          intensity={1.4}
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
         <directionalLight position={[-4, 3, -3]} intensity={0.9} />
         <mesh position={[0, -0.1, 0]} receiveShadow>
           <boxGeometry args={[11, 0.2, 4]} />
-          <meshStandardMaterial color="#c6d3dc" roughness={0.5} />
+          <meshStandardMaterial color="#657f91" roughness={0.5} />
         </mesh>
         <mesh position={[0, 1.5, -2]}>
           <boxGeometry args={[13, 4, 0.12]} />
-          <meshStandardMaterial color="#b8cddc" roughness={0.75} />
+          <meshStandardMaterial color="#164a6b" roughness={0.75} />
         </mesh>
         {[-3, 3].map((x) => (
           <mesh key={x} position={[x, -0.9, 0]}>
@@ -388,6 +426,12 @@ export default function TeachingScene3D({
               rotation={[0, 0, pos.rotate]}
               onClick={pick}
             >
+              {selected === a.id && (
+                <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                  <ringGeometry args={[0.27, 0.32, 40]} />
+                  <meshBasicMaterial color="#42c6f1" side={DoubleSide} />
+                </mesh>
+              )}
               <Tool
                 kind={a.kind}
                 selected={selected === a.id}
@@ -398,6 +442,7 @@ export default function TeachingScene3D({
                 mirror={p.scene.visual === 'silver_mirror'}
                 heating={p.scene.phase === 'heat'}
                 sealed={d.layout === 'gas_collection'}
+                bubbles={p.scene.visual === 'bubbles'}
               />
             </group>
           );

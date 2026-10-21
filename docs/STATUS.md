@@ -1,6 +1,35 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-21 (local guided workspaces for practicals 1–20)_
+_Last updated: 2026-10-22 (practicals 21–30 and local simulation authoring)_
+
+## Practicals 21–30 and local authoring
+
+- Added ten source-linked bilingual guides with shared interactive 2D/3D apparatus, ordered
+  actions, safety gates, sample/test comparisons, exact learner notes and recorded trial reports.
+  These are bounded guided teaching models; unsupported handbook branches and predictive
+  physics are explicitly excluded. Source conflicts are recorded in `SOURCE_MAP.md`.
+- Experiment 29 requires an entered 0–5 °C bath reading. Experiment 30 starts with five blank
+  timing fields and uses learner-entered measurements only. Its inverse-time comparison and
+  fitted concentration order do not imply an absolute rate or a known rate constant.
+- Admin → Simulation authoring supports bilingual forms, supported apparatus/layouts, procedure
+  targets, intermediate appearances, outcome matrices, source references and 2D/3D preview.
+  No scripts, arbitrary GLBs, expressions or new apparatus behaviour execute from a package.
+  Additional behaviour still requires an engine extension.
+- Models save as staged files behind the existing loopback/development guards. Separate local
+  review attestation enables local availability; deactivation and any saved edit remove that
+  availability. Optimistic versions, definition revisions and audit events are preserved.
+  No production publishing, authentication or database storage was added. Draft content
+  approval, knowledge-base activation and Experiment 4's engine remain separate.
+- All new Sinhala content remains a translation draft pending teacher review. Learner work is
+  retained within the current tab until refresh; authored definitions persist in local API files.
+- Verification: `pnpm test` exit 0 (95 contracts + 222 core + 358 web + 360 API = 1,035 passed).
+  `pnpm build` and workspace typechecks exit 0. The affected browser suite passed 34 with two
+  existing Experiment 4 viewport skips; Admin authoring passed at 1440×900, 1366×768 and 390×844.
+  Follow-up checks cover late timing edits, temperature guards, mobile 2D sizing and transparent
+  3D precipitates. Screenshots/logs are under `apps/web/final-screens/teaching*`.
+- `pnpm check` exits 2 because Prettier cannot scan existing generated cache/output folders
+  (`EPERM`, including `.pytest_cache`). Changed-file formatting, ESLint and Python Ruff pass.
+  No inaccessible folders were deleted, permissions changed, commits made or changes pushed.
 
 ## Guided handbook workspaces (2026-10-21)
 

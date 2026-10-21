@@ -543,6 +543,84 @@
                         "observe",
                         "measure"
                       ]
+                    },
+                    "appearance": {
+                      "type": "object",
+                      "properties": {
+                        "solutionColour": {
+                          "type": "string",
+                          "enum": [
+                            "clear",
+                            "white",
+                            "pale_blue",
+                            "deep_blue",
+                            "blue",
+                            "green",
+                            "pale_green",
+                            "pink",
+                            "pale_pink",
+                            "purple",
+                            "yellow",
+                            "orange",
+                            "red",
+                            "brown",
+                            "grey"
+                          ]
+                        },
+                        "precipitateColour": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "clear",
+                                "white",
+                                "pale_blue",
+                                "deep_blue",
+                                "blue",
+                                "green",
+                                "pale_green",
+                                "pink",
+                                "pale_pink",
+                                "purple",
+                                "yellow",
+                                "orange",
+                                "red",
+                                "brown",
+                                "grey"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "visual": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "bubbles",
+                            "precipitate",
+                            "silver_mirror"
+                          ]
+                        },
+                        "sourceIndexes": {
+                          "minItems": 1,
+                          "maxItems": 12,
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        }
+                      },
+                      "required": [
+                        "solutionColour",
+                        "precipitateColour",
+                        "visual",
+                        "sourceIndexes"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -677,8 +755,7 @@
                   "none",
                   "bubbles",
                   "precipitate",
-                  "silver_mirror",
-                  "layers"
+                  "silver_mirror"
                 ]
               },
               "sourceIndexes": {

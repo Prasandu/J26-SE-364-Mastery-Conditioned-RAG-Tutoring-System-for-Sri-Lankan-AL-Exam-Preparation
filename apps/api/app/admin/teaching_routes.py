@@ -4,8 +4,8 @@ Records use the existing atomic/integrity-checked file store in a separate priva
 PostgreSQL is deliberately unsupported here; no database/schema changes are made.
 """
 
-import threading
 import math
+import threading
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -32,8 +32,14 @@ class ActivateModel(BaseModel):
     reviewedSources: bool
 
 
+class DeactivateModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    expectedVersion: int
+
+
 def semantic_issues(d: dict[str, Any]) -> list[str]:
     issues: list[str] = []
+
     def nonblank(value: Any) -> bool:
         if isinstance(value, dict):
             if set(value) == {"en", "si"}:
@@ -42,6 +48,7 @@ def semantic_issues(d: dict[str, Any]) -> list[str]:
         if isinstance(value, list):
             return all(nonblank(v) for v in value)
         return not isinstance(value, float) or math.isfinite(value)
+
     if not nonblank(d) or any(not s["title"].strip() for s in d["sources"]):
         issues.append("invalid_value")
     kinds = {a["kind"] for a in d["apparatus"]}
@@ -49,7 +56,14 @@ def semantic_issues(d: dict[str, Any]) -> list[str]:
         issues.append("duplicate_instrument_kind")
     required = {
         "test_tubes": {"test_tube"},
-        "gas_collection": {"boiling_tube", "retort_stand", "burner", "delivery_tube", "gas_collector", "water_bath"},
+        "gas_collection": {
+            "boiling_tube",
+            "retort_stand",
+            "burner",
+            "delivery_tube",
+            "gas_collector",
+            "water_bath",
+        },
         "ice_bath": {"ice_bath", "test_tube"},
         "inverted_tube": {"gas_collector", "beaker", "stopwatch"},
     }[d["layout"]]
@@ -67,6 +81,15 @@ def semantic_issues(d: dict[str, Any]) -> list[str]:
         if not source["pdfPages"] and not source["url"]:
             issues.append("source_reference")
     for test in d["tests"]:
+        for step in test["steps"]:
+            appearance = step.get("appearance")
+            if appearance:
+                if any(i >= len(d["sources"]) for i in appearance["sourceIndexes"]):
+                    issues.append("outcome_source")
+                if (appearance["visual"] == "precipitate") != (
+                    appearance["precipitateColour"] is not None
+                ):
+                    issues.append("precipitate_appearance")
         if len({s["id"] for s in test["steps"]}) != len(test["steps"]):
             issues.append("duplicate_step")
         if any(s["apparatusId"] not in instruments for s in test["steps"]):
@@ -107,7 +130,9 @@ def register_teaching_routes(app: FastAPI, api: AdminApi) -> None:
     def guarded(request: Request) -> tuple[Any, AdminStore, AdminStore]:
         st, audit_store = api.guard(request)
         if not isinstance(audit_store, AdminStore):
-            raise ApiError(409, "invalid_request", "Local simulation authoring requires file storage")
+            raise ApiError(
+                409, "invalid_request", "Local simulation authoring requires file storage"
+            )
         root = str(audit_store.root / "teaching-models")
         with _lock:
             if root not in _stores:
@@ -123,6 +148,22 @@ def register_teaching_routes(app: FastAPI, api: AdminApi) -> None:
         st, store, _ = guarded(request)
         return [public(st, r) for r in api.records(store, "drafts")]
 
+    @app.post("/admin/dev/simulation-models/{record_id}/deactivate-local")
+    async def deactivate_model(record_id: str, request: Request) -> dict[str, Any]:
+        st, store, audit_store = guarded(request)
+        req = await api.read_json(request, "api-teaching-deactivate", DeactivateModel)
+        with _lock:
+            api.load(store, "drafts", record_id)
+            with storage_errors():
+                record = store.update(
+                    "drafts",
+                    record_id,
+                    req.expectedVersion,
+                    lambda current: {**current, "status": "staged", "review": None},
+                )
+            api.audit(audit_store, "simulation.deactivated_local", "simulation", record_id)
+        return public(st, record)
+
     async def save(request: Request, record_id: str | None) -> dict[str, Any]:
         st, store, audit_store = guarded(request)
         req = await api.read_json(request, "api-teaching-save", SaveModel)
@@ -131,16 +172,25 @@ def register_teaching_routes(app: FastAPI, api: AdminApi) -> None:
         if definition["experimentNumber"] <= 30 or definition["id"].startswith("handbook-"):
             issues.append("reserved_practical")
         if issues:
-            raise ApiError(422, "invalid_request", "Simulation package failed validation", details={"issues": issues})
+            raise ApiError(
+                422,
+                "invalid_request",
+                "Simulation package failed validation",
+                details={"issues": ", ".join(issues)},
+            )
         with _lock:
             records = api.records(store, "drafts")
             if any(
-                r["id"] != record_id and (
+                r["id"] != record_id
+                and (
                     r["definition"]["id"] == definition["id"]
                     or r["definition"]["experimentNumber"] == definition["experimentNumber"]
-                ) for r in records
+                )
+                for r in records
             ):
-                raise ApiError(409, "duplicate_practical", "Choose a different local model identity and number")
+                raise ApiError(
+                    409, "duplicate_practical", "Choose a different local model identity and number"
+                )
             data = {"definition": definition, "status": "staged", "review": None}
             with storage_errors():
                 if record_id is None:
@@ -151,10 +201,28 @@ def register_teaching_routes(app: FastAPI, api: AdminApi) -> None:
                     old = api.load(store, "drafts", record_id)
                     if req.expectedVersion != old["version"]:
                         raise VersionConflict(old["version"])
-                    if req.expectedVersion is None or definition["id"] != old["definition"]["id"] or definition["experimentNumber"] != old["definition"]["experimentNumber"] or definition["revision"] <= old["definition"]["revision"]:
-                        raise ApiError(422, "invalid_request", "Keep the identity and increment the definition revision")
-                    record = store.update("drafts", record_id, req.expectedVersion, lambda _old: data)
-            api.audit(audit_store, "simulation.saved", "simulation", record["id"], revision=definition["revision"], template=definition["template"])
+                    if (
+                        req.expectedVersion is None
+                        or definition["id"] != old["definition"]["id"]
+                        or definition["experimentNumber"] != old["definition"]["experimentNumber"]
+                        or definition["revision"] <= old["definition"]["revision"]
+                    ):
+                        raise ApiError(
+                            422,
+                            "invalid_request",
+                            "Keep the identity and increment the definition revision",
+                        )
+                    record = store.update(
+                        "drafts", record_id, req.expectedVersion, lambda _old: data
+                    )
+            api.audit(
+                audit_store,
+                "simulation.saved",
+                "simulation",
+                record["id"],
+                revision=definition["revision"],
+                template=definition["template"],
+            )
         return public(st, record)
 
     @app.post("/admin/dev/simulation-models", status_code=201)
@@ -176,9 +244,21 @@ def register_teaching_routes(app: FastAPI, api: AdminApi) -> None:
             if semantic_issues(old["definition"]):
                 raise ApiError(422, "invalid_request", "Invalid simulation package")
             with storage_errors():
-                record = store.update("drafts", record_id, req.expectedVersion, lambda current: {
-                    **current, "status": "local_active",
-                    "review": {"reviewer": req.reviewer.strip(), "date": now_iso()},
-                })
-            api.audit(audit_store, "simulation.activated_local", "simulation", record_id, revision=record["definition"]["revision"])
+                record = store.update(
+                    "drafts",
+                    record_id,
+                    req.expectedVersion,
+                    lambda current: {
+                        **current,
+                        "status": "local_active",
+                        "review": {"reviewer": req.reviewer.strip(), "date": now_iso()},
+                    },
+                )
+            api.audit(
+                audit_store,
+                "simulation.activated_local",
+                "simulation",
+                record_id,
+                revision=record["definition"]["revision"],
+            )
         return public(st, record)

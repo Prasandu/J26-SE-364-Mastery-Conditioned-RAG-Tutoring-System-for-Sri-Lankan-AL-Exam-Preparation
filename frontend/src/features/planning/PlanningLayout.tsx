@@ -63,7 +63,7 @@ function AuthenticatedPlanningLayout() {
   }
   if (!session) {
     return (
-      <div className="min-h-screen bg-page px-4 py-10 sm:px-6">
+      <div className="min-h-screen bg-page">
         <LoginPanel authError={authError} configurationError={configurationError} />
       </div>
     );

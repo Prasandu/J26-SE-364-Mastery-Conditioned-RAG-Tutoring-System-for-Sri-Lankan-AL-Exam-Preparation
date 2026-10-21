@@ -183,12 +183,12 @@ function TaskCard({
 
   return (
     <article
-      className={`rounded-xl border p-4 shadow-sm ${style}`}
+      className={`min-w-0 rounded-xl border p-4 shadow-sm ${style}`}
       data-status={task.status}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="font-semibold">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-44">
+          <p className="break-words font-semibold">
             {formatActivity(task.activity)} · {displayTopic}
           </p>
           <p className="mt-1 text-sm opacity-80">
@@ -346,7 +346,7 @@ function TaskCard({
       ) : null}
 
       {actionable ? (
-        <div className="mt-4 flex flex-col gap-2 border-t border-current/10 pt-3 sm:flex-row sm:items-center">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
           <button
             className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
             disabled={busy}

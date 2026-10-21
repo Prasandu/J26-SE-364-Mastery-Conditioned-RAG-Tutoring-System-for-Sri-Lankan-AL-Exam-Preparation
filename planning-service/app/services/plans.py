@@ -27,6 +27,19 @@ from app.services.roadmap import build_and_store_roadmap, set_rolling_state
 from app.services.topic_lookup import preload_topics
 from app.services.weights import NEUTRAL_PRIOR_MASTERY
 
+ADAPTIVE_NEEDS_RESULTS_MESSAGE = (
+    "Adaptive plans pick your topics from your assessment results, and you don't have any yet. "
+    "Take a quiz or past paper first, or choose a Manual plan and pick the topics you want to start with."
+)
+
+
+def student_has_results(session: Session, student_id: str) -> bool:
+    """True once the student has mastery data, which Adaptive plans are built from."""
+    states = session.scalars(
+        select(LearnerTopicState.topic_id).where(LearnerTopicState.student_id == student_id)
+    ).all()
+    return len(states) > 0
+
 
 def create_plan(
     session: Session,
@@ -334,7 +347,7 @@ def _build_constraints(
             requested_topics = set(data.topics)
             states = [state for state in states if state.topic_id in requested_topics]
         if not states:
-            return _starter_constraints(session, data)
+            raise Conflict(ADAPTIVE_NEEDS_RESULTS_MESSAGE)
 
         priorities = []
         for state in states:
@@ -364,48 +377,6 @@ def _build_constraints(
                 }
             )
 
-    constraints = data.model_dump(mode="json")
-    constraints["priorities"] = priorities
-    return constraints
-
-
-def _starter_constraints(session: Session, data: PlanInput) -> dict[str, Any]:
-    """Adaptive plan for a student with no results yet.
-
-    Every selected leaf topic (or every leaf topic in the catalogue) starts at
-    the neutral mastery estimate, so priorities follow exam weight until real
-    marks arrive and checkpoints personalise the plan.
-    """
-    topics = preload_topics(session)
-    parent_ids = {getattr(topic, "parent_id", None) for topic in topics.values()}
-    topic_ids = data.topics or sorted(topic_id for topic_id in topics if topic_id not in parent_ids)
-    if not topic_ids:
-        raise Conflict("No curriculum topics are available to plan yet.")
-    priorities = []
-    for topic_id in topic_ids:
-        topic = session.get(Topic, topic_id)
-        if topic is None:
-            raise ConstraintViolation(f"Unknown topic {topic_id!r}.")
-        priority = expected_gain_per_hour(
-            {
-                "topic_id": topic_id,
-                "exam_weight": effective_exam_weight(topic.exam_weight),
-                "mastery": NEUTRAL_PRIOR_MASTERY,
-                "prerequisites": [],
-                "prerequisite_mastery": {},
-            }
-        )
-        priorities.append(
-            {
-                "topic_id": topic_id,
-                "priority": priority,
-                "mastery": NEUTRAL_PRIOR_MASTERY,
-                "reason": (
-                    "No results yet: starting estimate from exam weight; "
-                    "updates as you answer questions."
-                ),
-            }
-        )
     constraints = data.model_dump(mode="json")
     constraints["priorities"] = priorities
     return constraints

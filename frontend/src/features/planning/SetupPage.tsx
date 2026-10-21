@@ -4,6 +4,7 @@ import catalogue from "../../../../shared/contracts/topics.json";
 import { ApiError } from "../../api/client";
 import {
   createPlan,
+  getPlanReadiness,
   getPlans,
   replacePlan,
   type AvailabilityWindow,
@@ -106,7 +107,11 @@ function availabilityFromWindows(windows: unknown): AvailabilityEntry[] | null {
 
 export default function PlanningSetupPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<PlanInput["mode"]>("predicted");
+  const [chosenMode, setMode] = useState<PlanInput["mode"]>("predicted");
+  // null = still checking (or the check failed; the server still enforces the rule)
+  const [adaptiveBlockedReason, setAdaptiveBlockedReason] = useState<string | null>(null);
+  // Adaptive plans are built from results, so a student with none must use Manual.
+  const mode: PlanInput["mode"] = adaptiveBlockedReason ? "manual" : chosenMode;
   const [examDate, setExamDate] = useState(futureDate(90));
   const [targetGrade, setTargetGrade] = useState("A");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -132,6 +137,21 @@ export default function PlanningSetupPage() {
       ),
     [availability],
   );
+
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve()
+      .then(() => getPlanReadiness())
+      .then((readiness) => {
+        if (active && readiness && !readiness.adaptive_available) {
+          setAdaptiveBlockedReason(readiness.adaptive_unavailable_reason ?? "Adaptive plans need your results first.");
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -295,7 +315,8 @@ export default function PlanningSetupPage() {
                     mode === value
                       ? "bg-white text-brand shadow-sm"
                       : "text-slate-600 hover:text-ink"
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                  disabled={value === "predicted" && adaptiveBlockedReason !== null}
                   key={value}
                   onClick={() => setMode(value)}
                   type="button"
@@ -304,6 +325,12 @@ export default function PlanningSetupPage() {
                 </button>
               ))}
             </div>
+            {adaptiveBlockedReason ? (
+              <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950" role="status">
+                <span className="font-semibold">Adaptive isn't available yet.</span>{" "}
+                {adaptiveBlockedReason}
+              </p>
+            ) : null}
           </fieldset>
           <label className="block text-sm font-medium text-slate-700">
             Target grade
@@ -355,9 +382,8 @@ export default function PlanningSetupPage() {
           </fieldset>
         ) : (
           <p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">
-            Adaptive planning picks topics from your results. No results yet?
-            It starts from the topics that carry the most exam marks and adapts
-            as you answer questions.
+            Adaptive planning picks your topics from your assessment results and
+            keeps adapting as you answer more questions.
           </p>
         )}
 

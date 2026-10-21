@@ -6,12 +6,25 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Attempt, Paper, Question
+from app.schemas.plans import PlanReadinessResponse
 from app.schemas.topic_history import TopicHistoryAttempt, TopicHistoryResponse
 from app.security import get_student_id
+from app.services.plans import ADAPTIVE_NEEDS_RESULTS_MESSAGE, student_has_results
 
 router = APIRouter(prefix="/api/v1/students", tags=["students"])
 DbSession = Annotated[Session, Depends(get_db)]
 StudentId = Annotated[str, Depends(get_student_id)]
+
+
+@router.get("/me/plan-readiness", response_model=PlanReadinessResponse)
+def get_plan_readiness(session: DbSession, student_id: StudentId) -> PlanReadinessResponse:
+    """Tell setup whether this student can create an Adaptive plan yet, and why not."""
+    has_results = student_has_results(session, student_id)
+    return PlanReadinessResponse(
+        has_results=has_results,
+        adaptive_available=has_results,
+        adaptive_unavailable_reason=None if has_results else ADAPTIVE_NEEDS_RESULTS_MESSAGE,
+    )
 
 
 @router.get("/me/topic-history/{topic_id}", response_model=TopicHistoryResponse)

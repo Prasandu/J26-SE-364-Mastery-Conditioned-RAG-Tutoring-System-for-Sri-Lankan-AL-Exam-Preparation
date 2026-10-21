@@ -313,8 +313,9 @@ Each session stores its reason, steps and practice question IDs (wrong answers f
 
 1. The student chooses mode (**Adaptive** = from results, **Manual** = pick topics), exam date, target grade, one or more time slots per day, maximum session length and daily limit.
 2. Editing an existing plan prefills every field.
-3. **Adaptive with no results yet:** every leaf topic starts at 30% mastery; priorities follow exam weights ("No results yet: starting estimate…").
-4. The roadmap is built immediately and the starting estimate is stored for later comparison.
+3. **A new student with no results cannot create an Adaptive plan.** Setup asks the server (`GET /api/v1/students/me/plan-readiness`); if there are no results, the **Adaptive** button is disabled with the reason: *"Adaptive plans pick your topics from your assessment results, and you don't have any yet. Take a quiz or past paper first, or choose a Manual plan and pick the topics you want to start with."* The server enforces the same rule (HTTP 409), so the API cannot be used to bypass it. Adaptive unlocks automatically after the first results arrive.
+4. **Manual plans work for new students:** they tick the topics they want; each topic starts at the neutral 30% mastery, so time is shared by exam weight until results arrive, and every session starts with theory.
+5. The roadmap is built immediately and the starting estimate is stored for later comparison.
 
 ### 7.2 Generating sessions (rolling horizon)
 
@@ -388,7 +389,9 @@ Rules: one alert per event (dedupe key), at most 3 unread shown (newest first), 
 
 ### 7.9 Coaching card
 
-Shows greeting, status message (6.6), up to 3 focus topics with reasons, and a daily suggestion based on the student's own study days: *"Aim for about 2 hours on each of your 3 study days, using the time available in your plan."*
+**Before any results (e.g. a new Manual student):** a welcome card with no grade estimate: *"Welcome! Let's build your starting point. We don't have your results yet, so your first sessions cover the basics of your topics. After your first quiz or paper, we'll estimate your progress towards B."* Topics show "start here" instead of "mastery is 0%". The normal card below replaces it once results arrive.
+
+**With results:** shows greeting, status message (6.6), up to 3 focus topics with reasons, and a daily suggestion based on the student's own study days: *"Aim for about 2 hours on each of your 3 study days, using the time available in your plan."*
 
 ### 7.10 Daily motivation
 
@@ -448,7 +451,7 @@ Conclusion: rolling re-planning gives a small but statistically clear mastery ga
 1. `python -m alembic upgrade head`, `python -m scripts.seed_topics`.
 2. Prepare two students:
    - **Student A (has history):** `python -m scripts.seed_student_scores --student <uuid-A> --grade C`
-   - **Student B (new):** a Supabase account with no data.
+   - **Student B (new):** a Supabase account with no data (shows that Adaptive is unavailable and Manual works).
    - Optional **Student S (struggling):** `--grade S` to show the effort-focused message.
 3. In `planning-service/.env`: `MISSED_GRACE_MINUTES=0.5` (missed alerts after 30 s). Restart the backend.
 4. Run the evaluation once and keep a screenshot of the tables.
@@ -458,7 +461,7 @@ Conclusion: rolling re-planning gives a small but statistically clear mastery ga
 
 | # | Show | Say |
 |---|---|---|
-| 1 | **Set up** as Student B: Adaptive, exam date, target, two slots on one day, daily limit → Save | "A new student gets a plan immediately, starting from the topics that carry the most marks." |
+| 1 | **Set up** as Student B: point out that **Adaptive is disabled with the reason**; choose **Manual**, tick a few topics, exam date, target, two slots on one day, daily limit → Save | "A new student can't get an adaptive plan because there are no results to adapt to, and the system says why. Manual works straight away, and the welcome card appears instead of a grade estimate." |
 | 2 | **Study plan**: coaching card, sessions (30/60 min), labels like "Review mistakes" | "Sessions focus on weak, high-mark units like s/p/d block and equilibrium." |
 | 3 | **Why this task?** | "Every decision is explained: mastery, trend, exam weight, days left, steps and questions." |
 | 4 | **Roadmap** | "We plan every week until the exam but commit to two weeks; the rest is a forecast rebuilt at checkpoints." |

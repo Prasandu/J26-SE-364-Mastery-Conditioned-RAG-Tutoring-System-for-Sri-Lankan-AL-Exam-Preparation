@@ -386,6 +386,16 @@ export function replacePlan(planId: string, data: PlanInput) {
   );
 }
 
+export interface PlanReadiness {
+  has_results: boolean;
+  adaptive_available: boolean;
+  adaptive_unavailable_reason: string | null;
+}
+
+export function getPlanReadiness() {
+  return planningRequest<PlanReadiness>("/api/v1/students/me/plan-readiness");
+}
+
 export function getPlans() {
   return planningRequest<PlanListResponse>("/api/v1/plans");
 }

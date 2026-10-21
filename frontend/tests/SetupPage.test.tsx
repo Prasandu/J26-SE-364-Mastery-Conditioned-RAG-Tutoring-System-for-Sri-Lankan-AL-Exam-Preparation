@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createPlan,
+  getPlanReadiness,
   getPlans,
   replacePlan,
 } from "../src/api/planning";
@@ -10,6 +11,7 @@ import PlanningSetupPage from "../src/features/planning/SetupPage";
 
 vi.mock("../src/api/planning", () => ({
   createPlan: vi.fn(),
+  getPlanReadiness: vi.fn(),
   getPlans: vi.fn(),
   replacePlan: vi.fn(),
 }));
@@ -227,5 +229,65 @@ describe("editing an existing plan", () => {
       }),
     );
     expect(getPlans).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe("Adaptive plans for students without results", () => {
+  const reason =
+    "Adaptive plans pick your topics from your assessment results, and you don't have any yet. " +
+    "Take a quiz or past paper first, or choose a Manual plan and pick the topics you want to start with.";
+
+  beforeEach(() => {
+    vi.mocked(createPlan).mockReset().mockResolvedValue(existingPlan);
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [] });
+    vi.mocked(getPlanReadiness).mockReset();
+  });
+
+  it("disables Adaptive, explains why, and starts in Manual mode", async () => {
+    vi.mocked(getPlanReadiness).mockResolvedValue({
+      has_results: false,
+      adaptive_available: false,
+      adaptive_unavailable_reason: reason,
+    });
+    renderSetupPage();
+
+    expect(await screen.findByText("Adaptive isn't available yet.")).toBeInTheDocument();
+    expect(screen.getByText(/you don't have any yet/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Adaptive" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Manual" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Choose topics")).toBeInTheDocument();
+  });
+
+  it("asks a new student to pick topics instead of sending an Adaptive plan", async () => {
+    vi.mocked(getPlanReadiness).mockResolvedValue({
+      has_results: false,
+      adaptive_available: false,
+      adaptive_unavailable_reason: reason,
+    });
+    renderSetupPage();
+    await screen.findByText("Adaptive isn't available yet.");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    expect(await screen.findByText("Choose at least one topic for a manual plan.")).toBeInTheDocument();
+    expect(createPlan).not.toHaveBeenCalled();
+  });
+
+  it("keeps Adaptive available for students who have results", async () => {
+    vi.mocked(getPlanReadiness).mockResolvedValue({
+      has_results: true,
+      adaptive_available: true,
+      adaptive_unavailable_reason: null,
+    });
+    renderSetupPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Save my plan" }));
+
+    await waitFor(() =>
+      expect(createPlan).toHaveBeenCalledWith(expect.objectContaining({ mode: "predicted" })),
+    );
+    expect(screen.queryByText("Adaptive isn't available yet.")).toBeNull();
+    expect(screen.getByRole("button", { name: "Adaptive" })).toBeEnabled();
   });
 });

@@ -144,3 +144,10 @@ class PlanResponse(BaseModel):
 
 class PlanListResponse(BaseModel):
     plans: list[PlanResponse]
+
+
+class PlanReadinessResponse(BaseModel):
+    # Adaptive plans need assessment results; Manual plans never do.
+    has_results: bool
+    adaptive_available: bool
+    adaptive_unavailable_reason: str | None = None

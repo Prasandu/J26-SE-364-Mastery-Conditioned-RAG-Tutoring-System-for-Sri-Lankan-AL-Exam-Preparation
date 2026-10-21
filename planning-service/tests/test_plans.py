@@ -201,30 +201,51 @@ def test_predicted_mode_uses_stored_mastery(
     assert priority["reason"]
 
 
-def test_predicted_mode_for_a_new_student_starts_from_neutral_estimates(client: TestClient) -> None:
+def test_new_student_cannot_create_an_adaptive_plan_and_is_told_why(
+    client: TestClient,
+    session: FakeSession,
+) -> None:
     response = client.post(
         "/api/v1/plans",
         json=valid_plan(mode="predicted", topics=[], priorities=[]),
     )
 
-    assert response.status_code == 201
-    priorities = response.json()["constraints"]["priorities"]
-    assert [item["topic_id"] for item in priorities] == ["chem-u1", "chem-u2"]
-    assert all(item["mastery"] == 0.3 for item in priorities)
-    assert all(item["reason"].startswith("No results yet") for item in priorities)
-    # Higher exam weight ranks higher while there is no evidence (chem-u2: 0.8 > chem-u1: 0.6).
-    by_id = {item["topic_id"]: item["priority"] for item in priorities}
-    assert by_id["chem-u2"] > by_id["chem-u1"]
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert "assessment results" in detail and "Manual plan" in detail
+    assert session.plans == {}  # nothing was saved
 
 
-def test_new_student_adaptive_plan_respects_selected_topics(client: TestClient) -> None:
-    response = client.post(
-        "/api/v1/plans",
-        json=valid_plan(mode="predicted", topics=["chem-u2"], priorities=[]),
-    )
+def test_adaptive_plan_needs_results_for_the_selected_topics(
+    client: TestClient,
+    session: FakeSession,
+) -> None:
+    session.states = [SimpleNamespace(student_id="student-1", topic_id="chem-u1", mastery=0.4)]
 
-    assert response.status_code == 201
-    assert [item["topic_id"] for item in response.json()["constraints"]["priorities"]] == ["chem-u2"]
+    chosen = valid_plan(mode="predicted", topics=["chem-u1"], priorities=[])
+    other = valid_plan(mode="predicted", topics=["chem-u2"], priorities=[])
+    ok = client.post("/api/v1/plans", json=chosen)
+    blocked = client.post("/api/v1/plans", json=other)
+
+    assert ok.status_code == 201
+    assert blocked.status_code == 409
+
+
+def test_plan_readiness_tells_new_students_why_adaptive_is_unavailable(
+    client: TestClient,
+    session: FakeSession,
+) -> None:
+    new_student = client.get("/api/v1/students/me/plan-readiness").json()
+    session.states = [SimpleNamespace(student_id="student-1", topic_id="chem-u1", mastery=0.4)]
+    with_results = client.get("/api/v1/students/me/plan-readiness").json()
+
+    assert new_student["has_results"] is False and new_student["adaptive_available"] is False
+    assert "Manual plan" in new_student["adaptive_unavailable_reason"]
+    assert with_results == {
+        "has_results": True,
+        "adaptive_available": True,
+        "adaptive_unavailable_reason": None,
+    }
 
 
 def test_unknown_topic_is_rejected(client: TestClient) -> None:

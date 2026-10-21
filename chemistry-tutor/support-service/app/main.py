@@ -10,6 +10,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
 from app.api.health import router as health_router
+from app.api.practice import router as practice_router
 from app.api.questions import router as questions_router
 from app.api.students import router as students_router
 from app.api.tutor import router as tutor_router
@@ -69,3 +70,4 @@ app.include_router(tutor_router, prefix="/api/v1")
 app.include_router(questions_router, prefix="/api/v1")
 app.include_router(students_router, prefix="/api/v1")
 app.include_router(voice_router, prefix="/api/v1")
+app.include_router(practice_router, prefix="/api/v1")

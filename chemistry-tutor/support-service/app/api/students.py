@@ -15,6 +15,7 @@ from app.schemas.students import (
     InterventionResponse,
     QuestionProgressResponse,
 )
+from app.schemas.practice import FlaggedQuestionResponse
 from app.services.consultation.recommendation import generate_consultation
 from app.services.learning_state.intervention_history import (
     get_intervention_history,
@@ -22,6 +23,7 @@ from app.services.learning_state.intervention_history import (
 )
 from app.services.learning_state.intervention_rules import get_interventions
 from app.services.mastery.evidence import get_student_dashboard, get_student_progress
+from app.services.practice.flagged_questions import list_review_queue
 from app.services.reports.wivarana_report import generate_wivarana_report
 
 router = APIRouter()
@@ -83,6 +85,28 @@ def student_dashboard(student_id: str, db: Session = Depends(get_db)) -> Dashboa
         independent_rate=d.independent_rate,
         per_question=[_to_progress_response(p) for p in d.per_question],
     )
+
+
+@router.get("/students/{student_id}/practice/review-queue", response_model=list[FlaggedQuestionResponse])
+def student_review_queue(student_id: str, db: Session = Depends(get_db)) -> list[FlaggedQuestionResponse]:
+    flagged = list_review_queue(db, student_id)
+    return [
+        FlaggedQuestionResponse(
+            id=f.id,
+            student_id=f.student_id,
+            source=f.source,
+            question_text=f.question_text,
+            topic=f.topic,
+            sub_topic=f.sub_topic,
+            unit=f.unit,
+            concept_id=f.concept_id,
+            submitted_answer=f.submitted_answer,
+            correct_answer=f.correct_answer,
+            status=f.status,
+            created_at=f.created_at,
+        )
+        for f in flagged
+    ]
 
 
 @router.get("/students/{student_id}/consultation", response_model=ConsultationResponse)

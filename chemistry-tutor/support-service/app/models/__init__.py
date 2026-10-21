@@ -1,5 +1,6 @@
 from app.models.concept import Concept
 from app.models.concept_edge import ConceptEdge
+from app.models.flagged_question import FlaggedQuestion
 from app.models.hint_event import HintEvent
 from app.models.intervention_event import InterventionEvent
 from app.models.knowledge_chunk import KnowledgeChunk
@@ -16,4 +17,5 @@ __all__ = [
     "Concept",
     "ConceptEdge",
     "InterventionEvent",
+    "FlaggedQuestion",
 ]

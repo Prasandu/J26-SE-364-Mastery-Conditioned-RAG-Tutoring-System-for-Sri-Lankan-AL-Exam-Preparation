@@ -13,8 +13,8 @@ infra/
 shared/
 CLAUDE.md
 .claude/
-chemistry-tutor\support-service\migrations
-
+migrations/
+chemistry-tutor/support-service/migrations/versions/
 # Python  ->  assessment-service/
 __pycache__/
 *.py[cod]

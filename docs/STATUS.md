@@ -1,6 +1,110 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-21 (3D room/materials and blue 2D simulation graphics)_
+_Last updated: 2026-10-21 (local guided workspaces for practicals 1–20)_
+
+## Guided handbook workspaces (2026-10-21)
+
+- The library now opens a runnable workspace for each of its first 20 practicals. Experiment 4
+  retains its existing versioned engine, modes, API, 2D/3D workbench and competency report.
+  The other 19 use an independent, versioned, deterministic **local guided 2D teaching model**;
+  they are not registered as validated ExperimentDefinitions or published API simulations.
+- Added ordered procedure actions, sample/reagent choices, safety acknowledgements, calculated
+  or qualitative outcomes, repeatable trials, exact learner notes and trial reports. Rejected
+  actions do not mutate state; actions have sequence checks and deterministic replay. Notes
+  and trials survive navigation/language switches in the same tab, but not refresh. No database,
+  provider calls, new dependencies or production gates were added or changed.
+- Experiments 5/6 and 14/19/20 are **entered-measurement calculation exercises**, not predictive
+  gas generators or continuously dispensed titrations. Defaults are explicitly example inputs.
+  Qualitative models cover the displayed reagent combinations; Experiment 13's lead-salt branch
+  is excluded. Thermal decomposition uses theoretical sufficient-heating products, not a
+  calibrated Bunsen flame. There are no new 3D scenes, automatic/manual modes, technique-error
+  scoring or teacher validation for these 19 workspaces. Full simulation parity remains work.
+- For Experiments 7/8 the user expressly authorized synthetic practice datasets pending teacher
+  review. Those fixtures are separated in `content/experiments/handbook/assessment.v1.json`,
+  identified on screen and in report inputs, and never described as NIE measured temperatures.
+  Entered readings remain a separate option. All new Sinhala text is a draft pending review.
+- Verification: `pnpm test` **exit 0**, with contracts **90**, simulation-core **207**, frontend
+  **336** and API **344** tests passed (**977 total**, no failures/skips). Windows needed a fresh
+  short pytest temporary directory under `$env:TEMP`, `PYTEST_ADDOPTS` with
+  `-p no:cacheprovider --basetemp=...`, and `UV_CACHE_DIR` under `$env:TEMP` with `UV_NO_SYNC=1`
+  and `UV_OFFLINE=1`. The first attempts hit cache permissions and MAX_PATH when the temporary
+  directory was under the long OneDrive project path; no API fix was needed.
+- Browser suite **exit 0: 61 passed, 2 skipped**, exercising all 19 procedures, notes and trial
+  reports at 1440, 834 and 390 widths in English/Sinhala, plus the existing Experiment 4 golden
+  path. The skipped cases are that pre-existing desktop-only golden path on tablet/mobile.
+  A representative adapter-boundary regression also passed **10**, skipped **2**.
+  Final diagram corrections (flame, gas collector and burette) passed **9/9** browser cases,
+  **123/123** focused unit/architecture checks, typecheck, lint and the final production build.
+  Extra screenshots at 1366×768 and 1920×1080 were captured for practical 7. Screenshots:
+  `apps/web/final-screens/models/`; browser logs/artifacts: `final-screens/mfinal` and `mboundary`.
+- Focused formatting, ESLint, frontend/core typechecks and production frontend build: **exit 0**.
+  `pnpm check` **exit 1**, stopped by existing formatting differences in 10 unrelated files
+  (admin-final test, apparatus-assets test, Lab2DDefs, LabScene, Apparatus3D, AuthoredFlaskBody,
+  LaboratoryRoom, layout3d, loadApparatusModel and ASSET_SPEC). Those prior changes were preserved.
+
+Files for this addition: core `handbookLab.ts`, its index export and tests; handbook
+`assessment.v1.json`; `en/si/labs.json`; web `HandbookSimulationView`, `HandbookPracticalCard`,
+`engine/localAdapter`, `sessionStore`, `App`, i18n index and `styles/views.css`; handbook unit/
+browser tests and the library keyboard test; this status and the source map. Existing unrelated
+staged/unstaged changes remain intact. No commit or push was performed.
+
+Next: teacher review of the new chemistry/Sinhala content and synthetic datasets; build and
+validate full experiment-specific measurement/error models before advertising parity with the
+existing Experiment 4 simulation or adding these to the production API catalog.
+
+## First 20 handbook practicals in the library (2026-10-21)
+
+- Verified the supplied PDF against the existing NIE handbook SHA-256 and inspected the
+  contents and each of the first 20 chapter openings. Added a versioned, source-backed reference
+  index with exact PDF/printed page ranges, unit assignments, titles and concise chapter aims.
+  Source differences for Experiments 6, 11 and 17 are documented in `docs/SOURCE_MAP.md`.
+- The practical library now presents Experiments 1–20 in order and searches/filters across all
+  six units. Reused the existing runnable Experiment 4 card and added compact expandable
+  reference cards for the other entries, with English/Sinhala text and draft translation notices.
+- Reference entries remain separate from the engine/API catalog: they cannot start sessions,
+  advertise learning modes or become runnable through content approval. Experiment 4 is still
+  the only validated simulation. The dashboard, review/import rules, RAG knowledge base,
+  simulation engine, API contracts and database are unchanged.
+- Focused frontend checks: typecheck, ESLint, formatting, build and 48 unit tests passed. Browser
+  verification exited 0: 4 passed, 0 failed, 2 deliberate project skips, including the full
+  Experiment 4 procedure. Reviewed desktop/tablet/mobile screenshots in English and Sinhala;
+  captures are in `apps/web/final-screens/handbook/`.
+- Next: implement and validate additional simulations separately; the 19 new handbook
+  references are not interactive simulations. No commit, push, paid AI calls or database changes.
+
+## Full-screen laboratory workspace (2026-10-21)
+
+- Fixed the live Vite/PostCSS `lab-workspace.css` import failure by consolidating those rules at
+  the end of the existing `workspace.css`, preserving cascade order. Removed the standalone
+  import/file. The running server now returns HTTP 200 for the CSS; a real Chrome check confirmed
+  workspace rules loaded with no error overlay. Production build and formatting checks passed;
+  capture: `apps/web/final-screens/fs/css-import-fixed.png`.
+- Replaced the workbench's tall two-row header, outer card gutters and reserved empty action
+  strip with an edge-to-edge scene beneath a compact title/navigation bar. Renderer switching,
+  camera presets and an expandable accessible bench description share one control bar.
+- Consolidated notebook navigation and reading into one right-hand pane in the existing
+  Context → Materials → Predictions → Protocol → Results → Reflection → Summary order.
+  Closing its reading area gives more width to the scene. Mobile retains the native notebook
+  dialog with focus restoration and a scrolling document layout.
+- Apparatus controls use an independently scrollable desktop inspector; selecting an item does
+  not resize the scene. On mobile, forms expand naturally below the scene. Help is anchored in
+  the title bar on the workbench so its launcher no longer covers notebook text or navigation.
+- Reused existing blue tokens, translations, renderers and action forms. Corrected the GLB
+  manifest's reagent name to the existing bilingual anhydrous sodium carbonate key. No engine,
+  scientific content, API, storage, authentication or publishing changes.
+- Verification: typecheck, ESLint, formatting, production build and 65 focused unit tests passed.
+  Interaction/Experiment 4/stage-stability/WebGL-fallback browser checks passed (11 tests), as did
+  notebook drawer checks. Final responsive browser verification exited 0: 10 passed, 0 failed,
+  2 intentional project skips. Reviewed 1920/1440/1366/834/390 captures in English and Sinhala.
+  Screenshots are in `apps/web/final-screens/fs/`; final browser artifacts are in
+  `apps/web/final-screens/fs-verified/`. Updated the older journey test to reveal the touch-layout
+  WebGL canvas before awaiting its camera readiness, matching the existing renderer test.
+- The final visual pass also removed spare height below the tablet/phone canvas: both renderers
+  grow into the remaining viewport while contextual forms can still extend the scroll area.
+  Touch-layout re-verification exited 0 (6 passed, 10 deliberate project skips), with captures in
+  `apps/web/final-screens/fs-touch/` and refreshed previews in `apps/web/final-screens/fs/`.
+- Next: review the expanded workspace on physical touch devices; authored GLB apparatus remains
+  a separate art task. No commit or push.
 
 ## Simulation graphics reference update (2026-10-21)
 

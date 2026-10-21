@@ -10,12 +10,50 @@ import {
   previewEnvelope,
   projectSession,
   reportFor,
+  handbookModels,
+  initialHandbookRun,
+  transitionHandbook,
+  calculateHandbook,
+  parseTeachingDefinition,
+  initialTeachingRun,
+  transitionTeaching,
+  projectTeaching,
   type OperationError,
   type SimulationContext,
 } from '@vlab/simulation-core';
 import { EngineError, type EngineAdapter, type SubmitRequest } from './adapter';
 import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
+import teachingDefinitions from '../../../../content/experiments/teaching/handbook21-30.v1.json';
+
+export const teachingPractice = {
+  bundled: teachingDefinitions.map(parseTeachingDefinition),
+  parse: parseTeachingDefinition,
+  create: initialTeachingRun,
+  dispatch: transitionTeaching,
+  project: projectTeaching,
+};
+export type {
+  TeachingRun,
+  TeachingAction,
+  TeachingError,
+  TeachingTrial,
+} from '@vlab/simulation-core';
+
+/** Local-only teaching models use this same engine boundary, separately from API sessions. */
+export const handbookPractice = {
+  models: handbookModels,
+  create: initialHandbookRun,
+  dispatch: transitionHandbook,
+  preview: calculateHandbook,
+};
+export type {
+  HandbookAction,
+  HandbookError,
+  HandbookRun,
+  HandbookResult,
+  HandbookModel,
+} from '@vlab/simulation-core';
 
 /**
  * Offline adapter: the engine runs in the browser with the same rules and projections as the

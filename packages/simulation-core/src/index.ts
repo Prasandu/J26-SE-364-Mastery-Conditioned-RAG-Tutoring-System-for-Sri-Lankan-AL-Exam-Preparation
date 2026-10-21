@@ -3,6 +3,8 @@ export * from './rng';
 export * from './fingerprint';
 export * from './context';
 export * from './registry';
+export * from './handbookLab';
+export * from './teaching';
 export {
   achievedConcentration,
   computeStage,

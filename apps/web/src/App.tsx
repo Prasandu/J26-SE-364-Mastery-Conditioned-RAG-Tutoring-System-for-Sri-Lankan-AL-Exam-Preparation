@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { AdminProvider, defaultAdminClient } from './admin/AdminContext';
+import { LocalTeachingSync } from './admin/LocalTeachingSync';
 import type { AdminClient } from './admin/adminClient';
 import { I18nextProvider } from 'react-i18next';
 import { AppHeader } from './components/AppHeader';
@@ -23,6 +24,8 @@ import { Lab2DDefs } from './workbench/lab2d/Lab2DDefs';
 
 /** Development-only admin tools: a separate chunk, loaded only when opened. */
 const AdminView = lazy(() => import('./admin/AdminView'));
+const HandbookSimulationView = lazy(() => import('./views/HandbookSimulationView'));
+const TeachingView = lazy(() => import('./views/TeachingWorkspace'));
 /**
  * R1 advanced-simulation-graphics prototype (chemistry-lab-advanced-sim-r1): an isolated,
  * dev-only proof-of-quality page at `/?r1=1`, never built into production bundles and never
@@ -42,6 +45,18 @@ function CurrentView() {
       return <DashboardView />;
     case 'library':
       return <LibraryView />;
+    case 'handbook_lab':
+      return (
+        <Suspense fallback={<p className="hint-text">…</p>}>
+          <HandbookSimulationView />
+        </Suspense>
+      );
+    case 'teaching_lab':
+      return (
+        <Suspense fallback={<p className="hint-text">…</p>}>
+          <TeachingView />
+        </Suspense>
+      );
     case 'overview':
       return <OverviewView />;
     case 'prelab':
@@ -72,6 +87,7 @@ function CurrentView() {
  */
 function AppBody() {
   const view = useSession((s) => s.view);
+  if (view === 'handbook_lab' || view === 'teaching_lab') return <CurrentView />;
   if (isFlowView(view)) {
     return (
       <SimulationFlowShell>
@@ -112,6 +128,7 @@ export function App({
           {/* Toasts and themed confirmations for both the student app and the admin console. */}
           <FeedbackProvider>
             <LocaleSync />
+            <LocalTeachingSync />
             <AppBody />
             <ConfirmDialog />
             <Lab2DDefs />

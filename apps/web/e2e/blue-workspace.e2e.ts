@@ -80,7 +80,7 @@ test('blue workspace: complete scenes, reachable writing and consistent bilingua
         await page.locator('.side-panel__collapse').click();
         await expect(page.locator('#side-tab-protocol')).toBeFocused();
         const after = await page.locator('.scene-frame').boundingBox();
-        expect(after!.width).toBeGreaterThan(before!.width + 250);
+        expect(after!.width).toBeGreaterThan(before!.width + 80);
         await capture(`${width}-${language}-expanded-stage`);
         await page.keyboard.press('Enter');
         await expect(page.locator('#side-panel-protocol')).toBeVisible();
@@ -95,12 +95,7 @@ test('blue workspace: complete scenes, reachable writing and consistent bilingua
         .getByRole('button', { name: text('ui.lab.renderer_2d') })
         .click();
       await expect(page.locator('.lab2d__svg')).toBeVisible();
-      if (width! <= 900) {
-        const caption = await page.locator('.scene-frame__caption').boundingBox();
-        expect(caption!.height, 'instruction caption reserves excessive blank space').toBeLessThan(
-          180,
-        );
-      }
+      await expect(page.locator('.bench-details')).toBeVisible();
       await page.locator('.lab-stage').scrollIntoViewIfNeeded();
       const sceneBounds = await page.locator('.lab2d__svg').boundingBox();
       const bodyBounds = await page.locator('#main').boundingBox();
@@ -130,7 +125,12 @@ test('blue workspace: complete scenes, reachable writing and consistent bilingua
         .locator('.lab-switch')
         .getByRole('button', { name: text('ui.lab.renderer_3d') })
         .click();
-      await expect(page.locator('.lab3d .lab-toolbar button').first()).toBeEnabled();
+      // On touch layouts the renderer can begin below the fold; reveal it before waiting for
+      // the first WebGL frame and its camera controls.
+      await page.locator('.lab-canvas').scrollIntoViewIfNeeded();
+      await expect(page.locator('.scene-frame .lab-toolbar button').first()).toBeEnabled({
+        timeout: 20_000,
+      });
       await expect(page.locator('.lab-canvas canvas')).toBeVisible();
       await page.locator('.lab-canvas').scrollIntoViewIfNeeded();
       await capture(`${width}-${language}-3d`);

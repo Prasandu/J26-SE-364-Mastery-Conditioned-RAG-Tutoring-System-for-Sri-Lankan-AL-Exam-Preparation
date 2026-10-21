@@ -35,6 +35,8 @@ export function SessionNav({ current }: { current: View }) {
               <button
                 type="button"
                 className="session-nav__button"
+                aria-label={t(STEP_LABEL[view])}
+                title={t(STEP_LABEL[view])}
                 disabled={disabled}
                 aria-current={state === 'current' ? 'page' : undefined}
                 aria-describedby={

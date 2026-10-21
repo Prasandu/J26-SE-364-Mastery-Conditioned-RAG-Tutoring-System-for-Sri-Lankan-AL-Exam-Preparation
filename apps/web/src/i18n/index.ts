@@ -4,10 +4,16 @@ import { initReactI18next } from 'react-i18next';
 import enAdmin from '../../../../content/locales/en/admin.json';
 import enCommon from '../../../../content/locales/en/common.json';
 import enExp04 from '../../../../content/locales/en/exp04.json';
+import enHandbook from '../../../../content/locales/en/handbook.json';
+import enLabs from '../../../../content/locales/en/labs.json';
+import enTeaching from '../../../../content/locales/en/teaching.json';
 import enUi from '../../../../content/locales/en/ui.json';
 import siAdmin from '../../../../content/locales/si/admin.json';
 import siCommon from '../../../../content/locales/si/common.json';
 import siExp04 from '../../../../content/locales/si/exp04.json';
+import siHandbook from '../../../../content/locales/si/handbook.json';
+import siLabs from '../../../../content/locales/si/labs.json';
+import siTeaching from '../../../../content/locales/si/teaching.json';
 import siUi from '../../../../content/locales/si/ui.json';
 
 // App keeps its i18next instance across React refreshes. Reload after locale edits so
@@ -18,8 +24,24 @@ if (import.meta.hot) {
 
 type LocaleFile = { _meta: unknown } & Record<string, unknown>;
 export const LOCALE_FILES = {
-  en: { ui: enUi, exp04: enExp04, common: enCommon, admin: enAdmin },
-  si: { ui: siUi, exp04: siExp04, common: siCommon, admin: siAdmin },
+  en: {
+    ui: enUi,
+    exp04: enExp04,
+    common: enCommon,
+    admin: enAdmin,
+    handbook: enHandbook,
+    labs: enLabs,
+    teaching: enTeaching,
+  },
+  si: {
+    ui: siUi,
+    exp04: siExp04,
+    common: siCommon,
+    admin: siAdmin,
+    handbook: siHandbook,
+    labs: siLabs,
+    teaching: siTeaching,
+  },
 } satisfies Record<Locale, Record<string, LocaleFile>>;
 export type LocaleFileName = keyof (typeof LOCALE_FILES)['en'];
 

@@ -1,5 +1,11 @@
 import { z } from 'zod';
 import {
+  TeachingDefinitionSchema,
+  TeachingRecordSchema,
+  TeachingSaveSchema,
+  TeachingActivateSchema,
+} from '../src/teaching';
+import {
   ActionResultSchema,
   AdminDraftDetailSchema,
   AdminDraftSummarySchema,
@@ -52,6 +58,10 @@ import {
 
 /** JSON Schemas consumed by the API (Pydantic contract tests) and any non-TS client. */
 export const SCHEMAS = {
+  'teaching-definition.v1.json': TeachingDefinitionSchema,
+  'api-teaching-record.v1.json': TeachingRecordSchema,
+  'api-teaching-save.v1.json': TeachingSaveSchema,
+  'api-teaching-activate.v1.json': TeachingActivateSchema,
   'experiment-definition.v1.json': ExperimentDefinitionSchema,
   'assessment-definition.v1.json': AssessmentDefinitionSchema,
   'source-registry.v1.json': SourceRegistrySchema,

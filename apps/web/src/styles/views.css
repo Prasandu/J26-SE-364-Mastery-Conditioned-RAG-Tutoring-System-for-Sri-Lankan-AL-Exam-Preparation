@@ -1,4 +1,32 @@
 /* ---------- dashboard ---------- */
+/* Data-driven practicals use the same Studio shell; every action stays in normal flow. */
+.teaching-guide { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:var(--space-5); margin-top:var(--space-5); }
+.teaching-guide > .card { min-width:0; padding:var(--space-6); }
+.teaching-guide h2 { margin-top:var(--space-5); }
+.teaching-guide li { margin-block:var(--space-2); overflow-wrap:anywhere; }
+.teaching-layout { margin-top:var(--space-5); }
+.teaching-view-toolbar { display:flex; justify-content:space-between; flex-wrap:wrap; gap:var(--space-2); margin-bottom:var(--space-3); }
+.teaching-view-toolbar [role='group'] { display:flex; flex-wrap:wrap; gap:var(--space-1); }
+.teaching-stage { width:100%; height:clamp(20rem,56vh,44rem); position:relative; overflow:hidden; border-radius:var(--radius-md); background:#063b57; }
+.teaching-scene2d { display:block; width:100%; height:100%; }
+.teaching-stage .teaching-scene3d { width:100%; height:100%; touch-action:none; }
+.teaching-stage canvas { display:block; }
+.teaching-stage > p { padding:var(--space-5); color:var(--surface); }
+.teaching-apparatus { cursor:pointer; }
+.teaching-apparatus:focus-visible { outline:3px solid #9be4ff; outline-offset:3px; }
+.teaching-tool-list { min-width:0; display:flex; flex-wrap:wrap; gap:var(--space-2); border:1px solid var(--line); border-radius:var(--radius-md); padding:var(--space-3); margin-top:var(--space-4); }
+.teaching-tool-list legend { font-weight:600; }
+.teaching-tool-list .button { text-align:start; }
+.teaching-next { background:var(--brand-50); border-radius:var(--radius-md); padding:var(--space-4); margin-block:var(--space-4); }
+.teaching-next h3 { font-size:var(--text-lg); }
+.teaching-next .button { width:100%; }
+.teaching-results { overflow-wrap:anywhere; }
+.teaching-chart { width:100%; max-width:44rem; height:auto; color:var(--ink-700); margin-block:var(--space-4); }
+.teaching-workspace .table-scroll { overflow:auto; }
+.teaching-workspace table { width:100%; border-collapse:collapse; }
+.teaching-workspace th,.teaching-workspace td { text-align:start; padding:var(--space-3); border-bottom:1px solid var(--line); }
+@media(max-width:900px){.teaching-guide{grid-template-columns:minmax(0,1fr)}.teaching-guide > .card{padding:var(--space-4)}}
+
 .view--dashboard .page-header {
   padding: var(--space-8);
   border-radius: var(--radius-lg);
@@ -787,6 +815,36 @@
   white-space: nowrap;
 }
 
+.handbook-card {
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+.handbook-card .experiment-card__title {
+  margin: var(--space-3) 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.handbook-card__details summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  color: var(--brand-700);
+  cursor: pointer;
+}
+
+.handbook-card__details summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.handbook-card__availability {
+  margin: var(--space-3) 0 0;
+}
+
 .mode-safety {
   margin-top: var(--space-5);
 }
@@ -1327,5 +1385,216 @@
   .reflection-step textarea {
     min-height: 120px;
     max-height: 140px;
+  }
+}
+/* Handbook teaching models share the Studio tokens and keep actions in document flow. */
+.handbook-lab {
+  min-height: 100dvh;
+  background: var(--canvas);
+  color: var(--ink-900);
+}
+.handbook-lab__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.handbook-lab__header h1 {
+  flex: 1 1 24rem;
+  font-size: var(--text-lg);
+  margin: 0;
+}
+.handbook-lab__main {
+  padding: var(--space-5);
+}
+.handbook-lab__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.handbook-lab__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 27rem);
+  gap: var(--space-5);
+  align-items: start;
+}
+.handbook-lab__visual,
+.handbook-lab__controls {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.handbook-lab__scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+.handbook-lab__source {
+  padding: var(--space-4) 0;
+  overflow-wrap: anywhere;
+}
+.handbook-lab__source summary {
+  cursor: pointer;
+  color: var(--brand-700);
+  font-weight: 600;
+}
+.handbook-lab__precaution {
+  border-left: 3px solid var(--warning-line);
+  background: var(--warning-soft);
+  padding: var(--space-3);
+  color: var(--warning);
+}
+.handbook-lab__controls fieldset {
+  min-width: 0;
+  margin: var(--space-4) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.handbook-lab__controls legend {
+  font-weight: 600;
+  padding-inline: var(--space-2);
+}
+.handbook-lab__field {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+}
+.handbook-lab__field input,
+.handbook-lab__field select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.handbook-lab__controls .check {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+.handbook-lab__controls .check input {
+  flex: 0 0 auto;
+  margin-top: 0.3rem;
+}
+.handbook-lab__controls progress {
+  width: 100%;
+  accent-color: var(--brand-600);
+}
+.handbook-lab__steps {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+.handbook-lab__steps .button {
+  width: 100%;
+  justify-content: start;
+  text-align: start;
+  white-space: normal;
+}
+.handbook-lab__steps .button span {
+  flex: 0 0 1.5rem;
+}
+.handbook-lab .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.handbook-lab .button {
+  white-space: normal;
+  min-height: 44px;
+}
+.handbook-lab__results {
+  border-top: 1px solid var(--line);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+}
+.handbook-lab__equation {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.handbook-lab .facts {
+  margin-block: var(--space-4);
+}
+.handbook-lab .facts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.handbook-lab .facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.handbook-lab__document {
+  max-width: 70rem;
+  margin: var(--space-5) auto;
+  padding: var(--space-6);
+}
+.handbook-lab__document textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 15rem;
+}
+.handbook-lab__notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.handbook-lab__wheel {
+  transform-origin: 450px 210px;
+  animation: handbook-wheel 4s linear infinite;
+}
+.handbook-lab__bubble {
+  animation: handbook-bubble 2s ease-in-out infinite alternate;
+}
+@keyframes handbook-wheel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes handbook-bubble {
+  to {
+    transform: translateY(-12px);
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .handbook-lab__wheel,
+  .handbook-lab__bubble {
+    animation: none;
+  }
+}
+@media (max-width: 1000px) {
+  .handbook-lab__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .handbook-lab__main {
+    padding: var(--space-3);
+  }
+  .handbook-lab__header {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+  .handbook-lab__header h1 {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .handbook-lab__header .language-switcher {
+    margin-left: auto;
+  }
+  .handbook-lab__document {
+    padding: var(--space-4);
+  }
+  .handbook-lab .button-row .button {
+    flex: 1 1 100%;
   }
 }

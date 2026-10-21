@@ -445,3 +445,417 @@
     display: none;
   }
 }
+
+/* Viewport-filling laboratory. Reading pages keep their existing document layout. */
+.flow-shell--lab {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.flow-shell--lab .flow-shell__bar {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) 64px var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Help belongs in the title bar, clear of notebook text and its navigation. */
+.flow-shell--lab > .help-widget {
+  grid-area: 1 / 1;
+  position: relative;
+  align-self: start;
+  justify-self: end;
+  margin: 10px 12px 0 0;
+  right: auto;
+  bottom: auto;
+}
+.flow-shell--lab .help-widget__launcher {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  box-shadow: none;
+}
+.flow-shell--lab .help-widget__launcher span {
+  display: none;
+}
+.flow-shell--lab .help-widget__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.flow-shell--lab .flow-shell__title {
+  flex: 1;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.flow-shell--lab .session-nav {
+  flex: none;
+  gap: var(--space-2);
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.flow-shell--lab .session-nav__steps {
+  flex-wrap: nowrap;
+}
+.flow-shell--lab .session-nav__label {
+  display: none;
+}
+.flow-shell--lab .session-nav__item--current .session-nav__label {
+  display: inline;
+}
+.flow-shell--lab .session-nav__button {
+  padding: 4px;
+  min-height: 36px;
+}
+.flow-shell--lab .session-nav__item--current .session-nav__button {
+  padding-right: 10px;
+}
+.flow-shell--lab .session-nav__mode {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: var(--text-xs);
+}
+
+.flow-shell--lab .app-main.flow-shell__body:has(.workbench) {
+  grid-area: 2 / 1;
+  padding: 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
+.flow-shell--lab .workbench {
+  gap: 0;
+}
+.flow-shell--lab .workbench__grid {
+  min-height: 0;
+  gap: 0;
+}
+.flow-shell--lab .workbench__safety:empty {
+  display: none;
+}
+.flow-shell--lab .workbench__safety .safety-alert {
+  border-radius: 0;
+}
+
+.flow-shell--lab .scene-frame {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.flow-shell--lab .scene-frame__bar {
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.scene-frame__presets {
+  flex: 1;
+  min-width: 0;
+}
+.flow-shell--lab .lab-toolbar {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.flow-shell--lab .lab-stage {
+  min-height: 0;
+}
+.flow-shell--lab .lab2d__svg,
+.flow-shell--lab .lab-canvas {
+  border-radius: 0;
+}
+.flow-shell--lab .lab2d,
+.flow-shell--lab .lab3d {
+  position: relative;
+}
+.flow-shell--lab .lab-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  margin: 0;
+}
+.flow-shell--lab .lab3d__hint {
+  display: none;
+}
+.flow-shell--lab .stage-dock--empty {
+  display: none;
+}
+
+.flow-shell--lab .bench-details {
+  position: relative;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-xs);
+}
+.flow-shell--lab .bench-details summary {
+  padding: 8px;
+  border-radius: var(--radius-pill);
+  color: var(--brand-800);
+  background: var(--brand-50);
+  cursor: pointer;
+}
+.bench-details__content {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(460px, calc(100vw - 32px));
+  max-height: min(520px, 65dvh);
+  overflow: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink-900);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 901px) {
+  .flow-shell--lab .workbench__grid {
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 25vw, 420px);
+  }
+  .flow-shell--lab .workbench__grid:has(.side-panel--collapsed) {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+  .flow-shell--lab .workbench__side .side-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .flow-shell--lab .side-panel__toolbar {
+    flex: none;
+    padding: var(--space-2);
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .flow-shell--lab .side-panel__head {
+    padding: 4px 6px 8px;
+  }
+  .flow-shell--lab .notebook-nav ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .flow-shell--lab .notebook-nav__item {
+    min-height: 40px;
+    padding: 5px;
+    gap: 4px;
+    font-size: var(--text-xs);
+  }
+  .flow-shell--lab .notebook-nav__item .icon {
+    display: none;
+  }
+  .flow-shell--lab .notebook-nav__label {
+    overflow-wrap: anywhere;
+  }
+  .flow-shell--lab .side-panel__reading-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    gap: 8px;
+  }
+  .flow-shell--lab .side-panel__collapse {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--brand-800);
+    font: inherit;
+    cursor: pointer;
+  }
+  .flow-shell--lab .side-panel__scroll {
+    padding: var(--space-3);
+  }
+  .flow-shell--lab .side-panel--collapsed .notebook-nav ol {
+    display: flex;
+  }
+  .flow-shell--lab .side-panel--collapsed .notebook-nav__item {
+    min-height: 48px;
+    font-size: var(--text-sm);
+  }
+  .flow-shell--lab .side-panel--collapsed > .side-panel__scroll,
+  .flow-shell--lab .side-panel--collapsed > .notebook-pager {
+    display: none;
+  }
+
+  /* Context actions float independently; selecting apparatus never resizes the scene. */
+  .flow-shell--lab .scene-frame > .stage-dock:not(.stage-dock--empty) {
+    position: absolute;
+    z-index: 8;
+    bottom: 64px;
+    right: 12px;
+    width: min(350px, calc(100% - 24px));
+    height: auto;
+    max-height: calc(100% - 180px);
+    margin: 0;
+    overflow-y: auto;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+  }
+  .flow-shell--lab .stage-dock__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1200px) and (min-width: 901px) {
+  .flow-shell--lab .session-nav__item--current .session-nav__label {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .flow-shell--lab .flow-shell__bar {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 6px 8px;
+    padding: 8px 60px 8px 8px;
+  }
+  .flow-shell--lab .flow-shell__back {
+    width: 36px;
+    height: 36px;
+  }
+  .flow-shell--lab .flow-shell__tools {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+  }
+  .flow-shell--lab .session-nav {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .flow-shell--lab .session-nav__steps {
+    flex: 1;
+  }
+  .flow-shell--lab .session-nav__item--current .session-nav__label {
+    display: none;
+  }
+  .flow-shell--lab .app-main.flow-shell__body:has(.workbench) {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .flow-shell--lab .workbench {
+    flex: 1 0 auto;
+    min-height: 100%;
+  }
+  .flow-shell--lab .workbench__grid {
+    flex: 1;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .flow-shell--lab .workbench__scene {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .flow-shell--lab .scene-frame {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .flow-shell--lab .lab-stage {
+    display: flex;
+    flex: 1 0 auto;
+  }
+  .flow-shell--lab .lab2d,
+  .flow-shell--lab .lab3d {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  .flow-shell--lab .lab2d__svg {
+    flex: 1;
+    min-height: 280px;
+  }
+  .flow-shell--lab .lab-canvas {
+    flex: 1;
+    height: auto;
+    min-height: clamp(280px, 45vh, 420px);
+  }
+  .flow-shell--lab .scene-frame__bar {
+    flex-wrap: wrap;
+  }
+  .flow-shell--lab .scene-frame__presets {
+    flex-basis: 100%;
+  }
+  .flow-shell--lab .bench-details {
+    margin-left: auto;
+  }
+  .flow-shell--lab .bench-details[open] {
+    flex-basis: 100%;
+  }
+  .flow-shell--lab .bench-details__content {
+    position: static;
+    width: 100%;
+    max-height: 45dvh;
+    margin-top: 8px;
+  }
+  .flow-shell--lab .scene-frame > .stage-dock {
+    margin: 8px;
+    height: auto;
+    max-height: none;
+  }
+  .flow-shell--lab .workbench__side {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .flow-shell--lab .flow-shell__bar {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding-right: 8px;
+  }
+  .flow-shell--lab .flow-shell__tools {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .flow-shell--lab .flow-shell__title {
+    font-size: var(--text-xs);
+    padding-right: 48px;
+  }
+  .flow-shell--lab .session-nav {
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 901px) and (max-height: 560px) {
+  .flow-shell--lab .app-main.flow-shell__body:has(.workbench) {
+    overflow-y: auto;
+  }
+  .flow-shell--lab .workbench__grid {
+    min-height: 380px;
+  }
+}

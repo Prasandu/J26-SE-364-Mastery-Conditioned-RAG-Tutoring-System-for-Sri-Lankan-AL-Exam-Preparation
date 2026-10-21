@@ -14,3 +14,4 @@ export * from './assistant';
 export * from './admin';
 export * from './titration';
 export * from './titrationCalculations';
+export * from './teaching';

@@ -15,6 +15,46 @@ Status values: **accepted** (verbatim/near-verbatim in source), **derived** (com
 
 Copied from `~/Downloads` on 2026-10-10; checksums re-verified after copy. Duplicate `… (1).pdf` copies there are byte-identical.
 
+## First 20 handbook library references (2026-10-21)
+
+The supplied `eALOM Chemistry Practical Handbook (1).pdf` is byte-identical to
+`nie-handbook-2018` (SHA-256 above). Page 7 is the contents page; the chapter opening pages
+below were checked directly for titles, unit headings and aims. Library data is stored in
+`content/library/handbook-first20.v1.json`; the associated English aims are concise paraphrases
+of the chapter aims. Sinhala titles and aims are draft translations pending teacher review.
+These reference entries do not constitute simulation definitions or publish runnable practicals.
+
+| Fact | Experiment | Unit | PDF pages | Printed pages |
+| ---- | ---------- | ---- | --------- | ------------- |
+| H01  | 1          | 1    | 18–22     | 10–14         |
+| H02  | 2          | 2    | 23–24     | 15–16         |
+| H03  | 3          | 3    | 25–28     | 17–20         |
+| H04  | 4          | 3    | 29–30     | 21–22         |
+| H05  | 5          | 4    | 31–34     | 23–26         |
+| H06  | 6          | 4    | 35–38     | 27–30         |
+| H07  | 7          | 5    | 39–42     | 31–34         |
+| H08  | 8          | 5    | 43–49     | 35–41         |
+| H09  | 9          | 6    | 50–51     | 42–43         |
+| H10  | 10         | 6    | 52–53     | 44–45         |
+| H11  | 11         | 6    | 54–56     | 46–48         |
+| H12  | 12         | 6    | 57–58     | 49–50         |
+| H13  | 13         | 6    | 59–61     | 51–53         |
+| H14  | 14         | 6    | 62–64     | 54–56         |
+| H15  | 15         | 6    | 65–66     | 57–58         |
+| H16  | 16         | 6    | 67–68     | 59–60         |
+| H17  | 17         | 6    | 69–70     | 61–62         |
+| H18  | 18         | 6    | 71–72     | 63–64         |
+| H19  | 19         | 6    | 73–74     | 65–66         |
+| H20  | 20         | 6    | 75–76     | 67–68         |
+
+Source discrepancies are retained explicitly: Experiment 6's contents entry says “relative atomic
+mass” while its chapter heading says “molar mass”; the library uses the chapter heading and its
+aim describes relative atomic mass. Experiment 11's contents entry mentions halides, while the
+chapter heading simply says “Identification of anions”; the library uses the chapter heading.
+Experiment 17's chapter heading and aims also include bicarbonates, which the contents omit.
+Unit 06's repeated heading contains a spelling error (“bloxk”); display text normalizes it to
+“block”. No procedures, quantities, safety rules, observations or assessment rules were inferred.
+
 ## 2. Experiment 4 facts
 
 PDF page = physical page in the file; printed = page number printed on the page.
@@ -134,3 +174,50 @@ They are never presented as NIE facts.
 - **Kept as written:** "Dialute" (resource book p.125) and "nai1" (handbook p.10). No chemistry value was changed.
 - **Out of scope:** the resource-book nuclear-reaction sections on PDF p.123 form a separate out-of-scope chunk and are never retrieved.
 - **Manifest:** `content/knowledge/manifest.v1.json` is metadata only. Chunk text and embeddings are private (`data/`, gitignored).
+
+## Local guided handbook models — practicals 1–20 (2026-10-21)
+
+The user requested runnable practice for the first 20 entries after approving reference entries.
+The existing Experiment 4 remains the full validated simulation. The other 19 are explicitly
+limited local guided teaching models in `packages/simulation-core/src/handbookLab.ts` with
+per-model PDF citations exposed in the workspace. This does not certify the complete handbook
+procedure, predictive physics, technique assessment or production readiness of these models.
+
+| Practicals | Handbook PDF pages | Resource-book PDF pages | Model evidence/scope                                                                                                                           |
+| ---------- | ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1          | 18–22              | 13–15                   | Ray properties; paddle motion is not conclusive momentum evidence because heating can contribute. Fields/paths are qualitative.                |
+| 2          | 23–24              | 65–71                   | VSEPR spatial geometry; drawings show bonded neighbours, not bond orders/resonance or calibrated angles.                                       |
+| 3          | 25–28              | —                       | Glassware roles; idealized mass balance. Chosen rider range is a UI guard, not an instrument specification.                                    |
+| 5–6        | 31–38              | —                       | Wet-gas pressure table (PDF 36), ideal-gas and stoichiometric calculations from entered readings, not predictive gas collection.               |
+| 7–8        | 39–49              | —                       | Procedure quantities and calorimetry assumptions; synthetic data separately authorized below.                                                  |
+| 9–10       | 50–53              | 133–140                 | Selected metal reactions and qualitative flame colours.                                                                                        |
+| 11         | 54–56              | 151, 156–159            | Selected anion confirmations, gas tests and precipitates; no mixture-separation model.                                                         |
+| 12         | 57–58, 65          | 138, 151                | Nitride hydrolysis and ammonia tests. Handbook PDF 65 supplies Nessler result.                                                                 |
+| 13         | 59–61              | 159–160                 | Selected silver-halide solubility/ammonia and halogen displacement. Lead-salt branch excluded.                                                 |
+| 14         | 62–64              | —                       | Iodate:thiosulfate ratio 1:6; starch added near endpoint; entered titres.                                                                      |
+| 15         | 65–66              | 151                     | Ammonia/ammonium distinctions; acid ammonium solution alone is not a positive gas test.                                                        |
+| 16         | 67–68              | 140                     | Table 4.5 classifications retained, including sparingly soluble; no Ksp/quantity prediction.                                                   |
+| 17         | 69–70              | 134–135, 139            | Thermal products under sufficient heating. Group-2 carbonate decomposition temperatures vary strongly; not all decompose in an ordinary flame. |
+| 18         | 71–72              | 180–181                 | Idealized aqueous-ion colours; actual ligand/hydration/concentration effects excluded.                                                         |
+| 19–20      | 73–76              | —                       | Entered-titre stoichiometry and three-trial concordance, not inferred unknown concentrations.                                                  |
+
+Synthetic practice datasets for 7/8 were **explicitly authorized by the user**, pending teacher
+review. `content/experiments/handbook/assessment.v1.json` records those values independently of
+source facts. The same file identifies editable starter inputs for gas/titration exercises as
+examples, not NIE readings. Screen colours are illustrative, not spectra or measured colour data.
+
+Source conflicts/limits retained:
+
+- Experiment 7: procedure uses equal 50 cm³ portions, hence total 100 g with the stated water-like
+  density. PDF 42 inconsistently mentions total 200 while its calculation uses 100; the model
+  follows the procedure's 100 and average initial temperature.
+- Experiment 6: PDF 37 names a 10 cm³ collector despite its magnesium quantity potentially
+  producing substantially more gas. The schematic does not assign that unsupported capacity.
+- Experiment 20: PDF 75's displayed redox equation omits the leading coefficient 2 on permanganate.
+  The model uses the atom/charge-balanced equation (2 permanganate : 5 oxalate). The chapter title
+  and reagent table differ on the oxalate counterion; calculation uses oxalate ion concentration.
+- Experiment 19: no assumption about ferrous-sulfate hydration is made to infer concentration
+  from weighed mass. The entered standard concentration and titre determine the calculation.
+- Full experiment-specific definitions, richer apparatus interactions, continuous measurements,
+  error consequences and all handbook branches remain prerequisites for claiming 19 additional
+  validated simulations. The library labels these entries “Guided 2D practice” accordingly.

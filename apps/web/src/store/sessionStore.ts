@@ -9,8 +9,19 @@ import {
   type NotebookDocument,
   type Report,
   type SessionView,
+  type TeachingDefinition,
 } from '@vlab/contracts';
 import { createStore, type StoreApi } from 'zustand/vanilla';
+import {
+  handbookPractice,
+  teachingPractice,
+  type TeachingRun,
+  type TeachingAction,
+  type TeachingError,
+  type HandbookAction,
+  type HandbookError,
+  type HandbookRun,
+} from '../engine/localAdapter';
 import {
   EngineError,
   type CatalogEntry,
@@ -29,7 +40,9 @@ export type View =
   | 'notebook'
   | 'reflection'
   | 'report'
-  | 'admin';
+  | 'admin'
+  | 'handbook_lab'
+  | 'teaching_lab';
 
 /** The practical runs as one continuous full-screen flow: pre-lab, the lab itself, the notebook
  * write-up, post-lab reflection and the final report, in this order. Mode selection sits between
@@ -123,6 +136,22 @@ export interface SessionStoreState {
   report: { status: 'idle' | 'loading' | 'ready' | 'unavailable' | 'error'; data: Report | null };
   /** Published practicals this client can run (real catalog data only). */
   catalog: { status: 'idle' | 'loading' | 'ready' | 'error'; items: CatalogEntry[] };
+  handbookLab: {
+    active: number | null;
+    runs: Record<number, HandbookRun>;
+    error: HandbookError | null;
+  };
+  openHandbookLab(number: number): void;
+  teaching: {
+    authored: TeachingDefinition[];
+    active: TeachingDefinition | null;
+    runs: Record<string, TeachingRun>;
+    error: TeachingError | null;
+  };
+  setAuthoredTeaching(definitions: TeachingDefinition[]): void;
+  openTeaching(definition: TeachingDefinition): void;
+  actTeaching(action: TeachingAction): boolean;
+  actHandbookLab(action: HandbookAction): boolean;
   ui: {
     pendingApparatus: string[];
     focusedItem: string | null;
@@ -317,6 +346,76 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
       notebook: freshNotebook(),
       report: { status: 'idle', data: null },
       catalog: { status: 'idle', items: [] },
+      handbookLab: { active: null, runs: {}, error: null },
+      teaching: { authored: [], active: null, runs: {}, error: null },
+      setAuthoredTeaching: (definitions) => {
+        const parsed = definitions.map((d) => teachingPractice.parse(d));
+        const allowed = parsed.filter(
+          (d) => d.experimentNumber > 30 && !teachingPractice.bundled.some((b) => b.id === d.id),
+        );
+        set((s) => ({ teaching: { ...s.teaching, authored: allowed } }));
+      },
+      openTeaching: (definition) => {
+        const parsed = teachingPractice.parse(definition);
+        const key = `${parsed.id}@${parsed.revision}`;
+        set((s) => ({
+          view: 'teaching_lab',
+          teaching: {
+            ...s.teaching,
+            active: parsed,
+            error: null,
+            runs: {
+              ...s.teaching.runs,
+              [key]: s.teaching.runs[key] ?? teachingPractice.create(parsed),
+            },
+          },
+        }));
+      },
+      actTeaching: (action) => {
+        const current = get().teaching;
+        const d = current.active;
+        if (!d) return false;
+        const key = `${d.id}@${d.revision}`;
+        const run = current.runs[key];
+        if (!run) return false;
+        const outcome = teachingPractice.dispatch(d, run, action, run.sequence);
+        set({
+          teaching: {
+            ...current,
+            error: outcome.error,
+            runs: { ...current.runs, [key]: outcome.state },
+          },
+        });
+        return outcome.accepted;
+      },
+      openHandbookLab: (number) => {
+        if (!handbookPractice.models.has(number)) return;
+        set((s) => ({
+          view: 'handbook_lab',
+          handbookLab: {
+            active: number,
+            error: null,
+            runs: {
+              ...s.handbookLab.runs,
+              [number]: s.handbookLab.runs[number] ?? handbookPractice.create(number),
+            },
+          },
+        }));
+      },
+      actHandbookLab: (action) => {
+        const lab = get().handbookLab;
+        const run = lab.active === null ? undefined : lab.runs[lab.active];
+        if (!run) return false;
+        const outcome = handbookPractice.dispatch(run, action, run.sequence);
+        set({
+          handbookLab: {
+            ...lab,
+            error: outcome.accepted ? null : outcome.error,
+            runs: { ...lab.runs, [run.number]: outcome.state },
+          },
+        });
+        return outcome.accepted;
+      },
       ui: { pendingApparatus: [], focusedItem: null, pending: null, busy: false },
 
       navigate: (view) => {

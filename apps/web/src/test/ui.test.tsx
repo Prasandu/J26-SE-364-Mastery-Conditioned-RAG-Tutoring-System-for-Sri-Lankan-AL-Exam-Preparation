@@ -276,8 +276,10 @@ describe('keyboard operation', () => {
     expect(screen.getByLabelText(tx('ui.library.search_label'))).toHaveFocus();
     await user.tab(); // unit filter
     expect(screen.getByLabelText(tx('ui.library.unit_filter'))).toHaveFocus();
-    await user.tab();
-    expect(await screen.findByRole('button', { name: tx('ui.card.start') })).toHaveFocus();
+    const start = await screen.findByRole('button', { name: tx('ui.card.start') });
+    // Entries 1–3 precede Experiment 4 and have reference summaries and guided-practice buttons.
+    for (let i = 0; i < 10 && document.activeElement !== start; i++) await user.tab();
+    expect(start).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(store.getState().view).toBe('overview');
   });

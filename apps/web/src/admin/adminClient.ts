@@ -16,6 +16,9 @@ import {
   AdminUserSchema,
   AdminUsersSchema,
   ApiErrorSchema,
+  TeachingRecordSchema,
+  type TeachingRecord,
+  type TeachingDefinition,
   type AdminAudit,
   type AdminDocuments,
   type AdminDocumentUpdateRequest,
@@ -52,6 +55,17 @@ export type Uploader = (
 ) => Promise<{ status: number; body: unknown }>;
 
 export interface AdminClient {
+  simulationModels?(): Promise<TeachingRecord[]>;
+  saveSimulationModel?(
+    id: string | null,
+    expectedVersion: number | null,
+    definition: TeachingDefinition,
+  ): Promise<TeachingRecord>;
+  activateLocalSimulation?(
+    id: string,
+    expectedVersion: number,
+    reviewer: string,
+  ): Promise<TeachingRecord>;
   status(): Promise<AdminStatus>;
   drafts(): Promise<AdminDraftSummary[]>;
   draft(id: string): Promise<AdminDraftDetail>;
@@ -170,6 +184,21 @@ export const createAdminClient = ({
   const id = (draftId: string) => `/drafts/${encodeURIComponent(draftId)}`;
 
   return {
+    simulationModels: () => call('GET', '/simulation-models', listOf(TeachingRecordSchema)),
+    saveSimulationModel: (recordId, expectedVersion, definition) =>
+      call(
+        recordId ? 'PUT' : 'POST',
+        recordId ? `/simulation-models/${encodeURIComponent(recordId)}` : '/simulation-models',
+        TeachingRecordSchema,
+        { expectedVersion, definition },
+      ),
+    activateLocalSimulation: (recordId, expectedVersion, reviewer) =>
+      call(
+        'POST',
+        `/simulation-models/${encodeURIComponent(recordId)}/activate-local`,
+        TeachingRecordSchema,
+        { expectedVersion, reviewer, reviewedSources: true },
+      ),
     status: () => call('GET', '/status', AdminStatusSchema),
     drafts: () => call('GET', '/drafts', listOf(AdminDraftSummarySchema)),
     draft: (draftId) => call('GET', id(draftId), AdminDraftDetailSchema),

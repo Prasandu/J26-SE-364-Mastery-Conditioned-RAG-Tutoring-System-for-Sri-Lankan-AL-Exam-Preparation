@@ -1,0 +1,732 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "revision": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 100000
+    },
+    "experimentNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "si": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "en",
+        "si"
+      ],
+      "additionalProperties": false
+    },
+    "unitNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20
+    },
+    "unitTitle": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "si": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "en",
+        "si"
+      ],
+      "additionalProperties": false
+    },
+    "template": {
+      "type": "string",
+      "enum": [
+        "reaction_comparison",
+        "fixed_volume_kinetics"
+      ]
+    },
+    "layout": {
+      "type": "string",
+      "enum": [
+        "test_tubes",
+        "gas_collection",
+        "ice_bath",
+        "inverted_tube"
+      ]
+    },
+    "aims": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "si": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "required": [
+          "en",
+          "si"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "si": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "en",
+        "si"
+      ],
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "si": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "en",
+        "si"
+      ],
+      "additionalProperties": false
+    },
+    "safety": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "si": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "required": [
+          "en",
+          "si"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "chemicals": {
+      "minItems": 1,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "si": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "required": [
+          "en",
+          "si"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "preLab": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "si": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "required": [
+          "en",
+          "si"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "postLab": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "si": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "required": [
+          "en",
+          "si"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "pdfPages": {
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000
+            }
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^https:\\/\\/"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "pdfPages",
+          "sha256",
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "apparatus": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "test_tube",
+              "boiling_tube",
+              "beaker",
+              "conical_flask",
+              "glass_rod",
+              "dropper",
+              "reagent_bottle",
+              "water_bath",
+              "ice_bath",
+              "burner",
+              "retort_stand",
+              "delivery_tube",
+              "gas_collector",
+              "stopwatch"
+            ]
+          },
+          "label": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              },
+              "si": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              }
+            },
+            "required": [
+              "en",
+              "si"
+            ],
+            "additionalProperties": false
+          },
+          "capacityCm3": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 5000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "capacityCm3"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "samples": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              },
+              "si": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              }
+            },
+            "required": [
+              "en",
+              "si"
+            ],
+            "additionalProperties": false
+          },
+          "colour": {
+            "type": "string",
+            "enum": [
+              "clear",
+              "white",
+              "pale_blue",
+              "deep_blue",
+              "blue",
+              "green",
+              "pale_green",
+              "pink",
+              "pale_pink",
+              "purple",
+              "yellow",
+              "orange",
+              "red",
+              "brown",
+              "grey"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "colour"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tests": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              },
+              "si": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              }
+            },
+            "required": [
+              "en",
+              "si"
+            ],
+            "additionalProperties": false
+          },
+          "steps": {
+            "minItems": 2,
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                },
+                "title": {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "si": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "si"
+                  ],
+                  "additionalProperties": false
+                },
+                "instruction": {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "si": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "si"
+                  ],
+                  "additionalProperties": false
+                },
+                "apparatusId": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                },
+                "effect": {
+                  "type": "string",
+                  "enum": [
+                    "prepare",
+                    "add",
+                    "mix",
+                    "heat",
+                    "cool",
+                    "observe",
+                    "measure"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "instruction",
+                "apparatusId",
+                "effect"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "temperatureRangeC": {
+            "anyOf": [
+              {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number",
+                    "minimum": -20,
+                    "maximum": 200
+                  },
+                  {
+                    "type": "number",
+                    "minimum": -20,
+                    "maximum": 200
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "steps",
+          "temperatureRangeC"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "outcomes": {
+      "maxItems": 144,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sampleId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+          },
+          "testId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+          },
+          "observation": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              },
+              "si": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 3000
+              }
+            },
+            "required": [
+              "en",
+              "si"
+            ],
+            "additionalProperties": false
+          },
+          "solutionColour": {
+            "type": "string",
+            "enum": [
+              "clear",
+              "white",
+              "pale_blue",
+              "deep_blue",
+              "blue",
+              "green",
+              "pale_green",
+              "pink",
+              "pale_pink",
+              "purple",
+              "yellow",
+              "orange",
+              "red",
+              "brown",
+              "grey"
+            ]
+          },
+          "precipitateColour": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "clear",
+                  "white",
+                  "pale_blue",
+                  "deep_blue",
+                  "blue",
+                  "green",
+                  "pale_green",
+                  "pink",
+                  "pale_pink",
+                  "purple",
+                  "yellow",
+                  "orange",
+                  "red",
+                  "brown",
+                  "grey"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visual": {
+            "type": "string",
+            "enum": [
+              "none",
+              "bubbles",
+              "precipitate",
+              "silver_mirror",
+              "layers"
+            ]
+          },
+          "sourceIndexes": {
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "required": [
+          "sampleId",
+          "testId",
+          "observation",
+          "solutionColour",
+          "precipitateColour",
+          "visual",
+          "sourceIndexes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "concentrationsMolDm3": {
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 10
+      }
+    },
+    "translationStatus": {
+      "type": "string",
+      "const": "draft"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "revision",
+    "experimentNumber",
+    "title",
+    "unitNumber",
+    "unitTitle",
+    "template",
+    "layout",
+    "aims",
+    "background",
+    "limitations",
+    "safety",
+    "chemicals",
+    "preLab",
+    "postLab",
+    "sources",
+    "apparatus",
+    "samples",
+    "tests",
+    "outcomes",
+    "concentrationsMolDm3",
+    "translationStatus"
+  ],
+  "additionalProperties": false
+}

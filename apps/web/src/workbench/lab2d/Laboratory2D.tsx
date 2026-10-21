@@ -7,6 +7,7 @@ import { BENCH_TARGET } from '../interaction/gestures';
 import { LAB_ITEM_ATTRIBUTE, type LabRendererProps } from '../labRenderer';
 import { placementOf, type Placement, type SceneModel } from '../sceneModel';
 import { ApparatusDrawing } from './Apparatus2D';
+import { ViewControls } from '../ViewControls';
 import {
   BENCH_BACK_Y,
   BENCH_Y,
@@ -151,6 +152,7 @@ export default function Laboratory2D({
   label,
   heldItemId = null,
   onDrop,
+  toolbarTarget,
 }: LabRendererProps) {
   const { t, i18n } = useTranslation();
   const locale = (i18n.language === 'si' ? 'si' : 'en') as Locale;
@@ -283,11 +285,13 @@ export default function Laboratory2D({
 
   return (
     <div className="lab2d" data-renderer="2d">
-      <div className="lab-toolbar" role="toolbar" aria-label={t('ui.lab.view_controls')}>
-        {presetButton('overview', 'ui.lab.view.overview')}
-        {presetButton('balance', 'ui.lab.view.balance')}
-        {presetButton('flask', 'ui.lab.view.mark')}
-      </div>
+      <ViewControls target={toolbarTarget}>
+        <div className="lab-toolbar" role="toolbar" aria-label={t('ui.lab.view_controls')}>
+          {presetButton('overview', 'ui.lab.view.overview')}
+          {presetButton('balance', 'ui.lab.view.balance')}
+          {presetButton('flask', 'ui.lab.view.mark')}
+        </div>
+      </ViewControls>
       <svg
         ref={svgRef}
         className={ghost ? 'lab2d__svg lab2d__svg--dragging' : 'lab2d__svg'}

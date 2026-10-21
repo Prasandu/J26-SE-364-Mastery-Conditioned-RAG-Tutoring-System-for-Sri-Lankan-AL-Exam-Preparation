@@ -21,6 +21,7 @@ export function SimulationFlowShell({ children }: { children: ReactNode }) {
   const engine = useSession((s) => s.engine);
   const view = useSession((s) => s.view);
   const navigate = useSession((s) => s.navigate);
+  const laboratory = view === 'workbench';
 
   useEffect(() => {
     const body = document.getElementById('main');
@@ -31,7 +32,7 @@ export function SimulationFlowShell({ children }: { children: ReactNode }) {
   }, [view]);
 
   return (
-    <div className="flow-shell">
+    <div className={laboratory ? 'flow-shell flow-shell--lab' : 'flow-shell'}>
       <a className="skip-link" href="#main">
         {t('ui.nav.skip_to_content')}
       </a>
@@ -46,11 +47,12 @@ export function SimulationFlowShell({ children }: { children: ReactNode }) {
           <Icon name="arrow" size={20} />
         </button>
         <p className="flow-shell__title">{t(engine.definition.titleKey)}</p>
+        {laboratory && <SessionNav current={view} />}
         <div className="flow-shell__tools">
           <LanguageSwitcher />
         </div>
       </header>
-      <SessionNav current={view} />
+      {!laboratory && <SessionNav current={view} />}
       <main id="main" className="app-main flow-shell__body" tabIndex={-1}>
         {children}
         {view !== 'workbench' && <FlowPager current={view} />}

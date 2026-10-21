@@ -40,6 +40,7 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
   const [form, setForm] = useState<{ type: ActionType; sequence: number } | null>(null);
   const [notice, setNotice] = useState<{ key: string; id: number } | null>(null);
   const [closedFor, setClosedFor] = useState<string | null>(null);
+  const [toolbarTarget, setToolbarTarget] = useState<HTMLDivElement | null>(null);
 
   const find = (id: string | null) => model.items.find((i) => i.id === id) ?? null;
   const held = find(heldId);
@@ -90,16 +91,24 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
   };
 
   const label = t('ui.lab.scene_label');
-  const rendererProps = { model, onPick, label, heldItemId: heldId, onDrop };
+  const rendererProps = { model, onPick, label, heldItemId: heldId, onDrop, toolbarTarget };
   const lab2d = <Laboratory2D {...rendererProps} />;
 
   return (
     <div className="scene-frame" onKeyDown={onKeyDown}>
       <div className="scene-frame__bar">
         <LaboratoryModeSwitcher value={labView} onChange={setLabView} />
-        <p className="scene-frame__caption">
-          {t(automatic ? 'ui.stage.caption_automatic' : 'ui.stage.caption')}
-        </p>
+        <div className="scene-frame__presets" ref={setToolbarTarget} />
+        <details className="bench-details">
+          <summary>{t('ui.stage.text_description')}</summary>
+          <div className="bench-details__content">
+            <p className="scene-frame__caption">
+              {t(automatic ? 'ui.stage.caption_automatic' : 'ui.stage.caption')}
+            </p>
+            {labView === '3d' && <p>{t('ui.lab.orbit_hint')}</p>}
+            <BenchDescription model={model} />
+          </div>
+        </details>
       </div>
       <div className={held ? 'lab-stage lab-stage--holding' : 'lab-stage'}>
         {labView === '3d' ? (
@@ -138,10 +147,6 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
           onCloseForm={() => setForm(null)}
         />
       )}
-      <details className="bench-details">
-        <summary>{t('ui.stage.text_description')}</summary>
-        <BenchDescription model={model} />
-      </details>
     </div>
   );
 }

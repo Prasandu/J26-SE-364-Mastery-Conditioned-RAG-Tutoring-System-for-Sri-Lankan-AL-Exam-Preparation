@@ -6,6 +6,7 @@ import type { LabRendererProps } from './labRenderer';
 import { placementOf } from './sceneModel';
 import type { CameraApi } from './scene3d/CameraRig';
 import { cameraPose, type CameraPreset } from './scene3d/layout3d';
+import { ViewControls } from './ViewControls';
 
 const LabScene = lazy(() => import('./LabScene'));
 
@@ -49,6 +50,7 @@ export function LabCanvas({
   label,
   heldItemId = null,
   fallback,
+  toolbarTarget,
 }: LabRendererProps & { fallback: (reason: FallbackReason) => ReactNode }) {
   const { t, i18n } = useTranslation();
   const locale = (i18n.language === 'si' ? 'si' : 'en') as Locale;
@@ -95,11 +97,13 @@ export function LabCanvas({
   return (
     <CanvasErrorBoundary fallback={fallback('error')}>
       <div className="lab3d" data-renderer="3d" data-scene-state={sceneState}>
-        <div className="lab-toolbar" role="toolbar" aria-label={t('ui.lab.view_controls')}>
-          {presetButton('overview', 'ui.lab.view.overview')}
-          {presetButton('balance', 'ui.lab.view.balance')}
-          {presetButton('mark', 'ui.lab.view.mark')}
-        </div>
+        <ViewControls target={toolbarTarget}>
+          <div className="lab-toolbar" role="toolbar" aria-label={t('ui.lab.view_controls')}>
+            {presetButton('overview', 'ui.lab.view.overview')}
+            {presetButton('balance', 'ui.lab.view.balance')}
+            {presetButton('mark', 'ui.lab.view.mark')}
+          </div>
+        </ViewControls>
         <Suspense fallback={<p className="canvas-loading">{t('ui.canvas.loading')}</p>}>
           <div className="lab-canvas">
             <LabScene

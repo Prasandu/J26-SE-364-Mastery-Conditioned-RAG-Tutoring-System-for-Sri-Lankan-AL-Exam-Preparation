@@ -9,6 +9,7 @@ const NAV: { group: string; items: { id: AdminSection; icon: IconName }[] }[] = 
     items: [
       { id: 'overview', icon: 'layers' },
       { id: 'library', icon: 'book' },
+      { id: 'simulations', icon: 'flask' },
       { id: 'import', icon: 'clipboard' },
       { id: 'drafts', icon: 'search' },
       { id: 'review', icon: 'check' },

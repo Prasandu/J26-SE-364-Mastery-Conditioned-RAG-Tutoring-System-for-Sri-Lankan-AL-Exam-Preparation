@@ -1,0 +1,4237 @@
+[
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-21",
+    "revision": 1,
+    "experimentNumber": 21,
+    "title": {
+      "en": "Experiment 21: Complexes of copper(II), nickel(II) and cobalt(II)",
+      "si": "පරීක්ෂණය 21: තඹ(II), නිකල්(II) හා කොබෝල්ට්(II) සංකීර්ණ"
+    },
+    "unitNumber": 6,
+    "unitTitle": {
+      "en": "Unit 06 – s, p and d block elements",
+      "si": "ඒකක 06 – s, p සහ d ගොනුවේ මූලද්‍රව්‍ය"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare ligand-dependent colours and hydroxide formation in metal-ion solutions.",
+        "si": "ලෝහ අයන ද්‍රාවණවල ලිගන්ඩ අනුව වර්ණ හා හයිඩ්‍රොක්සයිඩ් සෑදීම සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare ligand-dependent colours and hydroxide formation in metal-ion solutions.",
+      "si": "ලෝහ අයන ද්‍රාවණවල ලිගන්ඩ අනුව වර්ණ හා හයිඩ්‍රොක්සයිඩ් සෑදීම සසඳන්න."
+    },
+    "limitations": {
+      "en": "Guided qualitative model for the displayed tests only. Colours are illustrative. Reaction rates, yields, spectra and mixture separation are not predicted. Source and Sinhala content require teacher review.",
+      "si": "පෙන්වා ඇති පරීක්ෂණ සඳහා මඟපෙන්වන ගුණාත්මක ආකෘතියකි. වර්ණ නිදර්ශන වේ. වේග, ඵලදා, වර්ණාවලි හෝ මිශ්‍රණ වෙන් කිරීම පුරෝකථනය නොවේ. මූලාශ්‍ර සහ සිංහල පෙළ ගුරු සමාලෝචනයට යටත්ය."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Concentrated acid and ammonia are corrosive/irritant; nickel and cobalt salts require controlled handling.",
+        "si": "සාන්ද්‍ර අම්ලය හා ඇමෝනියා විඛාදක/උද්දීපකය; නිකල් හා කොබෝල්ට් ලවණ පාලනයෙන් හසුරුවන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Cu(II), Ni(II), Co(II) solutions; concentrated HCl; dilute/excess ammonia",
+        "si": "Cu(II), Ni(II), Co(II) ද්‍රාවණ; සාන්ද්‍ර HCl; තනුක/වැඩිපුර ඇමෝනියා"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [77, 78],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "NIE Grade 12 Chemistry Resource Book, Units 1, 2, 3 and 6",
+        "pdfPages": [182, 183, 184, 185],
+        "sha256": "805b9e585bbbd9d012d0f8a8dd1864b525542fb1b9927e8ff91490429f4afe86",
+        "url": null
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "copper",
+        "label": {
+          "en": "Cu(II)",
+          "si": "Cu(II)"
+        },
+        "colour": "pale_blue"
+      },
+      {
+        "id": "nickel",
+        "label": {
+          "en": "Ni(II)",
+          "si": "Ni(II)"
+        },
+        "colour": "green"
+      },
+      {
+        "id": "cobalt",
+        "label": {
+          "en": "Co(II)",
+          "si": "Co(II)"
+        },
+        "colour": "pink"
+      }
+    ],
+    "tests": [
+      {
+        "id": "chloride",
+        "label": {
+          "en": "Concentrated HCl",
+          "si": "සාන්ද්‍ර HCl"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add concentrated HCl to a fresh metal-ion portion; compare chloride complexes.",
+              "si": "නැවුම් ලෝහ අයන කොටසට සාන්ද්‍ර HCl එක් කර ක්ලෝරයිඩ් සංකීර්ණ සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "limited_ammonia",
+        "label": {
+          "en": "Limited aqueous ammonia",
+          "si": "සීමිත ජලීය ඇමෝනියා"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add a limited amount of aqueous ammonia; inspect hydroxide precipitation.",
+              "si": "සීමිත ජලීය ඇමෝනියා එක් කර හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පරීක්ෂා කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "excess_ammonia",
+        "label": {
+          "en": "Excess aqueous ammonia",
+          "si": "වැඩිපුර ජලීය ඇමෝනියා"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Continue adding ammonia to a fresh test portion until excess; compare complex formation.",
+              "si": "නැවුම් කොටසකට ඇමෝනියා අතිරික්ත වන තෙක් එක් කර සංකීර්ණ සෑදීම සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "copper",
+        "testId": "chloride",
+        "observation": {
+          "en": "The chloride-rich complex is yellow; partial replacement can give mixed colours.",
+          "si": "ක්ලෝරයිඩ් බහුල සංකීර්ණය කහය; අර්ධ ආදේශනයෙන් මිශ්‍ර වර්ණ ලැබිය හැක."
+        },
+        "solutionColour": "yellow",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "limited_ammonia",
+        "observation": {
+          "en": "A metal hydroxide precipitate forms; the displayed shade follows the NIE description.",
+          "si": "ලෝහ හයිඩ්‍රොක්සයිඩ් අවක්ෂේපයක් සෑදේ; පෙන්වන වර්ණය NIE විස්තරය අනුවය."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_blue",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The hydroxide dissolves into the coloured ammine complex.",
+          "si": "හයිඩ්‍රොක්සයිඩ් වර්ණවත් ඇමීන් සංකීර්ණයක් ලෙස දිය වේ."
+        },
+        "solutionColour": "deep_blue",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "chloride",
+        "observation": {
+          "en": "The chloride-rich complex is yellow; partial replacement can give mixed colours.",
+          "si": "ක්ලෝරයිඩ් බහුල සංකීර්ණය කහය; අර්ධ ආදේශනයෙන් මිශ්‍ර වර්ණ ලැබිය හැක."
+        },
+        "solutionColour": "yellow",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "limited_ammonia",
+        "observation": {
+          "en": "A metal hydroxide precipitate forms; the displayed shade follows the NIE description.",
+          "si": "ලෝහ හයිඩ්‍රොක්සයිඩ් අවක්ෂේපයක් සෑදේ; පෙන්වන වර්ණය NIE විස්තරය අනුවය."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The hydroxide dissolves into the coloured ammine complex.",
+          "si": "හයිඩ්‍රොක්සයිඩ් වර්ණවත් ඇමීන් සංකීර්ණයක් ලෙස දිය වේ."
+        },
+        "solutionColour": "blue",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "cobalt",
+        "testId": "chloride",
+        "observation": {
+          "en": "Pink aqua ions become a blue chloride complex.",
+          "si": "රෝස ජලීය අයන නිල් ක්ලෝරයිඩ් සංකීර්ණයක් බවට පත්වේ."
+        },
+        "solutionColour": "blue",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "cobalt",
+        "testId": "limited_ammonia",
+        "observation": {
+          "en": "A metal hydroxide precipitate forms; the displayed shade follows the NIE description.",
+          "si": "ලෝහ හයිඩ්‍රොක්සයිඩ් අවක්ෂේපයක් සෑදේ; පෙන්වන වර්ණය NIE විස්තරය අනුවය."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pink",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "cobalt",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "A yellow-brown ammine mixture forms; air oxidation can add a brown-red component.",
+          "si": "කහ දුඹුරු ඇමීන් මිශ්‍රණයක් සෑදේ; වායු ඔක්සිකරණයෙන් දුඹුරු රතු පැහැයක් එක් විය හැක."
+        },
+        "solutionColour": "brown",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-22",
+    "revision": 1,
+    "experimentNumber": 22,
+    "title": {
+      "en": "Experiment 22: Oxidation states of manganese",
+      "si": "පරීක්ෂණය 22: මැංගනීස් ඔක්සිකරණ අංක"
+    },
+    "unitNumber": 6,
+    "unitTitle": {
+      "en": "Unit 06 – s, p and d block elements",
+      "si": "ඒකක 06 – s, p සහ d ගොනුවේ මූලද්‍රව්‍ය"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare the colours associated with Mn(VII), Mn(VI), Mn(IV) and Mn(II).",
+        "si": "Mn(VII), Mn(VI), Mn(IV) හා Mn(II) සඳහා වර්ණ සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare the colours associated with Mn(VII), Mn(VI), Mn(IV) and Mn(II).",
+      "si": "Mn(VII), Mn(VI), Mn(IV) හා Mn(II) සඳහා වර්ණ සසඳන්න."
+    },
+    "limitations": {
+      "en": "Qualitative comparison of the handbook's oxidation-state stages. Its printed alkaline equation is unbalanced and is not used as an engine equation. Conditions, reaction rates and reagent quantities are not predicted.",
+      "si": "අත්පොතේ ඔක්සිකරණ අවස්ථා ගුණාත්මකව සසඳයි. මුද්‍රිත භාෂ්මික සමීකරණය අතුලිත බැවින් එන්ජිමේ භාවිත නොවේ. තත්ත්ව, වේග හෝ ප්‍රතික්‍රියක ප්‍රමාණ පුරෝකථනය නොකෙරේ."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Strong oxidizers, concentrated alkali/acid and chlorine require teacher control and a fume hood.",
+        "si": "ප්‍රබල ඔක්සිකාරක, සාන්ද්‍ර භෂ්ම/අම්ල හා ක්ලෝරීන් සඳහා ගුරු පාලනය සහ ධූම කුටියක් අවශ්‍යය."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Potassium permanganate, sulfuric acid, concentrated alkali, hydrogen peroxide, hydrochloric acid",
+        "si": "පොටෑසියම් පර්මැංගනේට්, සල්ෆියුරික් අම්ලය, සාන්ද්‍ර භෂ්මය, හයිඩ්‍රජන් පෙරොක්සයිඩ්, හයිඩ්‍රොක්ලෝරික් අම්ලය"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [79, 80],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "permanganate",
+        "label": {
+          "en": "Permanganate starting solution",
+          "si": "ආරම්භක පර්මැංගනේට් ද්‍රාවණය"
+        },
+        "colour": "purple"
+      }
+    ],
+    "tests": [
+      {
+        "id": "vii",
+        "label": {
+          "en": "Mn(VII) reference",
+          "si": "Mn(VII) යොමුව"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Prepare the dilute permanganate reference without conversion.",
+              "si": "පරිවර්තනය නොකර තනුක පර්මැංගනේට් යොමුව සකසන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "vi",
+        "label": {
+          "en": "Mn(VI) comparison",
+          "si": "Mn(VI) සැසඳීම"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Follow the handbook alkaline conversion under the specified strongly alkaline conditions. This is a qualitative stage comparison, not a calibrated reagent-dose model.",
+              "si": "අත්පොතේ දැඩි භාෂ්මික පරිවර්තන තත්ත්ව අනුගමනය කරන්න. මෙය ගුණාත්මක අවස්ථා සැසඳීමකි; ප්‍රතික්‍රියක මාත්‍රා ක්‍රමාංකනයක් නොවේ."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "iv",
+        "label": {
+          "en": "Mn(IV) comparison",
+          "si": "Mn(IV) සැසඳීම"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "First prepare the alkaline manganate stage, then add the prescribed peroxide portion.",
+              "si": "පළමුව භාෂ්මික මැංගනේට් අවස්ථාව සකසා නියමිත පෙරොක්සයිඩ් කොටස එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "ii",
+        "label": {
+          "en": "Mn(II) comparison",
+          "si": "Mn(II) සැසඳීම"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Follow the alkaline and peroxide stages before the hydrochloric-acid conversion. Chlorine production is a ventilation hazard.",
+              "si": "හයිඩ්‍රොක්ලෝරික් අම්ල පරිවර්තනයට පෙර භාෂ්මික හා පෙරොක්සයිඩ් අවස්ථා අනුගමනය කරන්න. ක්ලෝරීන් සෑදීම වාතාශ්‍රය අවශ්‍ය අවදානමකි."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "permanganate",
+        "testId": "vii",
+        "observation": {
+          "en": "Permanganate: manganese(VII), purple solution.",
+          "si": "පර්මැංගනේට්: මැංගනීස්(VII), දම් ද්‍රාවණය."
+        },
+        "solutionColour": "purple",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "permanganate",
+        "testId": "vi",
+        "observation": {
+          "en": "Manganate: manganese(VI), green solution under the handbook conditions.",
+          "si": "මැංගනේට්: මැංගනීස්(VI), අත්පොත් තත්ත්ව යටතේ කොළ ද්‍රාවණය."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "permanganate",
+        "testId": "iv",
+        "observation": {
+          "en": "Manganese dioxide: manganese(IV), brown solid.",
+          "si": "මැංගනීස් ඩයොක්සයිඩ්: මැංගනීස්(IV), දුඹුරු ඝනය."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "permanganate",
+        "testId": "ii",
+        "observation": {
+          "en": "Manganese(II) is nearly colourless at low concentration. The chloride reaction can release chlorine.",
+          "si": "අඩු සාන්ද්‍රණයේ මැංගනීස්(II) වර්ණය ඉතා අඩුය. ක්ලෝරයිඩ් ප්‍රතික්‍රියාවෙන් ක්ලෝරීන් නිකුත් විය හැක."
+        },
+        "solutionColour": "pale_pink",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-23",
+    "revision": 1,
+    "experimentNumber": 23,
+    "title": {
+      "en": "Experiment 23: Identification of selected metal ions",
+      "si": "පරීක්ෂණය 23: තෝරාගත් ලෝහ අයන හඳුනාගැනීම"
+    },
+    "unitNumber": 6,
+    "unitTitle": {
+      "en": "Unit 06 – s, p and d block elements",
+      "si": "ඒකක 06 – s, p සහ d ගොනුවේ මූලද්‍රව්‍ය"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare hydroxide precipitation and solubility in excess base or ammonia.",
+        "si": "භෂ්ම හෝ ඇමෝනියා අතිරික්තයේ හයිඩ්‍රොක්සයිඩ් අවක්ෂේපණය හා ද්‍රාව්‍යතාව සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare hydroxide precipitation and solubility in excess base or ammonia.",
+      "si": "භෂ්ම හෝ ඇමෝනියා අතිරික්තයේ හයිඩ්‍රොක්සයිඩ් අවක්ෂේපණය හා ද්‍රාව්‍යතාව සසඳන්න."
+    },
+    "limitations": {
+      "en": "Selected NaOH/ammonia tests only. Ferri/ferrocyanide, thiocyanate, peroxide and DMG confirmation branches from the guide are not simulated here. Air oxidation and complex formation are qualitative, not kinetic models.",
+      "si": "NaOH/ඇමෝනියා පරීක්ෂණ පමණි. අත්පොතේ ෆෙරි/ෆෙරෝසයනයිඩ්, තයෝසයනේට්, පෙරොක්සයිඩ් හා DMG තහවුරු කිරීම් මෙහි අනුකරණය නොවේ. වායු ඔක්සිකරණය හා සංකීර්ණ සෑදීම ගුණාත්මකයි."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Nickel(II), iron(II), iron(III), copper(II), chromium(III) solutions; NaOH; ammonia",
+        "si": "නිකල්(II), යකඩ(II), යකඩ(III), තඹ(II), ක්‍රෝමියම්(III) ද්‍රාවණ; NaOH; ඇමෝනියා"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [81, 82],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "NIE Grade 12 Chemistry Resource Book, Units 1, 2, 3 and 6",
+        "pdfPages": [182, 183, 184, 185],
+        "sha256": "805b9e585bbbd9d012d0f8a8dd1864b525542fb1b9927e8ff91490429f4afe86",
+        "url": null
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "nickel",
+        "label": {
+          "en": "Ni(II)",
+          "si": "Ni(II)"
+        },
+        "colour": "green"
+      },
+      {
+        "id": "iron_ii",
+        "label": {
+          "en": "Fe(II)",
+          "si": "Fe(II)"
+        },
+        "colour": "pale_green"
+      },
+      {
+        "id": "iron_iii",
+        "label": {
+          "en": "Fe(III)",
+          "si": "Fe(III)"
+        },
+        "colour": "yellow"
+      },
+      {
+        "id": "copper",
+        "label": {
+          "en": "Cu(II)",
+          "si": "Cu(II)"
+        },
+        "colour": "pale_blue"
+      },
+      {
+        "id": "chromium",
+        "label": {
+          "en": "Cr(III)",
+          "si": "Cr(III)"
+        },
+        "colour": "purple"
+      }
+    ],
+    "tests": [
+      {
+        "id": "hydroxide",
+        "label": {
+          "en": "Limited NaOH",
+          "si": "සීමිත NaOH"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add sodium hydroxide dropwise to a fresh portion.",
+              "si": "නැවුම් කොටසකට සෝඩියම් හයිඩ්‍රොක්සයිඩ් බිංදුවෙන් එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "excess_hydroxide",
+        "label": {
+          "en": "Excess NaOH",
+          "si": "වැඩිපුර NaOH"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Continue addition of sodium hydroxide to excess.",
+              "si": "සෝඩියම් හයිඩ්‍රොක්සයිඩ් අතිරික්ත වන තෙක් එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "ammonia",
+        "label": {
+          "en": "Limited ammonia",
+          "si": "සීමිත ඇමෝනියා"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add aqueous ammonia dropwise.",
+              "si": "ජලීය ඇමෝනියා බිංදුවෙන් එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "excess_ammonia",
+        "label": {
+          "en": "Excess ammonia",
+          "si": "වැඩිපුර ඇමෝනියා"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Continue addition of aqueous ammonia to excess.",
+              "si": "ජලීය ඇමෝනියා අතිරික්ත වන තෙක් එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "nickel",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "excess_hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "nickel",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The precipitate dissolves into the displayed complex solution.",
+          "si": "අවක්ෂේපය පෙන්වන සංකීර්ණ ද්‍රාවණය ලෙස දිය වේ."
+        },
+        "solutionColour": "blue",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_ii",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_ii",
+        "testId": "excess_hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_ii",
+        "testId": "ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_ii",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_iii",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_iii",
+        "testId": "excess_hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_iii",
+        "testId": "ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "iron_iii",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_blue",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "excess_hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_blue",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "pale_blue",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "copper",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The precipitate dissolves into the displayed complex solution.",
+          "si": "අවක්ෂේපය පෙන්වන සංකීර්ණ ද්‍රාවණය ලෙස දිය වේ."
+        },
+        "solutionColour": "deep_blue",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "chromium",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "chromium",
+        "testId": "excess_hydroxide",
+        "observation": {
+          "en": "The precipitate dissolves into the displayed complex solution.",
+          "si": "අවක්ෂේපය පෙන්වන සංකීර්ණ ද්‍රාවණය ලෙස දිය වේ."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "chromium",
+        "testId": "ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      },
+      {
+        "sampleId": "chromium",
+        "testId": "excess_ammonia",
+        "observation": {
+          "en": "The hydroxide precipitate remains. Iron(II) hydroxide can oxidize and darken in air.",
+          "si": "හයිඩ්‍රොක්සයිඩ් අවක්ෂේපය පවතී. යකඩ(II) හයිඩ්‍රොක්සයිඩ් වාතයේ ඔක්සිකරණය වී අඳුරු විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "green",
+        "visual": "precipitate",
+        "sourceIndexes": [1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-24",
+    "revision": 1,
+    "experimentNumber": 24,
+    "title": {
+      "en": "Experiment 24: Reactions of ethene and ethyne",
+      "si": "පරීක්ෂණය 24: එතීන් හා එතයින් ප්‍රතික්‍රියා"
+    },
+    "unitNumber": 8,
+    "unitTitle": {
+      "en": "Unit 08 – Hydrocarbons and halohydrocarbons",
+      "si": "ඒකක 08 – හයිඩ්‍රොකාබන සහ හැලෝහයිඩ්‍රොකාබන"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare unsaturated hydrocarbons using bromine and permanganate tests.",
+        "si": "බ්‍රෝමීන් හා පර්මැංගනේට් පරීක්ෂාවලින් අසංතෘප්ත හයිඩ්‍රොකාබන සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare unsaturated hydrocarbons using bromine and permanganate tests.",
+      "si": "බ්‍රෝමීන් හා පර්මැංගනේට් පරීක්ෂාවලින් අසංතෘප්ත හයිඩ්‍රොකාබන සසඳන්න."
+    },
+    "limitations": {
+      "en": "Selected qualitative tests on separately collected gases; no flame/acetylide tests, gas-generation yield or organic product distribution is predicted. The preparation apparatus is a schematic, not a real-world construction guide.",
+      "si": "වෙන්ව රැස් කළ වායුවල තෝරාගත් ගුණාත්මක පරීක්ෂණයි; දැල්ල/ඇසිටිලයිඩ් පරීක්ෂණ, වායු ඵලදා හෝ කාබනික ඵල ව්‍යාප්තිය පුරෝකථනය නොවේ. උපකරණ සැකැස්ම සැබෑ ඉදිකිරීම් උපදෙසක් නොවන රූපසටහනකි."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Flammable gases and toxic oxidants require supervised ventilation. Silver/copper acetylides can be explosive and are outside this simulation.",
+        "si": "ගිනිගන්නා වායු හා විෂ ඔක්සිකාරක සඳහා අධීක්ෂිත වාතාශ්‍රය අවශ්‍යය. රිදී/තඹ ඇසිටිලයිඩ් පුපුරන සුලු විය හැකි බැවින් මෙම අනුකරණයෙන් බැහැරය."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Ethene from ethanol/alumina; ethyne from calcium carbide/water; bromine water; acidified and alkaline permanganate",
+        "si": "එතනෝල්/ඇලුමිනා මඟින් එතීන්; කැල්සියම් කාබයිඩ්/ජලය මඟින් එතයින්; බ්‍රෝමීන් ජලය; ආම්ලික හා භාෂ්මික පර්මැංගනේට්"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [83, 84, 85],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "Royal Society of Chemistry: Qualitative tests for organic functional groups",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://edu.rsc.org/practical/qualitative-tests-for-organic-functional-groups-practical-videos-16-18-students/4014327.article"
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "boiling_tube",
+        "kind": "boiling_tube",
+        "label": {
+          "en": "Boiling tube",
+          "si": "තාපාංක නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "retort_stand",
+        "kind": "retort_stand",
+        "label": {
+          "en": "Retort stand and clamp",
+          "si": "ආධාරකය සහ කලම්පය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "delivery_tube",
+        "kind": "delivery_tube",
+        "label": {
+          "en": "Gas delivery tube",
+          "si": "වායු ගෙනයන නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "gas_collector",
+        "kind": "gas_collector",
+        "label": {
+          "en": "Inverted gas-collection tube",
+          "si": "උඩු යටිකුරු වායු රැස්කිරීමේ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "burner",
+        "kind": "burner",
+        "label": {
+          "en": "Bunsen burner",
+          "si": "බන්සන් දාහකය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "water_bath",
+        "kind": "water_bath",
+        "label": {
+          "en": "Water bath",
+          "si": "ජල තාපකය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "ethene",
+        "label": {
+          "en": "Ethene",
+          "si": "එතීන්"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "ethyne",
+        "label": {
+          "en": "Ethyne",
+          "si": "එතයින්"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "bromine",
+        "label": {
+          "en": "Bromine water",
+          "si": "බ්‍රෝමීන් ජලය"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Pass a separately collected gas portion through the bromine-water test.",
+              "si": "වෙන්ව රැස් කළ වායු කොටසක් බ්‍රෝමීන් ජල පරීක්ෂාව හරහා යවන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "acid_permanganate",
+        "label": {
+          "en": "Acidified permanganate",
+          "si": "ආම්ලික පර්මැංගනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use a fresh gas portion with acidified permanganate.",
+              "si": "නැවුම් වායු කොටසක් ආම්ලික පර්මැංගනේට් සමඟ යොදන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "alkaline_permanganate",
+        "label": {
+          "en": "Dilute alkaline permanganate",
+          "si": "තනුක භාෂ්මික පර්මැංගනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use the prescribed very dilute alkaline reagent and a fresh gas portion.",
+              "si": "නියමිත ඉතා තනුක භාෂ්මික ප්‍රතික්‍රියකය හා නැවුම් වායු කොටසක් භාවිත කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "ethene",
+        "testId": "bromine",
+        "observation": {
+          "en": "Bromine loses its colour as it reacts with the unsaturation.",
+          "si": "අසංතෘප්තතාව සමඟ ප්‍රතික්‍රියා කිරීමෙන් බ්‍රෝමීන් වර්ණය නැති වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethene",
+        "testId": "acid_permanganate",
+        "observation": {
+          "en": "The purple permanganate colour fades during oxidation. Products depend on the conditions.",
+          "si": "ඔක්සිකරණයේදී දම් පර්මැංගනේට් වර්ණය අඩු වේ. ඵල තත්ත්ව මත රඳා පවතී."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethene",
+        "testId": "alkaline_permanganate",
+        "observation": {
+          "en": "Purple permanganate is consumed and brown manganese dioxide can form.",
+          "si": "දම් පර්මැංගනේට් වැය වී දුඹුරු මැංගනීස් ඩයොක්සයිඩ් සෑදිය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethyne",
+        "testId": "bromine",
+        "observation": {
+          "en": "Bromine loses its colour as it reacts with the unsaturation.",
+          "si": "අසංතෘප්තතාව සමඟ ප්‍රතික්‍රියා කිරීමෙන් බ්‍රෝමීන් වර්ණය නැති වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethyne",
+        "testId": "acid_permanganate",
+        "observation": {
+          "en": "The purple permanganate colour fades during oxidation. Products depend on the conditions.",
+          "si": "ඔක්සිකරණයේදී දම් පර්මැංගනේට් වර්ණය අඩු වේ. ඵල තත්ත්ව මත රඳා පවතී."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethyne",
+        "testId": "alkaline_permanganate",
+        "observation": {
+          "en": "Purple permanganate is consumed and brown manganese dioxide can form.",
+          "si": "දම් පර්මැංගනේට් වැය වී දුඹුරු මැංගනීස් ඩයොක්සයිඩ් සෑදිය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "brown",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "gas_collection"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-25",
+    "revision": 1,
+    "experimentNumber": 25,
+    "title": {
+      "en": "Experiment 25: Properties of alcohols",
+      "si": "පරීක්ෂණය 25: ඇල්කොහොලවල ගුණ"
+    },
+    "unitNumber": 9,
+    "unitTitle": {
+      "en": "Unit 09 – Oxygen-containing organic compounds",
+      "si": "ඒකක 09 – ඔක්සිජන් අඩංගු කාබනික සංයෝග"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare alcohol behaviour with litmus, carbonate and oxidizing reagents.",
+        "si": "ලිට්මස්, කාබනේට් හා ඔක්සිකාරක සමඟ ඇල්කොහොල් හැසිරීම සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare alcohol behaviour with litmus, carbonate and oxidizing reagents.",
+      "si": "ලිට්මස්, කාබනේට් හා ඔක්සිකාරක සමඟ ඇල්කොහොල් හැසිරීම සසඳන්න."
+    },
+    "limitations": {
+      "en": "Selected ethanol/propan-2-ol tests only; esterification, odour identification and unspecified butyl-alcohol isomers are not modelled. Oxidation extent and distillation products depend on conditions.",
+      "si": "එතනෝල්/ප්‍රොපෑන්-2-ඔල් පරීක්ෂණ පමණි; එස්ටරීකරණය, සුවඳ හඳුනාගැනීම හා නිශ්චිත නොකළ බියුටිල් ඇල්කොහොල් සමාවයවික නිරූපණය නොවේ. ඔක්සිකරණ ප්‍රමාණය හා ආසවන ඵල තත්ත්ව මත රඳා පවතී."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Alcohols are flammable; keep bottles away from burners. Chromium(VI) reagents and concentrated acids are hazardous.",
+        "si": "ඇල්කොහොල් ගිනිගන්නා සුලුය; බෝතල් දාහකයෙන් ඈත් තබන්න. ක්‍රෝමියම්(VI) ප්‍රතික්‍රියක හා සාන්ද්‍ර අම්ල අනතුරුදායකයි."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Ethanol, propan-2-ol, litmus, sodium carbonate, acidified dichromate and permanganate",
+        "si": "එතනෝල්, ප්‍රොපෑන්-2-ඔල්, ලිට්මස්, සෝඩියම් කාබනේට්, ආම්ලික ඩයික්‍රෝමේට් හා පර්මැංගනේට්"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [86, 87, 88],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "Royal Society of Chemistry: Qualitative tests for organic functional groups",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://edu.rsc.org/practical/qualitative-tests-for-organic-functional-groups-practical-videos-16-18-students/4014327.article"
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "water_bath",
+        "kind": "water_bath",
+        "label": {
+          "en": "Water bath",
+          "si": "ජල තාපකය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "ethanol",
+        "label": {
+          "en": "Ethanol",
+          "si": "එතනෝල්"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "isopropanol",
+        "label": {
+          "en": "Propan-2-ol",
+          "si": "ප්‍රොපෑන්-2-ඔල්"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "litmus",
+        "label": {
+          "en": "Litmus",
+          "si": "ලිට්මස්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Compare red and blue litmus with the alcohol.",
+              "si": "ඇල්කොහොලය සමඟ රතු හා නිල් ලිට්මස් සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "carbonate",
+        "label": {
+          "en": "Sodium carbonate",
+          "si": "සෝඩියම් කාබනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add sodium carbonate to a separate alcohol portion.",
+              "si": "වෙනම ඇල්කොහොල් කොටසකට සෝඩියම් කාබනේට් එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "dichromate",
+        "label": {
+          "en": "Acidified dichromate",
+          "si": "ආම්ලික ඩයික්‍රෝමේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Warm the separate sample with the prescribed oxidizing reagent in a water bath.",
+              "si": "වෙනම නියැදිය නියමිත ඔක්සිකාරකය සමඟ ජල තාපකයක උණු කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "permanganate",
+        "label": {
+          "en": "Acidified permanganate",
+          "si": "ආම්ලික පර්මැංගනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Test a fresh alcohol portion with acidified permanganate.",
+              "si": "නැවුම් ඇල්කොහොල් කොටසක් ආම්ලික පර්මැංගනේට් සමඟ පරීක්ෂා කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "ethanol",
+        "testId": "litmus",
+        "observation": {
+          "en": "No acid/base litmus change under this test.",
+          "si": "මෙම පරීක්ෂාවේ අම්ල/භෂ්ම ලිට්මස් වෙනසක් නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanol",
+        "testId": "carbonate",
+        "observation": {
+          "en": "No carboxylic-acid-type carbon dioxide effervescence.",
+          "si": "කාබොක්සිලික් අම්ල වර්ගයේ කාබන් ඩයොක්සයිඩ් බුබුළු නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanol",
+        "testId": "dichromate",
+        "observation": {
+          "en": "Orange dichromate becomes green as the alcohol is oxidized.",
+          "si": "ඇල්කොහොලය ඔක්සිකරණය වෙමින් තැඹිලි ඩයික්‍රෝමේට් කොළ වේ."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanol",
+        "testId": "permanganate",
+        "observation": {
+          "en": "The purple acidified permanganate colour fades.",
+          "si": "දම් ආම්ලික පර්මැංගනේට් වර්ණය අඩු වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "isopropanol",
+        "testId": "litmus",
+        "observation": {
+          "en": "No acid/base litmus change under this test.",
+          "si": "මෙම පරීක්ෂාවේ අම්ල/භෂ්ම ලිට්මස් වෙනසක් නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "isopropanol",
+        "testId": "carbonate",
+        "observation": {
+          "en": "No carboxylic-acid-type carbon dioxide effervescence.",
+          "si": "කාබොක්සිලික් අම්ල වර්ගයේ කාබන් ඩයොක්සයිඩ් බුබුළු නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "isopropanol",
+        "testId": "dichromate",
+        "observation": {
+          "en": "Orange dichromate becomes green as the alcohol is oxidized.",
+          "si": "ඇල්කොහොලය ඔක්සිකරණය වෙමින් තැඹිලි ඩයික්‍රෝමේට් කොළ වේ."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "isopropanol",
+        "testId": "permanganate",
+        "observation": {
+          "en": "The purple acidified permanganate colour fades.",
+          "si": "දම් ආම්ලික පර්මැංගනේට් වර්ණය අඩු වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-26",
+    "revision": 1,
+    "experimentNumber": 26,
+    "title": {
+      "en": "Experiment 26: Properties of phenol",
+      "si": "පරීක්ෂණය 26: ෆීනෝල්වල ගුණ"
+    },
+    "unitNumber": 9,
+    "unitTitle": {
+      "en": "Unit 09 – Oxygen-containing organic compounds",
+      "si": "ඒකක 09 – ඔක්සිජන් අඩංගු කාබනික සංයෝග"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare phenol reactions with bromine, carbonate and neutral iron(III) chloride.",
+        "si": "බ්‍රෝමීන්, කාබනේට් හා උදාසීන යකඩ(III) ක්ලෝරයිඩ් සමඟ ෆීනෝල් ප්‍රතික්‍රියා සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare phenol reactions with bromine, carbonate and neutral iron(III) chloride.",
+      "si": "බ්‍රෝමීන්, කාබනේට් හා උදාසීන යකඩ(III) ක්ලෝරයිඩ් සමඟ ෆීනෝල් ප්‍රතික්‍රියා සසඳන්න."
+    },
+    "limitations": {
+      "en": "Guided qualitative model for the displayed tests only. Colours are illustrative. Reaction rates, yields, spectra and mixture separation are not predicted. Source and Sinhala content require teacher review.",
+      "si": "පෙන්වා ඇති පරීක්ෂණ සඳහා මඟපෙන්වන ගුණාත්මක ආකෘතියකි. වර්ණ නිදර්ශන වේ. වේග, ඵලදා, වර්ණාවලි හෝ මිශ්‍රණ වෙන් කිරීම පුරෝකථනය නොවේ. මූලාශ්‍ර සහ සිංහල පෙළ ගුරු සමාලෝචනයට යටත්ය."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Phenol is toxic and can severely burn skin; bromine and phenol require controlled handling.",
+        "si": "ෆීනෝල් විෂ සහ සමට දැඩි පිළිස්සුම් ඇති කළ හැක; බ්‍රෝමීන් හා ෆීනෝල් පාලනයෙන් හසුරුවන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Phenol; bromine; sodium carbonate; neutral iron(III) chloride; dilute HCl",
+        "si": "ෆීනෝල්; බ්‍රෝමීන්; සෝඩියම් කාබනේට්; උදාසීන යකඩ(III) ක්ලෝරයිඩ්; තනුක HCl"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [89, 90],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "University of Colorado: Identification of Phenols – Ferric Chloride Test",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://www.colorado.edu/lab/lecture-demo-manual/o638-identification-phenols-ferric-chloride-test"
+      },
+      {
+        "title": "University of Anbar: Phenols laboratory",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://www.uoanbar.edu.iq/eStoreImages/Bank/32459.pdf"
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "phenol",
+        "label": {
+          "en": "Phenol",
+          "si": "ෆීනෝල්"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "bromine",
+        "label": {
+          "en": "Bromine test",
+          "si": "බ්‍රෝමීන් පරීක්ෂාව"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add the bromine reagent to a fresh phenol portion.",
+              "si": "නැවුම් ෆීනෝල් කොටසකට බ්‍රෝමීන් ප්‍රතික්‍රියකය එක් කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "carbonate",
+        "label": {
+          "en": "Carbonate comparison",
+          "si": "කාබනේට් සැසඳීම"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Compare the carbonate response with that of a carboxylic acid.",
+              "si": "කාබොක්සිලික් අම්ලයක ප්‍රතිචාරය සමඟ කාබනේට් ප්‍රතිචාරය සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "ferric",
+        "label": {
+          "en": "Neutral iron(III) chloride",
+          "si": "උදාසීන යකඩ(III) ක්ලෝරයිඩ්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use neutral iron(III) chloride; avoid excess acidity.",
+              "si": "උදාසීන යකඩ(III) ක්ලෝරයිඩ් යොදන්න; අතිරික්ත ආම්ලිකතාව වළක්වන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "phenol",
+        "testId": "bromine",
+        "observation": {
+          "en": "Bromination gives a pale solid precipitate; bromine colour is consumed.",
+          "si": "බ්‍රෝමීනීකරණයෙන් ලා ඝන අවක්ෂේපයක් ලැබී බ්‍රෝමීන් වර්ණය වැය වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "white",
+        "visual": "precipitate",
+        "sourceIndexes": [2]
+      },
+      {
+        "sampleId": "phenol",
+        "testId": "carbonate",
+        "observation": {
+          "en": "No brisk carbon dioxide effervescence as in the carboxylic-acid test.",
+          "si": "කාබොක්සිලික් අම්ල පරීක්ෂාවේ මෙන් ප්‍රබල කාබන් ඩයොක්සයිඩ් බුබුළු නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "phenol",
+        "testId": "ferric",
+        "observation": {
+          "en": "A violet ferric–phenol colour develops. Ferric chloride colour tests are not exclusive to phenols.",
+          "si": "දම් ෆෙරික්–ෆීනෝල් වර්ණයක් වර්ධනය වේ. ෆෙරික් ක්ලෝරයිඩ් වර්ණ පරීක්ෂාව ෆීනෝල්වලට පමණක් විශේෂ නොවේ."
+        },
+        "solutionColour": "purple",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-27",
+    "revision": 1,
+    "experimentNumber": 27,
+    "title": {
+      "en": "Experiment 27: Aldehyde and ketone tests",
+      "si": "පරීක්ෂණය 27: ඇල්ඩිහයිඩ් හා කීටෝන පරීක්ෂණ"
+    },
+    "unitNumber": 9,
+    "unitTitle": {
+      "en": "Unit 09 – Oxygen-containing organic compounds",
+      "si": "ඒකක 09 – ඔක්සිජන් අඩංගු කාබනික සංයෝග"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Distinguish carbonyl compounds using selected qualitative reagents.",
+        "si": "තෝරාගත් ගුණාත්මක ප්‍රතික්‍රියකවලින් කාබොනයිල් සංයෝග වෙන් කර හඳුනාගන්න."
+      }
+    ],
+    "background": {
+      "en": "Distinguish carbonyl compounds using selected qualitative reagents.",
+      "si": "තෝරාගත් ගුණාත්මක ප්‍රතික්‍රියකවලින් කාබොනයිල් සංයෝග වෙන් කර හඳුනාගන්න."
+    },
+    "limitations": {
+      "en": "Selected carbonyl and oxidation tests. Water-solubility and Fehling branches are not modelled. No smell, reaction speed or quantitative yield is simulated.",
+      "si": "තෝරාගත් කාබොනයිල් හා ඔක්සිකරණ පරීක්ෂණයි. ජල ද්‍රාව්‍යතාව හා ෆෙලින් පරීක්ෂණ නිරූපණය නොවේ. සුවඳ, වේගය හෝ ප්‍රමාණාත්මක ඵලදා අනුකරණය නොවේ."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Carbonyls can be toxic/flammable. Tollens residues must never be stored or allowed to dry; use supervised disposal.",
+        "si": "කාබොනයිල් විෂ/ගිනිගන්නා සුලු විය හැක. ටොලන්ස් අවශේෂ ගබඩා කිරීම හෝ වියළීම නොකරන්න; අධීක්ෂිත බැහැර කිරීම භාවිත කරන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Carbonyl samples; 2,4-DNPH/Brady reagent; acidified dichromate; freshly prepared Tollens reagent",
+        "si": "කාබොනයිල් නියැදි; 2,4-DNPH/බ්‍රේඩි ප්‍රතික්‍රියකය; ආම්ලික ඩයික්‍රෝමේට්; නැවුම් ටොලන්ස් ප්‍රතික්‍රියකය"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [91, 92, 93],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "Royal Society of Chemistry: Qualitative tests for organic functional groups",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://edu.rsc.org/practical/qualitative-tests-for-organic-functional-groups-practical-videos-16-18-students/4014327.article"
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "water_bath",
+        "kind": "water_bath",
+        "label": {
+          "en": "Water bath",
+          "si": "ජල තාපකය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "reagent_bottle",
+        "kind": "reagent_bottle",
+        "label": {
+          "en": "Reagent bottle",
+          "si": "ප්‍රතික්‍රියක බෝතලය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "ethanal",
+        "label": {
+          "en": "Ethanal",
+          "si": "එතනැල්"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "benzaldehyde",
+        "label": {
+          "en": "Benzaldehyde",
+          "si": "බෙන්සැල්ඩිහයිඩ්"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "propanone",
+        "label": {
+          "en": "Propanone",
+          "si": "ප්‍රොපනෝන්"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "acetophenone",
+        "label": {
+          "en": "Acetophenone",
+          "si": "ඇසිටොෆිනෝන්"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "dnph",
+        "label": {
+          "en": "2,4-DNPH / Brady test",
+          "si": "2,4-DNPH / බ්‍රේඩි පරීක්ෂාව"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use the reagent solvent appropriate to sample solubility.",
+              "si": "නියැදි ද්‍රාව්‍යතාව අනුව සුදුසු ප්‍රතික්‍රියක ද්‍රාවකය භාවිත කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "dichromate",
+        "label": {
+          "en": "Acidified dichromate",
+          "si": "ආම්ලික ඩයික්‍රෝමේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Test a separate fresh sample with acidified dichromate.",
+              "si": "වෙනම නැවුම් නියැදියක් ආම්ලික ඩයික්‍රෝමේට් සමඟ පරීක්ෂා කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "tollens",
+        "label": {
+          "en": "Tollens test",
+          "si": "ටොලන්ස් පරීක්ෂාව"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use freshly prepared reagent and warm in the water bath; do not store residues.",
+              "si": "නැවුම් ප්‍රතික්‍රියකය භාවිත කර ජල තාපකයේ උණු කරන්න; අවශේෂ ගබඩා නොකරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "ethanal",
+        "testId": "dnph",
+        "observation": {
+          "en": "A yellow/orange carbonyl derivative precipitates; exact shade depends on the compound.",
+          "si": "කහ/තැඹිලි කාබොනයිල් ව්‍යුත්පන්නයක් අවක්ෂේප වේ; නිශ්චිත වර්ණය සංයෝගය අනුව වෙනස් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "orange",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanal",
+        "testId": "dichromate",
+        "observation": {
+          "en": "The aldehyde reduces dichromate: orange becomes green.",
+          "si": "ඇල්ඩිහයිඩ් ඩයික්‍රෝමේට් ඔක්සිහරණය කරයි: තැඹිලි කොළ වේ."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanal",
+        "testId": "tollens",
+        "observation": {
+          "en": "Silver deposits on the clean glass surface.",
+          "si": "පිරිසිදු වීදුරු පෘෂ්ඨයේ රිදී තැන්පත් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "silver_mirror",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "benzaldehyde",
+        "testId": "dnph",
+        "observation": {
+          "en": "A yellow/orange carbonyl derivative precipitates; exact shade depends on the compound.",
+          "si": "කහ/තැඹිලි කාබොනයිල් ව්‍යුත්පන්නයක් අවක්ෂේප වේ; නිශ්චිත වර්ණය සංයෝගය අනුව වෙනස් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "orange",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "benzaldehyde",
+        "testId": "dichromate",
+        "observation": {
+          "en": "The aldehyde reduces dichromate: orange becomes green.",
+          "si": "ඇල්ඩිහයිඩ් ඩයික්‍රෝමේට් ඔක්සිහරණය කරයි: තැඹිලි කොළ වේ."
+        },
+        "solutionColour": "green",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "benzaldehyde",
+        "testId": "tollens",
+        "observation": {
+          "en": "Silver deposits on the clean glass surface.",
+          "si": "පිරිසිදු වීදුරු පෘෂ්ඨයේ රිදී තැන්පත් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "silver_mirror",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "propanone",
+        "testId": "dnph",
+        "observation": {
+          "en": "A yellow/orange carbonyl derivative precipitates; exact shade depends on the compound.",
+          "si": "කහ/තැඹිලි කාබොනයිල් ව්‍යුත්පන්නයක් අවක්ෂේප වේ; නිශ්චිත වර්ණය සංයෝගය අනුව වෙනස් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "orange",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "propanone",
+        "testId": "dichromate",
+        "observation": {
+          "en": "No positive oxidation colour change in this test.",
+          "si": "මෙම පරීක්ෂාවේ ධන ඔක්සිකරණ වර්ණ වෙනසක් නැත."
+        },
+        "solutionColour": "orange",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "propanone",
+        "testId": "tollens",
+        "observation": {
+          "en": "No silver mirror forms under this test.",
+          "si": "මෙම පරීක්ෂාවේ රිදී දර්පණයක් නොසෑදේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "acetophenone",
+        "testId": "dnph",
+        "observation": {
+          "en": "A yellow/orange carbonyl derivative precipitates; exact shade depends on the compound.",
+          "si": "කහ/තැඹිලි කාබොනයිල් ව්‍යුත්පන්නයක් අවක්ෂේප වේ; නිශ්චිත වර්ණය සංයෝගය අනුව වෙනස් වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "orange",
+        "visual": "precipitate",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "acetophenone",
+        "testId": "dichromate",
+        "observation": {
+          "en": "No positive oxidation colour change in this test.",
+          "si": "මෙම පරීක්ෂාවේ ධන ඔක්සිකරණ වර්ණ වෙනසක් නැත."
+        },
+        "solutionColour": "orange",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "acetophenone",
+        "testId": "tollens",
+        "observation": {
+          "en": "No silver mirror forms under this test.",
+          "si": "මෙම පරීක්ෂාවේ රිදී දර්පණයක් නොසෑදේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 1]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-28",
+    "revision": 1,
+    "experimentNumber": 28,
+    "title": {
+      "en": "Experiment 28: Properties of carboxylic acids",
+      "si": "පරීක්ෂණය 28: කාබොක්සිලික් අම්ලවල ගුණ"
+    },
+    "unitNumber": 9,
+    "unitTitle": {
+      "en": "Unit 09 – Oxygen-containing organic compounds",
+      "si": "ඒකක 09 – ඔක්සිජන් අඩංගු කාබනික සංයෝග"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Compare carbonate, base and redox tests on the prescribed acids.",
+        "si": "නියමිත අම්ලවල කාබනේට්, භෂ්ම හා රෙඩොක්ස් පරීක්ෂණ සසඳන්න."
+      }
+    ],
+    "background": {
+      "en": "Compare carbonate, base and redox tests on the prescribed acids.",
+      "si": "නියමිත අම්ලවල කාබනේට්, භෂ්ම හා රෙඩොක්ස් පරීක්ෂණ සසඳන්න."
+    },
+    "limitations": {
+      "en": "Selected carbonate/base/redox tests only. Ester odours, quantitative solubility and product yields are not modelled; there is no sensory smell test.",
+      "si": "තෝරාගත් කාබනේට්/භෂ්ම/රෙඩොක්ස් පරීක්ෂණ පමණි. එස්ටර සුවඳ, ප්‍රමාණාත්මක ද්‍රාව්‍යතාව හා ඵලදා නිරූපණය නොවේ; සුවඳ පරීක්ෂාවක් නැත."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Methanoic, ethanoic and benzoic acids; carbonate; NaOH; acidified permanganate; Tollens reagent",
+        "si": "මෙතනොයික්, එතනොයික් හා බෙන්සොයික් අම්ල; කාබනේට්; NaOH; ආම්ලික පර්මැංගනේට්; ටොලන්ස් ප්‍රතික්‍රියකය"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [94, 95],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      },
+      {
+        "title": "Royal Society of Chemistry: Qualitative tests for organic functional groups",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://edu.rsc.org/practical/qualitative-tests-for-organic-functional-groups-practical-videos-16-18-students/4014327.article"
+      },
+      {
+        "title": "Tishk International University: Organic Chemistry laboratory, carboxylic acids",
+        "pdfPages": [],
+        "sha256": null,
+        "url": "https://lecture-notes.tiu.edu.iq/wp-content/uploads/2025/02/Org.Chem_.2Lab.Grade2_.Week2_.pdf"
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "conical_flask",
+        "kind": "conical_flask",
+        "label": {
+          "en": "Conical flask",
+          "si": "කේතුකාකාර ප්ලාස්කුව"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "beaker",
+        "kind": "beaker",
+        "label": {
+          "en": "Beaker",
+          "si": "බීකරය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "water_bath",
+        "kind": "water_bath",
+        "label": {
+          "en": "Water bath",
+          "si": "ජල තාපකය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "methanoic",
+        "label": {
+          "en": "Methanoic acid",
+          "si": "මෙතනොයික් අම්ලය"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "ethanoic",
+        "label": {
+          "en": "Ethanoic acid",
+          "si": "එතනොයික් අම්ලය"
+        },
+        "colour": "clear"
+      },
+      {
+        "id": "benzoic",
+        "label": {
+          "en": "Benzoic acid",
+          "si": "බෙන්සොයික් අම්ලය"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "carbonate",
+        "label": {
+          "en": "Sodium carbonate",
+          "si": "සෝඩියම් කාබනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add carbonate to a fresh acid portion and observe gas evolution.",
+              "si": "නැවුම් අම්ල කොටසකට කාබනේට් එක් කර වායු නිකුත් වීම නිරීක්ෂණය කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "hydroxide",
+        "label": {
+          "en": "Sodium hydroxide",
+          "si": "සෝඩියම් හයිඩ්‍රොක්සයිඩ්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the acid with the prescribed dilute base; compare salt formation.",
+              "si": "අම්ලය නියමිත තනුක භෂ්මය සමඟ මිශ්‍ර කර ලවණ සෑදීම සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "permanganate",
+        "label": {
+          "en": "Acidified permanganate",
+          "si": "ආම්ලික පර්මැංගනේට්"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Compare a fresh acid portion with acidified permanganate.",
+              "si": "නැවුම් අම්ල කොටසක් ආම්ලික පර්මැංගනේට් සමඟ සසඳන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      },
+      {
+        "id": "tollens",
+        "label": {
+          "en": "Tollens test",
+          "si": "ටොලන්ස් පරීක්ෂාව"
+        },
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare a fresh portion",
+              "si": "නැවුම් කොටසක් සකසන්න"
+            },
+            "instruction": {
+              "en": "Use a clean test tube for the chosen sample.",
+              "si": "තෝරාගත් නියැදිය සඳහා පිරිසිදු පරීක්ෂණ නළයක් භාවිත කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "add",
+            "title": {
+              "en": "Add the selected reagent",
+              "si": "තෝරාගත් ප්‍රතික්‍රියකය එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Use fresh Tollens reagent in a supervised water bath; dispose of residues immediately.",
+              "si": "නැවුම් ටොලන්ස් ප්‍රතික්‍රියකය අධීක්ෂිත ජල තාපකයක භාවිත කර අවශේෂ වහා බැහැර කරන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "mix",
+            "title": {
+              "en": "Mix gently",
+              "si": "මෘදුව මිශ්‍ර කරන්න"
+            },
+            "instruction": {
+              "en": "Mix the fresh test portion using the glass rod.",
+              "si": "වීදුරු දණ්ඩෙන් නැවුම් කොටස මිශ්‍ර කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe and interpret",
+              "si": "නිරීක්ෂණය කර අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Inspect the solution and any solid; record the result.",
+              "si": "ද්‍රාවණය සහ ඝන ද්‍රව්‍ය පරීක්ෂා කර ප්‍රතිඵලය සටහන් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ],
+        "temperatureRangeC": null
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "methanoic",
+        "testId": "carbonate",
+        "observation": {
+          "en": "Carbon dioxide effervescence accompanies acid–carbonate reaction.",
+          "si": "අම්ල–කාබනේට් ප්‍රතික්‍රියාව සමඟ කාබන් ඩයොක්සයිඩ් බුබුළු ලැබේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "bubbles",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "methanoic",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "Neutralization forms a carboxylate salt; benzoic acid can dissolve as its sodium salt when sufficient base is present.",
+          "si": "උදාසීනීකරණයෙන් කාබොක්සිලේට් ලවණය ලැබේ; ප්‍රමාණවත් භෂ්මය සමඟ බෙන්සොයික් අම්ලය සෝඩියම් ලවණය ලෙස දිය විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "methanoic",
+        "testId": "permanganate",
+        "observation": {
+          "en": "Methanoic acid is oxidized and the purple reagent fades.",
+          "si": "මෙතනොයික් අම්ලය ඔක්සිකරණය වී දම් ප්‍රතික්‍රියකයේ වර්ණය අඩු වේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 2]
+      },
+      {
+        "sampleId": "methanoic",
+        "testId": "tollens",
+        "observation": {
+          "en": "Methanoic acid reduces the silver reagent to a metallic deposit.",
+          "si": "මෙතනොයික් අම්ලය රිදී ප්‍රතික්‍රියකය ලෝහ තැන්පතුවක් බවට ඔක්සිහරණය කරයි."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "silver_mirror",
+        "sourceIndexes": [0, 2]
+      },
+      {
+        "sampleId": "ethanoic",
+        "testId": "carbonate",
+        "observation": {
+          "en": "Carbon dioxide effervescence accompanies acid–carbonate reaction.",
+          "si": "අම්ල–කාබනේට් ප්‍රතික්‍රියාව සමඟ කාබන් ඩයොක්සයිඩ් බුබුළු ලැබේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "bubbles",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "ethanoic",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "Neutralization forms a carboxylate salt; benzoic acid can dissolve as its sodium salt when sufficient base is present.",
+          "si": "උදාසීනීකරණයෙන් කාබොක්සිලේට් ලවණය ලැබේ; ප්‍රමාණවත් භෂ්මය සමඟ බෙන්සොයික් අම්ලය සෝඩියම් ලවණය ලෙස දිය විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "ethanoic",
+        "testId": "permanganate",
+        "observation": {
+          "en": "No positive permanganate test under these qualitative test conditions.",
+          "si": "මෙම ගුණාත්මක තත්ත්ව යටතේ ධන පර්මැංගනේට් පරීක්ෂාවක් නැත."
+        },
+        "solutionColour": "purple",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 2]
+      },
+      {
+        "sampleId": "ethanoic",
+        "testId": "tollens",
+        "observation": {
+          "en": "No silver mirror in this carboxylic-acid test.",
+          "si": "මෙම කාබොක්සිලික් අම්ල පරීක්ෂාවේ රිදී දර්පණයක් නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 2]
+      },
+      {
+        "sampleId": "benzoic",
+        "testId": "carbonate",
+        "observation": {
+          "en": "Carbon dioxide effervescence accompanies acid–carbonate reaction.",
+          "si": "අම්ල–කාබනේට් ප්‍රතික්‍රියාව සමඟ කාබන් ඩයොක්සයිඩ් බුබුළු ලැබේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "bubbles",
+        "sourceIndexes": [0, 1]
+      },
+      {
+        "sampleId": "benzoic",
+        "testId": "hydroxide",
+        "observation": {
+          "en": "Neutralization forms a carboxylate salt; benzoic acid can dissolve as its sodium salt when sufficient base is present.",
+          "si": "උදාසීනීකරණයෙන් කාබොක්සිලේට් ලවණය ලැබේ; ප්‍රමාණවත් භෂ්මය සමඟ බෙන්සොයික් අම්ලය සෝඩියම් ලවණය ලෙස දිය විය හැක."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0]
+      },
+      {
+        "sampleId": "benzoic",
+        "testId": "permanganate",
+        "observation": {
+          "en": "No positive permanganate test under these qualitative test conditions.",
+          "si": "මෙම ගුණාත්මක තත්ත්ව යටතේ ධන පර්මැංගනේට් පරීක්ෂාවක් නැත."
+        },
+        "solutionColour": "purple",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 2]
+      },
+      {
+        "sampleId": "benzoic",
+        "testId": "tollens",
+        "observation": {
+          "en": "No silver mirror in this carboxylic-acid test.",
+          "si": "මෙම කාබොක්සිලික් අම්ල පරීක්ෂාවේ රිදී දර්පණයක් නැත."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": null,
+        "visual": "none",
+        "sourceIndexes": [0, 2]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "test_tubes"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-29",
+    "revision": 1,
+    "experimentNumber": 29,
+    "title": {
+      "en": "Experiment 29: Aniline and azo-dye formation",
+      "si": "පරීක්ෂණය 29: ඇනිලීන් සහ ඇසෝ සායම් සෑදීම"
+    },
+    "unitNumber": 10,
+    "unitTitle": {
+      "en": "Unit 10 – Nitrogen-containing organic compounds",
+      "si": "ඒකක 10 – නයිට්‍රජන් අඩංගු කාබනික සංයෝග"
+    },
+    "template": "reaction_comparison",
+    "aims": [
+      {
+        "en": "Observe diazotization followed by coupling with alkaline naphthalen-2-ol under cold conditions.",
+        "si": "සීතල තත්ත්ව යටතේ ඩයසෝකරණයෙන් පසු භාෂ්මික නැෆ්තලීන්-2-ඔල් සමඟ යුග්මනය නිරීක්ෂණය කරන්න."
+      }
+    ],
+    "background": {
+      "en": "Observe diazotization followed by coupling with alkaline naphthalen-2-ol under cold conditions.",
+      "si": "සීතල තත්ත්ව යටතේ ඩයසෝකරණයෙන් පසු භාෂ්මික නැෆ්තලීන්-2-ඔල් සමඟ යුග්මනය නිරීක්ෂණය කරන්න."
+    },
+    "limitations": {
+      "en": "The handbook prints coupling text before the diazotization steps. This model places diazotization before coupling and records that source-order conflict. Only the naphthalen-2-ol route is modelled; temperature outside 0–5 °C is blocked, not assigned invented degradation readings.",
+      "si": "අත්පොතේ යුග්මන පෙළ ඩයසෝකරණයට පෙර මුද්‍රිතය. මෙම ආකෘතිය ඩයසෝකරණය පළමුව තබා එම පිළිවෙළ ගැටුම සටහන් කරයි. නැෆ්තලීන්-2-ඔල් මාර්ගය පමණි; 0–5 °C පිටත උෂ්ණත්වය අවහිර වේ; කල්පිත වියෝජන පාඨාංක නොදෙයි."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Aniline is toxic. Maintain the prescribed cold conditions; do not isolate, store or dry diazonium salts. Temperature here is an entered bath reading, not a calibrated thermal simulation.",
+        "si": "ඇනිලීන් විෂයි. නියමිත සීතල තත්ත්ව පවත්වා ඩයසෝනියම් ලවණ වෙන් කිරීම, ගබඩා කිරීම හෝ වියළීම නොකරන්න. මෙහි උෂ්ණත්වය ඇතුළත් කළ තාපක පාඨාංකයකි; ක්‍රමාංකිත තාප අනුකරණයක් නොවේ."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Aniline, hydrochloric acid, sodium nitrite, naphthalen-2-ol and NaOH",
+        "si": "ඇනිලීන්, හයිඩ්‍රොක්ලෝරික් අම්ලය, සෝඩියම් නයිට්‍රයිට්, නැෆ්තලීන්-2-ඔල් හා NaOH"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [96, 97],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "test_tube",
+        "kind": "test_tube",
+        "label": {
+          "en": "Test tube",
+          "si": "පරීක්ෂණ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "dropper",
+        "kind": "dropper",
+        "label": {
+          "en": "Dropper",
+          "si": "බිංදු දමනය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "ice_bath",
+        "kind": "ice_bath",
+        "label": {
+          "en": "Ice bath",
+          "si": "අයිස් තාපකය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "beaker",
+        "kind": "beaker",
+        "label": {
+          "en": "Beaker",
+          "si": "බීකරය"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "aniline",
+        "label": {
+          "en": "Aniline route",
+          "si": "ඇනිලීන් මාර්ගය"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "coupling",
+        "label": {
+          "en": "Cold diazotization and coupling",
+          "si": "සීතල ඩයසෝකරණය හා යුග්මනය"
+        },
+        "temperatureRangeC": [0, 5],
+        "steps": [
+          {
+            "id": "coupler",
+            "title": {
+              "en": "Prepare and cool the alkaline coupler",
+              "si": "භාෂ්මික යුග්මකය සකසා සිසිල් කරන්න"
+            },
+            "instruction": {
+              "en": "Prepare the prescribed alkaline naphthalen-2-ol solution and cool in an ice bath.",
+              "si": "නියමිත භාෂ්මික නැෆ්තලීන්-2-ඔල් ද්‍රාවණය සකසා අයිස් තාපකයේ සිසිල් කරන්න."
+            },
+            "apparatusId": "ice_bath",
+            "effect": "cool"
+          },
+          {
+            "id": "nitrite",
+            "title": {
+              "en": "Prepare the cooled nitrite solution",
+              "si": "සිසිල් නයිට්‍රයිට් ද්‍රාවණය සකසන්න"
+            },
+            "instruction": {
+              "en": "Dissolve the prescribed nitrite portion and cool separately.",
+              "si": "නියමිත නයිට්‍රයිට් කොටස දිය කර වෙන්ව සිසිල් කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "prepare"
+          },
+          {
+            "id": "aniline",
+            "title": {
+              "en": "Prepare aniline in acid and cool",
+              "si": "අම්ලයේ ඇනිලීන් සකසා සිසිල් කරන්න"
+            },
+            "instruction": {
+              "en": "Prepare the prescribed aniline/acid mixture, then cool before diazotization.",
+              "si": "නියමිත ඇනිලීන්/අම්ල මිශ්‍රණය සකසා ඩයසෝකරණයට පෙර සිසිල් කරන්න."
+            },
+            "apparatusId": "ice_bath",
+            "effect": "cool"
+          },
+          {
+            "id": "diazotize",
+            "title": {
+              "en": "Add nitrite slowly with stirring",
+              "si": "කලතමින් නයිට්‍රයිට් සෙමින් එක් කරන්න"
+            },
+            "instruction": {
+              "en": "Add the cooled nitrite to the cold acidic aniline; keep the bath within the specified range.",
+              "si": "සිසිල් නයිට්‍රයිට් සීතල ආම්ලික ඇනිලීන්ට එක් කර තාපකය නියමිත පරාසයේ තබන්න."
+            },
+            "apparatusId": "dropper",
+            "effect": "add"
+          },
+          {
+            "id": "couple",
+            "title": {
+              "en": "Couple with the alkaline solution",
+              "si": "භාෂ්මික ද්‍රාවණය සමඟ යුග්මනය කරන්න"
+            },
+            "instruction": {
+              "en": "Add the diazonium solution to the cold alkaline coupler while stirring.",
+              "si": "කලතමින් ඩයසෝනියම් ද්‍රාවණය සීතල භාෂ්මික යුග්මකයට එක් කරන්න."
+            },
+            "apparatusId": "glass_rod",
+            "effect": "mix"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Observe the dye",
+              "si": "සායම නිරීක්ෂණය කරන්න"
+            },
+            "instruction": {
+              "en": "Record the coloured solid and explain azo coupling.",
+              "si": "වර්ණවත් ඝනය සටහන් කර ඇසෝ යුග්මනය පැහැදිලි කරන්න."
+            },
+            "apparatusId": "test_tube",
+            "effect": "observe"
+          }
+        ]
+      }
+    ],
+    "outcomes": [
+      {
+        "sampleId": "aniline",
+        "testId": "coupling",
+        "observation": {
+          "en": "An orange-red azo-dye precipitate forms from the cold naphthalen-2-ol coupling route.",
+          "si": "සීතල නැෆ්තලීන්-2-ඔල් යුග්මන මාර්ගයෙන් තැඹිලි රතු ඇසෝ සායම් අවක්ෂේපයක් සෑදේ."
+        },
+        "solutionColour": "clear",
+        "precipitateColour": "orange",
+        "visual": "precipitate",
+        "sourceIndexes": [0]
+      }
+    ],
+    "concentrationsMolDm3": [],
+    "translationStatus": "draft",
+    "layout": "ice_bath"
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "handbook-30",
+    "revision": 1,
+    "experimentNumber": 30,
+    "title": {
+      "en": "Experiment 30: Acid concentration and magnesium reaction rate",
+      "si": "පරීක්ෂණය 30: අම්ල සාන්ද්‍රණය සහ මැග්නීසියම් ප්‍රතික්‍රියා වේගය"
+    },
+    "unitNumber": 11,
+    "unitTitle": {
+      "en": "Unit 11 – Chemical kinetics",
+      "si": "ඒකක 11 – රසායනික චාලකය"
+    },
+    "template": "fixed_volume_kinetics",
+    "aims": [
+      {
+        "en": "Estimate the concentration dependence from measured times to collect the same gas volume.",
+        "si": "සමාන වායු පරිමාවක් රැස් කිරීමට මනින ලද කාලවලින් සාන්ද්‍රණ බලපෑම ඇස්තමේන්තු කරන්න."
+      }
+    ],
+    "background": {
+      "en": "Estimate the concentration dependence from measured times to collect the same gas volume.",
+      "si": "සමාන වායු පරිමාවක් රැස් කිරීමට මනින ලද කාලවලින් සාන්ද්‍රණ බලපෑම ඇස්තමේන්තු කරන්න."
+    },
+    "limitations": {
+      "en": "Learner-entered data only. The fixed but unspecified collected gas volume makes 1/time a relative-rate proxy in s⁻¹, not mol dm⁻³ s⁻¹. The fitted log(1/time) versus log(concentration) slope estimates order under the controlled conditions; no rate constant or gas-generation curve is invented. The chapter's additional calcium-carbonate mass-loss route is not simulated.",
+      "si": "ශිෂ්‍යයා ඇතුළත් කරන දත්ත පමණි. නියත නමුත් නිශ්චිතව නොදුන් වායු පරිමාව නිසා 1/කාලය s⁻¹ හි සාපේක්ෂ වේග නියෝජිතයකි; mol dm⁻³ s⁻¹ නොවේ. log(1/කාලය) හා log(සාන්ද්‍රණය) බෑවුම පාලිත තත්ත්ව යටතේ පෙළ ඇස්තමේන්තු කරයි; කල්පිත වේග නියතයක් හෝ වායු වක්‍රයක් නැත. අමතර කැල්සියම් කාබනේට් ස්කන්ධ අඩුකිරීමේ මාර්ගය අනුකරණය නොවේ."
+    },
+    "safety": [
+      {
+        "en": "Virtual learning only. Real practical work requires a qualified teacher, eye protection and suitable ventilation. Never taste or directly smell chemicals; follow supervised waste disposal.",
+        "si": "අතථ්‍ය ඉගෙනීම සඳහා පමණි. සැබෑ වැඩ සඳහා සුදුසු ගුරු අධීක්ෂණය, ඇස් ආරක්ෂාව සහ වාතාශ්‍රය අවශ්‍යය. රසායන රස බැලීම හෝ කෙළින් සුවඳ බැලීම නොකරන්න; අධීක්ෂිත අපද්‍රව්‍ය බැහැර කිරීම අනුගමනය කරන්න."
+      },
+      {
+        "en": "Hydrogen is flammable and acid is corrosive; keep away from ignition sources.",
+        "si": "හයිඩ්‍රජන් ගිනිගන්නා සුලු සහ අම්ලය විඛාදකය; දහන ප්‍රභවවලින් ඈත් තබන්න."
+      }
+    ],
+    "chemicals": [
+      {
+        "en": "Equal exposed lengths of cleaned magnesium and HCl solutions at the handbook concentrations",
+        "si": "අත්පොත් සාන්ද්‍රණවල HCl ද්‍රාවණ සහ පිරිසිදු මැග්නීසියම් සමාන නිරාවරණ දිග"
+      }
+    ],
+    "preLab": [
+      {
+        "en": "Predict how the selected reagent can distinguish the samples. Explain your prediction before running a test.",
+        "si": "තෝරාගත් ප්‍රතික්‍රියකය නියැදි වෙන් කර හඳුනාගන්නේ කෙසේදැයි පුරෝකථනය කර පරීක්ෂාවට පෙර පැහැදිලි කරන්න."
+      }
+    ],
+    "postLab": [
+      {
+        "en": "Record the observation, explain the chemistry and identify a limitation of this test.",
+        "si": "නිරීක්ෂණය සටහන් කර රසායනය පැහැදිලි කර පරීක්ෂාවේ සීමාවක් හඳුනාගන්න."
+      }
+    ],
+    "sources": [
+      {
+        "title": "G.C.E. (A/L) Chemistry Practical Handbook (NIE, 2018)",
+        "pdfPages": [98, 99, 100],
+        "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+        "url": null
+      }
+    ],
+    "apparatus": [
+      {
+        "id": "gas_collector",
+        "kind": "gas_collector",
+        "label": {
+          "en": "Inverted gas-collection tube",
+          "si": "උඩු යටිකුරු වායු රැස්කිරීමේ නළය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "stopwatch",
+        "kind": "stopwatch",
+        "label": {
+          "en": "Stopwatch",
+          "si": "නැවතුම් ඔරලෝසුව"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "beaker",
+        "kind": "beaker",
+        "label": {
+          "en": "Beaker",
+          "si": "බීකරය"
+        },
+        "capacityCm3": null
+      },
+      {
+        "id": "glass_rod",
+        "kind": "glass_rod",
+        "label": {
+          "en": "Glass rod",
+          "si": "වීදුරු දණ්ඩ"
+        },
+        "capacityCm3": null
+      }
+    ],
+    "samples": [
+      {
+        "id": "magnesium",
+        "label": {
+          "en": "Equal exposed magnesium strips",
+          "si": "සමාන නිරාවරණ මැග්නීසියම් පටි"
+        },
+        "colour": "clear"
+      }
+    ],
+    "tests": [
+      {
+        "id": "fixed_volume",
+        "label": {
+          "en": "Fixed-volume timing comparison",
+          "si": "නියත පරිමා කාල සැසඳීම"
+        },
+        "temperatureRangeC": null,
+        "steps": [
+          {
+            "id": "prepare",
+            "title": {
+              "en": "Prepare equal strips and concentration series",
+              "si": "සමාන පටි හා සාන්ද්‍රණ මාලාව සකසන්න"
+            },
+            "instruction": {
+              "en": "Keep the exposed magnesium length, temperature and fixed-volume mark the same for every trial.",
+              "si": "සෑම අත්හදා බැලීමකම නිරාවරණ මැග්නීසියම් දිග, උෂ්ණත්වය හා නියත පරිමා සලකුණ සමාන තබන්න."
+            },
+            "apparatusId": "beaker",
+            "effect": "prepare"
+          },
+          {
+            "id": "invert",
+            "title": {
+              "en": "Invert the collection tube",
+              "si": "රැස්කිරීමේ නළය උඩු යටිකුරු කරන්න"
+            },
+            "instruction": {
+              "en": "Use the handbook inverted-tube arrangement and start timing as the strip contacts acid.",
+              "si": "අත්පොතේ උඩු යටිකුරු නළ සැකැස්ම යොදා පටිය අම්ලයට ස්පර්ශ වන විට කාලය මැනීම අරඹන්න."
+            },
+            "apparatusId": "gas_collector",
+            "effect": "prepare"
+          },
+          {
+            "id": "time",
+            "title": {
+              "en": "Enter the five measured times, then compare",
+              "si": "මනින ලද කාල පහ ඇතුළත් කර සසඳන්න"
+            },
+            "instruction": {
+              "en": "Enter your positive measured times to the same volume mark for each concentration. No synthetic readings are supplied.",
+              "si": "එක් එක් සාන්ද්‍රණයට සමාන පරිමා සලකුණ තෙක් ඔබ මනින ලද ධන කාල ඇතුළත් කරන්න. කෘත්‍රිම පාඨාංක සපයා නැත."
+            },
+            "apparatusId": "stopwatch",
+            "effect": "measure"
+          },
+          {
+            "id": "observe",
+            "title": {
+              "en": "Interpret the rate comparison",
+              "si": "වේග සැසඳීම අර්ථ දක්වන්න"
+            },
+            "instruction": {
+              "en": "Compare 1/time and the fitted logarithmic slope; do not call the proxy an absolute molar rate.",
+              "si": "1/කාලය සහ සවි කළ ලඝුගණක බෑවුම සසඳන්න; මෙම නියෝජිතය නිරපේක්ෂ මවුලික වේගයක් ලෙස නොහඳුන්වන්න."
+            },
+            "apparatusId": "stopwatch",
+            "effect": "observe"
+          }
+        ]
+      }
+    ],
+    "outcomes": [],
+    "concentrationsMolDm3": [1, 0.8, 0.6, 0.4, 0.2],
+    "translationStatus": "draft",
+    "layout": "inverted_tube"
+  }
+]

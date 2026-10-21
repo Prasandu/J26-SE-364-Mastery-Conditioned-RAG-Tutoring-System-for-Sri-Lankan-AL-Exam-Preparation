@@ -14,6 +14,7 @@ import { AdminUsers } from './AdminUsers';
 import { DraftList } from './DraftList';
 import { DraftReview } from './DraftReview';
 import { ImportPanel } from './ImportPanel';
+import { SimulationAuthor } from './SimulationAuthor';
 
 export type AdminSection =
   | 'overview'
@@ -25,7 +26,8 @@ export type AdminSection =
   | 'users'
   | 'translations'
   | 'audit'
-  | 'settings';
+  | 'settings'
+  | 'simulations';
 
 /**
  * Development-only administration console (no login yet; local requests only). Practical drafts,
@@ -170,6 +172,7 @@ export default function AdminView() {
           >
             {section === 'overview' && <AdminOverview status={status} onNavigate={setSection} />}
             {section === 'library' && <AdminLibrary client={client} onOpen={open} />}
+            {section === 'simulations' && <SimulationAuthor client={client} />}
             {section === 'import' && (
               <>
                 <ImportPanel

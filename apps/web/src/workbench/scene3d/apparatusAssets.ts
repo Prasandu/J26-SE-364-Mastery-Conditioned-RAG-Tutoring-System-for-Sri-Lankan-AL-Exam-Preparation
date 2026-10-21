@@ -146,7 +146,7 @@ export const APPARATUS_ASSETS: Readonly<Record<SceneItem['kind'], ApparatusAsset
   reagent: {
     ...PENDING,
     kind: 'reagent',
-    nameKey: 'exp04.chemical.na2co3',
+    nameKey: 'exp04.chemical.na2co3_anhydrous',
     parts: [
       { name: 'jar', material: 'glass' },
       { name: 'label', material: 'paper' },

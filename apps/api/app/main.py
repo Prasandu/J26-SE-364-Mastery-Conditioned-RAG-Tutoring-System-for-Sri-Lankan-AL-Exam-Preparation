@@ -13,6 +13,7 @@ from app.admin.assist import ExtractionAssistant
 from app.admin.assist import build_assistant as build_extraction_assistant
 from app.admin.manage_routes import register_manage_routes
 from app.admin.routes import register_admin_routes
+from app.admin.teaching_routes import register_teaching_routes
 from app.content import load_experiments
 from app.contracts import ContractRegistry
 from app.errors import ApiError, correlation_id_var, install_error_handlers, new_correlation_id
@@ -217,6 +218,7 @@ def create_app(
     # Development-only practical administration (404 unless enabled and verified local).
     admin_api = register_admin_routes(app, lab, read_json)
     register_manage_routes(app, admin_api)
+    register_teaching_routes(app, admin_api)
 
     @app.post("/assistant/ask")
     async def ask_assistant(

@@ -31,12 +31,17 @@ test('graphics: complete blue 2D bench and furnished 3D room in both locales', a
         await expect(surface).toBeVisible({ timeout: 20_000 });
         await surface.scrollIntoViewIfNeeded();
         if (renderer === '3d')
-          await expect(page.locator('.lab3d .lab-toolbar button').first()).toBeEnabled({
+          await expect(page.locator('.scene-frame .lab-toolbar button').first()).toBeEnabled({
             timeout: 15_000,
           });
         const box = await surface.boundingBox();
         expect(box!.height).toBeGreaterThan(150);
         expect(box!.width).toBeGreaterThan(280);
+        const zoom = await page.locator('.lab-zoom').boundingBox();
+        expect(zoom!.x).toBeGreaterThanOrEqual(box!.x);
+        expect(zoom!.y).toBeGreaterThanOrEqual(box!.y);
+        expect(zoom!.x + zoom!.width).toBeLessThanOrEqual(box!.x + box!.width);
+        expect(zoom!.y + zoom!.height).toBeLessThanOrEqual(box!.y + box!.height);
         if (renderer === '2d') {
           const clipped = await surface.evaluate((svg) => {
             const frame = svg.getBoundingClientRect();

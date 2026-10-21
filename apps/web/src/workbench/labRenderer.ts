@@ -6,6 +6,8 @@ import type { SceneModel } from './sceneModel';
  */
 export interface LabRendererProps {
   model: SceneModel;
+  /** Optional shared control bar, outside the drawing so presets do not consume scene height. */
+  toolbarTarget?: HTMLElement | null;
   /**
    * Click / tap on an item, or on the free bench (`BENCH_TARGET`). The viewport decides whether
    * this selects the item or places the item currently held.

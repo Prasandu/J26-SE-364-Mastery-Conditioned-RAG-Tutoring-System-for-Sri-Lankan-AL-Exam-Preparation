@@ -1237,3 +1237,22 @@ details[open] > .admin-field__summary::before {
     max-height: none;
   }
 }
+/* Simulation authoring is a normal-flow editor; preview uses a native focus-trapping dialog. */
+.simulation-author { min-width:0; }
+.simulation-author .card { padding:var(--space-5); margin-block:var(--space-4); }
+.simulation-author label { display:grid; gap:var(--space-2); min-width:0; }
+.simulation-author input,.simulation-author select,.simulation-author textarea { width:100%; min-width:0; max-width:100%; }
+.simulation-author__catalog { display:flex; align-items:end; flex-wrap:wrap; gap:var(--space-3); }
+.simulation-author__catalog label { flex:1 1 20rem; }
+.simulation-author__columns,.simulation-author__pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-4); }
+.simulation-author__pair { min-width:0; border:1px solid var(--line); border-radius:var(--radius-md); padding:var(--space-3); margin-block:var(--space-4); }
+.simulation-author__pair legend { font-weight:600; padding-inline:var(--space-2); }
+.simulation-author__item,.simulation-author__step { border:1px solid var(--line); border-radius:var(--radius-md); padding:var(--space-4); margin-block:var(--space-4); }
+.simulation-author__step { background:var(--surface-2); }
+.simulation-author__editor label { margin-block:var(--space-3); }
+.simulation-author__actions { display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-3); padding:var(--space-4); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md); margin-block:var(--space-4); }
+.simulation-author__preview { position:fixed; inset:0; width:100vw; max-width:none; height:100dvh; max-height:none; padding:0; border:0; margin:0; background:var(--canvas); color:var(--ink-900); overflow:auto; }
+.simulation-author__preview::backdrop { background:rgb(16 40 55 / 65%); }
+.simulation-author .check { display:flex; align-items:start; gap:var(--space-2); }
+.simulation-author .check input { width:auto; flex:0 0 auto; margin-top:.4rem; }
+@media(max-width:700px){.simulation-author__columns,.simulation-author__pair{grid-template-columns:minmax(0,1fr)}.simulation-author .card{padding:var(--space-3)}.simulation-author__actions .button{flex:1 1 100%}}

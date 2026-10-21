@@ -26,6 +26,7 @@ import {
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
+import PageHeader from "./PageHeader";
 import RoadmapSection, { CheckpointNotice } from "./RoadmapSection";
 import { FinishDialog, TimerControls } from "./TaskTimer";
 
@@ -728,19 +729,18 @@ export default function PlanningPage() {
 
   return (
     <section>
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand">
-        Your plan
-      </p>
-      <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
-        Your study sessions
-      </h2>
+      <PageHeader
+        description="Your next sessions, why each one was chosen, and the road to your exam."
+        eyebrow="Your plan"
+        title="Your study sessions"
+      />
       {!currentPlan ? (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="mt-6 rounded-3xl border border-slate-100 bg-white shadow-card p-6">
           <p className="text-slate-600">
             You have not set up a study plan yet.
           </p>
           <Link
-            className="mt-4 inline-flex rounded-lg bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark"
+            className="mt-4 inline-flex rounded-full bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark"
             to="/planning/setup"
           >
             Set up a plan
@@ -772,7 +772,7 @@ export default function PlanningPage() {
               </select>
             </label>
           ) : null}
-          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-slate-100 bg-white shadow-card p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-semibold text-ink">
                 {currentPlan.mode === "predicted"
@@ -785,7 +785,7 @@ export default function PlanningPage() {
               </p>
             </div>
             <button
-              className="rounded-lg bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+              className="rounded-full bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
               disabled={generating || scheduleLoading || (error !== "" && schedule === null)}
               onClick={() => void regenerate(currentPlan)}
               type="button"
@@ -826,7 +826,7 @@ export default function PlanningPage() {
             </div>
           ) : null}
           {scheduleLoading ? (
-            <p className="mt-6 rounded-xl border border-slate-200 bg-white p-5 text-slate-600">
+            <p className="mt-6 rounded-3xl border border-slate-100 bg-white shadow-card p-5 text-slate-600">
               Loading saved study sessions...
             </p>
           ) : null}
@@ -878,7 +878,7 @@ export default function PlanningPage() {
                 ))}
               </div>
               {tasks.length === 0 ? (
-                <p className="mt-3 rounded-xl border border-slate-200 bg-white p-5 text-slate-600">
+                <p className="mt-3 rounded-3xl border border-slate-100 bg-white shadow-card p-5 text-slate-600">
                   No study sessions are saved for this plan yet.
                 </p>
               ) : viewMode === "list" ? (
@@ -922,7 +922,7 @@ export default function PlanningPage() {
                     .map(([day, dayTasks]) => (
                       <section
                         aria-label={`Sessions for ${day}`}
-                        className="min-w-0 rounded-xl border border-slate-200 bg-white p-3"
+                        className="min-w-0 rounded-3xl border border-slate-100 bg-white shadow-card p-3"
                         key={day}
                       >
                         <h4 className="mb-3 font-semibold text-ink">{day}</h4>

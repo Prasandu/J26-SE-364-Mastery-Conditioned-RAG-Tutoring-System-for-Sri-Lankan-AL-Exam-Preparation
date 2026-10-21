@@ -46,7 +46,7 @@ export default function MotivationCard() {
   return (
     <section
       aria-label="Today's motivation"
-      className="mt-5 flex items-start justify-between gap-4 rounded-2xl border border-violet-200 bg-violet-50 p-5 text-violet-950"
+      className="mt-5 flex items-start justify-between gap-4 rounded-3xl border border-violet-100 bg-violet-50 p-5 text-violet-950 shadow-card"
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">

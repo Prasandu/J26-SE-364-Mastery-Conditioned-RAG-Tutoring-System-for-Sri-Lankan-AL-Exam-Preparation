@@ -1,11 +1,29 @@
 @import "tailwindcss";
 
+/* Shared A/L Chemistry look (matches the assessment app): deep navy brand,
+   soft blue-grey page, white rounded cards with a gentle shadow. */
 @theme {
-  --color-brand: #155e75;
-  --color-brand-dark: #164e63;
-  --color-page: #f8fafc;
-  --color-ink: #0f172a;
+  --color-brand: #0b4a7a;
+  --color-brand-dark: #083a61;
+  --color-brand-soft: #e2eef7;
+  --color-page: #f2f5f9;
+  --color-ink: #0f1f33;
+  --shadow-card: 0 10px 30px -12px rgb(15 31 51 / 0.12), 0 2px 6px -2px rgb(15 31 51 / 0.06);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Small uppercase label above titles, e.g. "YOUR PLAN". */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background-color: var(--color-brand-soft);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-brand);
 }
 
 :root {

@@ -171,7 +171,7 @@ export default function RoadmapSection({
               <p className="text-sm font-semibold">How would you like to continue?</p>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                 <button
-                  className="rounded-lg bg-brand px-3 py-2 text-left text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+                  className="rounded-full bg-brand px-3 py-2 text-left text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
                   disabled={choosing}
                   onClick={() => onChooseTarget("keep_target")}
                   type="button"
@@ -199,7 +199,7 @@ export default function RoadmapSection({
           ))}
         </ol>
       ) : (
-        <p className="mt-4 rounded-xl border border-slate-200 bg-white p-5 text-slate-600">
+        <p className="mt-4 rounded-3xl border border-slate-100 bg-white shadow-card p-5 text-slate-600">
           Your roadmap will appear once your plan has topics and study time.
         </p>
       )}

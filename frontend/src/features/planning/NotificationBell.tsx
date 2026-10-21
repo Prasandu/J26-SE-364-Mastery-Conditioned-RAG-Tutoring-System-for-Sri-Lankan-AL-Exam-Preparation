@@ -140,7 +140,7 @@ function SettingsPanel({ onDone }: { onDone: () => void }) {
       </div>
       <div className="flex items-center gap-2">
         <button
-          className="rounded-lg bg-brand px-3 py-1.5 font-semibold text-white hover:bg-brand-dark"
+          className="rounded-full bg-brand px-3 py-1.5 font-semibold text-white hover:bg-brand-dark"
           type="submit"
         >
           Save
@@ -260,7 +260,7 @@ export default function NotificationBell() {
       {open ? (
         <div
           aria-label="Notifications"
-          className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white text-ink shadow-xl"
+          className="absolute right-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-slate-100 bg-white shadow-card text-ink shadow-xl"
           role="region"
         >
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">

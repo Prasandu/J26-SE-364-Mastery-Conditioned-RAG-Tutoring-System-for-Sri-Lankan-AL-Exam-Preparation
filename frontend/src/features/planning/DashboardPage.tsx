@@ -28,6 +28,7 @@ import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
 import MotivationCard from "./MotivationCard";
+import PageHeader from "./PageHeader";
 
 const chartColors = {
   brand: "#155e75",
@@ -347,16 +348,15 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
 
   return (
     <section>
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand">
-        Progress overview
-      </p>
-      <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
-        Your learning dashboard
-      </h2>
+      <PageHeader
+        description="Your exam countdown, progress and topics that need attention."
+        eyebrow="Progress overview"
+        title="Your learning dashboard"
+      />
       <MotivationCard />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <p className="text-sm font-semibold text-slate-600">Exam countdown</p>
           {dashboard.has_exam_plan ? (
             <p className="mt-3 text-4xl font-bold text-ink">
@@ -378,7 +378,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <h3 className="text-sm font-semibold text-slate-600">
             Study adherence
           </h3>
@@ -399,7 +399,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <article className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <h3 className="text-sm font-semibold text-slate-600">
             Predicted vs target grade
           </h3>
@@ -446,7 +446,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
       )}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <h3 className="text-lg font-semibold text-ink">Mastery trend</h3>
           <p className="mb-4 mt-1 text-sm text-slate-600">
             Weekly mastery calculated from assessment evidence
@@ -461,7 +461,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
           )}
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <h3 className="text-lg font-semibold text-ink">Sub-topic mastery</h3>
           <p className="mb-4 mt-1 text-sm text-slate-600">
             Color indicates the latest stored mastery for each sub-topic.
@@ -477,7 +477,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </section>
       </div>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="mt-6 rounded-3xl border border-slate-100 bg-white shadow-card p-5 sm:p-6">
         <h3 className="text-lg font-semibold text-ink">Topics to reinforce</h3>
         {dashboard.weak_topics.length === 0 ? (
           <div className="mt-3">
@@ -507,7 +507,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         )}
       </section>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="mt-6 rounded-3xl border border-slate-100 bg-white shadow-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-lg font-semibold text-ink">
             What-if study estimate
@@ -545,7 +545,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
               </span>
             </label>
             <button
-              className="mt-4 rounded-lg bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+              className="mt-4 rounded-full bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
               disabled={projecting}
               onClick={() => void runWhatIf()}
               type="button"

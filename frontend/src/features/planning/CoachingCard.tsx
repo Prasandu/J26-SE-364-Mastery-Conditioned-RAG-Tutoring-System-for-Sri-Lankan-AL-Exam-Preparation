@@ -8,7 +8,7 @@ export default function CoachingCard({
   return (
     <section
       aria-label="Study coaching"
-      className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sky-950"
+      className="mt-6 rounded-3xl border border-brand-soft bg-brand-soft/60 p-6 text-ink shadow-card"
     >
       <p className="text-sm font-medium">{message.greeting}</p>
       <h3 className="mt-1 text-lg font-semibold">{message.headline}</h3>

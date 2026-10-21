@@ -11,6 +11,7 @@ import {
   type PlanResponse,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
+import PageHeader from "./PageHeader";
 import TopicTree, { type TopicNode } from "./TopicTree";
 import { validatePlanForm } from "./planValidation";
 
@@ -252,22 +253,18 @@ export default function PlanningSetupPage() {
 
   return (
     <section className="mx-auto max-w-4xl">
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand">
-        Planning setup
-      </p>
-      <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
-        Build a plan around your exam
-      </h2>
-      <p className="mt-2 text-slate-600">
-        Choose your target and regular study windows. Adaptive plans use your
-        saved mastery data to prioritize topics.
-      </p>
-      {existingPlan ? (
-        <p className="mt-3 rounded-xl bg-slate-100 p-3 text-sm text-slate-700" role="status">
-          These are your current plan's settings. Change what you need and save
-          to update your plan.
-        </p>
-      ) : null}
+      <PageHeader
+        description="Choose your target and regular study windows. Adaptive plans use your saved mastery data to prioritize topics."
+        eyebrow="Planning setup"
+        title="Build a plan around your exam"
+      >
+        {existingPlan ? (
+          <p className="mt-4 rounded-2xl bg-brand-soft p-3 text-sm text-brand" role="status">
+            These are your current plan's settings. Change what you need and save
+            to update your plan.
+          </p>
+        ) : null}
+      </PageHeader>
 
       {error ? (
         <div className="mt-6">
@@ -276,7 +273,7 @@ export default function PlanningSetupPage() {
       ) : null}
 
       <form
-        className="mt-6 space-y-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-7"
+        className="mt-6 space-y-6 rounded-3xl border border-slate-100 bg-white shadow-card p-4 sm:p-7"
         noValidate
         onSubmit={submit}
       >
@@ -495,7 +492,7 @@ export default function PlanningSetupPage() {
         ) : null}
 
         <button
-          className="w-full rounded-lg bg-brand px-5 py-3 font-semibold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-full bg-brand px-5 py-3 font-semibold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           disabled={saving}
           type="submit"
         >

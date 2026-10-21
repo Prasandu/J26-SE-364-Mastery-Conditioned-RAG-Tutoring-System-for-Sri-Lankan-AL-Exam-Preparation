@@ -78,7 +78,10 @@ class ExtractedPoint(BaseModel):
     description: str = Field(description="What earns the mark, in the marking scheme's own words")
     marks: float
     point_type: str = Field(
-        description="mcq_key, concept, equation, formula, calculation, unit, diagram or graph"
+        description=(
+            "Exactly one of: mcq_key, concept, equation, formula, calculation, unit, diagram, "
+            'graph. Never two of these joined together, e.g. never "diagram or graph".'
+        )
     )
     expected: ExpectedAnswer | None = None
     alternatives: list[str] = []
@@ -134,7 +137,8 @@ Rules:
 4. Split the marks the way the scheme does. "04 marks x 8 = 32 marks" means eight separate
    points worth 4 marks each, so list eight points.
 5. point_type: mcq_key for an answer key, calculation for a numeric answer, equation for a
-   chemical equation, unit for a unit, diagram or graph for a drawing, otherwise concept.
+   chemical equation, unit for a unit, diagram for a structure or other drawing, graph for a
+   plotted graph, otherwise concept. Exactly one of these words - never "diagram or graph".
 6. Fill expected only with what code can check: option for an answer key, value and unit for a
    numeric answer, equation for a balanced equation. Leave the rest empty.
 7. Put any instruction to the examiner, such as "deduct 01 mark if ...", into notes.

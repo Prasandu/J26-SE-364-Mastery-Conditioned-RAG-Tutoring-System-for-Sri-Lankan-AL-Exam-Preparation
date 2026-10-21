@@ -139,6 +139,7 @@ def create_scheme_from_extraction(
     """Turn a reviewed scheme extraction into the next draft version, the same way
     create_paper_from_extraction does for a paper - see its docstring."""
     _ensure_mcq_skeletons(db, paper_id, data)
+    _ensure_structured_skeletons(db, paper_id, data)
     try:
         body = MarkingSchemeIn.model_validate(
             scheme_from_extraction(
@@ -206,6 +207,7 @@ def append_scheme_questions_from_extraction(
     editable scheme version - the scheme-side half of resuming an import after a
     daily AI quota resets. See append_paper_questions_from_extraction above."""
     _ensure_mcq_skeletons(db, paper_id, data)
+    _ensure_structured_skeletons(db, paper_id, data)
     built = scheme_from_extraction(
         data.questions,
         data.mcq_answers,
@@ -251,6 +253,24 @@ def _ensure_mcq_skeletons(
     labels = [clean_label(answer["question"]) for answer in data.mcq_answers]
     if labels:
         papers.ensure_mcq_question_skeletons(db, paper_id, data.section_code, labels, data.mcq_marks)
+
+
+def _ensure_structured_skeletons(
+    db: Session, paper_id: int, data: SchemeFromExtractionIn | AppendSchemeQuestionsFromExtractionIn
+) -> None:
+    """The structured/essay equivalent of _ensure_mcq_skeletons: a scheme question
+    like "1(b)(iii)" needs that exact Question row (and its parents "1", "1(b)") to
+    already exist, so this creates whichever of those a reviewed scheme names that
+    are not already in the paper - its marks are the sum of its own points' marks,
+    matching how the scheme itself splits "04 marks x 8" into eight points."""
+    marks_by_label = {
+        clean_label(question["question"]): sum(
+            point.get("marks") or 0 for point in question.get("points") or []
+        )
+        for question in data.questions
+    }
+    if marks_by_label:
+        papers.ensure_structured_question_skeletons(db, paper_id, data.section_code, marks_by_label)
 
 
 def _messages(error: ValidationError) -> list[str]:

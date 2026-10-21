@@ -306,10 +306,29 @@ def _point(extracted: dict[str, Any], number: int) -> dict[str, Any]:
         "code": f"P{number}",
         "description": extracted["description"],
         "marks": extracted["marks"],
-        "point_type": extracted.get("point_type") or PointType.CONCEPT,
+        "point_type": _point_type(extracted.get("point_type")),
         "expected": _expected(extracted.get("expected")),
         "alternatives": extracted.get("alternatives") or [],
     }
+
+
+def _point_type(raw: Any) -> str:
+    """A read page's point_type, normalized to one PointType hasn't already.
+
+    The model is told to pick exactly one (see extractor.py's SCHEME_PROMPT), but
+    occasionally still writes two joined together, e.g. "diagram or graph" - a
+    whole scheme otherwise worth keeping should not fail just for this, and
+    re-reading the page costs real quota for something this mechanical to fix.
+    """
+    if not raw:
+        return PointType.CONCEPT
+    text = str(raw).strip().lower()
+    for value in PointType:
+        if value == text:
+            return value
+        if value in text:
+            return value
+    return PointType.CONCEPT
 
 
 # Checking an imported draft

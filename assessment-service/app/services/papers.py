@@ -4,6 +4,7 @@ Life cycle: draft -> published. Published papers never change, so every mark
 given against them stays traceable.
 """
 
+import re
 from collections.abc import Sequence
 
 from sqlalchemy import func, or_, select
@@ -79,7 +80,7 @@ def search_papers(
 
 
 def _paper_query(*, kind: PaperKind | None, year: int | None, student_ref: str | None):
-    stmt = select(Paper).order_by(Paper.id)
+    stmt = select(Paper).order_by(Paper.id.desc())
     mine = Paper.created_by.is_(None)
     if student_ref:
         mine = or_(mine, Paper.created_by == student_ref)
@@ -200,6 +201,61 @@ def ensure_mcq_question_skeletons(
         return
     skeletons = [QuestionIn(label=label, max_marks=marks) for label in missing]
     append_questions(db, paper_id, section_code, skeletons)
+
+
+_LABEL_SEGMENT = re.compile(r"\([^()]+\)|^[^(\s]+")
+
+
+def _label_path(full_label: str) -> list[str]:
+    """Split a full label into the path a Question tree stores it as: "1(b)(iii)"
+    -> ["1", "(b)", "(iii)"], matching Question.full_label's own concatenation."""
+    return _LABEL_SEGMENT.findall(full_label)
+
+
+def ensure_structured_question_skeletons(
+    db: Session, paper_id: int, section_code: str, marks_by_label: dict[str, float | None]
+) -> None:
+    """Auto-create bare structured/essay question skeletons (label and marks, no
+    wording) for any scheme label not already in this section - the structured
+    equivalent of ensure_mcq_question_skeletons, needed because a label here can be
+    several levels deep ("1(b)(iii)") and share parents with its siblings
+    ("1(b)(i)", "1(b)(ii)") instead of each becoming its own fresh top-level row,
+    which is as far as append_questions' flat, one-call-per-label approach goes.
+    Silently does nothing if the section does not exist or the paper is not a
+    draft - the scheme import itself reports that problem in a way the admin
+    already understands.
+    """
+    paper = get_paper(db, paper_id)
+    if paper.status != ContentStatus.DRAFT:
+        return
+    section = next((s for s in paper.sections if s.code == section_code), None)
+    if section is None:
+        return
+
+    top_level = [q for q in section.questions if q.parent is None]
+    for full_label, marks in marks_by_label.items():
+        segments = _label_path(full_label)
+        if not segments:
+            continue
+        parent: Question | None = None
+        siblings = top_level
+        for depth, segment in enumerate(segments):
+            existing = next((q for q in siblings if q.label == segment), None)
+            if existing is None:
+                is_leaf = depth == len(segments) - 1
+                existing = Question(
+                    parent=parent,
+                    label=segment,
+                    text="",
+                    max_marks=marks if is_leaf else None,
+                    order_no=len(siblings),
+                )
+                section.questions.append(existing)
+                if parent is None:
+                    top_level.append(existing)
+            parent = existing
+            siblings = existing.sub_questions
+    db.commit()
 
 
 def copy_paper(db: Session, paper_id: int) -> Paper:

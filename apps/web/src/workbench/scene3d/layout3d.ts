@@ -72,12 +72,11 @@ export interface CameraPose {
 }
 
 /**
- * Overview framing. The camera used to sit at [0, 3.8, 7.2], far enough back that the apparatus
- * occupied a small band across the middle of the canvas and read as "too small"; it is now closer
- * and slightly lower, so the bench fills the frame and the glassware is nearer eye height. The
- * e2e helper projects world points through this same constant, so the two stay in step.
+ * Oblique overview shows the depth of the worktop and cabinets while retaining the full apparatus
+ * span. Narrow canvases use the fitted pose below. Browser interaction helpers project through
+ * the same pose so picking checks follow the real camera.
  */
-export const OVERVIEW_POSE: CameraPose = { position: [0, 2.85, 6.2], target: [0, 1.0, -0.9] };
+export const OVERVIEW_POSE: CameraPose = { position: [3.6, 4.2, 8.8], target: [0, 0.75, -0.8] };
 
 /** Fit the full apparatus span in a narrow canvas without changing close-up presets. */
 export const fittedOverviewPose = (aspect: number): CameraPose => {

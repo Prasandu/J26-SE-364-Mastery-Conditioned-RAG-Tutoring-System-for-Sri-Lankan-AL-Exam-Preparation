@@ -1,6 +1,55 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-21 (blue simulation workspace and notebook layout)_
+_Last updated: 2026-10-21 (3D room/materials and blue 2D simulation graphics)_
+
+## Simulation graphics reference update (2026-10-21)
+
+- Implemented the requested visual update directly in the existing renderers. The 3D room now
+  has tiled walls/floor, recessed daylight window, background storage, beveled blue cabinets,
+  drawer hardware, open metal shelf and a locally generated epoxy worktop grain. Architectural
+  furniture introduces no new interactive equipment or experiment content.
+- Replaced the opaque back-face glass outline with physical transmission/refraction and studio
+  reflections. Tuned exposure, environment/key/fill/rim lighting, cleanliness smears and the
+  overview perspective to improve depth and contrast while keeping the apparatus inside the view.
+- Updated the 2D stage to a deep-blue backdrop with brighter glass, steel-blue worktop/shelf and
+  cabinet fronts, inspired by the supplied LabXchange reference. Existing positions, gestures,
+  close-ups, scientific overlays and keyboard fallback remain driven by the same scene model.
+- Released reflection-room/render-target resources on teardown and deferred the unused GLB
+  parser until a configured asset is requested. The production parser is now a separate chunk.
+- Focused checks: typecheck, ESLint, formatting, production build and 128 tests passed. Existing
+  desktop renderer/browser checks passed (6 tests), including real 3D picking, camera presets,
+  English/Sinhala switching and responsive layouts. Final graphics/Experiment 4/fallback browser
+  verification exited 0: 5 passed, 0 failed, 4 intentional project skips. Reviewed screenshots at
+  1920/1440/1366/834/390 widths in English and Sinhala; captures are in
+  `apps/web/final-screens/graphics-verified/`. A cold-load phone check initially timed out; it now
+  scrolls the stage into view and waits for the existing loading state before checking readiness.
+- The supplied images are visual references; no reference artwork, additional dependencies,
+  chemistry rules, API contracts, database changes or paid AI calls were introduced. These are
+  procedural graphics improvements; photorealistic authored apparatus assets remain outstanding.
+- Next: review the captured graphics and test touch/orbit performance on physical devices before
+  adding further art detail. No automatic roadmap expansion, commit or push.
+
+## R1 GLB loader continuation (2026-10-21)
+
+- Resumed the saved apparatus manifest/loader. Added cached loading with independent scene,
+  geometry and material instances per flask, pivot/display scaling, required-part checks and
+  procedural fallback for failed/missing/unsupported models. Added owned-resource cleanup,
+  including loads that complete after unmount; cached textures remain shared until cache reset.
+- Integrated only the optional authored flask shell into `Flask3D`. Existing projected liquid,
+  solid, marks, labels, stopper, cleanliness/warnings, selection and placement remain in the
+  existing renderer. Other apparatus manifest entries are specifications only, not enabled assets.
+- Added `docs/ASSET_SPEC.md` with the Blender/glTF handoff and R1 acceptance checklist.
+  All model paths remain `null`; no authored GLB or visual upgrade is claimed. No dependencies,
+  chemistry, engine rules, API contracts, paid providers or database configuration changed.
+- Verification: frontend typecheck, targeted ESLint, production build and 127 focused tests
+  passed (14 loader/lifecycle tests plus renderer, geometry and no-chemistry checks). The loader
+  parser test uses a synthetic GLB fixture, not a deliverable apparatus model. Focused Chrome
+  tests exited 0: 7 passed, no failures/skips, including Experiment 4, real 3D picking/camera
+  interaction, bilingual renderer switching and non-WebGL fallback. Inspected the fallback 3D
+  screenshot; captures are in `apps/web/final-screens/r1-loader/screens/`.
+- **R1 blocker:** Blender was not found on PATH or in its standard Program Files location, and
+  no authored GLB is available. Next: author/review the flask and verify its visual states before
+  enabling its path. Stop at the R1 gate; no R2–R8 implementation. No commit or push.
 
 ## Simulation workspace and notebook layout (2026-10-21)
 

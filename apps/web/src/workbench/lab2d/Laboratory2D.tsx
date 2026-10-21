@@ -60,12 +60,12 @@ function Backdrop({ shelfLabel }: { shelfLabel: string }) {
           width={96}
           height={150}
           rx={6}
-          fill="#cfe6f1"
-          stroke="#b7c6cf"
+          fill="#176d90"
+          stroke="#4b9dbb"
           strokeWidth={4}
         />
-        <line x1={1216} y1={24} x2={1216} y2={174} stroke="#b7c6cf" strokeWidth={3} />
-        <line x1={1168} y1={99} x2={1264} y2={99} stroke="#b7c6cf" strokeWidth={3} />
+        <line x1={1216} y1={24} x2={1216} y2={174} stroke="#4b9dbb" strokeWidth={3} />
+        <line x1={1168} y1={99} x2={1264} y2={99} stroke="#4b9dbb" strokeWidth={3} />
         <path
           d="M1176 44 L1200 30 M1176 68 L1204 54"
           stroke="#ffffff"
@@ -73,10 +73,10 @@ function Backdrop({ shelfLabel }: { shelfLabel: string }) {
           opacity={0.7}
         />
       </g>
-      <rect x={-BLEED} y={SHELF_Y} width={BLEED_W} height={12} rx={2} fill="#b8c3ca" />
-      <rect x={-BLEED} y={SHELF_Y + 12} width={BLEED_W} height={6} fill="#8d9aa3" />
+      <rect x={-BLEED} y={SHELF_Y} width={BLEED_W} height={12} rx={2} fill="#a4c9db" />
+      <rect x={-BLEED} y={SHELF_Y + 12} width={BLEED_W} height={6} fill="#5c8ea8" />
       {[90, 600, 1100].map((x) => (
-        <path key={x} d={`M${x} ${SHELF_Y + 18} l0 26 l22 -26 Z`} fill="#8d9aa3" />
+        <path key={x} d={`M${x} ${SHELF_Y + 18} l0 26 l22 -26 Z`} fill="#5c8ea8" />
       ))}
       <g className="lab2d-plaque">
         <rect
@@ -85,14 +85,14 @@ function Backdrop({ shelfLabel }: { shelfLabel: string }) {
           width={Math.max(150, shelfLabel.length * 8.4 + 28)}
           height={30}
           rx={15}
-          fill="#ffffff"
-          stroke="#d6e0e6"
+          fill="#124b6b"
+          stroke="#3d8db2"
         />
-        <text x={58} y={38} fontSize={15} fontWeight={600} fill="#2f414d">
+        <text x={58} y={38} fontSize={15} fontWeight={600} fill="#ffffff">
           {shelfLabel}
         </text>
       </g>
-      <rect x={-BLEED} y={BENCH_BACK_Y - 8} width={BLEED_W} height={8} fill="#8796a1" />
+      <rect x={-BLEED} y={BENCH_BACK_Y - 8} width={BLEED_W} height={8} fill="#adcddd" />
       <rect
         x={-BLEED}
         y={BENCH_BACK_Y}
@@ -104,14 +104,29 @@ function Backdrop({ shelfLabel }: { shelfLabel: string }) {
           presentation only — they draw no apparatus and depend on no session state. */}
       <rect x={-BLEED} y={BENCH_BACK_Y} width={BLEED_W} height={26} fill="url(#lab2d-bench-ao)" />
       <rect x={-BLEED} y={BENCH_Y - 10} width={BLEED_W} height={10} fill="url(#lab2d-bench-lip)" />
-      <rect x={-BLEED} y={BENCH_Y} width={BLEED_W} height={4} fill="#9aa9b3" />
+      <rect x={-BLEED} y={BENCH_Y} width={BLEED_W} height={4} fill="#9cbdd0" />
       <rect
         x={-BLEED}
         y={BENCH_Y + 4}
         width={BLEED_W}
         height={VIEW_H - BENCH_Y - 4 + BLEED}
-        fill="#3f4b54"
+        fill="#234e6b"
       />
+      {[80, 380, 680, 980].map((x) => (
+        <g key={x}>
+          <rect
+            x={x}
+            y={BENCH_Y + 18}
+            width={276}
+            height={120}
+            rx={3}
+            fill="#416f8d"
+            stroke="#6f9ab4"
+            strokeWidth={2}
+          />
+          <rect x={x + 100} y={BENCH_Y + 32} width={76} height={6} rx={3} fill="#b8d4e3" />
+        </g>
+      ))}
     </g>
   );
 }

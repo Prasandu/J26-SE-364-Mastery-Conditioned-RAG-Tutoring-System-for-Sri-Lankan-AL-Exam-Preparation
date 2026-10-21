@@ -11,16 +11,16 @@ export function Lab2DDefs() {
     <svg className="lab2d-defs" width="0" height="0" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="lab2d-wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#edf4f7" />
-          <stop offset="1" stopColor="#dae5eb" />
+          <stop offset="0" stopColor="#086b91" />
+          <stop offset="1" stopColor="#033a59" />
         </linearGradient>
         <pattern id="lab2d-tiles" width="48" height="32" patternUnits="userSpaceOnUse">
-          <rect width="48" height="32" fill="#e4edf2" />
-          <path d="M0 0 H48 M0 0 V32" stroke="#d3dee5" strokeWidth="1.5" />
+          <rect width="48" height="32" fill="#075275" />
+          <path d="M0 0 H48 M0 0 V32" stroke="#126184" strokeWidth="1.5" />
         </pattern>
         <linearGradient id="lab2d-glass" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.75" />
-          <stop offset="0.45" stopColor="#d9eef6" stopOpacity="0.35" />
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.85" />
+          <stop offset="0.45" stopColor="#b8e7f8" stopOpacity="0.48" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0.7" />
         </linearGradient>
         {/* Vertical body sheen. The horizontal `lab2d-glass` gradient alone reads as a flat
@@ -48,8 +48,8 @@ export function Lab2DDefs() {
           <stop offset="1" stopColor="#a8d4e8" stopOpacity="0.95" />
         </linearGradient>
         <linearGradient id="lab2d-bench" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#56646e" />
-          <stop offset="1" stopColor="#74838e" />
+          <stop offset="0" stopColor="#6d9fb8" />
+          <stop offset="1" stopColor="#477d9d" />
         </linearGradient>
         {/* Contact shading where the bench meets the back panel. A flat worktop reads as a slab of
             colour; darkening the few units nearest the wall is what gives it a surface. */}
@@ -65,11 +65,11 @@ export function Lab2DDefs() {
         <linearGradient id="lab2d-metal" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#eef1f3" />
           <stop offset="0.45" stopColor="#c3ccd2" />
-          <stop offset="1" stopColor="#8d98a1" />
+          <stop offset="1" stopColor="#8cabbc" />
         </linearGradient>
         <linearGradient id="lab2d-metal-dark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5b6670" />
-          <stop offset="1" stopColor="#333c43" />
+          <stop offset="0" stopColor="#386582" />
+          <stop offset="1" stopColor="#1d405a" />
         </linearGradient>
         <linearGradient id="lab2d-plastic" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.9" />

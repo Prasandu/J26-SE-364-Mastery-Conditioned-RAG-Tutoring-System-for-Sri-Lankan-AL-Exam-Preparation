@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react';
 import {
-  BackSide,
   type BufferGeometry,
   CanvasTexture,
   CatmullRomCurve3,
@@ -19,10 +18,11 @@ import {
   liquidProfile,
 } from '../flaskProfile';
 import type { Placement, PointerState, SceneItem, SceneModel } from '../sceneModel';
+import { AuthoredFlaskBody } from './AuthoredFlaskBody';
 
 /**
  * Procedural 3D apparatus. Geometry is created once per module and shared; visual state comes only
- * from the scene model. Glass uses a physical material without transmission (no extra render pass).
+ * from the scene model. Glass uses physical transmission and studio reflections.
  */
 
 const lathe = (pts: readonly (readonly [number, number])[], segments = 48) =>
@@ -60,71 +60,45 @@ const GEOMETRY = {
   balanceHousing: new RoundedBoxGeometry(1.3, 0.46, 0.22, 3, 0.04),
 };
 
-const GLASS_COLOR = '#e6f5fb';
-const SELECTED_COLOR = '#5cc8b6';
-/** Silhouette colours: a cool near-black for glass rims, the selection teal when picked. */
-const OUTLINE_COLOR = '#17323f';
-const OUTLINE_SELECTED = '#0b7f70';
+const GLASS_COLOR = '#f3fbff';
+const SELECTED_COLOR = '#68c9f3';
 
 function Glass({ selected, opacity = 0.36 }: { selected: boolean; opacity?: number }) {
   return (
     <meshPhysicalMaterial
       color={GLASS_COLOR}
-      emissive={selected ? '#0f9d8a' : '#000000'}
-      emissiveIntensity={selected ? 0.12 : 0}
-      roughness={0.05}
+      emissive={selected ? '#23659a' : '#000000'}
+      emissiveIntensity={selected ? 0.06 : 0}
+      roughness={0.035}
       metalness={0}
       clearcoat={1}
       clearcoatRoughness={0.04}
-      envMapIntensity={1.5}
-      transparent
-      opacity={selected ? opacity + 0.1 : opacity}
+      envMapIntensity={1.35}
+      transmission={0.94}
+      thickness={opacity * 0.12}
+      ior={1.47}
+      attenuationColor="#dcefff"
+      attenuationDistance={2}
       side={DoubleSide}
       depthWrite={false}
     />
   );
 }
 
-/**
- * A glass vessel drawn with a silhouette.
- *
- * Transparent glassware lit from in front reads as a faint smear: the 3D laboratory's apparatus
- * were reported as "pale and too small", and the cause is that almost all of a glass vessel's
- * visible structure in real life comes from edges and refraction, neither of which a cheap
- * transparent material reproduces. Drawing the same profile a second time, slightly larger and
- * with `side={BackSide}`, leaves only its far wall visible — a rim that traces the outline
- * exactly. For a surface of revolution this is the cheapest readable silhouette available, and
- * it needs no post-processing pass, no outline shader and no extra dependency.
- *
- * `depthWrite={false}` on both, with the outline at a lower `renderOrder`, keeps the existing
- * transparency sorting behaviour unchanged.
- */
+/** A single refractive shell; opaque back-face outlines previously made glass look like gray plastic. */
 function GlassBody({
   geometry,
   selected,
   opacity = 0.36,
-  outline = 1.03,
 }: {
   geometry: BufferGeometry;
   selected: boolean;
   opacity?: number;
-  outline?: number;
 }) {
   return (
-    <>
-      <mesh geometry={geometry} scale={outline} renderOrder={1}>
-        <meshBasicMaterial
-          color={selected ? OUTLINE_SELECTED : OUTLINE_COLOR}
-          side={BackSide}
-          transparent
-          opacity={selected ? 0.75 : 0.5}
-          depthWrite={false}
-        />
-      </mesh>
-      <mesh geometry={geometry} renderOrder={2}>
-        <Glass selected={selected} opacity={opacity} />
-      </mesh>
-    </>
+    <mesh geometry={geometry} renderOrder={2}>
+      <Glass selected={selected} opacity={opacity} />
+    </mesh>
   );
 }
 
@@ -147,12 +121,17 @@ function Solid() {
 
 function Smudge({ y, radius }: { y: number; radius: number }) {
   return (
-    <mesh position={[radius * 0.55, y, radius * 0.75]} rotation={[0, 0.6, 0]} renderOrder={3}>
+    <mesh
+      position={[radius * 0.55, y, radius * 0.75]}
+      rotation={[0, 0.6, -0.3]}
+      scale={[0.55, 1, 1]}
+      renderOrder={3}
+    >
       <circleGeometry args={[radius * 0.28, 16]} />
       <meshBasicMaterial
-        color="#7d725c"
+        color="#6e7c86"
         transparent
-        opacity={0.22}
+        opacity={0.15}
         depthWrite={false}
         side={DoubleSide}
       />
@@ -232,7 +211,9 @@ export function Flask3D({
           ))}
         </group>
       )}
-      <GlassBody geometry={GEOMETRY.flask} selected={item.highlighted} />
+      <AuthoredFlaskBody
+        fallback={<GlassBody geometry={GEOMETRY.flask} selected={item.highlighted} />}
+      />
       <mesh position={[0, FLASK_MARK_Y, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={3}>
         <torusGeometry args={[markR, 0.0045, 6, 40]} />
         <meshBasicMaterial color="#1f2d36" />

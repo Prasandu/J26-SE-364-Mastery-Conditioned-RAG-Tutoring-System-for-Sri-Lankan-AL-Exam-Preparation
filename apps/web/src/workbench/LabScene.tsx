@@ -1,8 +1,7 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { Group, PMREMGenerator, Vector3 } from 'three';
+import { ACESFilmicToneMapping, Group, PMREMGenerator, Vector3 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { BENCH_TARGET } from './interaction/gestures';
 import type { LabRendererProps } from './labRenderer';
 import { placementOf, type Placement, type SceneItem, type SceneModel } from './sceneModel';
@@ -17,16 +16,16 @@ import {
   WatchGlass3D,
 } from './scene3d/Apparatus3D';
 import { CameraRig, type CameraApi } from './scene3d/CameraRig';
-import { OVERVIEW_POSE, RISER, itemPosition3D } from './scene3d/layout3d';
+import { OVERVIEW_POSE, itemPosition3D } from './scene3d/layout3d';
+import { LaboratoryRoom } from './scene3d/LaboratoryRoom';
 
 /**
- * 3D laboratory: procedural geometry only (no external assets), no experiment rules. Picking an
+ * 3D laboratory: procedural fallback with an optional authored flask shell, no experiment rules. Picking an
  * item calls `onPick`, the same handler the accessible equipment list and the 2D renderer use.
  */
 
-const SELECTION = '#0f9d8a';
+const SELECTION = '#26a9e8';
 const HELD_LIFT = 0.45;
-const WORKTOP = new RoundedBoxGeometry(9.8, 0.24, 5.8, 4, 0.05);
 /** Pointer travel (px) above which a press is treated as an orbit drag, not a pick. */
 const DRAG_TOLERANCE = 6;
 /** Approximate footprint radius per kind for the selection ring. */
@@ -44,14 +43,16 @@ const FOOTPRINT: Record<SceneItem['kind'], number> = {
 /** Soft studio reflections for glass (three's RoomEnvironment; no downloaded HDR file). */
 function Environment() {
   const gl = useThree((s) => s.gl);
-  const texture = useMemo(() => {
+  const environment = useMemo(() => {
     const pmrem = new PMREMGenerator(gl);
-    const target = pmrem.fromScene(new RoomEnvironment(), 0.04);
+    const room = new RoomEnvironment();
+    const target = pmrem.fromScene(room, 0.04);
+    room.dispose();
     pmrem.dispose();
-    return target.texture;
+    return target;
   }, [gl]);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return <primitive attach="environment" object={texture} />;
+  useEffect(() => () => environment.dispose(), [environment]);
+  return <primitive attach="environment" object={environment.texture} />;
 }
 
 /**
@@ -117,58 +118,6 @@ function SettledGroup({
 
 /** Scratch vector reused every frame so easing allocates nothing. */
 const TARGET_VEC = new Vector3();
-
-function Room({ onBench }: { onBench: () => void }) {
-  return (
-    <group>
-      {/* Back wall: a mid tone, not near-white, so glassware in front of it keeps a visible
-          silhouette. The lower band is darker still, giving the bench a horizon to sit against. */}
-      {/* Deliberately oversized: the closer overview camera used to see past the old 22x7 panel,
-          leaving raw clear-colour in the upper corners where the room should be. */}
-      <mesh position={[0, 5, -3.05]} receiveShadow>
-        <planeGeometry args={[34, 16]} />
-        <meshStandardMaterial color="#b9cdd8" roughness={0.95} />
-      </mesh>
-      <mesh position={[0, 0.85, -3.03]}>
-        <planeGeometry args={[22, 1.7]} />
-        <meshStandardMaterial color="#9db4c2" roughness={0.8} />
-      </mesh>
-      <mesh position={[4.9, 3.4, -3.02]}>
-        <planeGeometry args={[2.4, 2.2]} />
-        <meshBasicMaterial color="#d8edf7" />
-      </mesh>
-      <mesh position={[4.9, 3.4, -3.01]}>
-        <boxGeometry args={[0.06, 2.2, 0.02]} />
-        <meshStandardMaterial color="#b7c6cf" />
-      </mesh>
-      <mesh
-        geometry={WORKTOP}
-        position={[0, -0.12, 0]}
-        receiveShadow
-        onClick={(e: ThreeEvent<MouseEvent>) => {
-          e.stopPropagation();
-          if (e.delta <= DRAG_TOLERANCE) onBench();
-        }}
-      >
-        <meshStandardMaterial color="#55636d" roughness={0.55} metalness={0.05} />
-      </mesh>
-      <mesh position={[0, -1.3, 0.2]}>
-        <boxGeometry args={[9.6, 2.1, 5.4]} />
-        <meshStandardMaterial color="#46535c" roughness={0.8} />
-      </mesh>
-      {[-3.6, -1.2, 1.2, 3.6].map((x) => (
-        <mesh key={x} position={[x, -0.75, 2.92]}>
-          <boxGeometry args={[2.2, 0.06, 0.02]} />
-          <meshStandardMaterial color="#7d8b95" metalness={0.4} roughness={0.4} />
-        </mesh>
-      ))}
-      <mesh position={[RISER.x, RISER.height / 2, RISER.z]} castShadow receiveShadow>
-        <boxGeometry args={[RISER.width, RISER.height, RISER.depth]} />
-        <meshStandardMaterial color="#a3b0b8" roughness={0.6} />
-      </mesh>
-    </group>
-  );
-}
 
 function Highlight({ item }: { item: SceneItem }) {
   if (!item.highlighted && !item.onBench) return null;
@@ -273,6 +222,8 @@ export default function LabScene({
   return (
     <Canvas
       frameloop="demand"
+      gl={{ antialias: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.9 }}
+      scene={{ environmentIntensity: 0.45 }}
       camera={{ position: OVERVIEW_POSE.position, fov: 40, near: 0.1, far: 60 }}
       aria-label={label}
       role="img"
@@ -282,14 +233,14 @@ export default function LabScene({
       {/* Pale glass needs something to read against. The backdrop was near-white (#e9f1f5), which
           is why the apparatus looked washed out; a deeper slate keeps the room bright without
           letting the glassware disappear into it. */}
-      <color attach="background" args={['#aec4d0']} />
+      <color attach="background" args={['#bdcbd5']} />
       <Environment />
       <CameraRig initial={OVERVIEW_POSE} reducedMotion={reducedMotion} onReady={onCameraReady} />
-      <hemisphereLight args={['#ffffff', '#76889a', 0.5]} />
+      <hemisphereLight args={['#f2f7ff', '#3c5369', 0.4]} />
       <directionalLight
         castShadow
         position={[3.5, 7, 5]}
-        intensity={1.5}
+        intensity={1.8}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-bias={-0.0004}
@@ -298,8 +249,9 @@ export default function LabScene({
         shadow-camera-top={6}
         shadow-camera-bottom={-6}
       />
-      <directionalLight position={[-5, 4, 2]} intensity={0.35} />
-      <Room onBench={() => onPick(BENCH_TARGET)} />
+      <directionalLight position={[-5, 4, 2]} intensity={0.35} color="#c9dfff" />
+      <directionalLight position={[1, 5, -4]} intensity={0.8} color="#f3f8ff" />
+      <LaboratoryRoom onBench={() => onPick(BENCH_TARGET)} />
       {model.items.map((item) => {
         const placement = placementOf(item, model);
         const [x, y, z] = itemPosition3D(item, model);

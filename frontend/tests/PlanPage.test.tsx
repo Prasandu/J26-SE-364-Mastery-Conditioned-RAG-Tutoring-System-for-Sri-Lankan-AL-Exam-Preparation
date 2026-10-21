@@ -145,10 +145,6 @@ function authValue(loading: boolean): AuthContextValue {
   };
 }
 
-function openManualLog() {
-  fireEvent.click(screen.getByRole("button", { name: "Log without the timer" }));
-}
-
 function renderPlanPage(loading: boolean) {
   return render(
     <AuthContext.Provider value={authValue(loading)}>
@@ -395,7 +391,6 @@ describe("PlanningPage", () => {
     expect(
       await screen.findByText("Practice · Organic chemistry, Alkanes"),
     ).toBeInTheDocument();
-    openManualLog();
     expect(screen.getByLabelText("Minutes studied for Organic chemistry, Alkanes")).toBeInTheDocument();
     expect(getSchedule).toHaveBeenCalledWith("newest-plan");
 
@@ -455,7 +450,6 @@ describe("PlanningPage", () => {
     renderPlanPage(false);
 
     expect(await screen.findByText("Learn the theory · Ketones")).toBeInTheDocument();
-    openManualLog();
     expect(screen.getByLabelText("Minutes studied for Ketones")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -510,7 +504,6 @@ describe("PlanningPage", () => {
 
     // Readable topic name is displayed in task list
     expect(await screen.findByText("Practice · Ketones")).toBeInTheDocument();
-    openManualLog();
     expect(screen.getByLabelText("Minutes studied for Ketones")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Why this task?" }));

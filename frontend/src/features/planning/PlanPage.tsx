@@ -173,8 +173,6 @@ function TaskCard({
   onUndo: (task: ScheduledTask) => void;
 }) {
   const [showReason, setShowReason] = useState(false);
-  const [showManual, setShowManual] = useState(false);
-  const timerState = task.timer_state ?? "idle";
   const style =
     statusStyles[task.status] ?? "border-slate-200 bg-white text-ink";
   const actionable = task.status === "planned" && task.id !== null;
@@ -183,9 +181,6 @@ function TaskCard({
     partialMinutes >= 1 &&
     partialMinutes <= task.duration_min;
   const displayTopic = formatTopicName(task);
-  // The timer is the main way to log a session; the manual buttons are tucked
-  // away unless the student chooses to log without it (or the timer was finished).
-  const manualVisible = actionable && (showManual || timerState === "finished");
   const minutesNote =
     task.actual_duration_min != null && (task.status === "partial" || task.status === "completed")
       ? ` · ${task.actual_duration_min} min studied`
@@ -332,23 +327,7 @@ function TaskCard({
         </Modal>
       ) : null}
 
-      <TimerControls
-        busy={busy}
-        extra={
-          actionable && timerState === "idle" ? (
-            <button
-              aria-expanded={showManual}
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white/60 hover:text-ink hover:underline"
-              onClick={() => setShowManual((open) => !open)}
-              type="button"
-            >
-              {showManual ? "Hide manual log" : "Log without the timer"}
-            </button>
-          ) : null
-        }
-        onAction={onTimer}
-        task={task}
-      />
+      <TimerControls busy={busy} onAction={onTimer} task={task} />
 
       {task.status !== "planned" && task.can_undo && task.id ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3 text-sm">
@@ -369,8 +348,8 @@ function TaskCard({
         </div>
       ) : null}
 
-      {manualVisible ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
+      {actionable ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
           <button
             className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
             disabled={busy}

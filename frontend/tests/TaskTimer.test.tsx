@@ -294,9 +294,8 @@ describe("rescheduling after a missed session", () => {
     });
     renderPage();
 
-    const logLinks = await screen.findAllByRole("button", { name: "Log without the timer" });
-    fireEvent.click(logLinks[0]);
-    fireEvent.click(screen.getByRole("button", { name: "Missed" }));
+    const cards = await screen.findAllByRole("button", { name: "Missed" });
+    fireEvent.click(cards[0]);
 
     expect(await screen.findByText("Moved or added sessions:")).toBeInTheDocument();
     await waitFor(() => expect(getSchedule).toHaveBeenCalledTimes(2));
@@ -346,23 +345,17 @@ describe("session card actions", () => {
     vi.mocked(updateTaskStatus).mockReset();
   });
 
-  it("keeps Start as the main action and tucks the manual buttons away", async () => {
+  it("shows Start together with the manual Done / Partial / Missed buttons", async () => {
     vi.mocked(getSchedule).mockResolvedValue(schedule([task()]));
     renderPage();
 
     expect(await screen.findByRole("button", { name: "Start" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Partial" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Missed" })).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: "Log without the timer" }));
-
     expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Partial" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Missed" })).toBeInTheDocument();
     expect(screen.getByText("Minutes studied")).toBeInTheDocument();
     expect(screen.getByText("(for Partial)")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Hide manual log" }));
-    expect(screen.queryByRole("button", { name: "Partial" })).toBeNull();
+    expect(screen.queryByText("Log without the timer")).toBeNull();
   });
 
   it("shows how many minutes were studied on a partial session", async () => {
@@ -388,7 +381,7 @@ describe("session card actions", () => {
     });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Log without the timer" }));
+    await screen.findByRole("button", { name: "Start" });
     fireEvent.click(screen.getByRole("button", { name: "Partial" }));
 
     expect(await screen.findByText("We couldn't fit the rest in")).toBeInTheDocument();
@@ -415,7 +408,7 @@ describe("session card actions", () => {
     });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Log without the timer" }));
+    await screen.findByRole("button", { name: "Start" });
     fireEvent.click(screen.getByRole("button", { name: "Missed" }));
 
     expect(

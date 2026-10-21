@@ -12,7 +12,6 @@ from app.services.weights import (
     ACHIEVABILITY_DEFAULT_UNCERTAINTY,
     ACHIEVABILITY_DIMINISHING_RETURNS,
     ACHIEVABILITY_GRADE_THRESHOLDS,
-    ACHIEVABILITY_HOURS_RATIO_EPSILON,
     ACHIEVABILITY_LEARNING_RATE_BASE,
     ACHIEVABILITY_MAX_HOURS_PER_TOPIC,
     ACHIEVABILITY_MAX_TOTAL_HOURS,
@@ -22,7 +21,6 @@ from app.services.weights import (
     ACHIEVABILITY_MIN_UNCERTAINTY,
     ACHIEVABILITY_PREREQUISITE_MASTERY_THRESHOLD,
     ACHIEVABILITY_REQUIRED_HOURS_SEARCH_ITERATIONS,
-    ACHIEVABILITY_STRETCH_MULTIPLIER,
     ACHIEVABILITY_UNCERTAINTY_EVIDENCE_DECAY,
     ACHIEVABILITY_UNMET_PREREQUISITE_PENALTY,
     COACHING_MAX_FOCUS_CHARS,
@@ -110,10 +108,12 @@ def build_coaching_message(
         )
     elif status == "out_of_reach":
         tone = "ambitious"
-        headline = f"Your {target_grade} target is very ambitious."
+        # When the target is out of reach, focus on effort rather than the grade:
+        # no "very ambitious" label and no discouraging score range.
+        headline = "Focus on your best, one day at a time."
         body = (
-            f"With {days_left} days left, effort now still raises your result. "
-            f"Aim for the estimated best range, {best_range}, as a realistic goal."
+            f"With {days_left} days left, give each session your full effort and "
+            "don't worry about the final grade. Progress comes from steady work."
         )
     else:
         tone = "stretch"
@@ -376,14 +376,14 @@ def build_achievability_report(
     gains = _expected_total_gain(topics, allocation)
     score_range = projected_score_range(current, gains, evidence_count=evidence_count)
     threshold = _grade_threshold(target_grade)
-    ratio = required.hours_per_week / max(
-        hours_available,
-        ACHIEVABILITY_HOURS_RATIO_EPSILON,
-    )
-    if score_range.expected >= threshold and ratio <= 1:
+    # Status follows the range the student sees, so it can never contradict it:
+    # on track when the expected score reaches the target, a stretch when only
+    # the optimistic end does, otherwise out of reach. (Basing it on "hours
+    # needed" broke when the target was unreachable even at the hour cap.)
+    if score_range.expected >= threshold:
         status: Literal["on_track", "stretch", "out_of_reach"] = "on_track"
         message = "Estimate: you are on track for your target with your current study time."
-    elif ratio <= ACHIEVABILITY_STRETCH_MULTIPLIER:
+    elif score_range.high >= threshold:
         status = "stretch"
         message = "Estimate: your target is a stretch, but focused study can move you closer."
     else:

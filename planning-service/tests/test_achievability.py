@@ -23,7 +23,7 @@ def test_coaching_message_variants_are_safe_specific_and_under_70_words() -> Non
     variants = [
         ("on_track", "on_track", "You're on track, keep your pace."),
         ("stretch", "stretch", "A focused push can build momentum."),
-        ("out_of_reach", "ambitious", "very ambitious"),
+        ("out_of_reach", "ambitious", "Focus on your best, one day at a time."),
     ]
     for status, tone, expected_text in variants:
         coaching = build_coaching_message(
@@ -52,7 +52,8 @@ def test_coaching_message_variants_are_safe_specific_and_under_70_words() -> Non
         assert coaching.greeting == "Dear Amara,"
         assert "62 days left" in coaching.body
         assert expected_text.lower() in message.lower()
-        assert "estimated" in message.lower()
+        if status != "out_of_reach":
+            assert "estimated" in message.lower()
         assert len(message.split()) < 70
         assert len(coaching.focus_topics) == 3
         assert all(word not in message.lower() for word in banned_words)
@@ -118,7 +119,7 @@ def test_low_mastery_short_deadline_reports_out_of_reach_with_best_range() -> No
     report = build_achievability_report(
         current=0.2,
         target_grade="A",
-        topics=[{"topic_id": "topic-1", "exam_weight": 1.0, "mastery": 0.2}],
+        topics=[{"topic_id": f"topic-{index}", "exam_weight": 1.0, "mastery": 0.2} for index in range(60)],
         days_remaining=30,
         hours_available=10,
         evidence_count=1,
@@ -466,7 +467,31 @@ def test_coaching_focus_topics_and_reasons_are_never_cut_mid_phrase() -> None:
     assert long_one.topic.endswith("…") and len(long_one.topic) <= 60
     full_name = "Industrial manufacturing processes, Sulfuric acid by the contact process"
     assert full_name.startswith(long_one.topic[:-1])
-    assert coaching.body.endswith("as a realistic goal.")
+    assert coaching.body.endswith("Progress comes from steady work.")
+
+
+def test_out_of_reach_message_focuses_on_effort_not_the_grade() -> None:
+    coaching = build_coaching_message(
+        student_name="Kamal",
+        days_left=90,
+        best_range="S (38–62%)",
+        target_grade="B",
+        status="out_of_reach",
+        focus_topics=[{"topic": "Formation of complex compounds", "reason": "mastery is 24%"}],
+        suggested_hours_per_day=2,
+        study_days_per_week=3,
+    )
+
+    assert coaching.headline == "Focus on your best, one day at a time."
+    assert coaching.body == (
+        "With 90 days left, give each session your full effort and don't worry about the "
+        "final grade. Progress comes from steady work."
+    )
+    text = f"{coaching.headline} {coaching.body}".lower()
+    assert "ambitious" not in text and "s (38" not in text and "realistic goal" not in text
+    # The practical guidance stays.
+    assert coaching.focus_topics[0].topic == "Formation of complex compounds"
+    assert "3 study days" in coaching.daily_suggestion
 
 
 def test_long_body_is_trimmed_by_whole_sentences() -> None:
@@ -523,3 +548,60 @@ def test_estimate_does_not_inflate_with_the_number_of_topics() -> None:
     assert many_topics.projected_range.expected < 0.75
     # The grade label follows the expected score, not the top of the range.
     assert many_topics.best_range_grade == "C"
+
+
+
+def _status(current: float, target: str, days: int, hours: float) -> str:
+    topics = [
+        {"topic_id": f"t{index}", "exam_weight": weight, "mastery": current}
+        for index, weight in enumerate([1.0, 0.8, 0.5, 0.3] * 15)
+    ]
+    return build_achievability_report(
+        current=current,
+        target_grade=target,
+        topics=topics,
+        days_remaining=days,
+        hours_available=hours,
+        evidence_count=8,
+    ).status
+
+
+def test_status_always_agrees_with_the_range_the_student_sees() -> None:
+    for current in (0.25, 0.42, 0.57, 0.7):
+        for target in ("S", "C", "B", "A"):
+            for days in (7, 30, 90, 180):
+                report = build_achievability_report(
+                    current=current,
+                    target_grade=target,
+                    topics=[
+                        {"topic_id": f"t{index}", "exam_weight": 0.7, "mastery": current}
+                        for index in range(60)
+                    ],
+                    days_remaining=days,
+                    hours_available=10,
+                    evidence_count=8,
+                )
+                threshold = {"A": 0.75, "B": 0.65, "C": 0.5, "S": 0.35}[target]
+                expected = (
+                    "on_track"
+                    if report.projected_range.expected >= threshold
+                    else "stretch"
+                    if report.projected_range.high >= threshold
+                    else "out_of_reach"
+                )
+                assert report.status == expected
+
+
+def test_far_below_target_is_out_of_reach_even_with_a_long_time_left() -> None:
+    # F -> A in 90 days was labelled "stretch" because "hours needed" hit its cap.
+    assert _status(0.25, "A", 90, 10) == "out_of_reach"
+    assert _status(0.57, "A", 10, 20) == "out_of_reach"
+
+
+def test_more_days_or_hours_never_make_the_status_worse() -> None:
+    rank = {"on_track": 0, "stretch": 1, "out_of_reach": 2}
+    for current, target in [(0.25, "C"), (0.42, "B"), (0.57, "B"), (0.7, "A")]:
+        by_days = [rank[_status(current, target, days, 10)] for days in (7, 30, 60, 90, 180)]
+        by_hours = [rank[_status(current, target, 60, hours)] for hours in (3, 10, 20)]
+        assert by_days == sorted(by_days, reverse=True)
+        assert by_hours == sorted(by_hours, reverse=True)

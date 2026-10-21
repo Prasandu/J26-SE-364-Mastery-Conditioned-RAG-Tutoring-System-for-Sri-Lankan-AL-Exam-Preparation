@@ -69,6 +69,7 @@ FINAL_WEEK_DAYS = 7  # last N days use revision/past-paper only; no new theory
 COMPRESSION_MIN_LOAD = 0.40  # compressed plans keep at least this share of the original load
 COMPRESSION_HEADROOM = 0.15  # compressed load = measured adherence + headroom (room for good days)
 COMPRESSION_MIN_TOPIC_HOURS = 1.0  # kept topics need at least this many hours a week to be useful
+REALISTIC_MAX_HOURS_PER_DAY = 6  # never suggest more daily study than this; encourage effort instead
 COMPRESSED_SESSION_FACTOR = 0.75  # compressed plans shorten sessions by this factor
 MIN_COMPRESSED_SESSION_MINUTES = 25
 RANGE_CHANGE_EPSILON = 0.01  # projected-score change treated as "moved" at a checkpoint

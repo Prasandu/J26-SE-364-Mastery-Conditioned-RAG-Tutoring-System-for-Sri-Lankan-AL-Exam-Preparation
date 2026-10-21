@@ -50,6 +50,7 @@ from app.services.weights import (
     FINAL_WEEK_DAYS,
     MIN_COMPRESSED_SESSION_MINUTES,
     NEUTRAL_PRIOR_MASTERY,
+    REALISTIC_MAX_HOURS_PER_DAY,
     SHORT_HORIZON_DAYS,
     SHORT_HORIZON_THRESHOLD_DAYS,
     WINDOW_DAYS,
@@ -646,15 +647,20 @@ def _target_choice(
     if pace_grade == plan.target_grade.upper():
         return None
     hours_per_day = round(full.hours_needed / 7, 1)
+    # Never suggest an impossible daily load (e.g. "14 hours a day" for a C
+    # student aiming for an A in 10 days); encourage effort instead.
+    keep_label = (
+        f"Keep target {plan.target_grade}: bring back all topics and aim for about "
+        f"{hours_per_day} hours a day."
+        if hours_per_day <= REALISTIC_MAX_HOURS_PER_DAY
+        else f"Keep target {plan.target_grade}: bring back all topics and give it your best every day."
+    )
     return {
         "target_grade": plan.target_grade,
         "keep_target": {
             "grade": plan.target_grade,
-            "hours_per_day": hours_per_day,
-            "label": (
-                f"Keep target {plan.target_grade}: bring back all topics and aim for about "
-                f"{hours_per_day} hours a day."
-            ),
+            "hours_per_day": min(hours_per_day, REALISTIC_MAX_HOURS_PER_DAY),
+            "label": keep_label,
         },
         "adjust_goal": {
             "grade": pace_grade,

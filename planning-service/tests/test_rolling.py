@@ -738,3 +738,18 @@ def test_new_results_replan_early_only_for_full_papers_and_not_too_often() -> No
     assert rolling.checkpoint_status(paper_session, "student-1", older, now=NOW) == (True, "new_evidence")  # type: ignore[arg-type]
     # Quizzes (assessments without a paper) do not count.
     assert "raw_events.paper_id IS NOT NULL" in captured["sql"]
+
+
+def test_keep_target_option_never_suggests_an_impossible_daily_load() -> None:
+    from app.services.roadmap import _target_choice
+
+    plan = make_plan(exam_in_days=10)
+    weak = [topic_input(f"t{index}", 0.8, 0.45) for index in range(30)]
+
+    choice = _target_choice(plan, weak, weak, compressed_hours=4, full_hours=10, today=MONDAY)  # type: ignore[arg-type]
+
+    assert choice is not None
+    assert choice["keep_target"]["label"] == (
+        "Keep target A: bring back all topics and give it your best every day."
+    )
+    assert choice["keep_target"]["hours_per_day"] <= 6

@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+/* Avatar mouth animation (TutorPage voice-chat mode) — toggles the SVG
+   mouth ellipse's vertical radius to look like talking. Not phoneme-synced,
+   just an on/off "is speaking" cue. */
+@keyframes avatar-talk {
+  0%,
+  100% {
+    ry: 2;
+  }
+  50% {
+    ry: 9;
+  }
+}
+.avatar-mouth-speaking {
+  animation: avatar-talk 0.35s ease-in-out infinite;
+}
+
+@keyframes avatar-listen-ring {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+.avatar-ring-listening {
+  animation: avatar-listen-ring 1.1s ease-in-out infinite;
+}

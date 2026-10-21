@@ -31,6 +31,18 @@ CONCEPTS = [
     Concept(concept_id="U03-MOLAR-MASS", name="Molar mass", unit="3"),
     Concept(concept_id="U03-MOLARITY", name="Molarity", unit="3"),
     Concept(concept_id="U03-PERCENTAGE-COMPOSITION", name="Percentage composition", unit="3"),
+    Concept(concept_id="U03-OXIDATION-NUMBERS", name="Oxidation numbers", unit="3"),
+    # Unit 6 — topics covered by the ingested resource book content (flame
+    # test/cation identification, nitrogen oxoacids, coordination compounds
+    # of transition metals). No verified_questions exist for Unit 6 yet, so
+    # these concepts aren't referenced by any question's topic_id today —
+    # they're seeded ahead of that content so the graph is ready for it, and
+    # so GraphRAG-based retrieval/consultation already has Unit 6 coverage.
+    Concept(concept_id="U06-FLAME-TEST", name="Flame test for cation identification", unit="6"),
+    Concept(concept_id="U06-OXOACIDS-NITROGEN", name="Oxoacids of nitrogen", unit="6"),
+    Concept(
+        concept_id="U06-COORDINATION-COMPOUNDS", name="Coordination compounds of transition metals", unit="6"
+    ),
 ]
 
 # (concept_id, prerequisite_id) — concept_id requires prerequisite_id first.
@@ -43,6 +55,17 @@ EDGES = [
     ("U03-MOLAR-MASS", "U03-MOLE"),
     ("U03-MOLARITY", "U03-MOLE"),
     ("U03-PERCENTAGE-COMPOSITION", "U03-MOLAR-MASS"),
+    # Assigning oxidation numbers relies on knowing which atom "wins" shared
+    # electrons, i.e. electron configuration/electronegativity reasoning.
+    ("U03-OXIDATION-NUMBERS", "U01-ELECTRON-CONFIG"),
+    # Flame-test colours come from electrons dropping between energy levels.
+    ("U06-FLAME-TEST", "U01-ELECTRON-CONFIG"),
+    # Nitrogen oxoacids (HNO2 vs HNO3 etc.) are distinguished by N's oxidation state.
+    ("U06-OXOACIDS-NITROGEN", "U03-OXIDATION-NUMBERS"),
+    # Coordination compounds need both d-orbital electron configuration and
+    # the lone-pair/dative-bond idea already introduced via Lewis structures.
+    ("U06-COORDINATION-COMPOUNDS", "U01-ELECTRON-CONFIG"),
+    ("U06-COORDINATION-COMPOUNDS", "U02-LEWIS-STRUCTURE"),
 ]
 
 

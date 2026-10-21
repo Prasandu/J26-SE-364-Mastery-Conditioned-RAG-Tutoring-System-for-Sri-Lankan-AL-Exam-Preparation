@@ -17,11 +17,11 @@ export function SpeakButton({ text, language }: SpeakButtonProps) {
       type="button"
       onClick={() => (isSpeaking ? stop() : speak(text, language))}
       title={
-        voiceAvailable
+        voiceAvailable || language === "si"
           ? isSpeaking
             ? "Stop"
             : "Listen"
-          : `No ${language === "si" ? "Sinhala" : "English"} voice found on this device — will use default voice`
+          : "No English voice found on this device — will use default voice"
       }
       className={`rounded px-2 py-1 text-xs ${
         isSpeaking ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"

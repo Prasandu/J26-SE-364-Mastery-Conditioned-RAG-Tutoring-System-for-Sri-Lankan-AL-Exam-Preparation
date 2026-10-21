@@ -27,3 +27,5 @@ Thumbs.db
 # IDE
 .vscode/*
 !.vscode/extensions.json
+
+support-service/scripts/

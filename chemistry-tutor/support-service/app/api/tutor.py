@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.rate_limit import limiter
 from app.schemas.tutor import AskRawRequest, AskRawResponse, AskRequest, AskResponse, Citation
 from app.services.tutoring.grounded_answer import answer_question
 from app.services.tutoring.llm_adapter import get_llm_provider
@@ -15,22 +16,24 @@ SYSTEM_PROMPT = (
 
 
 @router.post("/tutor/ask-raw", response_model=AskRawResponse)
-def ask_raw(request: AskRawRequest) -> AskRawResponse:
+@limiter.limit("20/minute")
+def ask_raw(request: Request, body: AskRawRequest) -> AskRawResponse:
     """Temporary ungrounded endpoint, kept only to compare against /tutor/ask."""
     provider = get_llm_provider()
     try:
-        answer = provider.generate_response(SYSTEM_PROMPT, request.question)
+        answer = provider.generate_response(SYSTEM_PROMPT, body.question)
     except Exception:
         answer = "The AI service is temporarily unavailable. Please try again in a moment."
     return AskRawResponse(answer=answer)
 
 
 @router.post("/tutor/ask", response_model=AskResponse)
-def ask(request: AskRequest, db: Session = Depends(get_db)) -> AskResponse:
+@limiter.limit("20/minute")
+def ask(request: Request, body: AskRequest, db: Session = Depends(get_db)) -> AskResponse:
     """Curriculum-grounded answer: retrieves relevant NIE passages, answers from
     them only, and returns citations. Abstains if no relevant evidence is found.
     """
-    result = answer_question(db, request.question, request.language)
+    result = answer_question(db, body.question, body.language)
     citations = [
         Citation(
             document_title=c.document_title,

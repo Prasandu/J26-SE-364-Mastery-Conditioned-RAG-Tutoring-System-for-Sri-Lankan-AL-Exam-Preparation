@@ -13,3 +13,13 @@ export async function transcribeAudio(audioBlob: Blob, language: "en" | "si"): P
   const data = await res.json();
   return data.text;
 }
+
+export async function synthesizeSinhalaSpeech(text: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/voice/synthesize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  return res.blob();
+}

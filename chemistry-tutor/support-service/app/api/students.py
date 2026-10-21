@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.rate_limit import limiter
 from app.schemas.consultation import ConsultationResponse, WeakTopicResponse
 from app.schemas.reports import (
     CorrectedAnswerResponse,
@@ -85,7 +86,10 @@ def student_dashboard(student_id: str, db: Session = Depends(get_db)) -> Dashboa
 
 
 @router.get("/students/{student_id}/consultation", response_model=ConsultationResponse)
-def student_consultation(student_id: str, db: Session = Depends(get_db)) -> ConsultationResponse:
+@limiter.limit("10/minute")
+def student_consultation(
+    request: Request, student_id: str, db: Session = Depends(get_db)
+) -> ConsultationResponse:
     result = generate_consultation(db, student_id)
     return ConsultationResponse(
         has_data=result.has_data,
@@ -105,7 +109,10 @@ def student_consultation(student_id: str, db: Session = Depends(get_db)) -> Cons
 
 
 @router.get("/students/{student_id}/wivarana-report", response_model=WivaranaReportResponse)
-def student_wivarana_report(student_id: str, db: Session = Depends(get_db)) -> WivaranaReportResponse:
+@limiter.limit("10/minute")
+def student_wivarana_report(
+    request: Request, student_id: str, db: Session = Depends(get_db)
+) -> WivaranaReportResponse:
     report = generate_wivarana_report(db, student_id)
     return WivaranaReportResponse(
         student_id=report.student_id,

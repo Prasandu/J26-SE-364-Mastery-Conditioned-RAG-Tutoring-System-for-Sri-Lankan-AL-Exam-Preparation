@@ -1,8 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+# A genuine Chemistry question fits comfortably in a few hundred characters;
+# this bounds prompt-injection padding and per-call LLM cost, not legitimate use.
+MAX_QUESTION_LENGTH = 1000
 
 
 class AskRawRequest(BaseModel):
-    question: str
+    question: str = Field(max_length=MAX_QUESTION_LENGTH)
 
 
 class AskRawResponse(BaseModel):
@@ -10,7 +14,7 @@ class AskRawResponse(BaseModel):
 
 
 class AskRequest(BaseModel):
-    question: str
+    question: str = Field(max_length=MAX_QUESTION_LENGTH)
     language: str = "en"  # "en" or "si"
 
 

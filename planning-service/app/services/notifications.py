@@ -305,19 +305,27 @@ def _replan_missed(
 
 
 def _clear_stale_reminders(session: Session, student_id: str, now: datetime) -> None:
-    """A reminder is only useful before its session starts."""
-    stale = session.scalars(
+    """Clear alerts that no longer point at anything useful.
+
+    * A reminder is only useful before its session starts.
+    * A reminder or missed alert whose session was deleted (for example
+      because the plan was deleted or replaced) is cleared, so a student
+      without a plan never sees alerts about sessions that no longer exist.
+    """
+    unread = session.scalars(
         select(Notification).where(
             Notification.student_id == student_id,
-            Notification.type == "reminder",
+            Notification.type.in_(("reminder", "missed")),
             Notification.read_at.is_(None),
         )
     ).all()
-    for notification in stale:
-        if notification.type != "reminder":
+    for notification in unread:
+        if notification.type not in {"reminder", "missed"}:
             continue
         task = session.get(StudyTask, notification.task_id) if notification.task_id else None
-        if task is None or task.status != "planned" or task.start_at <= now:
+        if task is None:
+            notification.read_at = now
+        elif notification.type == "reminder" and (task.status != "planned" or task.start_at <= now):
             notification.read_at = now
 
 

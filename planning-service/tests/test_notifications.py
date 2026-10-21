@@ -372,3 +372,34 @@ def test_session_the_student_undid_is_never_auto_marked_missed(replanner: dict[s
     list_notifications(session, "student-1", now=NOW)  # type: ignore[arg-type]
 
     assert undone.status == "planned" and replanner["count"] == 0
+
+
+def test_alerts_for_deleted_sessions_are_cleared() -> None:
+    session = FakeSession()  # the student's plan and sessions were deleted
+    for index in range(2):
+        session.add(
+            Notification(
+                student_id="student-1",
+                type="missed",
+                title="Missed session moved",
+                message="No worries, you missed Molar mass…",
+                task_id=None,
+                dedupe_key=f"missed:{index}",
+                created_at=NOW - timedelta(days=2),
+            )
+        )
+
+    result = list_notifications(session, "student-1", now=NOW)  # type: ignore[arg-type]
+
+    assert result.unread_count == 0
+    assert all(item.read_at == NOW for item in session.notifications)
+
+
+def test_missed_alert_for_an_existing_session_is_kept(replanner: dict[str, Any]) -> None:
+    task = make_task(NOW - timedelta(minutes=120))
+    session = FakeSession(task)
+    list_notifications(session, "student-1", now=NOW)  # type: ignore[arg-type]
+
+    again = list_notifications(session, "student-1", now=NOW + timedelta(minutes=1))  # type: ignore[arg-type]
+
+    assert again.unread_count == 1 and again.notifications[0].type == "missed"

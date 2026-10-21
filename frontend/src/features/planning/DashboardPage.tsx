@@ -21,7 +21,6 @@ import {
   submitWhatIf,
   type DashboardResponse,
   type DashboardMasteryHistoryPoint,
-  type DashboardTopicTrend,
   type WhatIfResponse,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
@@ -29,6 +28,7 @@ import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
 import MotivationCard from "./MotivationCard";
 import PageHeader from "./PageHeader";
+import UnitMastery from "./UnitMastery";
 
 const chartColors = {
   brand: "#155e75",
@@ -40,13 +40,6 @@ const chartColors = {
 
 function percent(value: number): string {
   return `${Math.round(value * 100)}%`;
-}
-
-function heatColor(mastery: number): string {
-  if (mastery >= 0.75) return "bg-emerald-600 text-white";
-  if (mastery >= 0.55) return "bg-emerald-300 text-emerald-950";
-  if (mastery >= 0.35) return "bg-amber-300 text-amber-950";
-  return "bg-rose-300 text-rose-950";
 }
 
 function EmptyData({
@@ -259,69 +252,6 @@ function MasteryTrendChart({
   );
 }
 
-function SubtopicHeatmap({ topics }: { topics: DashboardTopicTrend[] }) {
-  const subtopics = topics.filter((topic) => topic.parent_topic_id !== null);
-  const grouped = subtopics.reduce<Record<string, DashboardTopicTrend[]>>(
-    (groups, topic) => {
-      const parent = topic.parent_topic_id ?? "Other";
-      (groups[parent] ??= []).push(topic);
-      return groups;
-    },
-    {},
-  );
-
-  if (subtopics.length === 0) {
-    return (
-      <EmptyData>
-        Not enough sub-topic data yet. Mastery will appear here after topic
-        assessments are recorded.
-      </EmptyData>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {Object.entries(grouped).map(([parentId, children]) => (
-        <section key={parentId}>
-          <h4 className="mb-2 text-sm font-semibold text-slate-700">
-            {parentId}
-          </h4>
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {children.map((topic) => (
-              <li
-                aria-label={`${topic.topic_name ?? topic.topic_id}: ${percent(topic.mastery)} mastery`}
-                className={`min-h-20 rounded-lg p-3 ${heatColor(topic.mastery)}`}
-                key={topic.topic_id}
-                title={`${topic.topic_name ?? topic.topic_id}: ${percent(topic.mastery)} mastery`}
-              >
-                <span className="block text-xs font-medium">
-                  {topic.topic_name ?? topic.topic_id}
-                </span>
-                <span className="mt-2 block text-lg font-bold">
-                  {percent(topic.mastery)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-      <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600">
-        {[
-          ["bg-rose-300", "Below 35%"],
-          ["bg-amber-300", "35–54%"],
-          ["bg-emerald-300", "55–74%"],
-          ["bg-emerald-600", "75% or higher"],
-        ].map(([color, label]) => (
-          <span className="inline-flex items-center gap-1.5" key={label}>
-            <span className={`size-3 rounded-sm ${color}`} />
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
   const [projection, setProjection] = useState<WhatIfResponse | null>(null);
   const [extraHours, setExtraHours] = useState(2);
@@ -445,7 +375,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </section>
       )}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+      <div className="mt-6 grid gap-6">
         <section className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
           <h3 className="text-lg font-semibold text-ink">Mastery trend</h3>
           <p className="mb-4 mt-1 text-sm text-slate-600">
@@ -462,12 +392,12 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
         </section>
 
         <section className="rounded-3xl border border-slate-100 bg-white shadow-card p-5">
-          <h3 className="text-lg font-semibold text-ink">Sub-topic mastery</h3>
+          <h3 className="text-lg font-semibold text-ink">Mastery by unit</h3>
           <p className="mb-4 mt-1 text-sm text-slate-600">
-            Color indicates the latest stored mastery for each sub-topic.
+            Weakest units first. Open a unit to see its sub-topics.
           </p>
           {enoughTopics ? (
-            <SubtopicHeatmap topics={dashboard.mastery_trend} />
+            <UnitMastery topics={dashboard.mastery_trend} />
           ) : (
             <EmptyData>
               Not enough data yet. Sub-topic mastery will appear after

@@ -55,4 +55,5 @@ def scheduled_task_response(
         timer_started_at=getattr(task, "started_at", None),
         timer_elapsed_sec=elapsed_seconds(task, current),
         can_undo=can_undo_outcome(task, current),
+        actual_duration_min=getattr(task, "actual_duration_min", None),
     )

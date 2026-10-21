@@ -294,8 +294,9 @@ describe("rescheduling after a missed session", () => {
     });
     renderPage();
 
-    const cards = await screen.findAllByRole("button", { name: "Missed" });
-    fireEvent.click(cards[0]);
+    const logLinks = await screen.findAllByRole("button", { name: "Log without the timer" });
+    fireEvent.click(logLinks[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Missed" }));
 
     expect(await screen.findByText("Moved or added sessions:")).toBeInTheDocument();
     await waitFor(() => expect(getSchedule).toHaveBeenCalledTimes(2));
@@ -334,5 +335,93 @@ describe("undoing a recorded outcome", () => {
 
     await waitFor(() => expect(document.querySelector('[data-status="completed"]')).not.toBeNull());
     expect(screen.queryByRole("button", { name: /Undo/ })).toBeNull();
+  });
+});
+
+describe("session card actions", () => {
+  beforeEach(() => {
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [plan] });
+    vi.mocked(getRoadmap).mockReset().mockRejectedValue(new Error("not needed"));
+    vi.mocked(getSchedule).mockReset();
+    vi.mocked(updateTaskStatus).mockReset();
+  });
+
+  it("keeps Start as the main action and tucks the manual buttons away", async () => {
+    vi.mocked(getSchedule).mockResolvedValue(schedule([task()]));
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: "Start" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Partial" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Missed" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Log without the timer" }));
+
+    expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Partial" })).toBeInTheDocument();
+    expect(screen.getByText("Minutes studied")).toBeInTheDocument();
+    expect(screen.getByText("(for Partial)")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide manual log" }));
+    expect(screen.queryByRole("button", { name: "Partial" })).toBeNull();
+  });
+
+  it("shows how many minutes were studied on a partial session", async () => {
+    vi.mocked(getSchedule).mockResolvedValue(
+      schedule([task({ status: "partial", actual_duration_min: 30, can_undo: true })]),
+    );
+    renderPage();
+
+    expect(await screen.findByText(/30 min studied/)).toBeInTheDocument();
+  });
+
+  it("explains kindly when the rest of a partial session has no free slot", async () => {
+    vi.mocked(getSchedule)
+      .mockResolvedValueOnce(schedule([task()]))
+      .mockResolvedValue(schedule([task({ status: "partial", actual_duration_min: 30, can_undo: true })]));
+    vi.mocked(updateTaskStatus).mockResolvedValue({
+      task: task({ status: "partial", actual_duration_min: 30 }),
+      score_change: null,
+      planned_minutes: 60,
+      actual_minutes: 30,
+      replanned: true,
+      schedule: schedule([]),
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Log without the timer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Partial" }));
+
+    expect(await screen.findByText("We couldn't fit the rest in")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Nice work on the 30 minutes you studied. We couldn't find a free time for the remaining 30 minutes in your current study window. You can add more study times in Set up.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Plan updated")).toBeNull();
+    expect(updateTaskStatus).toHaveBeenCalledWith("task-1", { status: "partial", actual_duration_min: 30 });
+  });
+
+  it("explains kindly when a missed session cannot be moved", async () => {
+    vi.mocked(getSchedule)
+      .mockResolvedValueOnce(schedule([task()]))
+      .mockResolvedValue(schedule([task({ status: "missed", can_undo: true })]));
+    vi.mocked(updateTaskStatus).mockResolvedValue({
+      task: task({ status: "missed" }),
+      score_change: null,
+      planned_minutes: 60,
+      actual_minutes: 0,
+      replanned: true,
+      schedule: schedule([]),
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Log without the timer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Missed" }));
+
+    expect(
+      await screen.findByText(
+        "We couldn't find a free time for this 60-minute session in your current study window. You can add more study times in Set up.",
+      ),
+    ).toBeInTheDocument();
   });
 });

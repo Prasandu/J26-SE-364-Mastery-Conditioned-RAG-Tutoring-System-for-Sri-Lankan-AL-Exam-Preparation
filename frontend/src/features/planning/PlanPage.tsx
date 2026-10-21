@@ -173,6 +173,8 @@ function TaskCard({
   onUndo: (task: ScheduledTask) => void;
 }) {
   const [showReason, setShowReason] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+  const timerState = task.timer_state ?? "idle";
   const style =
     statusStyles[task.status] ?? "border-slate-200 bg-white text-ink";
   const actionable = task.status === "planned" && task.id !== null;
@@ -181,6 +183,13 @@ function TaskCard({
     partialMinutes >= 1 &&
     partialMinutes <= task.duration_min;
   const displayTopic = formatTopicName(task);
+  // The timer is the main way to log a session; the manual buttons are tucked
+  // away unless the student chooses to log without it (or the timer was finished).
+  const manualVisible = actionable && (showManual || timerState === "finished");
+  const minutesNote =
+    task.actual_duration_min != null && (task.status === "partial" || task.status === "completed")
+      ? ` · ${task.actual_duration_min} min studied`
+      : "";
 
   return (
     <article
@@ -195,6 +204,7 @@ function TaskCard({
           <p className="mt-1 text-sm opacity-80">
             {taskDate(task)} at {taskTime(task)} · {task.duration_min} min ·{" "}
             <span className="capitalize">{task.status}</span>
+            {minutesNote}
           </p>
         </div>
         <button
@@ -322,7 +332,23 @@ function TaskCard({
         </Modal>
       ) : null}
 
-      <TimerControls busy={busy} onAction={onTimer} task={task} />
+      <TimerControls
+        busy={busy}
+        extra={
+          actionable && timerState === "idle" ? (
+            <button
+              aria-expanded={showManual}
+              className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:bg-white/60 hover:text-ink hover:underline"
+              onClick={() => setShowManual((open) => !open)}
+              type="button"
+            >
+              {showManual ? "Hide manual log" : "Log without the timer"}
+            </button>
+          ) : null
+        }
+        onAction={onTimer}
+        task={task}
+      />
 
       {task.status !== "planned" && task.can_undo && task.id ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3 text-sm">
@@ -343,8 +369,8 @@ function TaskCard({
         </div>
       ) : null}
 
-      {actionable ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
+      {manualVisible ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
           <button
             className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
             disabled={busy}
@@ -354,9 +380,11 @@ function TaskCard({
             Done
           </button>
           <label className="flex items-center gap-2 text-xs font-medium">
-            Actual min
+            <span>
+              Minutes studied <span className="font-normal opacity-70">(for Partial)</span>
+            </span>
             <input
-              aria-label={`Actual minutes for ${displayTopic}`}
+              aria-label={`Minutes studied for ${displayTopic}`}
               className="w-20 rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-ink"
               max={task.duration_min}
               min={1}
@@ -389,6 +417,19 @@ function TaskCard({
   );
 }
 
+function noFreeSlotMessage(
+  task: ScheduledTask,
+  status: TaskStatus,
+  studiedMinutes: number | null,
+): string {
+  const advice = "You can add more study times in Set up.";
+  if (status === "partial" && studiedMinutes !== null) {
+    const remaining = Math.max(task.duration_min - studiedMinutes, 0);
+    return `Nice work on the ${studiedMinutes} minutes you studied. We couldn't find a free time for the remaining ${remaining} minutes in your current study window. ${advice}`;
+  }
+  return `We couldn't find a free time for this ${task.duration_min}-minute session in your current study window. ${advice}`;
+}
+
 export default function PlanningPage() {
   const { session, loading: authLoading } = useAuth();
   const studentId = session?.user.id;
@@ -406,6 +447,8 @@ export default function PlanningPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [error, setError] = useState("");
   const [toast, setToast] = useState<string[]>([]);
+  // A friendly heads-up (amber), e.g. when remaining study time did not fit.
+  const [warning, setWarning] = useState("");
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
   const [rollingUpdate, setRollingUpdate] =
     useState<RollingUpdateResponse | null>(null);
@@ -542,6 +585,7 @@ export default function PlanningPage() {
     setGenerating(true);
     setError("");
     setToast([]);
+    setWarning("");
     const previousTasks = schedule?.tasks ?? [];
     try {
       const nextSchedule = await generateSchedule(plan.id);
@@ -630,6 +674,7 @@ export default function PlanningPage() {
     setBusyTaskId(task.id);
     setError("");
     setToast([]);
+    setWarning("");
     try {
       const result = await undoTaskOutcome(task.id);
       setToast([
@@ -656,6 +701,7 @@ export default function PlanningPage() {
     setBusyTaskId(task.id);
     setError("");
     setToast([]);
+    setWarning("");
     const before = schedule?.tasks ?? [];
     const minutes =
       status === "missed"
@@ -674,13 +720,10 @@ export default function PlanningPage() {
         // The response holds only the newly placed session(s); every other
         // session stayed put, so reload the full list rather than replace it.
         const changed = movedTasks(before, result.schedule.tasks);
-        setToast(
-          result.replanned
-            ? changed.length > 0
-              ? changed
-              : ["No free slot was left in this window for the remaining time."]
-            : [],
-        );
+        setToast(result.replanned && changed.length > 0 ? changed : []);
+        if (result.replanned && changed.length === 0) {
+          setWarning(noFreeSlotMessage(task, status, minutes));
+        }
         if (currentPlanId) setSchedule(await getSchedule(currentPlanId));
       } else if (schedule) {
         setSchedule({
@@ -756,6 +799,7 @@ export default function PlanningPage() {
                   setSchedule(null);
                   setScheduleLoading(true);
                   setToast([]);
+                  setWarning("");
                   setError("");
                 }}
                 value={currentPlan.id}
@@ -821,6 +865,16 @@ export default function PlanningPage() {
                   ))}
                 </ul>
               ) : null}
+            </div>
+          ) : null}
+          {warning ? (
+            <div
+              aria-live="polite"
+              className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-amber-950"
+              role="status"
+            >
+              <p className="font-semibold">We couldn't fit the rest in</p>
+              <p className="mt-1 text-sm">{warning}</p>
             </div>
           ) : null}
           {scheduleLoading ? (

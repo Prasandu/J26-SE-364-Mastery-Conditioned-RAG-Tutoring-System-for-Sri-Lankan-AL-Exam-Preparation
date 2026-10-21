@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Modal from "../../components/Modal";
 import type {
   ScheduledTask,
@@ -54,10 +54,13 @@ export function TimerControls({
   task,
   busy,
   onAction,
+  extra,
 }: {
   task: ScheduledTask;
   busy: boolean;
   onAction: (task: ScheduledTask, action: TimerAction) => void;
+  // Shown beside Start while the timer is idle (e.g. the "log without the timer" link).
+  extra?: ReactNode;
 }) {
   const state = task.timer_state ?? "idle";
   if (task.status !== "planned" || task.id === null || state === "finished") {
@@ -69,14 +72,17 @@ export function TimerControls({
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-current/10 pt-3">
       {state === "idle" ? (
-        <button
-          className={`${button} bg-brand text-white hover:bg-brand-dark`}
-          disabled={busy}
-          onClick={() => onAction(task, "start")}
-          type="button"
-        >
-          Start
-        </button>
+        <>
+          <button
+            className={`${button} bg-brand text-white hover:bg-brand-dark`}
+            disabled={busy}
+            onClick={() => onAction(task, "start")}
+            type="button"
+          >
+            Start
+          </button>
+          {extra}
+        </>
       ) : (
         <>
           <span

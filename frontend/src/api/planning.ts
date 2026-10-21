@@ -108,6 +108,7 @@ export interface ScheduledTask {
   timer_started_at?: string | null;
   timer_elapsed_sec?: number;
   can_undo?: boolean;
+  actual_duration_min?: number | null;
 }
 
 export interface UndoOutcomeResponse {

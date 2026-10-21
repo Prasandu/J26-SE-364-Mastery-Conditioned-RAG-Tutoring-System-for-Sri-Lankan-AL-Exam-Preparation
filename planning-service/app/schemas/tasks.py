@@ -81,6 +81,8 @@ class ScheduledTaskResponse(BaseModel):
     timer_elapsed_sec: int = 0
     # True while a recorded outcome can still be undone.
     can_undo: bool = False
+    # Minutes the student actually studied (set for completed and partial sessions).
+    actual_duration_min: int | None = None
 
 
 class ScheduleResponse(BaseModel):

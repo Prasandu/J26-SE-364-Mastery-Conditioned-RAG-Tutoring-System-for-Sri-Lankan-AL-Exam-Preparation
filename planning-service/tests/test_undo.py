@@ -160,3 +160,11 @@ def test_can_undo_flag_follows_the_window() -> None:
 
 def test_undo_route_is_registered() -> None:
     assert "/api/v1/tasks/{task_id}/undo" in app.openapi()["paths"]
+
+
+def test_task_response_reports_the_minutes_actually_studied() -> None:
+    partial = scheduled_task_response(make_task("partial"), 0.6, now=NOW)
+    planned = scheduled_task_response(make_task("planned", recorded_hours_ago=None), 0.6, now=NOW)
+
+    assert partial.actual_duration_min == 40 and partial.duration_min == 60
+    assert planned.actual_duration_min is None

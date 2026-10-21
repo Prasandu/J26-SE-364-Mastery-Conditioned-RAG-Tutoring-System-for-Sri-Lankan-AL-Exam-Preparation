@@ -494,12 +494,23 @@ function DashboardContent({ dashboard }: { dashboard: DashboardResponse }) {
                 </p>
                 <p className="mt-1 font-semibold">
                   Projected grade: {projection.projected_grade}
+                  {projection.projected_range
+                    ? ` (${percent(projection.projected_range[0])}–${percent(projection.projected_range[1])})`
+                    : ""}
                 </p>
                 <p className="mt-1 text-sm">
-                  {percent(projection.current_prediction)} current projection
+                  {percent(projection.current_prediction)} at your current pace
                   {" → "}
-                  {percent(projection.projected_prediction)} estimated with{" "}
-                  {extraHours} extra weekly hours.
+                  {percent(projection.projected_prediction)} with {extraHours} extra
+                  hours a week
+                  {projection.extra_total_hours != null && projection.days_remaining != null
+                    ? ` (about ${Math.round(projection.extra_total_hours)} extra hours over the ${projection.days_remaining} days left)`
+                    : ""}
+                  .
+                </p>
+                <p className="mt-1 text-xs opacity-80">
+                  Extra time goes to your weakest, highest-mark topics first. Each
+                  extra hour helps a little less than the one before.
                 </p>
               </div>
             ) : null}

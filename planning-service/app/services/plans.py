@@ -169,7 +169,14 @@ def build_plan_achievability(
     current_score: float | None = None,
     evidence_count: int | None = None,
     as_of: datetime | None = None,
+    extra_hours_per_week: float = 0.0,
 ) -> dict[str, Any]:
+    """Achievability report and coaching message for a plan.
+
+    ``extra_hours_per_week`` adds study time on top of the plan's availability,
+    which is how the dashboard's what-if estimate stays consistent with the
+    coaching card.
+    """
     preload_topics(session)
     states = session.scalars(
         select(LearnerTopicState).where(LearnerTopicState.student_id == student_id)
@@ -247,7 +254,7 @@ def build_plan_achievability(
         )
         / 60
         for slot in slots
-    )
+    ) + max(extra_hours_per_week, 0.0)
     now = (as_of or datetime.now(UTC)).astimezone(UTC)
     days_remaining = max((plan.exam_date - now.date()).days, 0)
     report = build_achievability_report(

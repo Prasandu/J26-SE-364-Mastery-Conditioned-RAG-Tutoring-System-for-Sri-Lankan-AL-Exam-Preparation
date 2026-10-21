@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
+import pytest
+
 import app.api.dashboard as dashboard_api
 from app.api.dashboard import router
 from app.schemas.dashboard import DashboardResponse, WhatIfInput
@@ -361,3 +363,34 @@ def test_saving_predictions_prunes_old_runs() -> None:
     sql = str(executed[0].compile(dialect=postgresql.dialect()))
     assert sql.startswith("DELETE FROM planning.predictions")
     assert "OFFSET" in sql and "created_at <" in sql
+
+
+def test_what_if_uses_the_plan_model_with_extra_weekly_hours(monkeypatch) -> None:
+    from datetime import date
+
+    import app.services.dashboard as dashboard_service
+
+    calls = []
+
+    def fake_achievability(_session, _student_id, _plan, **kwargs):
+        calls.append(kwargs)
+        extra = kwargs.get("extra_hours_per_week", 0.0)
+        expected = 0.6 + 0.004 * extra
+        return {"projected_range": {"low": expected - 0.08, "expected": expected, "high": expected + 0.08}}
+
+    monkeypatch.setattr(dashboard_service, "build_plan_achievability", fake_achievability)
+    session = FakeDashboardSession()
+    session.plan.constraints = {"priorities": []}
+    session.plan.exam_date = date(2026, 12, 1)
+    now = datetime(2026, 10, 13, tzinfo=UTC)
+
+    response = project_what_if(session, "student-1", WhatIfInput(extra_hours_per_week=4), as_of=now)
+
+    assert [call.get("extra_hours_per_week", 0.0) for call in calls] == [0.0, 4]
+    # Both runs start from the same score the coaching card uses.
+    assert calls[0]["current_score"] == calls[1]["current_score"]
+    assert response.current_prediction == pytest.approx(0.6)
+    assert response.projected_prediction == pytest.approx(0.616)
+    assert response.days_remaining == 49
+    assert response.extra_total_hours == 28.0
+    assert response.projected_range == pytest.approx((0.536, 0.696))

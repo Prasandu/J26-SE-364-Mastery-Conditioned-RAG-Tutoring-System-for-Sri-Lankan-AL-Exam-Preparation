@@ -242,7 +242,6 @@ def project_what_if(
     as_of: datetime | None = None,
 ) -> WhatIfResponse:
     current_prediction = _current_prediction_score(session, student_id)
-    current_grade = _grade_for(current_prediction)
     target_grade = _target_grade_for_student(session, student_id)
     target_score = _grade_target_score(target_grade)
     extra_hours = (
@@ -250,6 +249,13 @@ def project_what_if(
         if data.extra_hours_per_week is not None
         else data.hours_per_week or 0.0
     )
+    plans = _all(session, select(StudyPlan).where(StudyPlan.student_id == student_id))
+    plan = _latest_plan(plans)
+    if plan is not None and hasattr(plan, "constraints"):
+        return _plan_what_if(session, student_id, plan, current_prediction, extra_hours, target_score, as_of)
+
+    # No plan yet: a simple rule of thumb, clearly labelled as an estimate.
+    current_grade = _grade_for(current_prediction)
     mastery_gain = data.mastery_gain or 0.0
     uplift = min(0.2, (extra_hours / 10.0) * 0.06 + mastery_gain * 0.25)
     projected_prediction = max(current_prediction, min(1.0, current_prediction + uplift))
@@ -265,6 +271,60 @@ def project_what_if(
         estimate=True,
         target_grade=target_grade,
         gap_to_target=projected_prediction - target_score,
+    )
+
+
+def _plan_what_if(
+    session,
+    student_id: str,
+    plan,
+    current_prediction: float,
+    extra_hours: float,
+    target_score: float,
+    as_of: datetime | None,
+) -> WhatIfResponse:
+    """Run the plan's achievability model with and without the extra hours.
+
+    Uses the same starting score as the dashboard's coaching card, so the two
+    always agree; extra time is spread over the remaining weeks and the
+    student's weakest, highest-mark topics by the existing allocation.
+    """
+    now = (as_of or datetime.now(UTC)).astimezone(UTC)
+    baseline = build_plan_achievability(
+        session,
+        student_id,
+        plan,
+        current_score=current_prediction,
+        as_of=now,
+    )
+    projected = build_plan_achievability(
+        session,
+        student_id,
+        plan,
+        current_score=current_prediction,
+        as_of=now,
+        extra_hours_per_week=extra_hours,
+    )
+    base_range = baseline["projected_range"]
+    new_range = projected["projected_range"]
+    base_expected = float(base_range["expected"])
+    new_expected = max(base_expected, float(new_range["expected"]))
+    days_remaining = max((plan.exam_date - now.date()).days, 0)
+    gain = new_expected - base_expected
+    return WhatIfResponse(
+        current_prediction=base_expected,
+        current_grade=_grade_for(base_expected),
+        projected_prediction=new_expected,
+        projected_grade=_grade_for(new_expected),
+        gain=gain,
+        change=gain,
+        estimate=True,
+        target_grade=plan.target_grade,
+        gap_to_target=new_expected - target_score,
+        current_range=(float(base_range["low"]), float(base_range["high"])),
+        projected_range=(float(new_range["low"]), float(new_range["high"])),
+        extra_total_hours=round(extra_hours * days_remaining / 7, 1),
+        days_remaining=days_remaining,
     )
 
 

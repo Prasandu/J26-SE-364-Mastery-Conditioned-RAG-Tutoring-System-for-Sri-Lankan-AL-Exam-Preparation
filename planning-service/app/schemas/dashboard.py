@@ -117,3 +117,8 @@ class WhatIfResponse(BaseModel):
     estimate: bool = True
     target_grade: str | None = None
     gap_to_target: float | None = None
+    # Present when the estimate comes from the plan's model (same as the coaching card).
+    current_range: tuple[float, float] | None = None
+    projected_range: tuple[float, float] | None = None
+    extra_total_hours: float | None = None
+    days_remaining: int | None = None

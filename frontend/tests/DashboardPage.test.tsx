@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getDashboard,
+  submitWhatIf,
   type DashboardResponse,
 } from "../src/api/planning";
 import PlanningDashboardPage from "../src/features/planning/DashboardPage";
@@ -176,5 +177,42 @@ describe("PlanningDashboardPage", () => {
         screen.getByRole("slider", { name: /Extra study time/ }),
       ).toBeInTheDocument();
     });
+  });
+});
+
+describe("what-if study estimate", () => {
+  beforeEach(() => {
+    vi.mocked(getDashboard).mockReset().mockResolvedValue(populatedDashboard);
+    vi.mocked(submitWhatIf).mockReset();
+  });
+
+  it("shows the range and the total extra hours before the exam", async () => {
+    vi.mocked(submitWhatIf).mockResolvedValue({
+      current_prediction: 0.687,
+      current_grade: "B",
+      projected_prediction: 0.695,
+      projected_grade: "B",
+      gain: 0.008,
+      change: 0.008,
+      estimate: true,
+      target_grade: "A",
+      gap_to_target: -0.055,
+      current_range: [0.59, 0.78],
+      projected_range: [0.6, 0.79],
+      extra_total_hours: 28,
+      days_remaining: 49,
+    });
+    render(
+      <MemoryRouter>
+        <PlanningDashboardPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Calculate estimate" }));
+
+    expect(await screen.findByText("Projected grade: B (60%–79%)")).toBeInTheDocument();
+    expect(screen.getByText(/69% at your current pace/)).toBeInTheDocument();
+    expect(screen.getByText(/about 28 extra hours over the 49 days left/)).toBeInTheDocument();
+    expect(submitWhatIf).toHaveBeenCalledWith({ extra_hours_per_week: 2 });
   });
 });

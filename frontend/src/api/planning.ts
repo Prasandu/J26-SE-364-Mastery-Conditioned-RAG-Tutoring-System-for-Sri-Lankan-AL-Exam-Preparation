@@ -361,6 +361,10 @@ export interface WhatIfResponse {
   estimate: boolean;
   target_grade: string | null;
   gap_to_target: number | null;
+  current_range?: [number, number] | null;
+  projected_range?: [number, number] | null;
+  extra_total_hours?: number | null;
+  days_remaining?: number | null;
 }
 
 export function createPlan(data: PlanInput) {

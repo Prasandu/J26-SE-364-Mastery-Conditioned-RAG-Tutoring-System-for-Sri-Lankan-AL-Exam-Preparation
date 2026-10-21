@@ -43,6 +43,7 @@ from app.services.achievability import (
 from app.services.topic_lookup import preload_topics
 from app.services.weights import (
     ADHERENCE_FLOOR,
+    CATCH_UP_BUFFER,
     COMPRESSED_SESSION_FACTOR,
     COMPRESSION_HEADROOM,
     COMPRESSION_MIN_LOAD,
@@ -376,7 +377,12 @@ def build_and_store_roadmap(
     rows = (
         forecast_weeks(
             inputs,
-            daily_hours=plan_daily_hours(session, plan),
+            # Sessions use about 85% of the free time (the rest is catch-up time), so the
+            # roadmap's weekly hours match what the committed window really schedules.
+            daily_hours={
+                weekday: hours * (1 - CATCH_UP_BUFFER)
+                for weekday, hours in plan_daily_hours(session, plan).items()
+            },
             today=today,
             exam_date=plan.exam_date,
             window_end=window_end,

@@ -299,6 +299,7 @@ Rules, in order of importance:
 - never outside availability, never overlapping, never past the exam;
 - at most the **maximum session length** per session and the **daily limit** per day;
 - **no session shorter than 30 minutes** (unless only a short remainder is left); time is planned in 30-minute blocks;
+- **catch-up time:** about 15% of the free time (rounded down, in 30-minute blocks, spread evenly across the study days) is deliberately left unscheduled, so a missed session has somewhere to go;
 - **prerequisites first**;
 - at most **two back-to-back sessions of the same topic per day**, then move on;
 - spread topics across the week; at each free slot pick the highest-priority topic.
@@ -334,7 +335,7 @@ The window never splits the final week: 42 days → windows of 14, 14, 7 and a f
 **A. The student presses "Missed":**
 
 1. The session is marked *missed* and the time it was recorded is saved.
-2. Its minutes are rescheduled **into the next free slot of the current window**; every other session stays where it is. The topic gets a small priority boost (+0.25) and the new session links back to the missed one.
+2. Its minutes are rescheduled **into the next free slot of the current window**; every other session stays where it is. The free slots are mostly the **catch-up time** the plan left open when it was generated (`CATCH_UP_BUFFER`, about 15%). If those gaps are already used up, the student is told there was no free slot and the minutes are not carried over (the next checkpoint rebuilds the window). The topic gets a small priority boost (+0.25) and the new session links back to the missed one.
 3. The change is logged in the replan log.
 4. The Plan page shows "Moved or added sessions: … — Wed 21 Oct, 5:00 PM", or "No free slot was left in this window" if nothing fits.
 
@@ -501,6 +502,7 @@ Conclusion: rolling re-planning gives a small but statistically clear mastery ga
 | `FINAL_WEEK_DAYS` | 7 | Revision-only period |
 | `ADHERENCE_FLOOR` | 0.60 | Below this, the plan is lightened |
 | `MIN_SESSION_MINUTES` | 30 | Shortest session |
+| `CATCH_UP_BUFFER` | 0.15 | Share of study time held back as catch-up slots (30-minute blocks) |
 | `EVIDENCE_CHECKPOINT_MIN_DAYS` | 3 | Minimum gap between early re-plans |
 | `UNDO_WINDOW_HOURS` | 24 | Undo period |
 | `MAX_VISIBLE_ALERTS` | 3 | Unread alerts shown |

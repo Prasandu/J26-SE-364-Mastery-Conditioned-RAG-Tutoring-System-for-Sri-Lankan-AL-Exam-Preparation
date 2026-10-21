@@ -52,6 +52,8 @@ from app.services.task_content import (
 from app.services.task_views import scheduled_task_response
 from app.services.topic_lookup import preload_topics
 from app.services.weights import (
+    CATCH_UP_BLOCK_MINUTES,
+    CATCH_UP_BUFFER,
     DECLINE_PRIORITY_BOOST,
     ERROR_REVIEW_RECENT_ATTEMPTS,
     ERROR_SCORE_THRESHOLD,
@@ -141,6 +143,10 @@ def generate_plan_schedule(
         end_date,
         local_zone,
     )
+    if not keep_existing:
+        # Leave catch-up gaps. Rescheduling (keep_existing) uses the full windows,
+        # so a missed session can be moved into those gaps.
+        windows = _reserve_catch_up_time(windows, current, local_zone)
     commitments = _fixed_commitments(constraints.get("fixed_commitments", [])) + [
         SchedulerCommitment(
             start_at=task.start_at.astimezone(UTC),
@@ -250,6 +256,40 @@ def generate_plan_schedule(
         local_zone=local_zone,
         replanned_from=replanned_from,
     )
+
+
+def _reserve_catch_up_time(
+    windows: list[TimeWindow],
+    now: datetime,
+    zone: ZoneInfo,
+) -> list[TimeWindow]:
+    """Hold back about ``CATCH_UP_BUFFER`` of the study time as catch-up slots.
+
+    The time is held in 30-minute blocks taken from the end of a day's last
+    window that is still at least an hour long, and the blocks are spread
+    evenly across the study days (not piled up at the end of the window). The
+    share is rounded down, so short plans may keep none.
+    """
+    block = timedelta(minutes=CATCH_UP_BLOCK_MINUTES)
+
+    def usable(window: TimeWindow) -> timedelta:
+        return window.end_at - max(window.start_at, now)
+
+    total = sum((usable(window) for window in windows if usable(window) > timedelta(0)), timedelta(0))
+    blocks = int(total / block * CATCH_UP_BUFFER + 1e-9)  # round down; epsilon guards float error
+    candidates: dict[date, int] = {}
+    for index, window in enumerate(windows):
+        if usable(window) >= 2 * block:
+            candidates[window.start_at.astimezone(zone).date()] = index  # the day's last long window
+    day_windows = [candidates[day] for day in sorted(candidates)]
+    blocks = min(blocks, len(day_windows))
+    if blocks <= 0:
+        return windows
+    reserved = windows[:]
+    for step in range(blocks):
+        index = day_windows[int((step + 0.5) * len(day_windows) / blocks)]
+        reserved[index] = TimeWindow(windows[index].start_at, windows[index].end_at - block)
+    return reserved
 
 
 def _session_blocks(minutes: float) -> int:

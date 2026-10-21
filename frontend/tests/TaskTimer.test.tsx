@@ -358,6 +358,15 @@ describe("session card actions", () => {
     expect(screen.queryByText("Log without the timer")).toBeNull();
   });
 
+  it("tells students that some study time is kept free for catch-up", async () => {
+    vi.mocked(getSchedule).mockResolvedValue(schedule([task()]));
+    renderPage();
+
+    expect(
+      await screen.findByText(/Some of your study time is kept free for catch-up/),
+    ).toBeInTheDocument();
+  });
+
   it("shows how many minutes were studied on a partial session", async () => {
     vi.mocked(getSchedule).mockResolvedValue(
       schedule([task({ status: "partial", actual_duration_min: 30, can_undo: true })]),

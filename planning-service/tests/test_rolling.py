@@ -2,6 +2,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -35,7 +36,7 @@ from app.services.roadmap import (
     rescheduling_horizon_days,
     schedule_limits,
 )
-from app.services.scheduler import ScheduleResult
+from app.services.scheduler import ScheduleResult, TimeWindow
 from app.services.task_content import build_activity_steps
 from app.services.weights import ADHERENCE_FLOOR, FINAL_WEEK_DAYS
 
@@ -753,3 +754,79 @@ def test_keep_target_option_never_suggests_an_impossible_daily_load() -> None:
         "Keep target A: bring back all topics and give it your best every day."
     )
     assert choice["keep_target"]["hours_per_day"] <= 6
+
+
+# --- Catch-up time ----------------------------------------------------------------------
+
+
+def _day_windows(count: int, minutes: int = 120) -> list[TimeWindow]:
+    start = datetime(2026, 10, 20, 10, 30, tzinfo=UTC)
+    return [
+        TimeWindow(start + timedelta(days=day), start + timedelta(days=day, minutes=minutes))
+        for day in range(count)
+    ]
+
+
+def _minutes(windows: list[TimeWindow]) -> float:
+    return sum((window.end_at - window.start_at).total_seconds() / 60 for window in windows)
+
+
+def test_catch_up_time_is_held_back_in_blocks_spread_across_the_days() -> None:
+    windows = _day_windows(6)  # 720 minutes of study time
+
+    result = scheduling._reserve_catch_up_time(windows, datetime(2026, 10, 20, tzinfo=UTC), ZoneInfo("UTC"))
+
+    trimmed = [index for index, (new, old) in enumerate(zip(result, windows, strict=True)) if new != old]
+    assert trimmed == [1, 3, 5]  # evenly spread, not piled up at the end
+    assert all(windows[i].end_at - result[i].end_at == timedelta(minutes=30) for i in trimmed)
+    assert _minutes(windows) - _minutes(result) == 90 <= 0.15 * _minutes(windows)
+
+
+def test_short_windows_and_tiny_plans_keep_no_catch_up_time() -> None:
+    now = datetime(2026, 10, 20, tzinfo=UTC)
+
+    short = _day_windows(10, minutes=45)  # too short to give up 30 minutes
+    tiny = _day_windows(1)  # 120 minutes: 15% rounds down to nothing
+
+    assert scheduling._reserve_catch_up_time(short, now, ZoneInfo("UTC")) == short
+    assert scheduling._reserve_catch_up_time(tiny, now, ZoneInfo("UTC")) == tiny
+
+
+def test_catch_up_time_never_comes_from_time_that_has_already_passed() -> None:
+    windows = _day_windows(6)
+    now = windows[2].start_at + timedelta(minutes=60)  # days 0 and 1 are over, day 2 half gone
+
+    result = scheduling._reserve_catch_up_time(windows, now, ZoneInfo("UTC"))
+
+    assert result[0] == windows[0] and result[1] == windows[1]
+    assert result != windows
+
+
+def test_generation_holds_back_catch_up_time_but_rescheduling_can_use_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = make_plan()
+    session = FakeSession(plan, topics=TOPICS, slots=every_day_slots(plan.id))
+    session.scalars = _with_empty(session.scalars, Question, TopicEvidence, StudyTask)  # type: ignore[method-assign]
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        scheduling,
+        "schedule_tasks",
+        lambda **kwargs: captured.update(kwargs) or ScheduleResult((), False, 0, {}),
+    )
+
+    scheduling.generate_plan_schedule(session, "student-1", plan.id, horizon_days=7, now=NOW)  # type: ignore[arg-type]
+    planned = _minutes(captured["availability"])
+    scheduling.generate_plan_schedule(  # type: ignore[arg-type]
+        session,
+        "student-1",
+        plan.id,
+        horizon_days=7,
+        now=NOW,
+        duration_overrides={"mid": 30},
+        keep_existing=True,
+    )
+    available_for_makeup = _minutes(captured["availability"])
+
+    assert available_for_makeup == 840  # 7 days x 2 hours, all open for a missed session
+    assert planned == 720  # 4 blocks of 30 minutes (about 14%) kept free for catch-up

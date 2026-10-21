@@ -105,5 +105,10 @@ UNDO_WINDOW_HOURS = 24  # a recorded outcome can be undone for this long
 COACHING_MAX_FOCUS_CHARS = 60  # focus topic names/reasons are shortened (with "…") only beyond this
 COACHING_MAX_FOCUS_WORDS = 5  # ...or beyond this many words
 
+# Catch-up time: part of the free time is left unscheduled so a missed session can be
+# moved without disturbing the rest of the plan.
+CATCH_UP_BUFFER = 0.15  # share of the study time held back (never exceeded; 30-minute blocks)
+CATCH_UP_BLOCK_MINUTES = 30  # catch-up time is held back in blocks of this length
+
 # Sessions
 MIN_SESSION_MINUTES = 30  # no study session shorter than this (unless only a short remainder is left)

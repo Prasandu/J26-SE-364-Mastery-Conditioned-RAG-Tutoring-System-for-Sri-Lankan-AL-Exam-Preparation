@@ -908,6 +908,12 @@ export default function PlanningPage() {
                   </span>
                 ))}
               </div>
+              {tasks.length > 0 ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  Some of your study time is kept free for catch-up, so a missed
+                  session can be moved without disturbing the rest of your plan.
+                </p>
+              ) : null}
               {tasks.length === 0 ? (
                 <p className="mt-3 rounded-3xl border border-slate-100 bg-white shadow-card p-5 text-slate-600">
                   No study sessions are saved for this plan yet.

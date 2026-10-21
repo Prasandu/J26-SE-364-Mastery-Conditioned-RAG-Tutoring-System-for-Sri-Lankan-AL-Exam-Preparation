@@ -1,0 +1,447 @@
+/* Shared blue presentation: calm surfaces, generous spacing and unclipped work areas. */
+.button {
+  border-radius: var(--radius-pill);
+}
+
+.card {
+  box-shadow: 0 4px 18px rgb(19 46 79 / 4%);
+}
+
+.app-header__logo {
+  background: linear-gradient(135deg, var(--brand-800), var(--brand-600));
+}
+
+.view--dashboard .page-header {
+  background:
+    radial-gradient(ellipse at 90% 30%, rgb(110 168 230 / 22%), transparent 65%),
+    linear-gradient(120deg, var(--brand-50), var(--brand-100));
+  border-color: var(--brand-200);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-sm);
+}
+
+.view--dashboard .page-header h1 {
+  color: var(--navy-900);
+}
+
+.view--dashboard .page-header h1:lang(en) {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.view--dashboard .page-header .lead {
+  color: var(--ink-700);
+}
+
+.view--dashboard .page-header__eyebrow {
+  color: var(--brand-700);
+}
+
+.view--dashboard .page-header__media {
+  border-color: var(--brand-200);
+  background: linear-gradient(145deg, rgb(255 255 255 / 60%), rgb(194 216 240 / 65%));
+}
+
+.view--dashboard .page-header__actions .button {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+  color: var(--surface);
+}
+
+.view--dashboard .page-header__actions .button:hover {
+  background: var(--brand-800);
+  border-color: var(--brand-800);
+}
+
+.mode-option--guided .mode-option__icon,
+.mode-option--manual .mode-option__icon {
+  background: var(--brand-100);
+  color: var(--brand-700);
+}
+
+.mode-option--selected {
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* One light frame for every practical step; no narrow document floating in dark margins. */
+.flow-shell {
+  background: var(--canvas);
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.flow-shell__bar {
+  background: var(--surface);
+  color: var(--ink-900);
+  padding-bottom: var(--space-3);
+}
+
+.flow-shell__title {
+  white-space: normal;
+  overflow: visible;
+  font-size: var(--text-base);
+}
+
+.flow-shell__back {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-800);
+}
+
+.flow-shell__back:hover {
+  background: var(--brand-100);
+}
+
+.flow-shell__tools .language-switcher {
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+
+.flow-shell__tools .toggle {
+  color: var(--ink-700);
+}
+
+.flow-shell__tools .toggle--on {
+  background: var(--brand-700);
+  color: var(--surface);
+}
+
+.flow-shell .session-nav {
+  max-width: none;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.flow-shell .session-nav__button {
+  background: var(--surface-2);
+  color: var(--ink-700);
+}
+
+.flow-shell .session-nav__button:hover:not(:disabled) {
+  background: var(--brand-100);
+}
+
+.flow-shell .session-nav__marker {
+  background: var(--brand-100);
+  color: var(--brand-800);
+}
+
+.flow-shell .session-nav__item--done .session-nav__button {
+  color: var(--brand-800);
+}
+
+.flow-shell .session-nav__item--done .session-nav__marker {
+  background: var(--brand-100);
+  color: var(--brand-800);
+}
+
+.flow-shell .session-nav__item--current .session-nav__button {
+  background: var(--brand-700);
+  color: var(--surface);
+}
+
+.flow-shell .session-nav__item--current .session-nav__button:hover:not(:disabled) {
+  background: var(--brand-800);
+}
+
+.flow-shell .session-nav__item--current .session-nav__marker {
+  background: var(--surface);
+  color: var(--brand-800);
+}
+
+.flow-shell .session-nav__mode {
+  border-color: var(--brand-200);
+  background: var(--surface);
+  color: var(--brand-800);
+}
+
+.app-main.flow-shell__body {
+  border-radius: 0;
+  scrollbar-gutter: stable;
+  scroll-padding-block: var(--space-5);
+}
+
+.flow-shell__body :is(input, textarea, select, button, summary) {
+  scroll-margin-block: var(--space-5);
+}
+
+.notebook-sections {
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.view--notebook .notebook-sheet {
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+}
+
+.view--notebook .notebook__save {
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.view--notebook .notebook-pager,
+.view--reflection .notebook-pager,
+.lab-studio .notebook-pager {
+  padding-right: var(--space-4);
+}
+
+/* Short windows scroll the work area instead of squeezing or clipping the laboratory. */
+.app-main.flow-shell__body:has(.workbench) {
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.workbench {
+  flex: 1;
+  min-height: 0;
+}
+
+.lab-stage,
+.scene-frame,
+.workbench__side {
+  min-width: 0;
+}
+
+.lab-stage {
+  flex-direction: column;
+}
+
+.lab-stage > .canvas-fallback {
+  flex: none;
+}
+
+.notebook-nav__label {
+  white-space: normal;
+  overflow: visible;
+}
+
+.notebook-nav__item {
+  padding-block: var(--space-2);
+}
+
+.bench-details {
+  flex: none;
+}
+
+.flow-pager__button {
+  max-width: 100%;
+  min-width: 0;
+  border-radius: var(--radius-pill);
+  overflow-wrap: anywhere;
+}
+
+/* Page navigation follows the document; it never covers fields or takes space from the bench. */
+.flow-pager {
+  position: relative;
+  margin-top: var(--space-6);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+
+.flow-shell__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The help launcher floats bottom-right (see flow.css); its panel opens upward from there. */
+.help-widget__panel {
+  max-height: min(600px, calc(100dvh - 180px));
+}
+
+.help-widget__body {
+  min-height: 0;
+}
+
+@media (min-width: 901px) {
+  .workbench__grid {
+    min-height: 460px;
+  }
+
+  .lab-stage {
+    min-height: 220px;
+  }
+
+  .view--notebook .notebook-sections {
+    position: sticky;
+    top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .scene-frame__bar {
+    flex-direction: column;
+  }
+
+  .scene-frame__bar .scene-frame__caption {
+    flex: none;
+  }
+
+  .workbench {
+    flex: none;
+  }
+
+  .app-main.flow-shell__body:has(.workbench) {
+    display: block;
+  }
+
+  .flow-shell__title {
+    font-size: var(--text-sm);
+  }
+
+  .flow-shell__bar {
+    flex-wrap: wrap;
+  }
+
+  .flow-shell__tools {
+    margin-left: auto;
+  }
+
+  .flow-pager {
+    gap: var(--space-2);
+  }
+
+  .flow-pager__button {
+    padding-inline: var(--space-3);
+  }
+
+  .view--notebook .notebook-sheet {
+    padding: var(--space-4);
+  }
+}
+
+/* Notebook reading area beside a vertical section rail, in the LabXchange content order.
+ * Closing the reading area gives its space back to the scene; apparatus never crop to fill. */
+.side-panel__reading-head {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .workbench__grid {
+    grid-template-columns: minmax(0, 1fr) clamp(540px, 43vw, 660px);
+  }
+
+  .workbench__grid:has(.side-panel--collapsed) {
+    grid-template-columns: minmax(0, 1fr) 230px;
+  }
+
+  .workbench__side .side-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: 'reading rail' 'pager rail';
+    gap: 0;
+    height: 100%;
+  }
+
+  .side-panel__toolbar {
+    grid-area: rail;
+    border-left: 1px solid var(--line);
+    border-bottom: 0;
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-2);
+    background: var(--surface);
+  }
+
+  .side-panel__head {
+    padding: var(--space-2) var(--space-2) var(--space-4);
+    color: var(--brand-800);
+  }
+
+  .lab-studio .notebook-nav ol {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .lab-studio .notebook-nav__item {
+    min-height: 44px;
+    padding: var(--space-2);
+    border-radius: var(--radius);
+  }
+
+  .lab-studio .notebook-nav__item .icon {
+    display: none;
+  }
+
+  .side-panel__scroll {
+    grid-area: reading;
+    min-width: 0;
+    background: var(--surface-2);
+  }
+
+  .side-panel__reading-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+    background: var(--brand-50);
+    color: var(--brand-800);
+    font-weight: 700;
+  }
+
+  .side-panel__collapse {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--brand-200);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--brand-800);
+    font: inherit;
+    font-size: var(--text-lg);
+    cursor: pointer;
+  }
+
+  .side-panel__collapse:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .side-panel > .notebook-pager {
+    grid-area: pager;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .workbench__side .side-panel--collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'rail' 'rail';
+  }
+
+  .side-panel--collapsed > .side-panel__scroll,
+  .side-panel--collapsed > .notebook-pager {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .flow-shell__bar {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .flow-shell__tools {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .flow-shell__tools .help-widget__launcher {
+    padding: var(--space-3);
+    box-shadow: none;
+  }
+
+  .flow-shell__tools .help-widget__launcher span {
+    display: none;
+  }
+}

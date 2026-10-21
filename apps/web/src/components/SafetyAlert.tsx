@@ -1,27 +1,27 @@
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
 
-/** Persistent safety area. Safety feedback is visible in every mode. */
+/**
+ * Safety warnings for the current attempt. There is no longer a persistent precaution banner; this
+ * renders nothing until the engine records a safety event, and then shows the warning (and its
+ * history). `role="alert"` announces on insertion, so screen-reader users still hear a new warning.
+ */
 export function SafetyAlert() {
   const { t } = useTranslation();
   const session = useSession((s) => s.session);
   const log = useSession((s) => s.log);
-  const engine = useSession((s) => s.engine);
   const attempt = session?.attempt ?? 0;
   const safety = log.filter((l) => l.kind === 'safety' && l.attempt === attempt);
   const latest = safety.at(-1);
-  const precaution = engine.definition.safetyRules.find((r) => r.id === 'avoid_touching_chemicals');
+
+  // Nothing to show until a safety event occurs: keeps the workbench clean (no empty banner).
+  if (safety.length === 0) return null;
 
   return (
     <section className="safety-alert" aria-labelledby="safety-title">
       <h2 id="safety-title" className="visually-hidden">
         {t('ui.safety.title')}
       </h2>
-      {precaution && (
-        <p className="safety-alert__precaution">
-          <span className="label">{t('ui.safety.precaution')}</span> {t(precaution.textKey)}
-        </p>
-      )}
       <div role="alert" aria-live="assertive" className="safety-alert__live">
         {latest && (
           <p className="safety-alert__warning">

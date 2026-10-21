@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui/Icon';
+import { useFeedback } from '../components/ui/Feedback';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import { EngineError } from '../engine/adapter';
 import type { AdminClient } from './adminClient';
@@ -105,6 +106,7 @@ export function DraftReview({
   onChanged: () => void;
 }) {
   const { t } = useTranslation();
+  const { confirm, toast } = useFeedback();
   const [detail, setDetail] = useState<AdminDraftDetail | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -138,13 +140,14 @@ export function DraftReview({
       setForm(toForm(d));
       setDirty(false);
       setMessage({ tone: 'success', key: successKey });
+      toast(t(successKey), 'success');
       onChanged();
     } catch (error) {
       const code = error instanceof EngineError ? error.code : '';
-      setMessage({
-        tone: 'error',
-        key: ERRORS.has(code) ? `admin.error.${code}` : 'admin.error.generic',
-      });
+      const key = ERRORS.has(code) ? `admin.error.${code}` : 'admin.error.generic';
+      setMessage({ tone: 'error', key });
+      // A failed review can leave the panel scrolled away from its inline message.
+      toast(t(key), 'error');
     } finally {
       setBusy(false);
     }
@@ -242,8 +245,12 @@ export function DraftReview({
             disabled={busy || dirty || archived}
             title={t('admin.quick.fix_help')}
             onClick={() => {
-              if (window.confirm(t('admin.quick.fix_one_confirm')))
-                void act('quick_fix').then(() => setFixedNow(true));
+              void (async () => {
+                if (await confirm(t('admin.quick.fix_one_confirm'))) {
+                  await act('quick_fix');
+                  setFixedNow(true);
+                }
+              })();
             }}
           >
             <Icon name="check" size={16} /> {t('admin.quick.fix')}
@@ -264,7 +271,13 @@ export function DraftReview({
                 : t('admin.quick.approve_help')
             }
             onClick={() => {
-              if (window.confirm(t('admin.quick.approve_one_confirm'))) void act('quick_approve');
+              void (async () => {
+                // Content approval is not reversible from this console.
+                const ok = await confirm(t('admin.quick.approve_one_confirm'), {
+                  destructive: true,
+                });
+                if (ok) await act('quick_approve');
+              })();
             }}
           >
             {t('admin.quick.approve')}
@@ -306,6 +319,44 @@ export function DraftReview({
         </p>
       )}
 
+      <div className="admin-review__toolbar">
+        <div
+          id="review-save"
+          tabIndex={-1}
+          className="button-row admin-review__savebar"
+          role="group"
+          aria-label={t('admin.review.save')}
+        >
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={!dirty || busy || archived}
+            onClick={save}
+          >
+            {t('admin.review.save')}
+          </button>
+          <button
+            type="button"
+            className="button"
+            disabled={!dirty || busy}
+            onClick={() => {
+              setForm(toForm(detail));
+              setDirty(false);
+            }}
+          >
+            {t('admin.review.discard')}
+          </button>
+        </div>
+        <a className="button button--ghost" href="#actions-title">
+          {t('admin.review.actions')}
+        </a>
+      </div>
+      {dirty && (
+        <p className="notice" role="status">
+          {t('admin.review.unsaved')}
+        </p>
+      )}
+
       <div className="content-layout">
         <div className="content-layout__main">
           <section className="card" aria-labelledby="fields-title">
@@ -313,7 +364,6 @@ export function DraftReview({
               <Icon name="clipboard" /> {t('admin.review.fields')}
             </h3>
             <p className="hint-text">{t('admin.review.fields_help')}</p>
-            {dirty && <p className="notice">{t('admin.review.unsaved')}</p>}
             {ADMIN_FIELDS.map((f) => {
               const id = `field-${f}`;
               const issues = issuesFor(f);
@@ -349,124 +399,108 @@ export function DraftReview({
                       {t(reviewed ? 'admin.review.reviewed' : 'admin.review.not_reviewed')}
                     </span>
                   </summary>
-                  <div className="admin-field__head">
-                    <label htmlFor={id}>{t(`admin.field.${f}`)}</label>
-                    {draft.fieldEdited[f] && (
-                      <span className="tag tag--warning">{t('admin.review.edited')}</span>
-                    )}
-                    {missing && (
-                      <span className="tag tag--warning">{t('admin.review.missing')}</span>
-                    )}
-                    <span className="admin-field__review">
+                  <div className="admin-field__body">
+                    <div className="admin-field__head">
+                      <label htmlFor={id}>{t(`admin.field.${f}`)}</label>
+                      {draft.fieldEdited[f] && (
+                        <span className="tag tag--warning">{t('admin.review.edited')}</span>
+                      )}
+                      {missing && (
+                        <span className="tag tag--warning">{t('admin.review.missing')}</span>
+                      )}
+                      <span className="admin-field__review">
+                        <input
+                          type="checkbox"
+                          id={`${id}-reviewed`}
+                          checked={draft.fieldReview[f] ?? false}
+                          disabled={busy || dirty || archived}
+                          onChange={(e) => void act('mark_field', f, e.target.checked)}
+                        />
+                        <label htmlFor={`${id}-reviewed`}>{t('admin.review.reviewed')}</label>
+                      </span>
+                    </div>
+                    {isList(f) ? (
+                      <>
+                        <textarea
+                          id={id}
+                          rows={Math.min(12, Math.max(4, form.values[f].split('\n').length + 1))}
+                          value={form.values[f]}
+                          disabled={archived}
+                          aria-describedby={`${id}-help`}
+                          onChange={(e) => {
+                            setForm({ ...form, values: { ...form.values, [f]: e.target.value } });
+                            setDirty(true);
+                          }}
+                        />
+                        <span id={`${id}-help`} className="field__counter">
+                          {t('admin.review.one_per_line')}
+                        </span>
+                        <label className="admin-field__pages" htmlFor={`${id}-pages`}>
+                          {t('admin.review.source_pages')}
+                          <input
+                            id={`${id}-pages`}
+                            type="text"
+                            inputMode="numeric"
+                            value={form.pages[f]}
+                            disabled={archived}
+                            onChange={(e) => {
+                              setForm({ ...form, pages: { ...form.pages, [f]: e.target.value } });
+                              setDirty(true);
+                            }}
+                          />
+                        </label>
+                      </>
+                    ) : (
                       <input
-                        type="checkbox"
-                        id={`${id}-reviewed`}
-                        checked={draft.fieldReview[f] ?? false}
-                        disabled={busy || dirty || archived}
-                        onChange={(e) => void act('mark_field', f, e.target.checked)}
-                      />
-                      <label htmlFor={`${id}-reviewed`}>{t('admin.review.reviewed')}</label>
-                    </span>
-                  </div>
-                  {isList(f) ? (
-                    <>
-                      <textarea
                         id={id}
-                        rows={Math.min(8, Math.max(2, form.values[f].split('\n').length + 1))}
+                        type="text"
+                        inputMode={f === 'experimentNumber' ? 'numeric' : undefined}
                         value={form.values[f]}
                         disabled={archived}
-                        aria-describedby={`${id}-help`}
                         onChange={(e) => {
                           setForm({ ...form, values: { ...form.values, [f]: e.target.value } });
                           setDirty(true);
                         }}
                       />
-                      <span id={`${id}-help`} className="field__counter">
-                        {t('admin.review.one_per_line')}
-                      </span>
-                      <label className="admin-field__pages" htmlFor={`${id}-pages`}>
-                        {t('admin.review.source_pages')}
-                        <input
-                          id={`${id}-pages`}
-                          type="text"
-                          inputMode="numeric"
-                          value={form.pages[f]}
-                          disabled={archived}
-                          onChange={(e) => {
-                            setForm({ ...form, pages: { ...form.pages, [f]: e.target.value } });
-                            setDirty(true);
-                          }}
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <input
-                      id={id}
-                      type="text"
-                      inputMode={f === 'experimentNumber' ? 'numeric' : undefined}
-                      value={form.values[f]}
-                      disabled={archived}
-                      onChange={(e) => {
-                        setForm({ ...form, values: { ...form.values, [f]: e.target.value } });
-                        setDirty(true);
-                      }}
-                    />
-                  )}
-                  {isList(f) && (draft.suggestions?.[f] ?? []).length > 0 && (
-                    <div className="admin-suggestions">
-                      <p className="admin-suggestions__title">{t('admin.assist.suggested')}</p>
-                      <ul>
-                        {(draft.suggestions?.[f] ?? []).map((s) => (
-                          <li key={`${s.page}-${s.text}`}>
-                            <span>
-                              {s.text}{' '}
-                              <span className="hint-text">
-                                {t('admin.assist.from_page', { page: s.page })}
+                    )}
+                    {isList(f) && (draft.suggestions?.[f] ?? []).length > 0 && (
+                      <div className="admin-suggestions">
+                        <p className="admin-suggestions__title">{t('admin.assist.suggested')}</p>
+                        <ul>
+                          {(draft.suggestions?.[f] ?? []).map((s) => (
+                            <li key={`${s.page}-${s.text}`}>
+                              <span>
+                                {s.text}{' '}
+                                <span className="hint-text">
+                                  {t('admin.assist.from_page', { page: s.page })}
+                                </span>
                               </span>
-                            </span>
-                            <button
-                              type="button"
-                              className="button button--ghost"
-                              disabled={archived || form.values[f].split('\n').includes(s.text)}
-                              onClick={() => addSuggestion(f, s.text, s.page)}
-                            >
-                              {t('admin.assist.add')}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {issues.map((i, n) => (
-                    <p key={`${i.code}-${n}`} className="admin-field__issue">
-                      <Icon name="alert" size={14} />{' '}
-                      {t(ISSUES.has(i.code) ? `admin.issue.${i.code}` : 'admin.issue.other')}
-                    </p>
-                  ))}
+                              <button
+                                type="button"
+                                className="button button--ghost"
+                                disabled={archived || form.values[f].split('\n').includes(s.text)}
+                                onClick={() => addSuggestion(f, s.text, s.page)}
+                              >
+                                {t('admin.assist.add')}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {issues.map((i, n) => (
+                      <p key={`${i.code}-${n}`} className="admin-field__issue">
+                        <Icon name="alert" size={14} />{' '}
+                        {t(ISSUES.has(i.code) ? `admin.issue.${i.code}` : 'admin.issue.other')}
+                      </p>
+                    ))}
+                  </div>
                 </details>
               );
             })}
-            <div className="button-row admin-review__savebar">
-              <button
-                type="button"
-                className="button button--primary"
-                disabled={!dirty || busy || archived}
-                onClick={save}
-              >
-                {t('admin.review.save')}
-              </button>
-              <button
-                type="button"
-                className="button"
-                disabled={!dirty || busy}
-                onClick={() => {
-                  setForm(toForm(detail));
-                  setDirty(false);
-                }}
-              >
-                {t('admin.review.discard')}
-              </button>
-            </div>
+            <a className="button admin-review__return" href="#review-save">
+              <Icon name="arrow" size={16} /> {t('admin.review.save')}
+            </a>
           </section>
         </div>
 
@@ -533,6 +567,60 @@ export function DraftReview({
             </ul>
           </section>
 
+          <section className="card" aria-labelledby="actions-title">
+            <h3 id="actions-title" tabIndex={-1} className="card__title">
+              <Icon name="shield" /> {t('admin.review.actions')}
+            </h3>
+            <div className="admin-actions">
+              <button
+                type="button"
+                className="button"
+                disabled={busy || dirty || draft.status !== 'draft'}
+                onClick={() => void act('submit_for_review')}
+              >
+                {t('admin.action.submit_for_review')}
+              </button>
+              <button
+                type="button"
+                className="button button--primary"
+                disabled={
+                  busy || dirty || draft.status !== 'needs_review' || !validation.canApproveContent
+                }
+                aria-describedby="approve-help"
+                onClick={() => void act('approve_content')}
+              >
+                {t('admin.action.approve_content')}
+              </button>
+              <p id="approve-help" className="hint-text">
+                {t('admin.action.approve_help')}
+              </p>
+              <button
+                type="button"
+                className="button"
+                disabled={
+                  busy || dirty || !['needs_review', 'content_approved'].includes(draft.status)
+                }
+                onClick={() => void act('return_to_draft')}
+              >
+                {t('admin.action.return_to_draft')}
+              </button>
+              <button
+                type="button"
+                className="button button--warning"
+                disabled={busy || archived}
+                onClick={() => {
+                  void (async () => {
+                    const ok = await confirm(t('admin.action.archive_confirm'), {
+                      destructive: true,
+                    });
+                    if (ok) await act('archive');
+                  })();
+                }}
+              >
+                {t('admin.action.archive')}
+              </button>
+            </div>
+          </section>
           <section className="card card--safety" aria-labelledby="duplicates-title">
             <h3 id="duplicates-title" className="card__title">
               <Icon name="layers" /> {t('admin.validation.duplicates')}
@@ -584,56 +672,6 @@ export function DraftReview({
               {t(`admin.simulation.reason.${validation.simulation.reason}`)}
             </p>
             <p className="hint-text">{t('admin.simulation.separate')}</p>
-          </section>
-
-          <section className="card" aria-labelledby="actions-title">
-            <h3 id="actions-title" className="card__title">
-              <Icon name="shield" /> {t('admin.review.actions')}
-            </h3>
-            <div className="admin-actions">
-              <button
-                type="button"
-                className="button"
-                disabled={busy || dirty || draft.status !== 'draft'}
-                onClick={() => void act('submit_for_review')}
-              >
-                {t('admin.action.submit_for_review')}
-              </button>
-              <button
-                type="button"
-                className="button button--primary"
-                disabled={
-                  busy || dirty || draft.status !== 'needs_review' || !validation.canApproveContent
-                }
-                aria-describedby="approve-help"
-                onClick={() => void act('approve_content')}
-              >
-                {t('admin.action.approve_content')}
-              </button>
-              <p id="approve-help" className="hint-text">
-                {t('admin.action.approve_help')}
-              </p>
-              <button
-                type="button"
-                className="button"
-                disabled={
-                  busy || dirty || !['needs_review', 'content_approved'].includes(draft.status)
-                }
-                onClick={() => void act('return_to_draft')}
-              >
-                {t('admin.action.return_to_draft')}
-              </button>
-              <button
-                type="button"
-                className="button button--warning"
-                disabled={busy || archived}
-                onClick={() => {
-                  if (window.confirm(t('admin.action.archive_confirm'))) void act('archive');
-                }}
-              >
-                {t('admin.action.archive')}
-              </button>
-            </div>
           </section>
         </aside>
       </div>

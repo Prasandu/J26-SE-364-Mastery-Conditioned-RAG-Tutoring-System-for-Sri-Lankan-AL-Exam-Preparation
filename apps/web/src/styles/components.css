@@ -700,3 +700,57 @@ fieldset.choice {
 .report-table tbody th {
   font-weight: 600;
 }
+
+/* ---------- app-wide toasts ---------- */
+/*
+ * Transient confirmations of something that already happened. They reuse `.stage-toast` from the
+ * laboratory so the whole product speaks one visual language; only placement and tone colours
+ * differ. Fixed to the top-right, clear of the flow pager and the help launcher at the bottom.
+ */
+.toast-stack {
+  position: fixed;
+  top: calc(var(--space-4) + env(safe-area-inset-top));
+  right: calc(var(--space-4) + env(safe-area-inset-right));
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.app-toast {
+  pointer-events: auto;
+  animation: toast-life 6s ease forwards;
+}
+
+.app-toast--success {
+  border-left-color: var(--ok);
+}
+
+.app-toast--warning {
+  border-left-color: var(--warning-line);
+}
+
+.app-toast--error {
+  border-left-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+@media (max-width: 900px) {
+  /* Full width on a phone, and below the top bar rather than over it. */
+  .toast-stack {
+    top: auto;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    left: calc(var(--space-3) + env(safe-area-inset-left));
+    right: calc(var(--space-3) + env(safe-area-inset-right));
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the message, drop the movement; it still clears on its own timer. */
+  .app-toast {
+    animation: none;
+  }
+}

@@ -14,7 +14,7 @@ export function ExperimentCard({ entry }: { entry: CatalogEntry }) {
   return (
     <article className="card experiment-card" aria-labelledby={titleId}>
       <div className="experiment-card__media">
-        <LabIllustration compact />
+        <LabIllustration />
       </div>
       <div className="experiment-card__body">
         <div className="experiment-card__top">

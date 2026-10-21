@@ -24,7 +24,8 @@ export function AdminOverview({
     { key: 'admin.count.imports', value: status.counts.imports, icon: 'layers' },
   ];
   return (
-    <>
+    <div className="admin-overview">
+      <p className="notice">{t('admin.overview.scope')}</p>
       <ul className="stat-strip stat-strip--admin" aria-label={t('admin.counts')}>
         {tiles.map((tile) => (
           <li key={tile.key} className="stat">
@@ -61,9 +62,18 @@ export function AdminOverview({
               {t('admin.op.open_drafts')}
             </button>
           </article>
+          <article className="card">
+            <h3 className="card__title">
+              <Icon name="layers" /> {t('admin.library.title')}
+            </h3>
+            <p>{t('admin.library.rule')}</p>
+            <button type="button" className="button" onClick={() => onNavigate('library')}>
+              {t('admin.overview.open_library')}
+            </button>
+          </article>
         </div>
         <p className="hint-text">{t('admin.op.not_available')}</p>
       </section>
-    </>
+    </div>
   );
 }

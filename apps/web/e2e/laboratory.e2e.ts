@@ -11,6 +11,7 @@ import {
   startExperiment,
   viewShot,
   waitFor3D,
+  openSection,
 } from './helpers';
 
 const switchTo = async (page: Page, view: '2d' | '3d') => {
@@ -142,12 +143,12 @@ test('guided and manual modes expose different assistance', async ({ page }, inf
   test.skip(info.project.name !== 'desktop', 'mode comparison runs at desktop width');
   // Guidance and the full action list now share one notebook section (V3-2: Protocol).
   await startExperiment(page, 'guided', 'beginner');
-  await page.getByRole('tab', { name: en('ui.side.protocol') }).click();
+  await openSection(page, 'ui.side.protocol');
   await expect(page.locator('.action-panel__suggested')).toBeVisible();
   await shot(page, 'desktop-10-guided-protocol');
 
   await startExperiment(page, 'manual');
-  await page.getByRole('tab', { name: en('ui.side.protocol') }).click();
+  await openSection(page, 'ui.side.protocol');
   await expect(page.locator('.action-panel__suggested')).toHaveCount(0);
   // The complete action list is still available in manual mode.
   await expect(actionButton(page, 'submit_experiment')).toBeAttached();

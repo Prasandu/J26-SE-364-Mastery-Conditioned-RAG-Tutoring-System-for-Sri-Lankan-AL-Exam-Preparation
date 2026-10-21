@@ -78,7 +78,7 @@ export function NotebookSheet({ model }: { model: SceneModel }) {
       {isSheet && (
         <button
           type="button"
-          className="button button--primary notebook-sheet__trigger"
+          className="button button--primary notebook-drawer__trigger"
           onClick={() => setOpen(true)}
         >
           <Icon name="book" size={16} />
@@ -87,18 +87,18 @@ export function NotebookSheet({ model }: { model: SceneModel }) {
       )}
       <dialog
         ref={dialogRef}
-        className="notebook-sheet"
+        className="notebook-drawer"
         aria-label={t('ui.side.notebook')}
         // `cancel` covers Escape; `close` covers every other route out.
         onCancel={() => setOpen(false)}
         onClose={() => setOpen(false)}
       >
         {isSheet && (
-          <div className="notebook-sheet__head">
-            <p className="notebook-sheet__title">{t('ui.side.notebook')}</p>
+          <div className="notebook-drawer__head">
+            <p className="notebook-drawer__title">{t('ui.side.notebook')}</p>
             <button
               type="button"
-              className="notebook-sheet__close"
+              className="notebook-drawer__close"
               onClick={() => setOpen(false)}
               aria-label={t('ui.side.close_notebook')}
             >

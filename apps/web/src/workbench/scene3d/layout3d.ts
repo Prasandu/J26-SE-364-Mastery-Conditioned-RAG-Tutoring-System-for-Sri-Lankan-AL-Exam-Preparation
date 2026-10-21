@@ -79,6 +79,18 @@ export interface CameraPose {
  */
 export const OVERVIEW_POSE: CameraPose = { position: [0, 2.85, 6.2], target: [0, 1.0, -0.9] };
 
+/** Fit the full apparatus span in a narrow canvas without changing close-up presets. */
+export const fittedOverviewPose = (aspect: number): CameraPose => {
+  const factor = Math.max(1, 2 / Math.max(0.5, aspect));
+  return {
+    target: [...OVERVIEW_POSE.target],
+    position: OVERVIEW_POSE.position.map((value, axis) => {
+      const target = OVERVIEW_POSE.target[axis]!;
+      return target + (value - target) * factor;
+    }) as Vec3,
+  };
+};
+
 /** Camera poses derived from where the balance and the flask currently are. */
 export const cameraPose = (preset: CameraPreset, model: SceneModel): CameraPose => {
   if (preset === 'balance') {

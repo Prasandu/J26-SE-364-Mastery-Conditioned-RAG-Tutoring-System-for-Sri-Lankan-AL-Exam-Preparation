@@ -81,13 +81,14 @@ export function AdminKnowledge({
     run(async () => setChunks({ version, items: await client.knowledgeChunks(version) }));
 
   return (
-    <section className="section admin-kb" aria-labelledby="kb-title">
+    <section className="section admin-kb admin-records" aria-labelledby="kb-title">
       <h2 id="kb-title">{t('admin.kb.title')}</h2>
       <p className="hint-text">{t('admin.kb.lead')}</p>
+      <p className="notice">{t('admin.kb.lifecycle')}</p>
       {message && <StatusMessage tone={message.tone} title={message.text} />}
 
       <div className="admin-kb__summary">
-        <article className="card">
+        <article className="card card--accent">
           <h3 className="card__title">{t('admin.kb.active')}</h3>
           {kb.active ? (
             <>
@@ -102,6 +103,13 @@ export function AdminKnowledge({
           ) : (
             <p className="hint-text">{t('admin.kb.none_active')}</p>
           )}
+        </article>
+        <article className="card">
+          <h3 className="card__title">{t('admin.kb.staged')}</h3>
+          <p className="stat__value">
+            {kb.builds.filter((record) => record.status === 'staged').length}
+          </p>
+          <p className="hint-text">{t('admin.kb.staged_help')}</p>
         </article>
         <article className="card">
           <h3 className="card__title">{t('admin.kb.engine')}</h3>
@@ -169,8 +177,8 @@ export function AdminKnowledge({
       {kb.builds.length === 0 && !kb.baseVersion ? (
         <p className="hint-text">{t('admin.kb.no_versions')}</p>
       ) : (
-        <div className="table-scroll card">
-          <table className="report-table admin-table">
+        <div className="table-scroll card admin-table-scroll">
+          <table className="report-table admin-table" role="table">
             <caption className="visually-hidden">{t('admin.kb.versions')}</caption>
             <thead>
               <tr>
@@ -185,59 +193,61 @@ export function AdminKnowledge({
             <tbody>
               {kb.builds.map((b) => (
                 <tr key={b.id}>
-                  <th scope="row" className="admin-table__mono">
+                  <th scope="row" className="admin-table__mono admin-records__title">
                     {b.knowledgeVersion}
                   </th>
-                  <td>
+                  <td data-label={t('admin.kb.col.status')}>
                     <span className={b.status === 'active' ? 'badge badge--ok' : 'badge'}>
                       {t(`admin.kb.status.${b.status}`)}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('admin.kb.col.chunks')}>
                     {t('admin.kb.chunk_counts', {
                       total: b.chunkCount,
                       fresh: b.newChunks,
                       carried: b.carriedChunks,
                     })}
                   </td>
-                  <td>
+                  <td data-label={t('admin.kb.col.dedupe')}>
                     {t('admin.kb.dedupe_counts', { exact: b.skippedExact, near: b.skippedNear })}
                   </td>
-                  <td>
+                  <td data-label={t('admin.kb.col.check')}>
                     {b.checkPassed ? (
                       <span className="badge badge--ok">{t('admin.kb.check_ok')}</span>
                     ) : (
                       <span className="badge badge--warning">{t('admin.kb.check_failed')}</span>
                     )}
                   </td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="button"
-                      disabled={busy}
-                      onClick={() => void showChunks(b.knowledgeVersion)}
-                    >
-                      {t('admin.kb.view_chunks')}
-                    </button>
-                    {b.status !== 'active' && (
+                  <td className="admin-records__actions" data-label={t('admin.kb.col.actions')}>
+                    <div className="admin-table__actions">
                       <button
                         type="button"
-                        className="button button--primary"
+                        className="button"
                         disabled={busy}
-                        onClick={() => void activate(b.knowledgeVersion)}
+                        onClick={() => void showChunks(b.knowledgeVersion)}
                       >
-                        {t('admin.kb.activate')}
+                        {t('admin.kb.view_chunks')}
                       </button>
-                    )}
+                      {b.status !== 'active' && (
+                        <button
+                          type="button"
+                          className="button button--primary"
+                          disabled={busy}
+                          onClick={() => void activate(b.knowledgeVersion)}
+                        >
+                          {t('admin.kb.activate')}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
               {kb.baseVersion && (
                 <tr>
-                  <th scope="row" className="admin-table__mono">
+                  <th scope="row" className="admin-table__mono admin-records__title">
                     {kb.baseVersion}
                   </th>
-                  <td>
+                  <td data-label={t('admin.kb.col.status')}>
                     <span
                       className={
                         kb.active?.knowledgeVersion === kb.baseVersion ? 'badge badge--ok' : 'badge'
@@ -250,18 +260,22 @@ export function AdminKnowledge({
                       )}
                     </span>
                   </td>
-                  <td colSpan={3}>{t('admin.kb.base_note')}</td>
-                  <td className="admin-table__actions">
-                    {kb.active?.knowledgeVersion !== kb.baseVersion && (
-                      <button
-                        type="button"
-                        className="button"
-                        disabled={busy}
-                        onClick={() => void activate(kb.baseVersion!)}
-                      >
-                        {t('admin.kb.rollback_base')}
-                      </button>
-                    )}
+                  <td colSpan={3} data-label={t('admin.kb.versions')}>
+                    {t('admin.kb.base_note')}
+                  </td>
+                  <td className="admin-records__actions" data-label={t('admin.kb.col.actions')}>
+                    <div className="admin-table__actions">
+                      {kb.active?.knowledgeVersion !== kb.baseVersion && (
+                        <button
+                          type="button"
+                          className="button"
+                          disabled={busy}
+                          onClick={() => void activate(kb.baseVersion!)}
+                        >
+                          {t('admin.kb.rollback_base')}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}

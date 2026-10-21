@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, type IconName } from '../components/ui/Icon';
 import type { WorkbenchTab } from '../store/sessionStore';
@@ -49,8 +49,24 @@ export function SidePanel({ model }: { model: SceneModel }) {
   const active = SECTIONS.includes(tab) ? tab : 'protocol';
   const index = SECTIONS.indexOf(active);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [collapsed, setCollapsed] = useState(false);
+
+  /**
+   * Click behaviour for a section tab: opening the active-and-open section again collapses it,
+   * so one click extracts the content and a second click on the same section hides it, with no
+   * separate close button needed. Keyboard navigation always opens (never toggles shut).
+   */
+  const onSectionClick = (id: WorkbenchTab) => {
+    if (id === active && !collapsed) {
+      setCollapsed(true);
+      refs.current[id]?.focus();
+      return;
+    }
+    goTo(id);
+  };
 
   const goTo = (next: WorkbenchTab) => {
+    setCollapsed(false);
     setTab(next);
     // A new section starts scrolled to its own top, like opening a fresh page of the notebook.
     // `.side-panel__scroll` is the notebook's own scroll region: the section nav above it and the
@@ -77,7 +93,7 @@ export function SidePanel({ model }: { model: SceneModel }) {
   };
 
   return (
-    <div className="side-panel">
+    <div className={`side-panel${collapsed ? ' side-panel--collapsed' : ''}`}>
       <div className="side-panel__toolbar">
         <div className="side-panel__head">
           <Icon name="book" size={18} />
@@ -103,8 +119,13 @@ export function SidePanel({ model }: { model: SceneModel }) {
                   aria-selected={active === id}
                   aria-controls={`side-panel-${id}`}
                   tabIndex={active === id ? 0 : -1}
-                  className={active === id ? 'notebook-nav__item is-active' : 'notebook-nav__item'}
-                  onClick={() => goTo(id)}
+                  className={
+                    active === id && !collapsed
+                      ? 'notebook-nav__item is-active'
+                      : 'notebook-nav__item'
+                  }
+                  aria-expanded={active === id && !collapsed}
+                  onClick={() => onSectionClick(id)}
                 >
                   <span className="notebook-nav__marker" aria-hidden="true">
                     {i + 1}
@@ -119,6 +140,22 @@ export function SidePanel({ model }: { model: SceneModel }) {
       </div>
 
       <div className="side-panel__scroll">
+        <div className="side-panel__reading-head">
+          <span>
+            {index + 1}. {t(`ui.side.${active}`)}
+          </span>
+          <button
+            type="button"
+            className="side-panel__collapse"
+            aria-label={t('ui.side.close_notebook')}
+            onClick={() => {
+              setCollapsed(true);
+              refs.current[active]?.focus();
+            }}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
         {SECTIONS.map((id) => (
           <div
             key={id}

@@ -186,13 +186,22 @@ describe('practical flow pages', () => {
   it('overview marks the current step and keeps a single primary action', async () => {
     const store = makeStore();
     store.getState().navigate('overview');
-    renderApp(store);
+    const { user } = renderApp(store);
     const steps = screen.getByRole('navigation', { name: tx('ui.flow.label') });
     expect(within(steps).getByText(tx('ui.flow.overview')).closest('li')).toHaveAttribute(
       'aria-current',
       'step',
     );
     expect(screen.getAllByRole('button', { name: tx('ui.nav.to_prelab') })).toHaveLength(1);
+    const definition = store.getState().engine.definition;
+    for (const rule of definition.safetyRules)
+      expect(screen.getByText(tx(rule.textKey))).toBeVisible();
+    for (const calculation of definition.expectedResults.calculations)
+      expect(screen.getByText(tx(calculation.stepKey))).toBeVisible();
+    const prerequisite = screen.getByText(tx(definition.prerequisites[0]!.textKey));
+    expect(prerequisite).not.toBeVisible();
+    await user.click(screen.getByText(tx('ui.overview.knowledge')));
+    expect(prerequisite).toBeVisible();
   });
 
   it('pre-lab readiness reflects the real checklist and the answer limit', async () => {
@@ -241,9 +250,8 @@ describe('workbench and report', () => {
     const store = makeStore();
     await startSession(store, 'guided', 'beginner');
     const { user } = renderApp(store);
-    const facts = screen.getByRole('list', { name: tx('ui.workbench.session_facts') });
-    expect(within(facts).getByText(tx('ui.mode.guided.title'))).toBeInTheDocument();
-    expect(within(facts).getByText(tx('ui.level.beginner.title'))).toBeInTheDocument();
+    // The mode/level chips and the static precaution banner were removed for a cleaner workbench;
+    // the mode is chosen on the mode page and the current stage shows in the Protocol section.
     // The equipment tray is the notebook's Materials section now (V3-2).
     await user.click(screen.getByRole('tab', { name: tx('ui.side.materials') }));
     expect(screen.getByRole('heading', { name: tx('ui.equipment.title') })).toBeInTheDocument();

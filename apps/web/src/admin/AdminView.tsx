@@ -1,13 +1,14 @@
 import type { AdminDraftSummary, AdminStatus } from '@vlab/contracts';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, type IconName } from '../components/ui/Icon';
+import { Icon } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import { useAdmin } from './AdminContext';
 import { AdminKnowledge } from './AdminKnowledge';
 import { AdminLibrary } from './AdminLibrary';
 import { AdminOverview } from './AdminOverview';
+import { AdminNavigation } from './AdminNavigation';
 import { AdminAudit, AdminDocuments, AdminSettingsView, AdminTranslations } from './AdminSystem';
 import { AdminUsers } from './AdminUsers';
 import { DraftList } from './DraftList';
@@ -26,34 +27,6 @@ export type AdminSection =
   | 'audit'
   | 'settings';
 
-const NAV: { group: string; items: { id: AdminSection; icon: IconName }[] }[] = [
-  {
-    group: 'admin.group.content',
-    items: [
-      { id: 'overview', icon: 'layers' },
-      { id: 'library', icon: 'book' },
-      { id: 'import', icon: 'clipboard' },
-      { id: 'drafts', icon: 'search' },
-      { id: 'review', icon: 'check' },
-    ],
-  },
-  {
-    group: 'admin.group.knowledge',
-    items: [
-      { id: 'knowledge', icon: 'flask' },
-      { id: 'translations', icon: 'globe' },
-    ],
-  },
-  {
-    group: 'admin.group.system',
-    items: [
-      { id: 'users', icon: 'shield' },
-      { id: 'audit', icon: 'alert' },
-      { id: 'settings', icon: 'compass' },
-    ],
-  },
-];
-
 /**
  * Development-only administration console (no login yet; local requests only). Practical drafts,
  * imports, the knowledge base, users, translations, audit and settings. Nothing here publishes a
@@ -63,6 +36,7 @@ export default function AdminView() {
   const { t } = useTranslation();
   const { client } = useAdmin();
   const [section, setSection] = useState<AdminSection>('overview');
+  const [environmentOpen, setEnvironmentOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<AdminStatus | null>(null);
   const [drafts, setDrafts] = useState<AdminDraftSummary[]>([]);
@@ -102,6 +76,22 @@ export default function AdminView() {
     };
   }, [client]);
 
+  // The shared header wraps in Sinhala and on phones; sticky offsets must follow its real height.
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.app-header');
+    const main = document.getElementById('main');
+    if (!header || !main) return;
+    const update = () =>
+      main.style.setProperty('--admin-header-h', `${header.getBoundingClientRect().height}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      main.style.removeProperty('--admin-header-h');
+    };
+  }, []);
+
   const open = (id: string) => {
     setSelected(id);
     setSection('review');
@@ -111,13 +101,37 @@ export default function AdminView() {
     <section className="view view--admin" aria-labelledby="admin-title">
       <PageHeader
         id="admin-title"
-        eyebrow={t('admin.eyebrow')}
+        eyebrow={
+          <button
+            id="admin-environment-toggle"
+            type="button"
+            className="button admin-environment-toggle"
+            aria-expanded={environmentOpen}
+            aria-controls="admin-environment-info"
+            onClick={() => setEnvironmentOpen((open) => !open)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setEnvironmentOpen(false);
+            }}
+          >
+            <Icon name="shield" size={14} /> {t('admin.environment.label')}
+          </button>
+        }
         title={t('admin.title')}
         lead={t('admin.lead')}
-      />
-      <p className="admin-warning" role="note">
-        <Icon name="shield" size={18} /> {t('admin.dev_warning')}
-      </p>
+      >
+        <section
+          id="admin-environment-info"
+          className="card admin-environment-info"
+          aria-labelledby="admin-environment-toggle"
+          hidden={!environmentOpen}
+        >
+          <ul>
+            {['local', 'approval', 'simulation', 'production'].map((item) => (
+              <li key={item}>{t(`admin.environment.${item}`)}</li>
+            ))}
+          </ul>
+        </section>
+      </PageHeader>
 
       {state === 'loading' && <StatusMessage tone="loading" title={t('admin.loading')} />}
       {state === 'unavailable' && (
@@ -128,31 +142,32 @@ export default function AdminView() {
 
       {state === 'ready' && client && status && (
         <div className="admin-console">
-          <nav className="admin-nav" aria-label={t('admin.sections')}>
-            {NAV.map((group) => (
-              <div key={group.group} className="admin-nav__group">
-                <p className="admin-nav__label">{t(group.group)}</p>
-                <ul>
-                  {group.items.map((item) => (
-                    <li key={item.id}>
-                      <button
-                        type="button"
-                        className={
-                          section === item.id ? 'admin-nav__item is-active' : 'admin-nav__item'
-                        }
-                        aria-current={section === item.id ? 'page' : undefined}
-                        disabled={item.id === 'review' && selected === null}
-                        onClick={() => setSection(item.id)}
-                      >
-                        <Icon name={item.icon} size={16} /> {t(`admin.section.${item.id}`)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
-          <div className="admin-console__main">
+          <AdminNavigation
+            section={section}
+            canReview={selected !== null}
+            onNavigate={setSection}
+          />
+          <div
+            id="admin-content"
+            className="admin-console__main"
+            tabIndex={-1}
+            onFocusCapture={(event) => {
+              const field = event.target;
+              if (!field.matches('input:not([type="file"]), textarea, select, button, summary'))
+                return;
+              const bounds = field.getBoundingClientRect();
+              const headerBottom =
+                document.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0;
+              if (
+                bounds.top < headerBottom ||
+                bounds.bottom > window.innerHeight ||
+                bounds.left < 0 ||
+                bounds.right > window.innerWidth
+              ) {
+                field.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+              }
+            }}
+          >
             {section === 'overview' && <AdminOverview status={status} onNavigate={setSection} />}
             {section === 'library' && <AdminLibrary client={client} onOpen={open} />}
             {section === 'import' && (

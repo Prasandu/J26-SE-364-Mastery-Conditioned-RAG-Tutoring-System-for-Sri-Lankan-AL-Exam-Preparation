@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
 import { FlowPager } from './FlowPager';
@@ -11,8 +11,9 @@ import { Icon } from './ui/Icon';
  * Full-screen distraction-free frame for the practical itself: pre-lab, the lab, the notebook,
  * post-lab reflection and the report (`FLOW_VIEWS`). Replaces the site header while a student is
  * in the practical — only a back control, the experiment title and the language switch remain —
- * and adds the step rail (`SessionNav`) and the Previous/Next pager (`FlowPager`) shared by every
- * step. The language switch stays reachable here exactly as in the site header, so switching
+ * and adds the step rail (`SessionNav`). Reading steps have an in-document Previous/Next pager;
+ * the workbench uses notebook section controls instead of a global footer. The language switch
+ * stays reachable here exactly as in the site header, so switching
  * locale never requires leaving the practical or resetting its state.
  */
 export function SimulationFlowShell({ children }: { children: ReactNode }) {
@@ -20,6 +21,14 @@ export function SimulationFlowShell({ children }: { children: ReactNode }) {
   const engine = useSession((s) => s.engine);
   const view = useSession((s) => s.view);
   const navigate = useSession((s) => s.navigate);
+
+  useEffect(() => {
+    const body = document.getElementById('main');
+    if (body) {
+      body.scrollTop = 0;
+      body.scrollLeft = 0;
+    }
+  }, [view]);
 
   return (
     <div className="flow-shell">
@@ -44,8 +53,9 @@ export function SimulationFlowShell({ children }: { children: ReactNode }) {
       <SessionNav current={view} />
       <main id="main" className="app-main flow-shell__body" tabIndex={-1}>
         {children}
+        {view !== 'workbench' && <FlowPager current={view} />}
       </main>
-      <FlowPager current={view} />
+      {/* Floating help launcher, pinned bottom-right (not in the header). */}
       <HelpWidget />
     </div>
   );

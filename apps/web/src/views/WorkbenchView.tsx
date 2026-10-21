@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { SafetyAlert } from '../components/SafetyAlert';
-import { Icon } from '../components/ui/Icon';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import { useSession } from '../store/StoreProvider';
 import { LaboratoryViewport } from '../workbench/LaboratoryViewport';
@@ -47,12 +46,6 @@ export function WorkbenchView() {
   }
 
   const model = buildSceneModel(session, engine.definition, ui);
-  const stages = engine.definition.stages;
-  const stageIndex = Math.max(
-    0,
-    stages.findIndex((s) => s.id === session.stage),
-  );
-  const stage = stages[stageIndex];
   // Feedback arrives already filtered by the projection's disclosure rules.
   const announced = feedback
     .filter((f) => f.severity !== 'safety')
@@ -66,24 +59,9 @@ export function WorkbenchView() {
       <h1 id="workbench-title" className="visually-hidden">
         {t(engine.definition.titleKey)}
       </h1>
-      <header className="workbench__bar">
-        <ul className="workbench__meta" aria-label={t('ui.workbench.session_facts')}>
-          <li className="chip chip--strong">{t(`ui.mode.${session.mode}.title`)}</li>
-          {session.guidanceLevel && (
-            <li className="chip">{t(`ui.level.${session.guidanceLevel}.title`)}</li>
-          )}
-          {session.attempt > 1 && (
-            <li className="chip">{t('ui.workbench.attempt', { attempt: session.attempt })}</li>
-          )}
-          {stage && (
-            <li className="chip chip--outline">
-              <Icon name="layers" size={14} />{' '}
-              {t('ui.protocol.stage_of', { current: stageIndex + 1, total: stages.length })}{' '}
-              {t(stage.titleKey)}
-            </li>
-          )}
-        </ul>
-      </header>
+      {/* The mode/level/stage chips and the static precaution banner were removed for a cleaner,
+          LabXchange-style workbench: the current stage is already shown in the Protocol section,
+          and dynamic safety warnings still appear below. Connection errors still surface. */}
       <ConnectionBanner />
       <div className="workbench__safety">
         <SafetyAlert />

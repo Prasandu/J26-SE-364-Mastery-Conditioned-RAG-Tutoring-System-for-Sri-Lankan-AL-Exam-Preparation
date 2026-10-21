@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { en } from './helpers';
+import { en, openSection } from './helpers';
 
 /**
  * The practical report has to survive being printed or saved as a PDF — it is the artefact a
@@ -18,7 +18,7 @@ const runToReport = async (page: Page) => {
   await page.getByRole('button', { name: en('ui.nav.manual_lab') }).click();
   await page.locator('#mode-automatic').check();
   await page.getByRole('button', { name: en('ui.mode.start') }).click();
-  await page.getByRole('tab', { name: en('ui.side.protocol') }).click();
+  await openSection(page, 'ui.side.protocol');
   const controls = page.getByRole('group', { name: en('ui.automatic.controls') });
   const step = controls.getByRole('button', { name: en('ui.automatic.next_step'), exact: true });
   for (let i = 0; i < 40 && (await step.isEnabled()); i += 1) {

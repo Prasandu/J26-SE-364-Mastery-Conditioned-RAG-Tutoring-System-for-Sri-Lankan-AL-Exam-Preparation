@@ -1,9 +1,11 @@
 import type { AdminDraftStatus, AdminDraftSummary, AdminReviewAction } from '@vlab/contracts';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui/Icon';
+import { useFeedback } from '../components/ui/Feedback';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import type { AdminClient } from './adminClient';
+import { AdminRecordFilters } from './AdminRecordFilters';
 
 const STATUSES: AdminDraftStatus[] = ['draft', 'needs_review', 'content_approved', 'archived'];
 
@@ -33,17 +35,17 @@ export function DraftList({
   onChanged?: () => void;
 }) {
   const { t } = useTranslation();
+  const { confirm, toast } = useFeedback();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'all' | AdminDraftStatus>('all');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
-  const ids = { search: useId(), status: useId() };
   const needle = query.trim().toLocaleLowerCase();
   const visible = drafts.filter(
     (d) =>
       (status === 'all' || d.status === status) &&
       (needle === '' ||
-        `${d.experimentNumber ?? ''} ${d.title ?? ''} ${d.documentName}`
+        `${d.experimentNumber ?? ''} ${d.title ?? ''} ${d.documentName} ${d.syllabusUnit ?? ''}`
           .toLocaleLowerCase()
           .includes(needle)),
   );
@@ -74,60 +76,48 @@ export function DraftList({
       }
     }
     setBusy(false);
-    setMessage({
-      tone: failed ? 'error' : 'success',
-      text: t(doneKey, { count: ok, failed }),
-    });
+    const text = t(doneKey, { count: ok, failed });
+    setMessage({ tone: failed ? 'error' : 'success', text });
+    // The bulk bar can scroll out of view on a long list, so the outcome is also announced.
+    toast(text, failed ? 'error' : 'success');
     onChanged?.();
   };
   const approveOne = (d: AdminDraftSummary) =>
     void runAll([d], 'quick_approve', 'admin.quick.approved_all');
 
   return (
-    <section aria-labelledby="draft-list-title" className="section">
+    <section aria-labelledby="draft-list-title" className="section admin-records">
       <h2 id="draft-list-title">{t('admin.drafts.title')}</h2>
-      <div className="toolbar" role="search" aria-label={t('admin.drafts.search_region')}>
-        <div className="toolbar__field toolbar__field--grow">
-          <label htmlFor={ids.search}>{t('admin.drafts.search')}</label>
-          <div className="input-icon">
-            <Icon name="search" size={18} />
-            <input
-              id={ids.search}
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="toolbar__field">
-          <label htmlFor={ids.status}>{t('admin.drafts.status_filter')}</label>
-          <select
-            id={ids.status}
-            value={status}
-            onChange={(e) => setStatus(e.target.value as 'all' | AdminDraftStatus)}
-          >
-            <option value="all">{t('admin.drafts.all')}</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`admin.status.${s}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <p className="notice">{t('admin.drafts.rule')}</p>
+      <AdminRecordFilters
+        query={query}
+        onQuery={setQuery}
+        status={status}
+        onStatus={(value) => setStatus(value as 'all' | AdminDraftStatus)}
+        options={STATUSES.map((value) => ({ value, label: t(`admin.status.${value}`) }))}
+        searchLabel={t('admin.drafts.search')}
+        regionLabel={t('admin.drafts.search_region')}
+        shown={visible.length}
+        total={drafts.length}
+      />
 
       {client && drafts.length > 0 && (
         <div className="bulk-bar" role="group" aria-label={t('admin.quick.bulk')}>
           <p className="bulk-bar__summary">
             {t('admin.quick.summary', { ready: ready.length, issues: withIssues.length })}
+            <span className="admin-table__note">{t('admin.drafts.bulk_scope')}</span>
           </p>
           <button
             type="button"
             className="button"
             disabled={busy || withIssues.length === 0}
             onClick={() => {
-              if (window.confirm(t('admin.quick.fix_confirm', { count: withIssues.length })))
-                void runAll(withIssues, 'quick_fix', 'admin.quick.fixed_all');
+              void (async () => {
+                const ok = await confirm(
+                  t('admin.quick.fix_confirm', { count: withIssues.length }),
+                );
+                if (ok) await runAll(withIssues, 'quick_fix', 'admin.quick.fixed_all');
+              })();
             }}
           >
             <Icon name="check" size={16} /> {t('admin.quick.fix_all', { count: withIssues.length })}
@@ -137,8 +127,16 @@ export function DraftList({
             className="button button--primary"
             disabled={busy || ready.length === 0}
             onClick={() => {
-              if (window.confirm(t('admin.quick.approve_confirm', { count: ready.length })))
-                void runAll(ready, 'quick_approve', 'admin.quick.approved_all');
+              void (async () => {
+                // Approving a batch cannot be undone from here, so it keeps a real gate.
+                const ok = await confirm(
+                  t('admin.quick.approve_confirm', { count: ready.length }),
+                  {
+                    destructive: true,
+                  },
+                );
+                if (ok) await runAll(ready, 'quick_approve', 'admin.quick.approved_all');
+              })();
             }}
           >
             {t('admin.quick.approve_all', { count: ready.length })}
@@ -154,7 +152,8 @@ export function DraftList({
         <StatusMessage tone="empty" title={t('admin.drafts.no_match')} />
       ) : (
         <div className="table-scroll card admin-table-scroll">
-          <table className="report-table admin-table admin-table--compact">
+          <table className="report-table admin-table admin-table--compact" role="table">
+            <caption className="visually-hidden">{t('admin.drafts.title')}</caption>
             <thead>
               <tr>
                 <th scope="col">{t('admin.col.number')}</th>
@@ -170,19 +169,18 @@ export function DraftList({
             <tbody>
               {visible.map((d) => (
                 <tr key={d.id}>
-                  <td>{d.experimentNumber ?? '—'}</td>
-                  <td>
+                  <td data-label={t('admin.col.number')}>{d.experimentNumber ?? '—'}</td>
+                  <th scope="row" className="admin-records__title">
                     <span className="admin-table__title">
                       {d.title ?? t('admin.missing_value')}
                     </span>
-                    <span className="admin-table__note">
-                      {d.syllabusUnit ?? '—'} · {d.documentName}
-                    </span>
-                  </td>
-                  <td>
+                    <span className="admin-table__note">{d.syllabusUnit ?? '—'}</span>
+                    <span className="admin-table__note">{d.documentName}</span>
+                  </th>
+                  <td data-label={t('admin.col.status')}>
                     <StatusBadge status={d.status} />
                   </td>
-                  <td>
+                  <td data-label={t('admin.col.validation')}>
                     {d.validation.blockingCount === 0 ? (
                       <span className="badge badge--ok">{t('admin.validation.ok')}</span>
                     ) : (
@@ -191,33 +189,36 @@ export function DraftList({
                       </span>
                     )}
                   </td>
-                  <td>
+                  <td data-label={t('admin.col.simulation')}>
                     <span className="badge badge--muted">{t('admin.simulation.pending')}</span>
+                    <span className="admin-table__note">{t('admin.library.not_runnable')}</span>
                   </td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="button"
-                      onClick={() => onOpen(d.id)}
-                      aria-label={t('admin.drafts.open_label', {
-                        title: d.title ?? t('admin.missing_value'),
-                      })}
-                    >
-                      {t('admin.drafts.open')}
-                    </button>
-                    {client && isReady(d) && (
+                  <td className="admin-records__actions" data-label={t('admin.col.actions')}>
+                    <div className="admin-table__actions">
                       <button
                         type="button"
                         className="button button--primary"
-                        disabled={busy}
-                        aria-label={t('admin.quick.approve_label', {
+                        onClick={() => onOpen(d.id)}
+                        aria-label={t('admin.drafts.open_label', {
                           title: d.title ?? t('admin.missing_value'),
                         })}
-                        onClick={() => approveOne(d)}
                       >
-                        {t('admin.quick.approve')}
+                        {t('admin.drafts.open')}
                       </button>
-                    )}
+                      {client && isReady(d) && (
+                        <button
+                          type="button"
+                          className="button"
+                          disabled={busy}
+                          aria-label={t('admin.quick.approve_label', {
+                            title: d.title ?? t('admin.missing_value'),
+                          })}
+                          onClick={() => approveOne(d)}
+                        >
+                          {t('admin.quick.approve')}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

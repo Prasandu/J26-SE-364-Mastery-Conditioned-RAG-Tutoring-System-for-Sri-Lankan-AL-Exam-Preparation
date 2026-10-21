@@ -115,7 +115,8 @@ export interface ViewBox {
   h: number;
 }
 
-export const OVERVIEW: ViewBox = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
+// Include the tallest stored flask and the front edge, rather than cropping at the room origin.
+export const OVERVIEW: ViewBox = { x: -48, y: -64, w: VIEW_W + 96, h: VIEW_H + 100 };
 const MIN_W = 360;
 
 /**

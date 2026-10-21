@@ -29,8 +29,10 @@ function UserRow({
   const { t } = useTranslation();
   return (
     <tr>
-      <th scope="row">{user.displayName}</th>
-      <td>
+      <th scope="row" className="admin-records__title">
+        {user.displayName}
+      </th>
+      <td data-label={t('admin.users.role')}>
         <label className="visually-hidden" htmlFor={`role-${user.id}`}>
           {t('admin.users.role')}
         </label>
@@ -47,7 +49,7 @@ function UserRow({
           ))}
         </select>
       </td>
-      <td>
+      <td data-label={t('admin.users.status')}>
         <label className="visually-hidden" htmlFor={`status-${user.id}`}>
           {t('admin.users.status')}
         </label>
@@ -64,7 +66,7 @@ function UserRow({
           ))}
         </select>
       </td>
-      <td>{user.note || '—'}</td>
+      <td data-label={t('admin.users.note')}>{user.note || '—'}</td>
     </tr>
   );
 }
@@ -122,7 +124,7 @@ export function AdminUsers({ client }: { client: AdminClient }) {
 
   const { users, learnerData } = state.data;
   return (
-    <section className="section" aria-labelledby="users-title">
+    <section className="section admin-records" aria-labelledby="users-title">
       <h2 id="users-title">{t('admin.users.title')}</h2>
       <p className="notice" role="note">
         {t('admin.users.no_login')}
@@ -186,8 +188,8 @@ export function AdminUsers({ client }: { client: AdminClient }) {
       {users.length === 0 ? (
         <p className="hint-text">{t('admin.users.empty')}</p>
       ) : (
-        <div className="table-scroll card">
-          <table className="report-table admin-table">
+        <div className="table-scroll card admin-table-scroll">
+          <table className="report-table admin-table" role="table">
             <caption className="visually-hidden">{t('admin.users.directory')}</caption>
             <thead>
               <tr>
@@ -211,8 +213,8 @@ export function AdminUsers({ client }: { client: AdminClient }) {
       {learnerData.length === 0 ? (
         <p className="hint-text">{t('admin.users.no_sessions')}</p>
       ) : (
-        <div className="table-scroll card">
-          <table className="report-table admin-table">
+        <div className="table-scroll card admin-table-scroll">
+          <table className="report-table admin-table" role="table">
             <caption className="visually-hidden">{t('admin.users.learner_data')}</caption>
             <thead>
               <tr>
@@ -225,12 +227,12 @@ export function AdminUsers({ client }: { client: AdminClient }) {
             <tbody>
               {learnerData.map((l) => (
                 <tr key={l.ownerId}>
-                  <th scope="row" className="admin-table__mono">
+                  <th scope="row" className="admin-table__mono admin-records__title">
                     {l.ownerId}
                   </th>
-                  <td>{l.sessions}</td>
-                  <td>{l.submitted}</td>
-                  <td>{l.lastStartedOn || '—'}</td>
+                  <td data-label={t('admin.users.sessions')}>{l.sessions}</td>
+                  <td data-label={t('admin.users.submitted')}>{l.submitted}</td>
+                  <td data-label={t('admin.users.last')}>{l.lastStartedOn || '—'}</td>
                 </tr>
               ))}
             </tbody>

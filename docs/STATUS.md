@@ -1,6 +1,162 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-20 (sheet trigger reachability, dissolve motion — see the top entry)_
+_Last updated: 2026-10-21 (blue simulation workspace and notebook layout)_
+
+## Simulation workspace and notebook layout (2026-10-21)
+
+- Applied the shared blue theme and removed the research-prototype subtitle in both locales.
+  Widened the 2D overview and fitted the 3D overview camera to the actual viewport aspect ratio.
+- Replaced the fixed global footer with navigation after reading-page content. The workbench
+  retains the top journey links and notebook section controls; help has a reserved header slot.
+- Wide screens show a vertical Context → Materials → Predictions → Protocol → Results →
+  Reflection → Summary rail beside the reading panel. Closing the panel expands the laboratory;
+  selecting a section reopens it. Keyboard navigation and typed input are preserved.
+- Phone/tablet notebooks retain the native modal drawer, Escape and focus restoration. Separate
+  drawer/editor CSS names prevent the mobile drawer rules from hiding standalone notebook fields.
+- No experiment rules, submission gates, API contracts, providers or database configuration changed.
+- Verification: `pnpm check` exited 0: 890 workspace tests passed, plus 72 content assertions
+  repeated during the build. Full `pnpm test:e2e` exited 0: 56 passed, 0 failed, 61 intentional
+  viewport/project skips. After the final narrow-screen caption spacing adjustment, focused
+  tablet/phone browser checks also exited 0 (2 passed, no failures/skips); CSS formatting passed.
+  Keyboard navigation, focus, drawer input preservation, WebGL fallback, stage stability, printing
+  and Experiment 4 were verified. An initial Admin test timeout passed in isolation and on the
+  full rerun; the initial non-WebGL layout failure was fixed before the successful final suite.
+- Reviewed English/Sinhala screenshots at 1920/1440/1366/834/390 widths. Screenshots:
+  `apps/web/final-screens/lab-flow-verified/` and latest tablet/phone captures in
+  `apps/web/final-screens/lab-flow-responsive/`; verification logs:
+  `apps/web/final-screens/admin-v2/verification/lab-flow-*.log`.
+- Next: real-device touch/orbit and screen-reader review; no further features implemented here.
+
+## Experiment overview reading order (2026-10-20)
+
+- Replaced uneven main/sidebar stacks with four numbered preparation groups: target and aims,
+  apparatus/chemical, calculation, and safety. Theory, syllabus outcomes and exact citations
+  remain accessible through native keyboard-operated disclosures. All safety rules and
+  calculation steps stay visible; no chemistry, source references or session rules changed.
+- Matched the existing theme, stacked cards on small screens and made the shared header
+  opaque to prevent scrolling content showing through it. One pre-lab action remains in flow.
+- Typecheck, targeted ESLint/formatting and 55 frontend tests passed. Focused browser run
+  exited 0: four passed, two existing journey skips, including forward/back student workflow.
+  Reviewed bilingual screenshots at 1440/1366/834/390 widths:
+  `apps/web/final-screens/overview-polish/`. No commit or push.
+
+## Dashboard and shared catalog presentation (2026-10-20)
+
+- Navy/teal hero places the primary browse action beneath the introduction, with larger
+  existing apparatus artwork in a separate panel. Shared dashboard/library cards use white
+  surfaces, teal accents, readable details and full-width mobile actions. No catalog facts,
+  session behavior or simulation logic changed.
+- Brief entrance and artwork animations and arrow feedback respect reduced motion. Sinhala
+  desktop navigation wraps onto its own row instead of compressing the brand; headings have
+  additional Sinhala line spacing. Existing theme tokens remain shared across the application.
+- Typecheck, targeted ESLint/formatting and 55 frontend tests passed. Browser verification
+  exited 0: four passed, two existing journey skips. Checks include the real student journey,
+  keyboard navigation, reduced motion, both languages and widths 1920/1440/1366/834/390.
+  Reviewed screenshots: `apps/web/final-screens/dashboard-polish/`.
+
+## Admin import spacing (2026-10-20)
+
+- Separated the import heading, notice, import-type cards, file chooser, requirements and
+  upload action using existing spacing tokens. Source documents have their own section gap;
+  long filenames and Sinhala labels wrap within the available width.
+- Import cards show one keyboard focus outline. Development locale edits reload the page so
+  the retained i18next instance cannot show newly added translation keys verbatim.
+- Frontend typecheck, targeted ESLint, 61 admin/locale tests and three bilingual browser
+  checks passed. Screenshots at 1440x900, 1366x768 and 390x844 are in
+  `apps/web/final-screens/admin-import-spacing/`. Import handlers and security gates are unchanged.
+
+## Compact admin environment status (2026-10-20)
+
+- Replaced the shared orange development banner with a compact, bilingual Local development
+  button above the Admin title. Its optional, labeled information panel stays in normal flow,
+  supports Enter/Space and Escape, and retains focus without a mobile overlay.
+- Kept contextual approval, simulation readiness, knowledge activation and production-feature
+  explanations. Routes, backend gates, storage, publishing and student behavior are unchanged.
+- Frontend typecheck, targeted ESLint/formatting, 61 admin/locale tests and 21 admin browser
+  checks passed (all exit 0, no failures or skips). Browser
+  coverage includes normal/expanded information, focus and overflow across all admin sections
+  in English/Sinhala at 1440x900, 1366x768 and 390x844. Reviewed screenshots are in
+  `apps/web/final-screens/admin-local-status/`.
+
+## Admin V2 final verification (2026-10-20)
+
+- Audited all ten admin sections in English and Sinhala at widths 1920, 1440, 1366,
+  834 and 390. Shared record rows switch to cards at the drawer breakpoint, including
+  the source-document and user directories. Focused fields scroll clear of the opaque header;
+  visually hidden table labels no longer extend document overflow.
+- Existing import, save, revalidation, review/approval, knowledge activation/staging,
+  translation downloads, exact audit records and read-only settings were exercised against
+  isolated test stores. No API, review-rule, publishing or student simulation changes.
+- Browser artifacts: `apps/web/final-screens/admin-v2/` contains the 110-image bilingual
+  matrix, contact sheets, workflow screenshots and verification logs. Test results and the
+  final working-tree snapshot are recorded in its `verification/` directory.
+- Final commands exited 0: `pnpm check` (885 workspace tests plus 72 repeated content
+  checks during build), `pnpm test` (885 passed), and `pnpm test:e2e` (47 passed,
+  61 skipped). The existing Experiment 4 desktop student golden path passed. Focused
+  admin browser runs passed 20 tests, with no failures or skips. No commit or push.
+
+## Knowledge and system sections — Checkpoint D (2026-10-20)
+
+- Knowledge Base separates the active retrieval version from staged builds and explains that
+  activation does not publish practicals or validate simulations. Existing build, inspect,
+  activate and rollback operations and eligibility remain unchanged.
+- Translations show text coverage independently from server-reported teacher review status,
+  with reviewer/date evidence when present and the existing CSV downloads.
+- Audit uses readable event names with original action codes, full target identifiers and
+  expandable, full-width exact JSON records, including nested details and integrity hashes.
+- Settings groups explicit read-only configuration into runtime/access, storage and models.
+  Only key-presence flags are displayed; endpoint credentials, paths, queries and fragments
+  are omitted. No publishing, authentication, backend or database additions.
+- Focused validation: seven system-section unit tests and five locale-parity checks passed;
+  typecheck and ESLint passed. Three browser checks cover 1440×900, 1366×768 and 390×844,
+  including Sinhala, staged chunk inspection and exact audit values. Screenshots were reviewed
+  in `apps/web/final-screens/checkpoint-d/`. Stopped after Checkpoint D.
+
+## Overview, library and drafts — Checkpoint C (2026-10-20)
+
+- Polished existing server-backed Overview cards and added an explicit library-status shortcut.
+  Counts remain draft/import counts; content approval never implies student availability.
+- Library and Drafts share labeled search/status filters, live result counts and clear/reset controls.
+  Draft search includes source documents and units. Bulk operations retain their existing scope
+  across all drafts, now explained beside the controls.
+- Desktop tables have clearer titles, source details, status labels and primary review actions.
+  Phone rows show labeled details and reachable actions without horizontal scrolling. Library
+  availability always follows the server's `runnable` value, including catalog entries.
+- Focused checks: web typecheck, ESLint, nine affected-screen unit tests and five locale-parity
+  checks passed. Three browser checks exercise only Overview, Library and Drafts at
+  1440×900, 1366×768 and 390×844, including
+  combined filters, actual counts, keyboard reachability and Sinhala. Screenshots were inspected
+  in `apps/web/final-screens/checkpoint-c/`. No backend or unrelated screens changed.
+- Stopped after Checkpoint C; later checkpoints are not started.
+
+## Draft Review workspace — Checkpoint B (2026-10-20)
+
+- Review editor/context columns use a 70/30 desktop split and stack on mobile. Expanded fields
+  have separate readable summaries, padded bodies, full-width inputs and resizable text areas.
+- Validation leads the context panel, followed by existing review actions. Save/Discard sit in
+  a normal-flow toolbar; keyboard-accessible links reach it and the review actions without
+  sticky layers covering fields. Request handlers, provenance, versions and approval rules are unchanged.
+- Focused validation: web typecheck, ESLint and 31 admin tests passed, including discard restoring
+  source pages without an update. Real-API browser checks cover 1440×900, 1366×768 and 390×844,
+  the editor ratio, uncovered controls, focus return and Sinhala mobile rendering.
+  Screenshots: `apps/web/final-screens/checkpoint-b/`; no unrelated screens changed.
+- Stopped after Checkpoint B. Next checkpoint requires a separate instruction.
+
+## Admin shell — Checkpoint A (2026-10-20)
+
+- Added grouped sidebar navigation and a native mobile drawer with keyboard focus cycling,
+  Escape/backdrop dismissal, focus restoration, scroll locking and desktop resize cleanup.
+- Admin-only header styling is opaque and sticky on phones as well as desktop. Sticky panels
+  follow the measured bilingual header height; responsive grids and readable scrolling tables
+  prevent overflow. Review save actions and transient feedback stay in document flow.
+- Preserved routes, English/Sinhala support and all admin data/review/knowledge/simulation logic.
+  Existing unrelated working-tree changes were retained.
+- Validation: focused admin tests (30), web typecheck and targeted ESLint passed. Full `pnpm check`
+  passed; existing Playwright suite: 47 passed, 61 intentional skips. Admin suite: 5 passed,
+  4 intentional skips. Screenshots were captured and visually inspected. Browser checks cover
+  1440×900, 1366×768 and 390×844, including expanded review forms and uncovered save actions.
+  Screenshots: `apps/web/final-screens/checkpoint-a/` (ignored artifacts).
+- Next: Checkpoint B — admin section/table/filter/form consistency. Stopped after Checkpoint A.
 
 ## Slices
 

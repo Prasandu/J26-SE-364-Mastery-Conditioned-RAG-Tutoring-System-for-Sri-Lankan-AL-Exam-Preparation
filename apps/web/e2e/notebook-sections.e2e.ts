@@ -46,11 +46,11 @@ test('seven-section notebook: reachable on a phone through the sheet', async ({ 
 
   // On a phone the notebook is a dismissible sheet rather than a column stacked below the stage,
   // so "reachable" now means the trigger opens it — not that the page scrolls far enough.
-  const sheet = page.locator('.notebook-sheet');
+  const sheet = page.locator('.notebook-drawer');
   await expect(sheet).toBeHidden();
   await page.getByRole('button', { name: en('ui.side.open_notebook') }).click();
   await expect(sheet).toBeVisible();
-  await expect(page.locator('.notebook-sheet .side-panel')).toBeVisible();
+  await expect(page.locator('.notebook-drawer .side-panel')).toBeVisible();
   await page.waitForTimeout(200);
   await shot(page, 'notebook-mobile-nav');
 });

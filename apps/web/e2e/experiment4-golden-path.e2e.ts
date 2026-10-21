@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { en, shot, startExperiment } from './helpers';
+import { en, shot, startExperiment, openSection } from './helpers';
 
 /** Required solute mass for this practical (NIE handbook Experiment 4: 26.5 g of Na2CO3). */
 const REQUIRED_SOLUTE_G = 26.5;
 
 const openProtocol = async (page: Page) => {
-  await page.getByRole('tab', { name: en('ui.side.protocol') }).click();
+  await openSection(page, 'ui.side.protocol');
   await page.waitForTimeout(150);
   for (const d of await page.locator('.action-group').all()) {
     await d.evaluate((el: HTMLDetailsElement) => {

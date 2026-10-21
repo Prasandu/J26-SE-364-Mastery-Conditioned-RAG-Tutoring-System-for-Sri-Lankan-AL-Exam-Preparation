@@ -84,7 +84,9 @@ test('student journey: dashboard to report, forwards and backwards', async ({ pa
   await rail(page).getByRole('button').nth(1).click();
   await page.waitForTimeout(250);
   await expect(page.locator('.workbench')).toBeVisible();
-  await expect(page.getByText(en('ui.mode.guided.title'))).toBeVisible();
+  // The mode chip was removed from the workbench; the laboratory stage returning confirms the
+  // session is intact instead.
+  await expect(page.locator('.lab-stage')).toBeVisible();
   await noHorizontalOverflow(page);
 
   // The report step stays disabled until the experiment is submitted, rather than opening an

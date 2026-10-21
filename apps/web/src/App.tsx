@@ -4,6 +4,7 @@ import type { AdminClient } from './admin/adminClient';
 import { I18nextProvider } from 'react-i18next';
 import { AppHeader } from './components/AppHeader';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { FeedbackProvider } from './components/ui/Feedback';
 import { SimulationFlowShell } from './components/SimulationFlowShell';
 import { createI18n } from './i18n';
 import { LocaleSync } from './i18n/LocaleSync';
@@ -108,10 +109,13 @@ export function App({
     <I18nextProvider i18n={i18n}>
       <StoreProvider {...(store ? { store } : {})}>
         <AdminProvider client={admin}>
-          <LocaleSync />
-          <AppBody />
-          <ConfirmDialog />
-          <Lab2DDefs />
+          {/* Toasts and themed confirmations for both the student app and the admin console. */}
+          <FeedbackProvider>
+            <LocaleSync />
+            <AppBody />
+            <ConfirmDialog />
+            <Lab2DDefs />
+          </FeedbackProvider>
         </AdminProvider>
       </StoreProvider>
     </I18nextProvider>

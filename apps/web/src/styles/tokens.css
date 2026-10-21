@@ -1,44 +1,43 @@
 /*
  * Chemistry Studio design tokens — one palette for every page of the student app and the admin
- * console. Measured contrast (sRGB, against both #ffffff and --canvas #f3f7fa):
+ * console. Measured contrast (sRGB, against both #ffffff and --canvas #f3f6fa):
  *
- *   --brand-600 #087c86  4.96 / 4.60  — AA for normal text, and white on it is 4.96
- *   --ink-900   #142b39 14.64 / 13.59
- *   --ink-500   #526675  5.97 / 5.54
- *   --ok        #17805d  4.90 / 4.55
- *   --navy-900  #102837 15.21 / 14.12
+ *   --brand-600 #2563b8  5.91 / 5.45 — AA for normal text and white on blue
+ *   --ink-900   #1c3048 13.41 / 12.37
+ *   --ink-500   #53677e  5.82 / 5.37
+ *   --navy-900  #132e4f 13.71 / 12.65
  *
- * The cyan highlight (#25a8b8, 2.85 on white) and the warning accent (#d79224, 2.62) do NOT reach
+ * The light blue highlight (#6ea8e6) and the warning accent (#d79224) do NOT reach
  * text contrast, so they are deliberately confined to fills, borders and indicators; the text
  * tokens beside them (--warning) stay dark enough to read. Do not swap those roles.
  */
 :root {
   color-scheme: light;
 
-  /* brand: deep teal */
-  --brand-800: #053f46;
-  --brand-700: #066069;
-  --brand-600: #087c86;
+  /* brand: studio blue */
+  --brand-800: #173c6b;
+  --brand-700: #1e4f91;
+  --brand-600: #2563b8;
   /* Cyan highlight: fills, indicators and gradients only — never body text. */
-  --brand-500: #25a8b8;
-  --brand-200: #a9dde3;
-  --brand-100: #d8f0f3;
-  --brand-50: #eef8fa;
-  --teal-600: #0a6f66;
-  --teal-500: #12a08c;
-  --teal-100: #d7f2ed;
+  --brand-500: #6ea8e6;
+  --brand-200: #c2d8f0;
+  --brand-100: #e1edf9;
+  --brand-50: #f0f6fc;
+  --teal-600: #315e98;
+  --teal-500: #487fbd;
+  --teal-100: #e6effa;
 
   /* neutrals */
-  --navy-900: #102837;
-  --ink-900: #142b39;
-  --ink-700: #2f4555;
-  --ink-500: #526675;
+  --navy-900: #132e4f;
+  --ink-900: #1c3048;
+  --ink-700: #354d67;
+  --ink-500: #53677e;
   --ink-300: #93a4b1;
-  --line: #d8e2e9;
+  --line: #dce5ef;
   --line-strong: #b5c5d0;
   --surface: #ffffff;
-  --surface-2: #f7fafc;
-  --canvas: #f3f7fa;
+  --surface-2: #f7f9fc;
+  --canvas: #f3f6fa;
 
   /* status */
   --ok: #17805d;
@@ -89,8 +88,8 @@
 
   /* shape and depth */
   --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
+  --radius: 14px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
   --shadow-sm: 0 1px 2px rgb(19 33 43 / 6%);
   --shadow: 0 1px 2px rgb(19 33 43 / 6%), 0 4px 16px rgb(19 33 43 / 6%);
@@ -101,8 +100,8 @@
   --workbench-max: 1680px;
   /* Page templates differ by task: a questionnaire or report reads better at a document measure,
    * the notebook is a wider structured workspace, and the laboratory takes the whole shell. */
-  --flow-step-max: 1240px;
-  --flow-notebook-max: 1340px;
+  --flow-step-max: 1440px;
+  --flow-notebook-max: 1560px;
   --header-h: 64px;
   --control-h: 44px;
 }

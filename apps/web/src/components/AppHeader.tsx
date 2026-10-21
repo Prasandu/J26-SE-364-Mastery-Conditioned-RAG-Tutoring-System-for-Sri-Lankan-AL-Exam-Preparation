@@ -33,7 +33,7 @@ export function AppHeader() {
     </li>
   );
   return (
-    <header className="app-header">
+    <header className={view === 'admin' ? 'app-header app-header--admin' : 'app-header'}>
       <a className="skip-link" href="#main">
         {t('ui.nav.skip_to_content')}
       </a>

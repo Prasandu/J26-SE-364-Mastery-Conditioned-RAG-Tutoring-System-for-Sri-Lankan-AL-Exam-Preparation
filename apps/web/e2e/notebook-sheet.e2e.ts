@@ -17,7 +17,7 @@ test('notebook sheet: opens, restores focus, and never touches the experiment', 
   await page.setViewportSize(PHONE);
   await startExperiment(page, 'manual');
 
-  const sheet = page.locator('.notebook-sheet');
+  const sheet = page.locator('.notebook-drawer');
   const trigger = page.getByRole('button', { name: en('ui.side.open_notebook') });
   const stageBefore = await page.locator('.lab-stage').boundingBox();
   const stageText = await page
@@ -30,7 +30,7 @@ test('notebook sheet: opens, restores focus, and never touches the experiment', 
   await expect(sheet).toBeVisible();
 
   // showModal() makes everything outside the dialog inert, which is the whole point of using it.
-  await expect(page.locator('.notebook-sheet')).toHaveJSProperty('open', true);
+  await expect(page.locator('.notebook-drawer')).toHaveJSProperty('open', true);
   await expect(trigger).not.toBeFocused();
 
   // Escape closes it and focus returns to the trigger that opened it.
@@ -68,12 +68,12 @@ test('notebook sheet: a draft typed in the sheet survives closing and reopening'
   const trigger = page.getByRole('button', { name: en('ui.side.open_notebook') });
   await trigger.click();
   await page.getByRole('tab', { name: en('ui.side.predictions') }).click();
-  const field = page.locator('.notebook-sheet #prelab-prediction');
+  const field = page.locator('.notebook-drawer #prelab-prediction');
   await field.fill('The solution should be colourless at the mark.');
   await page.keyboard.press('Escape');
 
   await trigger.click();
-  await expect(page.locator('.notebook-sheet #prelab-prediction')).toHaveValue(
+  await expect(page.locator('.notebook-drawer #prelab-prediction')).toHaveValue(
     'The solution should be colourless at the mark.',
   );
 });
@@ -86,9 +86,9 @@ test('notebook sheet: on a desktop the notebook is a panel, not a dialog', async
   await startExperiment(page, 'manual');
 
   // Same element, flattened by CSS: visible, with no trigger and no modal behaviour.
-  await expect(page.locator('.notebook-sheet .side-panel')).toBeVisible();
+  await expect(page.locator('.notebook-drawer .side-panel')).toBeVisible();
   await expect(page.getByRole('button', { name: en('ui.side.open_notebook') })).toHaveCount(0);
-  const modal = await page.locator('.notebook-sheet').evaluate((el) => el.matches(':modal'));
+  const modal = await page.locator('.notebook-drawer').evaluate((el) => el.matches(':modal'));
   expect(modal, 'the desktop notebook is a modal dialog').toBe(false);
 });
 
@@ -110,7 +110,7 @@ for (const [name, width, height] of [
     await startExperiment(page, 'manual');
     await page.waitForTimeout(400);
 
-    const box = await page.locator('.notebook-sheet__trigger').boundingBox();
+    const box = await page.locator('.notebook-drawer__trigger').boundingBox();
     expect(box, 'the sheet trigger is not rendered').not.toBeNull();
     expect(box!.y, `${name}: trigger starts above the viewport`).toBeGreaterThanOrEqual(0);
     expect(

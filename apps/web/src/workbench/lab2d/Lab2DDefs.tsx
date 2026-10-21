@@ -23,6 +23,26 @@ export function Lab2DDefs() {
           <stop offset="0.45" stopColor="#d9eef6" stopOpacity="0.35" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0.7" />
         </linearGradient>
+        {/* Vertical body sheen. The horizontal `lab2d-glass` gradient alone reads as a flat
+            cut-out; real glassware is brightest where the wall turns away from the viewer at the
+            top and pools darker toward the base, which is what this adds over the fill. */}
+        <linearGradient id="lab2d-glass-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.5" />
+          <stop offset="0.45" stopColor="#e4f0f6" stopOpacity="0.1" />
+          <stop offset="1" stopColor="#8fb2c4" stopOpacity="0.36" />
+        </linearGradient>
+        {/* Light pooling through the base of a vessel: the single strongest cue that a shape is
+            glass rather than an outline. */}
+        <radialGradient id="lab2d-caustic" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#3d6376" stopOpacity="0.34" />
+          <stop offset="1" stopColor="#3d6376" stopOpacity="0" />
+        </radialGradient>
+        {/* Rim of an open vessel, lit from the left like every other apparatus here. */}
+        <linearGradient id="lab2d-rim" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.5" stopColor="#cfe0e9" />
+          <stop offset="1" stopColor="#9bb6c4" />
+        </linearGradient>
         <linearGradient id="lab2d-liquid" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#cbe7f3" stopOpacity="0.9" />
           <stop offset="1" stopColor="#a8d4e8" stopOpacity="0.95" />

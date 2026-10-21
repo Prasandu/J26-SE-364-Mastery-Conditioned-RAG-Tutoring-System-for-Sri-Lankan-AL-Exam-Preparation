@@ -15,6 +15,7 @@ const DATA = process.env.VLAB_ADMIN_E2E_DIR;
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.admin-e2e.ts',
+  outputDir: './final-screens/checkpoint-a',
   timeout: 120_000,
   workers: 1,
   reporter: [['list']],
@@ -26,6 +27,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
+    { name: 'laptop', use: { viewport: { width: 1366, height: 768 } } },
     {
       name: 'mobile',
       use: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true },

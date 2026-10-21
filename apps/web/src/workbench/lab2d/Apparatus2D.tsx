@@ -115,6 +115,10 @@ export function Flask2D({
         fill="url(#lab2d-base-shadow)"
       />
       <path d={mirrored(FLASK_PROFILE, s)} fill="url(#lab2d-glass)" />
+      {/* Vertical sheen and the light pooling in the bulb's base: the cues that separate blown
+          glass from a filled outline. Purely optical — neither depends on session state. */}
+      <path d={mirrored(FLASK_PROFILE, s)} fill="url(#lab2d-glass-body)" />
+      <ellipse cx={0} cy={-0.07 * s} rx={0.4 * s} ry={0.09 * s} fill="url(#lab2d-caustic)" />
       {h > 0 && (
         <g clipPath={`url(#${clipId})`}>
           <path d={mirrored(liquidProfile(h), s)} fill="url(#lab2d-liquid)" />
@@ -140,6 +144,17 @@ export function Flask2D({
         stroke={GLASS_STROKE}
         strokeWidth={1.6}
         strokeLinejoin="round"
+      />
+      {/* Open mouth of the neck. FLASK_PROFILE ends at r = 0.085, so the rim is drawn from the
+          profile's own radius rather than a guessed width. */}
+      <ellipse
+        cx={0}
+        cy={-2 * s}
+        rx={0.085 * s}
+        ry={0.03 * s}
+        fill="url(#lab2d-rim)"
+        stroke={GLASS_STROKE}
+        strokeWidth={1.2}
       />
       <path
         d={`M${-0.42 * s} ${-0.2 * s} Q${-0.5 * s} ${-0.4 * s} ${-0.34 * s} ${-0.62 * s}`}
@@ -195,16 +210,11 @@ export function Flask2D({
           ))}
         </g>
       )}
-      {working && model.stoppered && (
-        <rect
-          x={-0.13 * s}
-          y={-top - 0.14 * s}
-          width={0.26 * s}
-          height={0.16 * s}
-          rx={3}
-          fill="#3b4650"
-        />
-      )}
+      {/* The stopper is seated and lifted rather than blinking in and out. `model.stoppered` is
+          the engine's own state, so a rejected stopper action moves nothing, and the three-step
+          stopper sequence the engine enforces (stoppered to dissolve, unstoppered to adjust to the
+          mark, stoppered again to mix) becomes something the student can see happening. */}
+      {working && <Stopper stoppered={model.stoppered} s={s} top={top} />}
       {working && model.warning && (
         <g className="lab2d-warning" transform={`translate(${0.42 * s} ${-1.5 * s})`}>
           <path d="M0 -14 L12 8 L-12 8 Z" fill="#e09f3e" stroke="#995605" />
@@ -213,6 +223,41 @@ export function Flask2D({
           </text>
         </g>
       )}
+    </g>
+  );
+}
+
+/**
+ * Flask stopper, animated between seated and lifted.
+ *
+ * `useSettleValue` drives one progress value: 0 is clear of the neck, 1 is seated. It eases on a
+ * confirmed state change and jumps under `prefers-reduced-motion`, so the settled drawing is the
+ * same either way. Nothing here decides whether the flask IS stoppered — that is engine state.
+ */
+function Stopper({ stoppered, s, top }: { stoppered: boolean; s: number; top: number }) {
+  const seated = useSettleValue(stoppered ? 1 : 0, 420);
+  if (seated <= 0.01) return null;
+  // Lifted position sits a little above the neck and fades, so removal reads as taking it off.
+  const lift = (1 - seated) * 0.22 * s;
+  return (
+    <g opacity={Math.min(1, seated * 1.4)} transform={`translate(0 ${-lift})`}>
+      <rect
+        x={-0.13 * s}
+        y={-top - 0.14 * s}
+        width={0.26 * s}
+        height={0.16 * s}
+        rx={3}
+        fill="#3b4650"
+      />
+      <rect
+        x={-0.11 * s}
+        y={-top - 0.135 * s}
+        width={0.07 * s}
+        height={0.13 * s}
+        rx={2}
+        fill="#ffffff"
+        opacity={0.18}
+      />
     </g>
   );
 }
@@ -242,12 +287,21 @@ export function WatchGlass2D({ hasSolid, dirty }: { hasSolid: boolean; dirty: bo
         strokeWidth={1.4}
         opacity={0.75}
       />
+      <ellipse cx={0} cy={-13} rx={46} ry={18} fill="url(#lab2d-glass-body)" />
+      <ellipse cx={0} cy={-6} rx={30} ry={6} fill="url(#lab2d-caustic)" />
       <path
         d="M-30 -15 Q-10 -23 8 -21"
         fill="none"
         stroke="#ffffff"
         strokeWidth={2.2}
         opacity={0.9}
+      />
+      <path
+        d="M-24 -7 Q-6 -13 12 -11"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth={1.1}
+        opacity={0.45}
       />
       {hasSolid && (
         <g className="lab2d-solid">
@@ -315,10 +369,28 @@ export function Beaker2D({ dirty }: { dirty: boolean }) {
         strokeWidth={1.5}
         strokeLinejoin="round"
       />
+      {/* Body sheen and the light pooling in the base, over the flat fill. */}
+      <path
+        d="M-30 -84 L-30 -6 Q-30 0 -24 0 L24 0 Q30 0 30 -6 L30 -84 Z"
+        fill="url(#lab2d-glass-body)"
+      />
+      <ellipse cx={0} cy={-6} rx={26} ry={7} fill="url(#lab2d-caustic)" />
+      {/* The open mouth seen slightly from above: an ellipse, not a straight cut. */}
+      <ellipse
+        cx={0}
+        cy={-84}
+        rx={30}
+        ry={6}
+        fill="url(#lab2d-rim)"
+        stroke={GLASS_STROKE}
+        strokeWidth={1.4}
+      />
+      <ellipse cx={0} cy={-83} rx={25} ry={4} fill="#eef6fa" opacity={0.75} />
       {[20, 34, 48, 62].map((y) => (
         <line key={y} x1={14} y1={-y} x2={24} y2={-y} stroke={INK} strokeWidth={1} opacity={0.6} />
       ))}
       <line x1={-20} y1={-12} x2={-20} y2={-70} stroke="#ffffff" strokeWidth={2.4} opacity={0.85} />
+      <line x1={-13} y1={-20} x2={-13} y2={-62} stroke="#ffffff" strokeWidth={1.2} opacity={0.5} />
       {dirty && <Smudges cx={0} cy={-36} spread={28} />}
     </g>
   );
@@ -408,6 +480,7 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
     <g filter="url(#lab2d-drop-shadow)">
       <ellipse cx={-7} cy={0} rx={128} ry={10} fill="url(#lab2d-base-shadow)" />
       <rect x={-118} y={-30} width={236} height={26} rx={8} fill="url(#lab2d-metal-dark)" />
+      <rect x={-114} y={-29} width={228} height={4} rx={2} fill="#ffffff" opacity={0.22} />
       <rect x={-112} y={-6} width={16} height={6} rx={2} fill="#2b3339" />
       <rect x={96} y={-6} width={16} height={6} rx={2} fill="#2b3339" />
       {/* Arm connecting the pan column to the beam housing, so the instrument reads as one
@@ -432,6 +505,10 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
         stroke="#5b6670"
         strokeWidth={1.6}
       />
+      {/* Specular edge along the top of the housing, and a shaded foot: an instrument body is a
+          turned surface, not a flat panel. */}
+      <rect x={-30} y={-84} width={142} height={5} rx={2.5} fill="#ffffff" opacity={0.55} />
+      <rect x={-30} y={-36} width={142} height={4} rx={2} fill="#55606a" opacity={0.3} />
       {[-74, -63, -52, -41].map((y) => (
         <g key={y}>
           <line
@@ -466,6 +543,14 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
         stroke="#5b6670"
         strokeWidth={0.8}
       />
+      {/* The pan is a shallow dish, not a disc: a wall under the rim and a shaded well inside,
+          so an object placed on it reads as sitting IN the pan. */}
+      <path
+        d="M-120 -102 Q-120 -93 -72 -93 Q-24 -93 -24 -102 Z"
+        fill="url(#lab2d-metal-dark)"
+        stroke="#5b6670"
+        strokeWidth={1.2}
+      />
       <ellipse
         cx={-72}
         cy={-102}
@@ -475,7 +560,8 @@ export function Balance2D({ pointer }: { pointer: PointerState | null }) {
         stroke="#5b6670"
         strokeWidth={1.4}
       />
-      <ellipse cx={-72} cy={-102} rx={28} ry={4} fill="#ffffff" opacity={0.35} />
+      <ellipse cx={-72} cy={-101} rx={40} ry={5} fill="#8e9aa3" opacity={0.45} />
+      <ellipse cx={-72} cy={-103} rx={28} ry={3.4} fill="#ffffff" opacity={0.4} />
       <rect
         x={116}
         y={-92}

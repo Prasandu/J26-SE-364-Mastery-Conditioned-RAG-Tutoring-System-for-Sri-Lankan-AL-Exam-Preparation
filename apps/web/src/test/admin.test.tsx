@@ -17,7 +17,7 @@ import {
 } from '@vlab/contracts';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AdminClient } from '../admin/adminClient';
 import { createAdminClient } from '../admin/adminClient';
 import { App } from '../App';
@@ -31,6 +31,21 @@ const ID = 'a'.repeat(32);
 const IMPORT = 'b'.repeat(32);
 const SHA = 'c'.repeat(64);
 const NOW = '2026-10-11T10:00:00Z';
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  vi.stubGlobal('matchMedia', () => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+});
 
 const status: AdminStatus = AdminStatusSchema.parse({
   mode: 'development',
@@ -337,6 +352,7 @@ const openAdmin = async (client: AdminClient) => {
   expect(
     await screen.findByRole('heading', { level: 1, name: tx('admin.title') }),
   ).toBeInTheDocument();
+  await screen.findByRole('navigation', { name: tx('admin.sections') });
   return ctx;
 };
 
@@ -365,9 +381,18 @@ describe('admin availability', () => {
     expect(screen.queryByRole('navigation', { name: tx('admin.sections') })).toBeNull();
   });
 
-  it('opens the lazily loaded admin view with real counts and a development warning', async () => {
-    await openAdmin(fakeClient());
-    expect(screen.getByText(tx('admin.dev_warning'))).toBeInTheDocument();
+  it('opens the admin view with real counts and an optional local-development explanation', async () => {
+    const { user } = await openAdmin(fakeClient());
+    const toggle = screen.getByRole('button', { name: tx('admin.environment.label') });
+    const explanation = screen.getByText(tx('admin.environment.production'));
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(explanation).not.toBeVisible();
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(explanation).toBeVisible();
+    await user.keyboard('{Escape}');
+    expect(explanation).not.toBeVisible();
+    expect(toggle).toHaveFocus();
     const counts = await screen.findByRole('list', { name: tx('admin.counts') });
     expect(
       within(counts).getByText(tx('admin.count.validation_failures')).nextSibling,
@@ -391,6 +416,10 @@ describe('draft list', () => {
       'needs_review',
     );
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+    await user.type(screen.getByLabelText(tx('admin.drafts.search')), 'standard');
+    expect(screen.getByText(tx('admin.drafts.no_match'))).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: tx('admin.records.clear') }));
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
     expect(screen.getAllByText(tx('admin.simulation.pending')).length).toBeGreaterThan(0);
     await user.click(
       screen.getByRole('button', {
@@ -455,7 +484,9 @@ describe('draft review', () => {
     expect(req.expectedVersion).toBe(3);
     expect(req.content.precautions).toEqual(['Wear goggles.', 'Avoid touching the chemicals.']);
     expect(req.sourcePages.precautions).toEqual([2, 3]);
-    expect(await screen.findByText(tx('admin.review.saved'))).toBeInTheDocument();
+    expect(
+      await screen.findByText(tx('admin.review.saved'), { selector: '.status-message__title' }),
+    ).toBeInTheDocument();
   });
 
   it('reports a version conflict without losing the page', async () => {
@@ -467,7 +498,26 @@ describe('draft review', () => {
     const { user } = await openReview(client);
     await user.type(screen.getByLabelText(tx('admin.field.precautions')), 'x');
     await user.click(screen.getByRole('button', { name: tx('admin.review.save') }));
-    expect(await screen.findByText(tx('admin.error.draft_version_conflict'))).toBeInTheDocument();
+    expect(
+      await screen.findByText(tx('admin.error.draft_version_conflict'), {
+        selector: '.status-message__title',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('discards edits and source pages without sending an update or changing review state', async () => {
+    const { user, client } = await openReview();
+    const field = screen.getByLabelText(tx('admin.field.precautions'));
+    const pages = document.getElementById('field-precautions-pages')!;
+    await user.type(field, 'Temporary edit');
+    await user.type(pages, '12');
+    expect(document.getElementById('field-title-reviewed')).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: tx('admin.review.discard') }));
+    expect(field).toHaveValue('');
+    expect(pages).toHaveValue('');
+    expect(document.getElementById('field-title-reviewed')).toBeEnabled();
+    expect(client.update).not.toHaveBeenCalled();
+    expect(client.reviews).toEqual([]);
   });
 
   it('rejects non-numeric source pages locally', async () => {
@@ -645,10 +695,49 @@ describe('admin console sections', () => {
     const table = await screen.findByRole('table', { name: tx('admin.library.title') });
     expect(within(table).getByText(tx('admin.library.runnable'))).toBeInTheDocument();
     expect(within(table).getByText(tx('admin.library.not_runnable'))).toBeInTheDocument();
-    await user.click(within(table).getByRole('button', { name: tx('admin.library.open') }));
+    await user.click(
+      within(table).getByRole('button', {
+        name: tx('admin.drafts.open_label').replace('{{title}}', 'A complete practical'),
+      }),
+    );
     expect(
       await screen.findByRole('heading', { name: /A complete practical/ }),
     ).toBeInTheDocument();
+  });
+
+  it('library filters status and title together, clears filters and keeps approval separate from runnability', async () => {
+    const client = fakeClient();
+    const { user } = await go(client, 'library');
+    await screen.findByRole('table', { name: tx('admin.library.title') });
+    await user.selectOptions(
+      screen.getByLabelText(tx('admin.drafts.status_filter')),
+      'content_approved',
+    );
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('row')).toHaveLength(2);
+    expect(within(table).getByText(tx('admin.library.not_runnable'))).toBeInTheDocument();
+    expect(within(table).queryByText(tx('admin.library.live'))).toBeNull();
+    await user.type(screen.getByLabelText(tx('admin.library.search')), '  STANDARD  ');
+    expect(screen.getByText(tx('admin.records.no_match'))).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: tx('admin.records.clear') }));
+    expect(screen.getByLabelText(tx('admin.library.search'))).toHaveValue('');
+    expect(screen.getByLabelText(tx('admin.drafts.status_filter'))).toHaveValue('all');
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
+    expect(client.library).toHaveBeenCalledTimes(1);
+  });
+
+  it('library never claims student availability from catalog status alone', async () => {
+    const client = fakeClient({
+      library: vi.fn(async () => ({
+        ...library,
+        entries: [{ ...library.entries[0]!, runnable: false }],
+      })),
+    });
+    await go(client, 'library');
+    const table = await screen.findByRole('table');
+    expect(within(table).getByText(tx('admin.library.status.published'))).toBeInTheDocument();
+    expect(within(table).queryByText(tx('admin.library.live'))).toBeNull();
+    expect(within(table).queryByText(tx('admin.library.runnable'))).toBeNull();
   });
 
   it('knowledge base builds from approved drafts and activates a version', async () => {
@@ -742,6 +831,79 @@ describe('admin console sections', () => {
       await screen.findByRole('heading', { name: tx('admin.settings.title') }),
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/sk-|gsk_/);
+  });
+
+  it('knowledge versions separate active retrieval from staged builds without activating on load', async () => {
+    const client = fakeClient({
+      knowledge: vi.fn(async () => ({
+        ...knowledge,
+        active: {
+          knowledgeVersion: 'kb-active',
+          chunkCount: 6,
+          embeddingModel: build.embeddingModel,
+        },
+        builds: [
+          {
+            ...build,
+            id: '1'.repeat(32),
+            knowledgeVersion: 'kb-active',
+            status: 'active' as const,
+          },
+          build,
+        ],
+      })),
+    });
+    await go(client, 'knowledge');
+    expect(
+      await screen.findByText('kb-active', { selector: '.admin-kb__version' }),
+    ).toBeInTheDocument();
+    const staged = screen.getByRole('heading', { name: tx('admin.kb.staged') }).closest('article')!;
+    expect(within(staged).getByText('1')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: tx('admin.kb.activate') })).toHaveLength(1);
+    expect(client.activateKnowledge).not.toHaveBeenCalled();
+  });
+
+  it('translations keep complete coverage separate from teacher approval', async () => {
+    await go(fakeClient(), 'translations');
+    const coverage = await screen.findByRole('progressbar');
+    expect(coverage).toHaveAttribute('value', '400');
+    expect(coverage).toHaveAttribute('max', '400');
+    expect(screen.getByText(tx('admin.tr.state.draft'))).toBeInTheDocument();
+    expect(screen.queryByText(tx('admin.tr.state.reviewed'))).toBeNull();
+  });
+
+  it('audit summaries retain complete event values, nested details and integrity hashes', async () => {
+    const event = {
+      ...audit.events[0]!,
+      details: { nested: { values: [1, null, false] }, note: null },
+    };
+    const client = fakeClient({ audit: vi.fn(async () => ({ chainOk: true, events: [event] })) });
+    const { user } = await go(client, 'audit');
+    const summary = await screen.findByRole('button', { name: tx('admin.audit.exact_record') });
+    await user.click(summary);
+    const record = screen.getByLabelText(tx('admin.audit.exact_record'), { selector: 'pre' });
+    expect(JSON.parse(record.textContent!)).toEqual(event);
+    expect(screen.getByText(tx('admin.audit.event.import.created'))).toBeInTheDocument();
+  });
+
+  it('settings group only read-only configuration and omit endpoint credentials and extra secret fields', async () => {
+    const client = fakeClient({
+      settings: vi.fn(async () => ({
+        ...settings,
+        ollamaBaseUrl:
+          'http://user:test-password@localhost:11434/private-token?key=test-query-secret#private-fragment',
+        apiKey: 'sk-test-must-not-render',
+      })),
+    });
+    await go(client, 'settings');
+    await screen.findByRole('heading', { name: tx('admin.settings.models') });
+    const content = screen.getByRole('region', { name: tx('admin.settings.title') });
+    expect(content.textContent).toContain('http://localhost:11434');
+    expect(content.textContent).not.toMatch(
+      /test-password|private-token|test-query-secret|private-fragment|sk-test/,
+    );
+    expect(within(content).queryByRole('textbox')).toBeNull();
+    expect(within(content).queryByRole('button')).toBeNull();
   });
 });
 
@@ -849,7 +1011,7 @@ describe('quick fix and approve now', () => {
   };
 
   it('bulk bar fixes drafts with issues and approves ready drafts after confirmation', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    // The bulk confirmations are now the themed Chemistry Studio dialog, not window.confirm.
     const base = detail();
     const client = fakeClient({
       drafts: vi.fn(async () => [
@@ -865,12 +1027,13 @@ describe('quick fix and approve now', () => {
     await user.click(screen.getByRole('button', { name: tx('admin.section.drafts') }));
     const bulk = screen.getByRole('group', { name: tx('admin.quick.bulk') });
     await user.click(within(bulk).getByRole('button', { name: /Fix all \(1\)/ }));
+    await user.click(await screen.findByRole('button', { name: tx('ui.confirm.continue') }));
     await waitFor(() => expect(client.reviews).toHaveLength(1));
     expect(client.reviews[0]).toMatchObject({ action: 'quick_fix', expectedVersion: 3 });
     await user.click(within(bulk).getByRole('button', { name: /Approve all ready \(1\)/ }));
+    await user.click(await screen.findByRole('button', { name: tx('ui.confirm.continue') }));
     await waitFor(() => expect(client.reviews).toHaveLength(2));
     expect(client.reviews[1]).toMatchObject({ action: 'quick_approve' });
-    expect(confirm).toHaveBeenCalledTimes(2);
     // Only the ready draft gets a per-row Approve button.
     expect(
       screen.getByRole('button', {
@@ -882,21 +1045,19 @@ describe('quick fix and approve now', () => {
         name: tx('admin.quick.approve_label').replace('{{title}}', 'A complete practical'),
       }),
     ).toBeNull();
-    confirm.mockRestore();
   });
 
   it('cancelling the confirmation sends nothing', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const client = fakeClient();
     const { user } = await openAdmin(client);
     await user.click(screen.getByRole('button', { name: tx('admin.section.drafts') }));
     await user.click(screen.getByRole('button', { name: /Fix all/ }));
+    // Cancel the themed confirmation: nothing is sent.
+    await user.click(await screen.findByRole('button', { name: tx('ui.confirm.cancel') }));
     expect(client.review).not.toHaveBeenCalled();
-    confirm.mockRestore();
   });
 
   it('review page: Approve now is blocked by blocking issues; Quick fix reports what it did', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fixed = detail({ version: 4, quickFixLog: ['absent:precautions'] });
     const client = fakeClient({
       review: vi.fn(async (_id: string, req: AdminReviewRequest) => {
@@ -907,24 +1068,24 @@ describe('quick fix and approve now', () => {
     const { user } = await openReview(client);
     expect(screen.getByRole('button', { name: tx('admin.quick.approve') })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: tx('admin.quick.fix') }));
+    await user.click(await screen.findByRole('button', { name: tx('ui.confirm.continue') }));
     await waitFor(() => expect(client.reviews.at(-1)).toMatchObject({ action: 'quick_fix' }));
     expect(
       await screen.findByText(/Precautions confirmed as not given in the source/i),
     ).toBeInTheDocument();
-    confirm.mockRestore();
   });
 
   it('review page: a draft without blocking issues can be approved now', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const client = fakeClient({ draft: vi.fn(async () => ready()) });
     const { user } = await openReview(client);
     const approve = screen.getByRole('button', { name: tx('admin.quick.approve') });
     expect(approve).toBeEnabled();
     await user.click(approve);
+    // Approval is destructive, so it confirms through the themed dialog first.
+    await user.click(await screen.findByRole('button', { name: tx('ui.confirm.continue') }));
     await waitFor(() =>
       expect(client.reviews.at(-1)).toMatchObject({ action: 'quick_approve', expectedVersion: 3 }),
     );
-    confirm.mockRestore();
   });
 
   it('fields are collapsible; reviewed fields start closed, missing ones open', async () => {

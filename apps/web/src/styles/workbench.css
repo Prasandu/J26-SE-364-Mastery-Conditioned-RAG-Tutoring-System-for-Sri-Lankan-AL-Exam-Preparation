@@ -1178,7 +1178,7 @@
  * becomes a full-height sheet over the stage; the focus trap, Escape handling, background
  * inertness and focus restoration are the browser's, not ours.
  */
-.notebook-sheet {
+.notebook-drawer {
   display: flex;
   flex-direction: column;
   position: static;
@@ -1195,21 +1195,21 @@
   overflow: visible;
 }
 
-.notebook-sheet__trigger,
-.notebook-sheet__head {
+.notebook-drawer__trigger,
+.notebook-drawer__head {
   display: none;
 }
 
 @media (min-width: 901px) {
   /* The panel has to be able to shrink inside the workbench grid row and scroll internally. */
-  .notebook-sheet {
+  .notebook-drawer {
     flex: 1;
     min-height: 0;
   }
 }
 
 @media (max-width: 900px) {
-  .notebook-sheet__trigger {
+  .notebook-drawer__trigger {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -1220,11 +1220,11 @@
 
   /* Closed: `display: none` is what a dialog without `open` already does — but it is spelled out
      here because the desktop rule above sets `display: flex` unconditionally. */
-  .notebook-sheet:not([open]) {
+  .notebook-drawer:not([open]) {
     display: none;
   }
 
-  .notebook-sheet[open] {
+  .notebook-drawer[open] {
     position: fixed;
     inset: auto 0 0 0;
     z-index: 60;
@@ -1238,11 +1238,11 @@
     overflow: hidden;
   }
 
-  .notebook-sheet::backdrop {
+  .notebook-drawer::backdrop {
     background: rgb(16 40 55 / 55%);
   }
 
-  .notebook-sheet__head {
+  .notebook-drawer__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1251,13 +1251,13 @@
     border-bottom: 1px solid var(--line);
   }
 
-  .notebook-sheet__title {
+  .notebook-drawer__title {
     margin: 0;
     font-weight: 700;
     color: var(--ink-900);
   }
 
-  .notebook-sheet__close {
+  .notebook-drawer__close {
     display: grid;
     place-items: center;
     width: 44px;
@@ -1273,12 +1273,12 @@
 
   /* The sheet's own header already names the notebook; the panel's internal label would repeat
      it two lines further down. */
-  .notebook-sheet[open] .side-panel__head {
+  .notebook-drawer[open] .side-panel__head {
     display: none;
   }
 
   /* The sheet owns the height; the panel scrolls inside it. */
-  .notebook-sheet[open] .side-panel {
+  .notebook-drawer[open] .side-panel {
     flex: 1;
     min-height: 0;
     overflow: hidden;

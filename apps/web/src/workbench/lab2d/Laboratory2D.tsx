@@ -11,7 +11,6 @@ import {
   BENCH_BACK_Y,
   BENCH_Y,
   FLASK_UNIT,
-  NARROW_PANEL_PX,
   OVERVIEW,
   SHELF_Y,
   VIEW_H,
@@ -20,7 +19,6 @@ import {
   focusView,
   itemBox,
   itemPosition,
-  narrowOverview,
   zoomView,
   type ViewBox,
 } from './layout2d';
@@ -151,8 +149,6 @@ export default function Laboratory2D({
    * is wider than the base frame. 0 means "not measured yet"; the base frame is used until then.
    */
   const [stageAspect, setStageAspect] = useState(0);
-  /** Panel width in CSS pixels, used to pick a readable overview framing on a phone. */
-  const [stageWidth, setStageWidth] = useState(0);
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -164,7 +160,6 @@ export default function Laboratory2D({
       const { width, height } = el.getBoundingClientRect();
       if (width > 0 && height > 0) {
         setStageAspect(width / height);
-        setStageWidth(width);
       }
     };
     measure();
@@ -286,14 +281,8 @@ export default function Laboratory2D({
           // drawing fills the panel rather than sitting letterboxed inside it. A panel wider than
           // the frame reveals more bench and wall to the sides; a taller one reveals more above
           // and below. The backdrop is drawn well past the frame (`BLEED`) to cover both.
-          // On a phone the untouched overview draws the whole room into ~360px and the apparatus
-          // become unidentifiable, so the overview preset starts from a tighter frame there. Only
-          // the overview is substituted: once the student zooms or pans the preset is 'custom'
-          // and their own framing is respected.
-          const base =
-            preset === 'overview' && stageWidth > 0 && stageWidth < NARROW_PANEL_PX
-              ? narrowOverview()
-              : view;
+          // Overview always includes all apparatus. Close-up presets and zoom remain explicit.
+          const base = view;
           if (stageAspect <= 0) return `${base.x} ${base.y} ${base.w} ${base.h}`;
           if (base.w / base.h < stageAspect) {
             const w = base.h * stageAspect;

@@ -86,7 +86,7 @@ export function ImportPanel({
   const busy = phase === 'uploading' || phase === 'extracting';
 
   return (
-    <section aria-labelledby="import-title" className="section">
+    <section aria-labelledby="import-title" className="section admin-import">
       <h2 id="import-title">{t('admin.import.title')}</h2>
       <p className="notice" role="note">
         {t('admin.import.draft_only')}

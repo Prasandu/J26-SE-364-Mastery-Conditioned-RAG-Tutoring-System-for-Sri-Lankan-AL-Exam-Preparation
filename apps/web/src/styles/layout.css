@@ -3,7 +3,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgb(255 255 255 / 96%);
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   overflow-x: hidden;
@@ -35,6 +35,7 @@
 }
 
 .app-header__logo {
+  flex-shrink: 0;
   display: grid;
   place-items: center;
   width: 40px;
@@ -59,6 +60,30 @@
 .app-header__subtitle {
   color: var(--ink-500);
   font-size: var(--text-xs);
+}
+
+/* Longer Sinhala navigation uses its own row instead of squeezing the brand. */
+@media (min-width: 1101px) {
+  html[lang='si'] .app-header:not(.app-header--admin) .app-header__inner {
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+  }
+
+  html[lang='si'] .app-header:not(.app-header--admin) .app-header__brand {
+    flex: 1 1 28rem;
+    min-width: 20rem;
+  }
+
+  html[lang='si'] .app-header:not(.app-header--admin) .app-header__tools {
+    flex: 0 1 45%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  html[lang='si'] .app-header:not(.app-header--admin) .app-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
 }
 
 .app-nav ul {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
 import { AssistantPanel } from '../workbench/AssistantPanel';
@@ -16,6 +16,15 @@ export function HelpWidget() {
   const session = useSession((s) => s.session);
   const [open, setOpen] = useState(false);
   const [instance, setInstance] = useState(0);
+  const launcher = useRef<HTMLButtonElement>(null);
+  const minimize = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (open) minimize.current?.focus();
+    else if (wasOpen.current) launcher.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   if (!session) return null;
 
@@ -25,15 +34,24 @@ export function HelpWidget() {
   };
 
   return (
-    <div className="help-widget">
+    <div
+      className="help-widget"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
       {open ? (
-        <div className="help-widget__panel">
+        <div className="help-widget__panel" role="dialog" aria-label={t('assistant.help_button')}>
           <div className="help-widget__controls">
             <button type="button" className="help-widget__text-button" onClick={endChat}>
               {t('assistant.end_chat')}
             </button>
             <button
               type="button"
+              ref={minimize}
               className="help-widget__close"
               aria-label={t('assistant.minimize')}
               title={t('assistant.minimize')}
@@ -49,7 +67,9 @@ export function HelpWidget() {
       ) : (
         <button
           type="button"
+          ref={launcher}
           className="help-widget__launcher"
+          aria-label={t('assistant.help_button')}
           aria-expanded={false}
           onClick={() => setOpen(true)}
         >

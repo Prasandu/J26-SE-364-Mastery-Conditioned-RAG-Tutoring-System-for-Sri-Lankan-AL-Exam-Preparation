@@ -10,6 +10,12 @@ import siCommon from '../../../../content/locales/si/common.json';
 import siExp04 from '../../../../content/locales/si/exp04.json';
 import siUi from '../../../../content/locales/si/ui.json';
 
+// App keeps its i18next instance across React refreshes. Reload after locale edits so
+// an existing development tab cannot retain old resources and display new keys verbatim.
+if (import.meta.hot) {
+  import.meta.hot.accept(() => window.location.reload());
+}
+
 type LocaleFile = { _meta: unknown } & Record<string, unknown>;
 export const LOCALE_FILES = {
   en: { ui: enUi, exp04: enExp04, common: enCommon, admin: enAdmin },

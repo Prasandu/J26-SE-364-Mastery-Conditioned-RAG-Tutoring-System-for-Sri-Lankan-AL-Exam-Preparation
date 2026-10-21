@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { en, shot } from './helpers';
+import { en, shot, openSection } from './helpers';
 
 /**
  * Automatic mode, which had no end-to-end coverage. Every step is the engine's own
@@ -30,7 +30,7 @@ test('automatic demonstration runs from the initial state to completion', async 
 
   await expect(page.locator('#workbench-title')).toBeVisible();
   // The demonstration controls sit in the guidance panel, inside the Protocol tab.
-  await page.getByRole('tab', { name: en('ui.side.protocol') }).click();
+  await openSection(page, 'ui.side.protocol');
   const controls = page.getByRole('group', { name: en('ui.automatic.controls') });
   await expect(controls).toBeVisible();
   // The student's own action panel is withheld: the system is the actor in this mode.

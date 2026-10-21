@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { OVERVIEW_POSE, type Vec3 } from '../src/workbench/scene3d/layout3d';
+import { fittedOverviewPose, type Vec3 } from '../src/workbench/scene3d/layout3d';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const locale = (lang: 'en' | 'si', file: string) =>
@@ -75,8 +75,9 @@ export const waitFor3D = async (page: Page) => {
 export const projectOverview = async (page: Page, world: Vec3) => {
   const box = (await page.locator('[data-renderer="3d"] canvas').boundingBox())!;
   const camera = new PerspectiveCamera(40, box.width / box.height, 0.1, 60);
-  camera.position.set(...OVERVIEW_POSE.position);
-  camera.lookAt(new Vector3(...OVERVIEW_POSE.target));
+  const pose = fittedOverviewPose(box.width / box.height);
+  camera.position.set(...pose.position);
+  camera.lookAt(new Vector3(...pose.target));
   camera.updateMatrixWorld();
   const p = new Vector3(...world).project(camera);
   return { x: ((p.x + 1) / 2) * box.width, y: ((1 - p.y) / 2) * box.height };
@@ -127,4 +128,15 @@ export const noHorizontalOverflow = async (page: Page) => {
     1,
   );
   expect(result.offenders, 'elements extend past the viewport width').toEqual([]);
+};
+
+/**
+ * Open a notebook section and leave it open. The section tabs toggle: clicking the already-open
+ * active section collapses it. Tests that just want a section's content visible must not blindly
+ * click (Protocol is open by default), so this clicks only when the tab reports it is collapsed.
+ */
+export const openSection = async (page: Page, key: string) => {
+  const tab = page.getByRole('tab', { name: en(key) });
+  if ((await tab.getAttribute('aria-expanded')) !== 'true') await tab.click();
+  await expect(tab).toHaveAttribute('aria-expanded', 'true');
 };

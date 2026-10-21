@@ -67,6 +67,15 @@ SCHEME_PATH = "/papers/{paper_id}/marking-schemes/{version}"
 # Users
 
 
+def _active_admins(db: Session) -> int:
+    """How many admins can still sign in - the last one may not be demoted or disabled."""
+    return db.scalar(
+        select(func.count())
+        .select_from(User)
+        .where(User.role == UserRole.ADMIN, User.is_active.is_(True))
+    )
+
+
 @router.post("/users", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED)
 def create_user(data: AdminUserCreateIn, db: Session = Depends(get_db)):
     return auth.create_admin_user(db, data)
@@ -82,12 +91,9 @@ def update_user_role(user_id: int, role: UserRole, db: Session = Depends(get_db)
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No user with that id")
-    if user.role == UserRole.ADMIN and role != UserRole.ADMIN and user.is_active:
-        active_admins = db.scalar(
-            select(func.count()).select_from(User).where(User.role == UserRole.ADMIN, User.is_active.is_(True))
-        )
-        if active_admins <= 1:
-            raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be demoted")
+    demoting_an_admin = user.role == UserRole.ADMIN and role != UserRole.ADMIN and user.is_active
+    if demoting_an_admin and _active_admins(db) <= 1:
+        raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be demoted")
     user.role = role
     db.commit()
     db.refresh(user)
@@ -99,12 +105,9 @@ def update_user_status(user_id: int, is_active: bool, db: Session = Depends(get_
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No user with that id")
-    if user.role == UserRole.ADMIN and user.is_active and not is_active:
-        active_admins = db.scalar(
-            select(func.count()).select_from(User).where(User.role == UserRole.ADMIN, User.is_active.is_(True))
-        )
-        if active_admins <= 1:
-            raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be deactivated")
+    disabling_an_admin = user.role == UserRole.ADMIN and user.is_active and not is_active
+    if disabling_an_admin and _active_admins(db) <= 1:
+        raise HTTPException(status.HTTP_409_CONFLICT, "The last active admin cannot be deactivated")
     user.is_active = is_active
     db.commit()
     db.refresh(user)

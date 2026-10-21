@@ -107,21 +107,6 @@ def create_admin_user(db: Session, data: AdminUserCreateIn) -> User:
     db.commit()
     return user
 
-def create_admin_user(db: Session, data: AdminUserCreateIn) -> User:
-    email = normalize_email(data.email)
-    if db.scalar(select(User).where(User.email == email)) is not None:
-        raise ConflictError("An account with that email already exists")
-
-    user = User(
-        email=email,
-        name=data.name.strip(),
-        password_hash=hash_password(data.password),
-        role=data.role,
-    )
-    db.add(user)
-    db.commit()
-    return user
-
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = db.scalar(select(User).where(User.email == normalize_email(email)))

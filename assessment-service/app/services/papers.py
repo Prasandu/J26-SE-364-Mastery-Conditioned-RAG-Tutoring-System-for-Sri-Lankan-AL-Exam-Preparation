@@ -13,9 +13,11 @@ from sqlalchemy.orm import Session
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import (
     ContentStatus,
+    MarkingScheme,
     Paper,
     PaperKind,
     Question,
+    SchemeStatus,
     Section,
     Topic,
     utcnow,
@@ -46,8 +48,22 @@ def list_papers(
     """
     stmt = _paper_query(kind=kind, year=year, student_ref=student_ref)
     if published_only:
-        stmt = stmt.where(Paper.status == ContentStatus.PUBLISHED)
+        # A paper is sittable only with a scheme to mark it by. Publishing a paper
+        # and then retiring its scheme leaves one that start_attempt can only
+        # refuse, so it is not listed rather than failing when a student picks it.
+        stmt = stmt.where(Paper.status == ContentStatus.PUBLISHED, _has_published_scheme())
     return db.scalars(stmt).all()
+
+
+def _has_published_scheme():
+    return (
+        select(MarkingScheme.id)
+        .where(
+            MarkingScheme.paper_id == Paper.id,
+            MarkingScheme.status == SchemeStatus.PUBLISHED,
+        )
+        .exists()
+    )
 
 
 def search_papers(

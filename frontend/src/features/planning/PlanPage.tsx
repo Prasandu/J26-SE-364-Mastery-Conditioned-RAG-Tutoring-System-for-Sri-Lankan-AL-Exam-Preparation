@@ -24,6 +24,7 @@ import {
   type TaskReason,
 } from "../../api/planning";
 import ErrorState from "../../components/ErrorState";
+import Modal from "../../components/Modal";
 import LoadingState from "../../components/LoadingState";
 import CoachingCard from "./CoachingCard";
 import PageHeader from "./PageHeader";
@@ -206,13 +207,11 @@ function TaskCard({
       </div>
 
       {showReason ? (
-        <div
-          aria-labelledby={`task-reason-title-${task.id ?? task.topic_id}`}
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
-          role="dialog"
+        <Modal
+          labelledBy={`task-reason-title-${task.id ?? task.topic_id}`}
+          onClose={() => setShowReason(false)}
+          size="lg"
         >
-          <section className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 text-ink shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <h3
                 className="text-xl font-bold"
@@ -222,7 +221,7 @@ function TaskCard({
               </h3>
               <button
                 aria-label="Close task explanation"
-                className="rounded-lg border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+                className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => setShowReason(false)}
                 type="button"
               >
@@ -320,8 +319,7 @@ function TaskCard({
                 </p>
               </div>
             )}
-          </section>
-        </div>
+        </Modal>
       ) : null}
 
       <TimerControls busy={busy} onAction={onTimer} task={task} />

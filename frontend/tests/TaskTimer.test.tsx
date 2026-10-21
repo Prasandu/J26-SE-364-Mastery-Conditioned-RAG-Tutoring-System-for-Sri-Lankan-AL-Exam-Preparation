@@ -139,6 +139,9 @@ describe("study timer", () => {
     renderPage();
 
     expect(await screen.findByRole("timer")).toHaveTextContent("2:05");
+    // The tick interval is registered in a React effect that can run a moment after the
+    // clock first appears; flush it before moving time forward.
+    await act(async () => {});
     await act(async () => {
       vi.advanceTimersByTime(3000);
     });

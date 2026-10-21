@@ -11,6 +11,7 @@ import {
   type PlanInput,
   type PlanResponse,
 } from "../../api/planning";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import ErrorState from "../../components/ErrorState";
 import PageHeader from "./PageHeader";
 import TopicTree, { type TopicNode } from "./TopicTree";
@@ -123,6 +124,11 @@ export default function PlanningSetupPage() {
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  // Set when the student already has a plan and must confirm replacing it.
+  const [pendingReplacement, setPendingReplacement] = useState<{
+    planId: string;
+    data: PlanInput;
+  } | null>(null);
 
   const windows = useMemo(
     () =>
@@ -251,21 +257,36 @@ export default function PlanningSetupPage() {
       const latestPlan =
         existingPlan !== undefined ? existingPlan : ((await getPlans())?.plans?.[0] ?? null);
       if (latestPlan) {
-        const confirmed = window.confirm(
-          "You already have a study plan. Replace your latest plan with these settings?",
-        );
-        if (!confirmed) return;
-        await replacePlan(latestPlan.id, data);
-      } else {
-        await createPlan(data);
+        setPendingReplacement({ planId: latestPlan.id, data });
+        return;
       }
+      await createPlan(data);
       navigate("/planning/plan");
     } catch (cause) {
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Please check the planning service connection and try again.",
-      );
+      showSaveError(cause);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function showSaveError(cause: unknown) {
+    setError(
+      cause instanceof ApiError
+        ? cause.message
+        : "Please check the planning service connection and try again.",
+    );
+  }
+
+  async function confirmReplacement() {
+    if (!pendingReplacement) return;
+    const { planId, data } = pendingReplacement;
+    setPendingReplacement(null);
+    setSaving(true);
+    try {
+      await replacePlan(planId, data);
+      navigate("/planning/plan");
+    } catch (cause) {
+      showSaveError(cause);
     } finally {
       setSaving(false);
     }
@@ -525,6 +546,23 @@ export default function PlanningSetupPage() {
           {saving ? "Saving plan..." : "Save my plan"}
         </button>
       </form>
+
+      {pendingReplacement ? (
+        <ConfirmDialog
+          cancelLabel="Keep my current plan"
+          confirmLabel="Replace my plan"
+          id="replace-plan-title"
+          onCancel={() => setPendingReplacement(null)}
+          onConfirm={() => void confirmReplacement()}
+          title="Replace your current plan?"
+        >
+          <p>
+            Saving will update your latest study plan with these settings. Your
+            marks and finished sessions stay.
+          </p>
+          <p>Upcoming sessions are refreshed the next time you generate your plan.</p>
+        </ConfirmDialog>
+      ) : null}
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Modal from "../../components/Modal";
 import type {
   ScheduledTask,
   TaskStatus,
@@ -147,13 +148,7 @@ export function FinishDialog({
     Number.isInteger(minutes) && minutes >= 1 && minutes <= task.duration_min;
 
   return (
-    <div
-      aria-labelledby="finish-session-title"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
-      role="dialog"
-    >
-      <section className="w-full max-w-md rounded-2xl bg-white p-6 text-ink shadow-xl">
+    <Modal labelledBy="finish-session-title" onClose={onCancel}>
         <h3 className="text-xl font-bold" id="finish-session-title">
           How did this session go?
         </h3>
@@ -162,7 +157,7 @@ export function FinishDialog({
           (planned {task.duration_min}).
         </p>
         {result.requires_confirmation ? (
-          <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">
+          <p className="mt-3 rounded-full bg-amber-50 p-3 text-sm text-amber-950">
             {result.confirmation_reason}
           </p>
         ) : null}
@@ -180,7 +175,7 @@ export function FinishDialog({
         </label>
         <div className="mt-5 flex flex-wrap gap-2">
           <button
-            className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+            className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
             disabled={busy || !validMinutes}
             onClick={() => onSubmit("completed", minutes)}
             type="button"
@@ -188,7 +183,7 @@ export function FinishDialog({
             Done
           </button>
           <button
-            className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+            className="rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
             disabled={busy || !validMinutes}
             onClick={() => onSubmit("partial", minutes)}
             type="button"
@@ -196,7 +191,7 @@ export function FinishDialog({
             Partial
           </button>
           <button
-            className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
+            className="rounded-full bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
             disabled={busy}
             onClick={() => onSubmit("missed", null)}
             type="button"
@@ -204,7 +199,7 @@ export function FinishDialog({
             Missed
           </button>
           <button
-            className="ml-auto rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+            className="ml-auto rounded-full border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
             disabled={busy}
             onClick={onCancel}
             type="button"
@@ -212,7 +207,6 @@ export function FinishDialog({
             Cancel
           </button>
         </div>
-      </section>
-    </div>
+    </Modal>
   );
 }

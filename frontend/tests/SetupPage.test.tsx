@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -44,13 +44,16 @@ describe("PlanningSetupPage", () => {
   });
 
   it("asks before replacing an existing plan and uses PUT after confirmation", async () => {
-    const confirm = vi.fn(() => true);
-    vi.stubGlobal("confirm", confirm);
+    const nativeConfirm = vi.fn(() => true);
+    vi.stubGlobal("confirm", nativeConfirm);
     vi.mocked(getPlans).mockResolvedValue({ plans: [existingPlan] });
     vi.mocked(replacePlan).mockResolvedValue(existingPlan);
     renderSetupPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+    const dialog = await screen.findByRole("dialog", { name: "Replace your current plan?" });
+    expect(replacePlan).not.toHaveBeenCalled(); // nothing is saved until the student agrees
+    fireEvent.click(within(dialog).getByRole("button", { name: "Replace my plan" }));
 
     await waitFor(() => {
       expect(replacePlan).toHaveBeenCalledWith(
@@ -58,22 +61,36 @@ describe("PlanningSetupPage", () => {
         expect.objectContaining({ mode: "predicted" }),
       );
     });
-    expect(confirm).toHaveBeenCalledOnce();
+    expect(nativeConfirm).not.toHaveBeenCalled(); // no browser pop-up any more
     expect(createPlan).not.toHaveBeenCalled();
   });
 
   it("does not create another plan when replacement is declined", async () => {
-    const confirm = vi.fn(() => false);
-    vi.stubGlobal("confirm", confirm);
     vi.mocked(getPlans).mockResolvedValue({ plans: [existingPlan] });
     renderSetupPage();
+    await screen.findByText(/These are your current plan's settings/);
 
     fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+    const dialog = await screen.findByRole("dialog", { name: "Replace your current plan?" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Keep my current plan" }));
 
-    await waitFor(() => expect(getPlans).toHaveBeenCalledOnce());
-    expect(confirm).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(getPlans).toHaveBeenCalledOnce();
     expect(replacePlan).not.toHaveBeenCalled();
     expect(createPlan).not.toHaveBeenCalled();
+  });
+
+  it("closes the replace dialog with Escape without saving", async () => {
+    vi.mocked(getPlans).mockResolvedValue({ plans: [existingPlan] });
+    renderSetupPage();
+    await screen.findByText(/These are your current plan's settings/);
+
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+    await screen.findByRole("dialog", { name: "Replace your current plan?" });
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(replacePlan).not.toHaveBeenCalled();
   });
 
   it("creates the first plan when the API returns an empty list", async () => {
@@ -188,7 +205,7 @@ describe("editing an existing plan", () => {
   beforeEach(() => {
     vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [savedPlan] });
     vi.mocked(replacePlan).mockReset().mockResolvedValue(savedPlan);
-    vi.stubGlobal("confirm", vi.fn(() => true));
+
   });
 
   it("prefills the form with the current plan's settings", async () => {
@@ -211,6 +228,11 @@ describe("editing an existing plan", () => {
 
     fireEvent.change(screen.getByLabelText("Target grade"), { target: { value: "A" } });
     fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+    fireEvent.click(
+      within(await screen.findByRole("dialog", { name: "Replace your current plan?" })).getByRole("button", {
+        name: "Replace my plan",
+      }),
+    );
 
     await waitFor(() => expect(replacePlan).toHaveBeenCalled());
     const [planId, data] = vi.mocked(replacePlan).mock.calls[0];

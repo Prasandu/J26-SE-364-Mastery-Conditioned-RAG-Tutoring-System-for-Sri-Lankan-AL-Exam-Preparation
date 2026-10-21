@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
 
-export function ErrorBox({ message, hint }: { message: string; hint?: string }) {
+export function ErrorBox({
+  message,
+  details,
+  hint,
+}: {
+  readonly message: string;
+  // The specifics behind the one-line summary, e.g. which field and why (see
+  // ApiError.details) - a list, not another line of prose, so each one stays
+  // scannable instead of running together.
+  readonly details?: string[];
+  readonly hint?: string;
+}) {
   return (
     <div
       className="flex gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 backdrop-blur"
@@ -17,6 +28,13 @@ export function ErrorBox({ message, hint }: { message: string; hint?: string }) 
       </svg>
       <div>
         <p className="font-medium text-rose-900">{message}</p>
+        {details && details.length > 0 && (
+          <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-sm text-rose-800">
+            {details.map((detail) => (
+              <li key={detail}>{detail}</li>
+            ))}
+          </ul>
+        )}
         {hint && <p className="mt-1 text-sm text-rose-700">{hint}</p>}
       </div>
     </div>

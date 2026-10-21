@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { appendSchemeQuestionsFromExtraction, createSchemeFromExtraction, extractPdf } from "@/api/extract";
@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { Card, SectionHeading } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
 import { FileField } from "@/components/FileField";
+import { PdfViewer } from "@/components/PdfViewer";
 
 /**
  * Upload a scanned marking scheme PDF, review what the model read, then create the
@@ -76,15 +77,32 @@ function ExtractForm({ onExtracted }: { readonly onExtracted: (result: ExtractRe
   const [hint, setHint] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [problemDetails, setProblemDetails] = useState<string[]>([]);
+
+  // A local preview of the chosen file, never uploaded anywhere - just so the
+  // admin can see which page numbers to type into "Pages" below, instead of
+  // guessing from the printed page or trial and error.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!file) {
       setProblem("Choose a PDF first");
+      setProblemDetails([]);
       return;
     }
     setBusy(true);
     setProblem(null);
+    setProblemDetails([]);
     try {
       const result = await extractPdf({
         file,
@@ -95,6 +113,7 @@ function ExtractForm({ onExtracted }: { readonly onExtracted: (result: ExtractRe
       onExtracted(result);
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
+      setProblemDetails(cause instanceof ApiError ? cause.details : []);
     } finally {
       setBusy(false);
     }
@@ -105,6 +124,17 @@ function ExtractForm({ onExtracted }: { readonly onExtracted: (result: ExtractRe
       <SectionHeading>1. Read the pages</SectionHeading>
       <form onSubmit={submit} className="space-y-4">
         <FileField id="import-file" label="Scanned PDF" accept="application/pdf" file={file} onChange={setFile} />
+
+        {previewUrl && (
+          <div className="space-y-1">
+            <p className="text-sm text-slate-600">
+              Preview - each page is labelled, so you know what to put in "Pages" below.
+            </p>
+            <div className="h-[60vh]">
+              <PdfViewer fileUrl={previewUrl} />
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
@@ -137,7 +167,7 @@ function ExtractForm({ onExtracted }: { readonly onExtracted: (result: ExtractRe
           {busy ? "Reading..." : "Read these pages"}
         </Button>
 
-        {problem && <ErrorBox message={problem} />}
+        {problem && <ErrorBox message={problem} details={problemDetails} />}
       </form>
     </Card>
   );
@@ -296,6 +326,7 @@ function CreateSchemeForm({
   const [source, setSource] = useState<SchemeSource>("official");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [problemDetails, setProblemDetails] = useState<string[]>([]);
 
   const hasMcqAnswers = hasEntries(mcqAnswersText);
   // The vision model already read the marks-per-question off the page itself
@@ -307,10 +338,12 @@ function CreateSchemeForm({
     event.preventDefault();
     if (needsMcqMarks && !mcqMarks.trim()) {
       setProblem("The page didn't state the marks per MCQ - enter it above");
+      setProblemDetails([]);
       return;
     }
     setBusy(true);
     setProblem(null);
+    setProblemDetails([]);
     try {
       const questions = parseJsonArray(questionsText, "Questions");
       const mcqAnswers = parseJsonArray(mcqAnswersText, "MCQ answer key");
@@ -333,6 +366,7 @@ function CreateSchemeForm({
       navigate(`/admin/papers/${paperId}`);
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : (cause as Error).message);
+      setProblemDetails(cause instanceof ApiError ? cause.details : []);
       setBusy(false);
     }
   }
@@ -407,7 +441,7 @@ function CreateSchemeForm({
         {busy ? "Saving..." : mode === "existing" ? "Add these entries" : "Create this scheme version"}
       </Button>
 
-      {problem && <ErrorBox message={problem} />}
+      {problem && <ErrorBox message={problem} details={problemDetails} />}
     </form>
   );
 }

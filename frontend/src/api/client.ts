@@ -53,7 +53,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, await readError(response));
+    const { message, details } = await readError(response);
+    throw new ApiError(response.status, message, details);
   }
   if (response.status === 204) {
     return undefined as T;
@@ -78,21 +79,26 @@ export async function requestBlob(path: string, options: RequestOptions = {}): P
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, await readError(response));
+    const { message, details } = await readError(response);
+    throw new ApiError(response.status, message, details);
   }
   return response.blob();
 }
 
-async function readError(response: Response): Promise<string> {
+/** The message every error on this API uses, plus the itemized `errors` list a
+ * ContentValidationError or a request-validation failure sends alongside it (see
+ * app/main.py's exception handlers) - the specifics behind the one-line summary. */
+async function readError(response: Response): Promise<{ message: string; details: string[] }> {
   try {
-    const body = (await response.json()) as { detail?: unknown };
+    const body = (await response.json()) as { detail?: unknown; errors?: unknown };
+    const details = Array.isArray(body.errors) ? body.errors.filter((e) => typeof e === "string") : [];
     if (typeof body.detail === "string") {
-      return body.detail;
+      return { message: body.detail, details };
     }
   } catch {
     // The body was not JSON; fall back to the status line.
   }
-  return `${response.status} ${response.statusText}`;
+  return { message: `${response.status} ${response.statusText}`, details: [] };
 }
 
 export const apiBaseUrl = BASE_URL;

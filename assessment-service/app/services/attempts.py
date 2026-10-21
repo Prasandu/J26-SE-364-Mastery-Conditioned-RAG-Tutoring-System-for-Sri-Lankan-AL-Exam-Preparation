@@ -128,6 +128,22 @@ def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: Answ
     return answer
 
 
+def clear_answer(db: Session, attempt_id: uuid.UUID, question_id: int) -> None:
+    """Back to unanswered - clicking a chosen mcq option again, or any other "never
+    mind". Not a validation error like an empty AnswerIn would be (one kind of
+    answer is still required to save one), so this is its own endpoint rather than
+    a PUT with nothing in it."""
+    attempt = get_in_progress(db, attempt_id)
+    question = _answerable_question(attempt, question_id)
+    answer = next((a for a in attempt.answers if a.question_id == question.id), None)
+    if answer is None:
+        return
+    answer.mcq_option = None
+    answer.text = None
+    answer.data = None
+    db.commit()
+
+
 def question_index(db: Session, attempt: Attempt) -> dict[int, Question]:
     """Every question of the paper by id, in two queries.
 
@@ -404,7 +420,11 @@ def _check_answer_kind(question: Question, data: AnswerIn) -> None:
     options = [option["label"] for option in question.options or []]
     if data.mcq_option is None:
         raise ContentValidationError(WRONG_ANSWER_TYPE, [f"{where}: send mcq_option, not text or graph"])
-    if data.mcq_option not in options:
+    # No recorded options (a past paper's own PDF shows them instead, see
+    # app/services/papers.py's ensure_mcq_question_skeletons) - nothing to check the
+    # chosen option against, so it is trusted, same as the scheme's own mcq_key
+    # validation (app/services/validation.py's _check_points).
+    if options and data.mcq_option not in options:
         raise ContentValidationError(
             "Unknown option", [f"{where}: mcq_option must be one of {', '.join(options)}"]
         )

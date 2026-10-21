@@ -18,7 +18,8 @@ interface Props {
   attemptId: string;
   disabled: boolean;
   mcqOptionLabels: string[];
-  onChoose: (option: string) => void;
+  // null clears the answer - clicking the already-chosen option again.
+  onChoose: (option: string | null) => void;
   onWrite: (text: string) => void;
   onRead: (answer: AnswerOut) => void;
 }

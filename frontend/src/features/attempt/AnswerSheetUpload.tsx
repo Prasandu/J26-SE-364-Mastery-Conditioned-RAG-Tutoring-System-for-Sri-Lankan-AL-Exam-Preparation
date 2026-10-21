@@ -14,12 +14,21 @@ import { ErrorBox } from "@/components/ErrorBox";
 interface Props {
   attemptId: string;
   optionLabels: string[];
+  // How many MCQ questions this paper actually has - the photo can read fewer (a
+  // block the detector could not line up, a cropped edge), and that gap is shown
+  // rather than hidden (see ReadReview's missing note).
+  totalMcqQuestions: number;
   onSaved: () => void;
-  // Told whenever a photo's answers are being reviewed (between a successful read
-  // and either confirming or leaving to try another one) - while true, the
-  // question list below hides its own MCQ pickers, since correcting a choice here
-  // is the same action as clicking it there, just shown twice (see AttemptPage.tsx).
-  onReviewingChange?: (reviewing: boolean) => void;
+  // Told the ids actually covered by the current read (null once there is no
+  // read to review). The question list below hides only those ids - correcting
+  // a choice there is the same action as clicking it here, just shown twice -
+  // and leaves anything the photo missed answerable as normal (see AttemptPage.tsx).
+  onReviewingChange?: (coveredIds: Set<number> | null) => void;
+  // Told how many picks in the review grid are ready to save, every time one
+  // changes - not yet real answers (nothing is saved until confirmed), but shown
+  // alongside the "answered" count so filling the sheet doesn't look like nothing
+  // happened until that button is pressed (see AttemptPage.tsx's Progress).
+  onReadyCountChange?: (count: number) => void;
 }
 
 /**
@@ -28,13 +37,25 @@ interface Props {
  * What the reader saw is shown as a draft the student can change. Nothing is stored
  * until they press the button, so a misread bubble never becomes a mark by itself.
  */
-export function AnswerSheetUpload({ attemptId, optionLabels, onSaved, onReviewingChange }: Props) {
+export function AnswerSheetUpload({
+  attemptId,
+  optionLabels,
+  totalMcqQuestions,
+  onSaved,
+  onReviewingChange,
+  onReadyCountChange,
+}: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [read, setRead] = useState<SheetRead | null>(null);
   const [chosen, setChosen] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState<"reading" | "saving" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seconds = useElapsed(busy !== null);
+
+  function updateChosen(next: Record<number, string>) {
+    setChosen(next);
+    onReadyCountChange?.(Object.keys(next).length);
+  }
 
   async function send(file: File) {
     if (!IMAGE_TYPES.includes(file.type)) {
@@ -46,8 +67,8 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved, onReviewin
     try {
       const result = await readAnswerSheet(attemptId, file);
       setRead(result);
-      onReviewingChange?.(true);
-      setChosen(
+      onReviewingChange?.(new Set(result.answers.map((a) => a.question_id)));
+      updateChosen(
         Object.fromEntries(
           result.answers.filter((a) => a.option).map((a) => [a.question_id, a.option!]),
         ),
@@ -74,7 +95,8 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved, onReviewin
     try {
       await saveAnswers(attemptId, answers);
       setRead(null);
-      onReviewingChange?.(false);
+      onReviewingChange?.(null);
+      updateChosen({});
       onSaved();
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : String(cause));
@@ -143,18 +165,18 @@ export function AnswerSheetUpload({ attemptId, optionLabels, onSaved, onReviewin
           read={read}
           chosen={chosen}
           optionLabels={optionLabels}
+          missing={Math.max(0, totalMcqQuestions - read.answers.length)}
           busy={busy !== null}
-          onPick={(questionId, option) =>
-            setChosen((current) => {
-              const next = { ...current };
-              if (option === null) {
-                delete next[questionId];
-              } else {
-                next[questionId] = option;
-              }
-              return next;
-            })
-          }
+          saving={busy === "saving"}
+          onPick={(questionId, option) => {
+            const next = { ...chosen };
+            if (option === null) {
+              delete next[questionId];
+            } else {
+              next[questionId] = option;
+            }
+            updateChosen(next);
+          }}
           onConfirm={() => void confirm()}
         />
       )}
@@ -166,12 +188,19 @@ interface ReviewProps {
   read: SheetRead;
   chosen: Record<number, string>;
   optionLabels: string[];
+  // How many of the paper's mcq questions this photo did not cover at all - not a
+  // misread row (those show as "unsure"), but missing from the grid entirely, e.g.
+  // a whole block the detector could not line up with the rest of the sheet.
+  missing: number;
   busy: boolean;
+  // Specifically the confirm save, not a re-read in progress (both make `busy`
+  // true, which disables things, but only this one should say "Saving...").
+  saving: boolean;
   onPick: (questionId: number, option: string | null) => void;
   onConfirm: () => void;
 }
 
-function ReadReview({ read, chosen, optionLabels, busy, onPick, onConfirm }: ReviewProps) {
+function ReadReview({ read, chosen, optionLabels, missing, busy, saving, onPick, onConfirm }: ReviewProps) {
   const unsure = read.answers.filter((a) => a.state === "unsure").length;
   const picked = Object.keys(chosen).length;
 
@@ -186,11 +215,28 @@ function ReadReview({ read, chosen, optionLabels, busy, onPick, onConfirm }: Rev
             {unsure} {unsure === 1 ? "row needs" : "rows need"} a look
           </Badge>
         )}
+        {missing > 0 && (
+          <Badge tone="warn">
+            {missing} not found in this photo
+          </Badge>
+        )}
         <span className="text-slate-500">
           read as {read.questions_found} questions with {read.options_found} options
           {read.read_by === "detected grid" && " (layout worked out from the photo)"}
         </span>
       </div>
+
+      {/* Also at the top, not just after the 50-row grid below - confirming
+       * should not need scrolling past every row first. */}
+      <ConfirmButton picked={picked} busy={busy} saving={saving} onConfirm={onConfirm} className="mt-3" />
+
+      {missing > 0 && (
+        <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          {missing} question{missing === 1 ? "" : "s"} could not be matched up in this photo at all -
+          they are left out of the review below, but still waiting for you further down the page.
+          Answer {missing === 1 ? "it" : "them"} there, or try another, clearer photo of the whole sheet.
+        </p>
+      )}
 
       <p className="mt-3 text-sm text-slate-600">
         Check every row against your sheet. Click a different option to correct it, or click the
@@ -219,12 +265,38 @@ function ReadReview({ read, chosen, optionLabels, busy, onPick, onConfirm }: Rev
         ))}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button disabled={busy || picked === 0} onClick={onConfirm}>
-          {busy ? "Saving..." : `Use ${picked === 1 ? "this answer" : `these ${picked} answers`}`}
-        </Button>
-        <span className="text-xs text-slate-500">Nothing is saved until you press this.</span>
-      </div>
+      <ConfirmButton picked={picked} busy={busy} saving={saving} onConfirm={onConfirm} className="mt-5" />
+    </div>
+  );
+}
+
+function ConfirmButton({
+  picked,
+  busy,
+  saving,
+  onConfirm,
+  className = "",
+}: {
+  picked: number;
+  busy: boolean;
+  saving: boolean;
+  onConfirm: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
+      <Button disabled={busy || picked === 0} onClick={onConfirm}>
+        {saving && (
+          <span
+            className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white"
+            aria-hidden="true"
+          />
+        )}
+        {saving ? "Saving..." : `Use ${picked === 1 ? "this answer" : `these ${picked} answers`}`}
+      </Button>
+      <span className="text-xs text-slate-500">
+        {saving ? "Saving every answer in one go - please wait." : "Nothing is saved until you press this."}
+      </span>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { getAttempt, saveAnswer, submitAttempt } from "@/api/attempts";
+import { clearAnswer, getAttempt, saveAnswer, submitAttempt } from "@/api/attempts";
 import { ApiError } from "@/api/client";
 import { getPaper, getPaperFile } from "@/api/papers";
 import type { AnswerInput, AnswerOut, Attempt, PaperDetail } from "@/api/types";
@@ -9,12 +9,12 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorBox } from "@/components/ErrorBox";
+import { PdfViewer } from "@/components/PdfViewer";
 import { Spinner } from "@/components/Spinner";
 import { answerableQuestions, hasMcq, isMcq, optionLabels } from "@/lib/questions";
 
 import { AnswerSheetUpload } from "./AnswerSheetUpload";
 import { MarkingProgress } from "./MarkingProgress";
-import { PdfViewer } from "./PdfViewer";
 import { Progress } from "./Progress";
 import { QuestionBlock } from "./QuestionBlock";
 import { ResultList } from "./ResultList";
@@ -40,10 +40,15 @@ export function AttemptPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [submitting, setSubmitting] = useState(false);
-  // While reviewing an uploaded answer sheet, the mcq questions below hide their
-  // own pickers - correcting a choice happens in the review grid instead, not in
-  // two places that could disagree about what is actually chosen.
-  const [reviewingUpload, setReviewingUpload] = useState(false);
+  // The mcq question ids covered by a photo currently under review (null when
+  // there is none) - those hide their own picker below, since correcting a
+  // choice happens in the review grid instead. Anything the photo missed stays
+  // visible here, so a block the reader could not line up is never un-answerable.
+  const [reviewedIds, setReviewedIds] = useState<Set<number> | null>(null);
+  // Picks already in that review grid, not yet saved - shown alongside the real
+  // "answered" count so filling the sheet doesn't look like nothing happened
+  // until "Use these N answers" is actually pressed (see Progress).
+  const [readyToSave, setReadyToSave] = useState(0);
   const inFlight = useRef(0);
 
   const reload = useCallback(
@@ -128,15 +133,35 @@ export function AttemptPage() {
     [attemptId],
   );
 
+  const unchoose = useCallback(
+    async (questionId: number) => {
+      inFlight.current += 1;
+      setSaveState("saving");
+      try {
+        await clearAnswer(attemptId, questionId);
+        inFlight.current -= 1;
+        setSaveState(inFlight.current === 0 ? "saved" : "saving");
+      } catch {
+        inFlight.current -= 1;
+        setSaveState("failed");
+      }
+    },
+    [attemptId],
+  );
+
   const choose = useCallback(
-    (questionId: number, option: string) => {
+    (questionId: number, option: string | null) => {
       setGiven((current) => ({
         ...current,
         [questionId]: { ...(current[questionId] ?? BLANK), option },
       }));
-      void send(questionId, { mcq_option: option });
+      if (option === null) {
+        void unchoose(questionId);
+      } else {
+        void send(questionId, { mcq_option: option });
+      }
     },
-    [send],
+    [send, unchoose],
   );
 
   const write = useCallback(
@@ -239,7 +264,23 @@ export function AttemptPage() {
               Everything else here is your real mark already.
             </p>
           )}
-          <div className="mt-4">
+          {/* Right after the score, not after scrolling past every question - this
+           * is where to go next, not another thing to read. */}
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              to="/papers"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-brand-600/25 transition hover:bg-brand-700 hover:shadow-lg"
+            >
+              Try another paper
+            </Link>
+            <Link
+              to="/my-results"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white/80 px-5 py-2.5 text-sm font-medium text-slate-700 backdrop-blur transition hover:border-brand-300 hover:bg-white"
+            >
+              See all my results
+            </Link>
+          </div>
+          <div className="mt-6 border-t border-slate-100 pt-4">
             <ResultList attempt={attempt} />
           </div>
         </Card>
@@ -248,32 +289,49 @@ export function AttemptPage() {
           <Card className="sticky top-4 z-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-48 flex-1">
-                <Progress answered={answered} total={items.length} />
+                <Progress answered={answered} total={items.length} readyToSave={readyToSave} />
               </div>
               <div className="flex items-center gap-3">
                 <SaveHint state={saveState} />
-                <Button onClick={submit} disabled={submitting || answered === 0}>
+                <Button
+                  onClick={submit}
+                  disabled={submitting || answered === 0 || readyToSave > 0}
+                  title={
+                    readyToSave > 0
+                      ? "Confirm your uploaded answer sheet above first - those picks are not saved yet"
+                      : undefined
+                  }
+                >
                   {submitting ? "Sending your answers..." : "Submit"}
                 </Button>
               </div>
             </div>
+            {readyToSave > 0 && (
+              <p className="mt-2 text-xs text-amber-700">
+                {readyToSave} pick{readyToSave === 1 ? "" : "s"} in the uploaded sheet above{" "}
+                {readyToSave === 1 ? "is" : "are"} not saved yet - press "Use these {readyToSave}{" "}
+                answer{readyToSave === 1 ? "" : "s"}" there before submitting, or they will be left out.
+              </p>
+            )}
           </Card>
 
           {hasMcq(paper) && (
             <AnswerSheetUpload
               attemptId={attemptId}
               optionLabels={mcqOptionLabels}
+              totalMcqQuestions={items.filter(isMcq).length}
               onSaved={() => void reload()}
-              onReviewingChange={setReviewingUpload}
+              onReviewingChange={setReviewedIds}
+              onReadyCountChange={setReadyToSave}
             />
           )}
 
           <Card>
-            {/* While a just-uploaded sheet is still being reviewed above, mcq
-             * questions are left out here - correcting them happens in that
-             * review grid, not twice. */}
+            {/* An mcq question a just-uploaded photo covers is left out here -
+             * correcting it happens in that review grid, not twice. Anything the
+             * photo missed (or never existed, with no upload at all) stays here. */}
             {items
-              .filter((item) => !(reviewingUpload && isMcq(item)))
+              .filter((item) => !reviewedIds?.has(item.question.id))
               .map((item, index, visible) => {
                 const previous = visible[index - 1];
                 const newStem = item.stem.join("\n") !== (previous?.stem.join("\n") ?? "");

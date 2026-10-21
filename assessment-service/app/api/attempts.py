@@ -66,6 +66,12 @@ def save_answer(attempt_id: uuid.UUID, question_id: int, data: AnswerIn, db: Ses
     return attempts.save_answer(db, attempt_id, question_id, data)
 
 
+@router.delete("/{attempt_id}/answers/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+def clear_answer(attempt_id: uuid.UUID, question_id: int, db: Session = Depends(get_db)):
+    """Back to unanswered - e.g. clicking a chosen mcq option again to deselect it."""
+    attempts.clear_answer(db, attempt_id, question_id)
+
+
 @router.post("/{attempt_id}/answers/{question_id}/images", response_model=AnswerOut)
 async def add_answer_image(
     attempt_id: uuid.UUID,

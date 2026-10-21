@@ -17,10 +17,10 @@ const SCALE_STEP = 0.2;
 const DEFAULT_SCALE = 1.1;
 
 /**
- * The real exam PDF, shown directly instead of a transcription - a toolbar for
- * zoom, and every page stacked so the student scrolls through it like a document.
- * No text/annotation layer: this is a past exam scan, not something to select text
- * from, and skipping it keeps rendering fast.
+ * A PDF shown directly instead of a transcription - a toolbar for zoom, and every
+ * page stacked, labelled with its own number, so it scrolls like a document. No
+ * text/annotation layer: this is for a scanned exam or marking scheme, not
+ * something to select text from, and skipping it keeps rendering fast.
  */
 export function PdfViewer({ fileUrl }: { readonly fileUrl: string }) {
   const [numPages, setNumPages] = useState(0);
@@ -70,14 +70,18 @@ export function PdfViewer({ fileUrl }: { readonly fileUrl: string }) {
           className="flex flex-col items-center gap-4"
         >
           {Array.from({ length: numPages }, (_, index) => (
-            <Page
-              key={index}
-              pageNumber={index + 1}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className="shadow-md"
-            />
+            <div key={index} className="relative">
+              <span className="absolute left-2 top-2 z-10 rounded-md bg-slate-900/70 px-1.5 py-0.5 text-xs font-medium text-white">
+                Page {index + 1}
+              </span>
+              <Page
+                pageNumber={index + 1}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-md"
+              />
+            </div>
           ))}
         </Document>
       </div>

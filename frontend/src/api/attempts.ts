@@ -29,6 +29,11 @@ export function saveAnswer(
   });
 }
 
+/** Back to unanswered - e.g. clicking a chosen mcq option again to deselect it. */
+export function clearAnswer(attemptId: string, questionId: number): Promise<void> {
+  return request<void>(`/attempts/${attemptId}/answers/${questionId}`, { method: "DELETE" });
+}
+
 export function submitAttempt(attemptId: string): Promise<Attempt> {
   return request<Attempt>(`/attempts/${attemptId}/submit`, { method: "POST" });
 }

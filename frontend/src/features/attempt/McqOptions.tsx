@@ -10,7 +10,8 @@ interface Props {
   // app/lib/questions.ts's optionLabels); the student reads it off the PDF shown
   // alongside instead, and picks the matching number here.
   fallbackLabels: string[];
-  onChoose: (option: string) => void;
+  // null clears the answer - clicking the already-chosen option again.
+  onChoose: (option: string | null) => void;
 }
 
 /** The options of one MCQ: its own, as clickable rows with their wording - or, if
@@ -28,7 +29,7 @@ export function McqOptions({ question, chosen, disabled, fallbackLabels, onChoos
               disabled={disabled}
               aria-pressed={picked}
               aria-label={`Option ${label}`}
-              onClick={() => onChoose(label)}
+              onClick={() => onChoose(picked ? null : label)}
               className={`size-9 rounded-full border text-sm transition ${
                 picked
                   ? "border-brand-600 bg-brand-600 font-medium text-white"
@@ -59,6 +60,10 @@ export function McqOptions({ question, chosen, disabled, fallbackLabels, onChoos
               name={`question-${question.id}`}
               value={option.label}
               checked={picked}
+              // A native radio never un-checks itself by clicking the checked one
+              // again, so that case is handled here instead of onChange, which
+              // would not fire for it.
+              onClick={() => picked && onChoose(null)}
               onChange={() => onChoose(option.label)}
               className="mt-0.5 accent-brand-600"
             />

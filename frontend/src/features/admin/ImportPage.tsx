@@ -197,6 +197,17 @@ function ExtractSummary({
         </p>
       )}
 
+      {result.failed.length === 0 &&
+        result.extracted.questions.length === 0 &&
+        (result.extracted.mcq_answers ?? []).length === 0 && (
+          <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
+            {result.pages_read.length} page(s) were read by {result.model} without an error, but nothing
+            was extracted from any of them - that almost never means the pages were genuinely blank. It
+            usually means this model could not make sense of the scan (a common gap for a newly-tried
+            model). Try a different, known-working model, or re-run just one page to confirm.
+          </p>
+        )}
+
       {result.notes.length > 0 && (
         <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
           <p className="font-medium text-slate-700">The model flagged, check these:</p>

@@ -42,7 +42,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/extract", tags=["extract"], dependencies=[Depends(require_admin)])
 
-BATCH_SIZE = 2  # more pages in one request means less context per page - matches app/import_pdf.py
+# A dense, diagram-heavy page can already use a whole reply's output budget on its
+# own - sharing it with a second page risks a truncated, unparsable reply on
+# exactly the pages that most need reading. Slower (more requests), never less
+# likely to succeed. See app/import_pdf.py for the CLI's own, configurable --batch.
+BATCH_SIZE = 1
 MAX_UPLOAD_MB = 40  # scanned page images add up; matches resources' own ceiling
 
 

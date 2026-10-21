@@ -16,6 +16,7 @@ class ProviderName(StrEnum):
     CEREBRAS = "cerebras"
     GITHUB = "github"
     OLLAMA = "ollama"
+    HUGGINGFACE = "huggingface"  # Hugging Face's own Inference Providers router
     CUSTOM = "custom"  # any other OpenAI-compatible service; set AI_BASE_URL yourself
 
 

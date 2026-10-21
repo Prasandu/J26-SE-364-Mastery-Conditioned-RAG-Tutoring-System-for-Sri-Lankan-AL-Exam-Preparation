@@ -159,6 +159,12 @@ PROVIDERS: dict[ProviderName, Provider] = {
     ProviderName.CEREBRAS: Provider("https://api.cerebras.ai/v1", "llama-3.3-70b"),
     ProviderName.GITHUB: Provider("https://models.github.ai/inference", "openai/gpt-4o-mini"),
     ProviderName.OLLAMA: Provider("http://localhost:11434/v1", "qwen3:4b", needs_key=False),
+    # Routes to whichever backend actually serves the named model (Together,
+    # Fireworks, Novita, ...) - the model id is "<org>/<model>" exactly as it
+    # appears on huggingface.co, e.g. "Qwen/Qwen3-VL-235B-A22B-Instruct".
+    ProviderName.HUGGINGFACE: Provider(
+        "https://router.huggingface.co/v1", "Qwen/Qwen3-VL-235B-A22B-Instruct"
+    ),
 }
 
 

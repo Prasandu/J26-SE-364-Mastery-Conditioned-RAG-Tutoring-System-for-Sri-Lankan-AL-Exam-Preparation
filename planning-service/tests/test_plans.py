@@ -411,3 +411,14 @@ def test_student_cannot_read_another_students_plan(
     response = client.get(f"/api/v1/plans/{created.json()['id']}")
 
     assert response.status_code == 404
+
+
+def test_new_student_manual_plan_shows_the_getting_started_card(client: TestClient) -> None:
+    response = client.post("/api/v1/plans", json=valid_plan(topics=["chem-u1", "chem-u2"], priorities=[]))
+
+    assert response.status_code == 201
+    coaching = response.json()["coaching_message"]
+    assert coaching["tone"] == "getting_started"
+    assert coaching["headline"] == "Welcome! Let's build your starting point."
+    assert all(item["reason"] == "start here" for item in coaching["focus_topics"])
+    assert "0%" not in " ".join(item["reason"] for item in coaching["focus_topics"])

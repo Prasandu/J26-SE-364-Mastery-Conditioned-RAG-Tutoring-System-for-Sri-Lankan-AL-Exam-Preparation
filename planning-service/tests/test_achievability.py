@@ -605,3 +605,28 @@ def test_more_days_or_hours_never_make_the_status_worse() -> None:
         by_hours = [rank[_status(current, target, 60, hours)] for hours in (3, 10, 20)]
         assert by_days == sorted(by_days, reverse=True)
         assert by_hours == sorted(by_hours, reverse=True)
+
+
+def test_new_student_gets_a_welcome_instead_of_a_grade_estimate() -> None:
+    coaching = build_coaching_message(
+        student_name="Uvi",
+        days_left=90,
+        best_range="F (10–30%)",
+        target_grade="B",
+        status="out_of_reach",
+        focus_topics=[{"topic": "Alkane structure and naming", "reason": "start here"}],
+        suggested_hours_per_day=2.67,
+        study_days_per_week=3,
+        getting_started=True,
+    )
+
+    assert coaching.tone == "getting_started"
+    assert coaching.headline == "Welcome! Let's build your starting point."
+    assert coaching.body == (
+        "We don't have your results yet, so your first sessions cover the basics of your topics. "
+        "After your first quiz or paper, we'll estimate your progress towards B."
+    )
+    text = f"{coaching.headline} {coaching.body}".lower()
+    assert "f (10" not in text and "focus on your best" not in text and "0%" not in text
+    assert coaching.focus_topics[0].reason == "start here"
+    assert "3 study days" in coaching.daily_suggestion

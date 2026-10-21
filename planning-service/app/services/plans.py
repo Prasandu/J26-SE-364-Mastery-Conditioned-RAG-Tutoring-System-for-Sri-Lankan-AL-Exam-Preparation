@@ -195,7 +195,8 @@ def build_plan_achievability(
             {
                 "topic_id": topic_id,
                 "exam_weight": effective_exam_weight(topic.exam_weight),
-                "mastery": float(state.mastery) if state is not None else 0.0,
+                # No results yet: the same neutral estimate the planner uses (not 0%).
+                "mastery": float(state.mastery) if state is not None else NEUTRAL_PRIOR_MASTERY,
                 "prerequisites": list(getattr(topic, "prerequisites", None) or []),
                 "prerequisite_mastery": {
                     prerequisite: float(state_by_id[prerequisite].mastery)
@@ -204,9 +205,11 @@ def build_plan_achievability(
                 },
             }
         )
-        mastery = float(state.mastery) if state is not None else 0.0
+        mastery = float(state.mastery) if state is not None else NEUTRAL_PRIOR_MASTERY
         trend = float(getattr(state, "trend", 0)) if state is not None else 0.0
-        if trend < -0.01:
+        if state is None:
+            reason = "start here"
+        elif trend < -0.01:
             reason = "recent mastery is declining"
         elif mastery < 0.45:
             reason = f"mastery is {round(mastery * 100)}%"
@@ -290,6 +293,8 @@ def build_plan_achievability(
         focus_topics=ordered_focus_topics,
         suggested_hours_per_day=suggested_hours_per_day,
         study_days_per_week=study_days or None,
+        # No assessments yet: welcome the student instead of estimating a grade.
+        getting_started=evidence_count == 0,
     )
     return {
         **asdict(report),

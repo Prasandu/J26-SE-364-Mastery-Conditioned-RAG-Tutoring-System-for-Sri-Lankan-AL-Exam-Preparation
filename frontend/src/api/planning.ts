@@ -71,7 +71,7 @@ export interface CoachingMessage {
     reason: string;
   }[];
   daily_suggestion: string;
-  tone: "on_track" | "stretch" | "ambitious";
+  tone: "on_track" | "stretch" | "ambitious" | "getting_started";
 }
 
 export interface AchievabilityReport {

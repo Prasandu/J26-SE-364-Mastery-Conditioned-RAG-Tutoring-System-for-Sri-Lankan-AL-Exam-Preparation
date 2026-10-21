@@ -128,7 +128,7 @@ class CoachingMessageResponse(BaseModel):
     body: str
     focus_topics: list[CoachingFocusTopicResponse]
     daily_suggestion: str
-    tone: Literal["on_track", "stretch", "ambitious"]
+    tone: Literal["on_track", "stretch", "ambitious", "getting_started"]
 
 
 class PlanResponse(BaseModel):

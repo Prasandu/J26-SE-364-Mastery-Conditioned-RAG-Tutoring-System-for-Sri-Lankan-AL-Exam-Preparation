@@ -75,7 +75,7 @@ class CoachingMessage:
     body: str
     focus_topics: tuple[CoachingFocusTopic, ...]
     daily_suggestion: str
-    tone: Literal["on_track", "stretch", "ambitious"]
+    tone: Literal["on_track", "stretch", "ambitious", "getting_started"]
 
 
 def build_coaching_message(
@@ -87,19 +87,33 @@ def build_coaching_message(
     focus_topics: list[dict[str, str]],
     suggested_hours_per_day: float,
     study_days_per_week: int | None = None,
+    getting_started: bool = False,
 ) -> CoachingMessage:
     """Build a warm, concise study message using the student's current plan.
 
     With ``study_days_per_week``, ``suggested_hours_per_day`` means hours on
     each study day, so a Mon/Wed/Sat student is told "2 hours on each of your
     3 study days" rather than an average over all seven days.
+
+    With ``getting_started`` (no assessment results yet) the student is
+    welcomed instead of being given a grade estimate, which would rest on no
+    evidence at all.
     """
     if days_left < 0:
         raise ValueError("days_left cannot be negative.")
     _validate_nonnegative_finite("suggested_hours_per_day", suggested_hours_per_day)
 
-    tone: Literal["on_track", "stretch", "ambitious"]
-    if status == "on_track":
+    tone: Literal["on_track", "stretch", "ambitious", "getting_started"]
+    body_limit = 22
+    if getting_started:
+        tone = "getting_started"
+        headline = "Welcome! Let's build your starting point."
+        body = (
+            "We don't have your results yet, so your first sessions cover the basics of your topics. "
+            f"After your first quiz or paper, we'll estimate your progress towards {target_grade}."
+        )
+        body_limit = 30
+    elif status == "on_track":
         tone = "on_track"
         headline = "You're on track, keep your pace."
         body = (
@@ -137,7 +151,7 @@ def build_coaching_message(
     return CoachingMessage(
         greeting=f"Dear {(student_name.strip() or 'there').split()[0]},",
         headline=_whole_sentences(headline, 8),
-        body=_whole_sentences(body, 22),
+        body=_whole_sentences(body, body_limit),
         focus_topics=focus,
         daily_suggestion=daily_suggestion,
         tone=tone,

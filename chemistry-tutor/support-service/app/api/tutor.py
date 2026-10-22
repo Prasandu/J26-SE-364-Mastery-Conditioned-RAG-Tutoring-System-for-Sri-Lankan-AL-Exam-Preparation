@@ -33,7 +33,7 @@ def ask(request: Request, body: AskRequest, db: Session = Depends(get_db)) -> As
     """Curriculum-grounded answer: retrieves relevant NIE passages, answers from
     them only, and returns citations. Abstains if no relevant evidence is found.
     """
-    result = answer_question(db, body.question, body.language)
+    result = answer_question(db, body.question, body.language, concise=body.concise)
     citations = [
         Citation(
             document_title=c.document_title,

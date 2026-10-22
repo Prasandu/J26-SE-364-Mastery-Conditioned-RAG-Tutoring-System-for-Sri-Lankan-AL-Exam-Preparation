@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user_id, require_self
 from app.db import get_db
 from app.rate_limit import limiter
 from app.schemas.consultation import ConsultationResponse, WeakTopicResponse
@@ -41,13 +42,19 @@ def _to_progress_response(p) -> QuestionProgressResponse:
 
 
 @router.get("/students/{student_id}/progress", response_model=list[QuestionProgressResponse])
-def student_progress(student_id: str, db: Session = Depends(get_db)) -> list[QuestionProgressResponse]:
+def student_progress(
+    student_id: str, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_id)
+) -> list[QuestionProgressResponse]:
+    require_self(student_id, current_user_id)
     progress = get_student_progress(db, student_id)
     return [_to_progress_response(p) for p in progress]
 
 
 @router.get("/students/{student_id}/interventions", response_model=list[InterventionResponse])
-def student_interventions(student_id: str, db: Session = Depends(get_db)) -> list[InterventionResponse]:
+def student_interventions(
+    student_id: str, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_id)
+) -> list[InterventionResponse]:
+    require_self(student_id, current_user_id)
     interventions = get_interventions(db, student_id)
     record_interventions(db, student_id, interventions)
     return [
@@ -58,8 +65,9 @@ def student_interventions(student_id: str, db: Session = Depends(get_db)) -> lis
 
 @router.get("/students/{student_id}/intervention-history", response_model=list[InterventionHistoryItem])
 def student_intervention_history(
-    student_id: str, db: Session = Depends(get_db)
+    student_id: str, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_id)
 ) -> list[InterventionHistoryItem]:
+    require_self(student_id, current_user_id)
     history = get_intervention_history(db, student_id)
     return [
         InterventionHistoryItem(
@@ -74,7 +82,10 @@ def student_intervention_history(
 
 
 @router.get("/students/{student_id}/dashboard", response_model=DashboardResponse)
-def student_dashboard(student_id: str, db: Session = Depends(get_db)) -> DashboardResponse:
+def student_dashboard(
+    student_id: str, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_id)
+) -> DashboardResponse:
+    require_self(student_id, current_user_id)
     d = get_student_dashboard(db, student_id)
     return DashboardResponse(
         total_attempts=d.total_attempts,
@@ -88,7 +99,10 @@ def student_dashboard(student_id: str, db: Session = Depends(get_db)) -> Dashboa
 
 
 @router.get("/students/{student_id}/practice/review-queue", response_model=list[FlaggedQuestionResponse])
-def student_review_queue(student_id: str, db: Session = Depends(get_db)) -> list[FlaggedQuestionResponse]:
+def student_review_queue(
+    student_id: str, db: Session = Depends(get_db), current_user_id: str = Depends(get_current_user_id)
+) -> list[FlaggedQuestionResponse]:
+    require_self(student_id, current_user_id)
     flagged = list_review_queue(db, student_id)
     return [
         FlaggedQuestionResponse(
@@ -112,8 +126,12 @@ def student_review_queue(student_id: str, db: Session = Depends(get_db)) -> list
 @router.get("/students/{student_id}/consultation", response_model=ConsultationResponse)
 @limiter.limit("10/minute")
 def student_consultation(
-    request: Request, student_id: str, db: Session = Depends(get_db)
+    request: Request,
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id),
 ) -> ConsultationResponse:
+    require_self(student_id, current_user_id)
     result = generate_consultation(db, student_id)
     return ConsultationResponse(
         has_data=result.has_data,
@@ -135,8 +153,12 @@ def student_consultation(
 @router.get("/students/{student_id}/wivarana-report", response_model=WivaranaReportResponse)
 @limiter.limit("10/minute")
 def student_wivarana_report(
-    request: Request, student_id: str, db: Session = Depends(get_db)
+    request: Request,
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id),
 ) -> WivaranaReportResponse:
+    require_self(student_id, current_user_id)
     report = generate_wivarana_report(db, student_id)
     return WivaranaReportResponse(
         student_id=report.student_id,

@@ -33,4 +33,9 @@ class FlaggedQuestion(Base):
     correct_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
     # "pending" until the student has been walked through an explanation.
     status: Mapped[str] = mapped_column(String(20), default="pending")
+    # The full step-by-step explanation shown to the student (from /explain
+    # or hint level 5), stored so the Wivarana report can show what they
+    # actually saw instead of regenerating it. Null if solved by re-attempt
+    # (no explanation was ever generated) or still pending.
+    explanation_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))

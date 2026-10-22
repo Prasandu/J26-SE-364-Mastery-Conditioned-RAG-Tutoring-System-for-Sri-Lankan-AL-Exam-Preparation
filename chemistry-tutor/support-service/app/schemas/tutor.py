@@ -16,6 +16,9 @@ class AskRawResponse(BaseModel):
 class AskRequest(BaseModel):
     question: str = Field(max_length=MAX_QUESTION_LENGTH)
     language: str = "en"  # "en" or "si"
+    # True for voice-chat questions: shorter, spoken-style answer — faster
+    # to generate and shorter to listen to. False (default) for text chat.
+    concise: bool = False
 
 
 class Citation(BaseModel):

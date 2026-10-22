@@ -11,6 +11,7 @@ IT23278530.pdf
 docs/
 infra/
 shared/
+state/
 CLAUDE.md
 .claude/
 migrations/

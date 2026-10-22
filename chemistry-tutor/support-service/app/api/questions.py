@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user_id, require_self
 from app.db import get_db
 from app.models.verified_question import VerifiedQuestion
 from app.schemas.questions import (
@@ -58,7 +59,13 @@ def get_question(question_code: str, db: Session = Depends(get_db)) -> QuestionS
 
 
 @router.post("/questions/{question_code}/hint", response_model=HintResponse)
-def request_hint(question_code: str, request: HintRequest, db: Session = Depends(get_db)) -> HintResponse:
+def request_hint(
+    question_code: str,
+    request: HintRequest,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id),
+) -> HintResponse:
+    require_self(request.student_id, current_user_id)
     q = _get_question_or_404(db, question_code)
     level = choose_hint_level(request.attempts, request.hints_used, request.requested_full_solution)
     record_hint_event(db, request.student_id, question_code, level)
@@ -67,8 +74,12 @@ def request_hint(question_code: str, request: HintRequest, db: Session = Depends
 
 @router.post("/questions/{question_code}/check", response_model=AnswerCheckResponse)
 def check_answer(
-    question_code: str, request: AnswerCheckRequest, db: Session = Depends(get_db)
+    question_code: str,
+    request: AnswerCheckRequest,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id),
 ) -> AnswerCheckResponse:
+    require_self(request.student_id, current_user_id)
     q = _get_question_or_404(db, question_code)
     attempt = record_attempt(
         db,

@@ -1,16 +1,17 @@
+import { authFetch } from "./apiClient";
 import type { HintResponse } from "../types/question";
 import type { CheckFlaggedAnswerResponse, Explanation, FlaggedQuestion } from "../types/practice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function getReviewQueue(studentId: string): Promise<FlaggedQuestion[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/students/${studentId}/practice/review-queue`);
+  const res = await authFetch(`${API_BASE_URL}/api/v1/students/${studentId}/practice/review-queue`);
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
   return res.json();
 }
 
 export async function explainFlaggedQuestion(flaggedQuestionId: number): Promise<Explanation> {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_BASE_URL}/api/v1/practice/flagged-questions/${flaggedQuestionId}/explain`,
     { method: "POST" },
   );
@@ -22,7 +23,7 @@ export async function checkFlaggedAnswer(
   flaggedQuestionId: number,
   submittedAnswer: string,
 ): Promise<CheckFlaggedAnswerResponse> {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_BASE_URL}/api/v1/practice/flagged-questions/${flaggedQuestionId}/check`,
     {
       method: "POST",
@@ -40,7 +41,7 @@ export async function requestFlaggedHint(
   hintsUsed: number,
   requestedFullSolution: boolean,
 ): Promise<HintResponse> {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_BASE_URL}/api/v1/practice/flagged-questions/${flaggedQuestionId}/hint`,
     {
       method: "POST",

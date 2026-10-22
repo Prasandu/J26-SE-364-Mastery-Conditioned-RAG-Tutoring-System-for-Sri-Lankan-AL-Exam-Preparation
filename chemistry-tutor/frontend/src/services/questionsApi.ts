@@ -1,3 +1,4 @@
+import { authFetch } from "./apiClient";
 import type { AnswerCheckResponse, HintResponse, QuestionSummary } from "../types/question";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -15,7 +16,7 @@ export async function requestHint(
   hintsUsed: number,
   requestedFullSolution: boolean,
 ): Promise<HintResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/questions/${questionCode}/hint`, {
+  const res = await authFetch(`${API_BASE_URL}/api/v1/questions/${questionCode}/hint`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -36,7 +37,7 @@ export async function checkAnswer(
   hintsUsed: number,
   timeSeconds: number,
 ): Promise<AnswerCheckResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/questions/${questionCode}/check`, {
+  const res = await authFetch(`${API_BASE_URL}/api/v1/questions/${questionCode}/check`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

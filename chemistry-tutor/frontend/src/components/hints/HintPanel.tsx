@@ -1,3 +1,4 @@
+import { FormattedText } from "../tutor/FormattedText";
 import type { HintResponse } from "../../types/question";
 
 export function HintPanel({ hints }: { hints: HintResponse[] }) {
@@ -10,7 +11,9 @@ export function HintPanel({ hints }: { hints: HintResponse[] }) {
           <p className="text-xs font-semibold text-amber-700">
             Level {h.level} — {h.level_name}
           </p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{h.content}</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+            <FormattedText text={h.content} />
+          </p>
         </div>
       ))}
     </div>

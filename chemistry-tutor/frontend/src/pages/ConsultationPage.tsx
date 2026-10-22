@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FormattedText } from "../components/tutor/FormattedText";
 import { useAuth } from "../contexts/AuthContext";
 import { getConsultation } from "../services/studentsApi";
 import type { Consultation } from "../types/consultation";
@@ -58,7 +59,7 @@ export function ConsultationPage() {
               <>
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-5">
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-blue-950">
-                    {consultation.revision_plan}
+                    <FormattedText text={consultation.revision_plan} />
                   </p>
                 </div>
 

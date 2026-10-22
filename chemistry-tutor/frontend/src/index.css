@@ -1,19 +1,22 @@
 @import "tailwindcss";
 
-/* Avatar mouth animation (TutorPage voice-chat mode) — toggles the SVG
-   mouth ellipse's vertical radius to look like talking. Not phoneme-synced,
-   just an on/off "is speaking" cue. */
-@keyframes avatar-talk {
+/* Avatar (TutorPage voice-chat mode). The mouth itself is driven directly
+   by a continuous mouthOpenness value in React (real audio amplitude for
+   Sinhala, word-boundary pulses for English — see useSpeechSynthesis.ts),
+   not a CSS loop. These keyframes are just the idle/listening liveliness. */
+@keyframes avatar-blink {
   0%,
+  92%,
   100% {
-    ry: 2;
+    transform: scaleY(1);
   }
-  50% {
-    ry: 9;
+  96% {
+    transform: scaleY(0.1);
   }
 }
-.avatar-mouth-speaking {
-  animation: avatar-talk 0.35s ease-in-out infinite;
+.avatar-eye-blinking {
+  animation: avatar-blink 4.5s ease-in-out infinite;
+  transform-origin: center;
 }
 
 @keyframes avatar-listen-ring {

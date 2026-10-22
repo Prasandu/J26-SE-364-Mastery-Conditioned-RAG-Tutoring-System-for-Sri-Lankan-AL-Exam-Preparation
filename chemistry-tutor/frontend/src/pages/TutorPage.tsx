@@ -101,7 +101,7 @@ export function TutorPage() {
 
       {voiceConversation.active && (
         <div className="border-b bg-white pb-3">
-          <Avatar phase={voiceConversation.phase} />
+          <Avatar phase={voiceConversation.phase} mouthOpenness={synth.mouthOpenness} />
           <div className="flex justify-center gap-2">
             {voiceConversation.phase === "paused" ? (
               <button

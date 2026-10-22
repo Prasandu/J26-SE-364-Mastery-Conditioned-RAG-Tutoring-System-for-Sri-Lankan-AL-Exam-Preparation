@@ -1,4 +1,5 @@
 import { SpeakButton } from "../voice/SpeakButton";
+import { FormattedText } from "./FormattedText";
 import type { ChatMessage, Language } from "../../types/tutor";
 
 export function ChatMessageItem({
@@ -17,7 +18,9 @@ export function ChatMessageItem({
           isUser ? "bg-blue-800 text-white" : "bg-slate-100 text-slate-900"
         }`}
       >
-        <p className="whitespace-pre-wrap">{message.text}</p>
+        <p className="whitespace-pre-wrap">
+          <FormattedText text={message.text} />
+        </p>
 
         {!isUser && (
           <div className="mt-2">

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
+import { FormattedText } from "../components/tutor/FormattedText";
 import { useAuth } from "../contexts/AuthContext";
 import { getWivaranaReport } from "../services/studentsApi";
 import type { WivaranaReport } from "../types/report";
@@ -119,7 +120,9 @@ export function ReportPage() {
             </p>
 
             <h2 className="mt-4 text-sm font-semibold text-slate-700">Explanation</h2>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{report.narrative}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+              <FormattedText text={report.narrative} />
+            </p>
 
             {report.question_evidence.length > 0 && (
               <>
@@ -133,7 +136,9 @@ export function ReportPage() {
                       <span className="font-medium">
                         {e.question_code} (Unit {e.unit}) — {STATUS_LABEL[e.status] ?? e.status}
                       </span>
-                      <p className="mt-1 text-slate-700">{e.explanation}</p>
+                      <p className="mt-1 text-slate-700">
+                        <FormattedText text={e.explanation} />
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -159,19 +164,23 @@ export function ReportPage() {
                       <p className="mt-2 text-xs font-semibold uppercase text-slate-500">
                         Theory
                       </p>
-                      <p className="text-sm text-slate-700">{c.theory_explanation}</p>
+                      <p className="text-sm text-slate-700">
+                        <FormattedText text={c.theory_explanation} />
+                      </p>
 
                       <p className="mt-2 text-xs font-semibold uppercase text-slate-500">
                         Step by step
                       </p>
                       <p className="whitespace-pre-wrap text-sm text-slate-700">
-                        {c.worked_solution}
+                        <FormattedText text={c.worked_solution} />
                       </p>
 
                       <p className="mt-2 text-xs font-semibold uppercase text-slate-500">
                         Correct answer
                       </p>
-                      <p className="text-sm font-medium text-green-700">{c.final_answer}</p>
+                      <p className="text-sm font-medium text-green-700">
+                        <FormattedText text={c.final_answer} />
+                      </p>
                     </div>
                   ))}
                 </div>

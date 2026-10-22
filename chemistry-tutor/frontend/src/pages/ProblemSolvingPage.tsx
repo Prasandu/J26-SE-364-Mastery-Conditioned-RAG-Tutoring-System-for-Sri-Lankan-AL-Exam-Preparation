@@ -313,7 +313,7 @@ export function ProblemSolvingPage() {
 
         {mode === "mistakes" && selectedFlagged && (
           <div className="mx-auto max-w-2xl">
-            <p className="mb-2 text-xs text-slate-400">Reviewing as: {studentId}</p>
+            
             <h1 className="text-lg font-semibold">
               {selectedFlagged.topic}
               {selectedFlagged.sub_topic && (

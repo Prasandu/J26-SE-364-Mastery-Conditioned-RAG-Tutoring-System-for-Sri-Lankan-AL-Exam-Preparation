@@ -12,6 +12,7 @@
   "assistant.aiLabel": "AI-generated assistance: check it against the cited pages and with your teacher.",
   "assistant.asking": "Finding the answer in the sources…",
   "assistant.cached": "Previously answered",
+  "assistant.cached_refusal": "Previous source-check result reused; no new answer was generated.",
   "assistant.citation.pages": "{{title}} ({{year}}), {{section}}: PDF p. {{pdfPage}}, printed p. {{printedPage}}",
   "assistant.citations": "Sources",
   "assistant.end_chat": "End chat",
@@ -551,7 +552,7 @@
   "ui.journey.report": "Report",
   "ui.journey.writing_notice": "Your own answers are kept in this tab until refresh. They are not automatically graded or teacher reviewed.",
   "ui.journey.prediction": "What do you predict? Explain your reasoning before starting.",
-  "ui.journey.answer_required": "Answer each question and write a prediction to continue to setup.",
+  "ui.journey.answer_required": "Answer the questions and write a prediction, or choose Skip pre-lab. Safety checks remain required.",
   "ui.journey.equipment_ack": "I have reviewed the apparatus and its purpose in this practical.",
   "ui.journey.setup_note": "Arrange the apparatus on the bench. When a step requires a measurement or setting, use the gear beside the relevant instrument. Moving apparatus does not perform a procedure step.",
   "ui.journey.start": "Start practical",
@@ -561,5 +562,15 @@
   "ui.journey.previous": "Previous stage",
   "ui.journey.continue": "Continue to {{stage}}",
   "ui.journey.complete_bench": "Complete and record the required trials, then select Complete practice in Protocol to unlock reflection.",
-  "ui.journey.selected_questions": "Selected questions adapted from this practical’s handbook pre-lab and post-lab sections."
+  "ui.journey.selected_questions": "Selected questions adapted from this practical’s handbook pre-lab and post-lab sections.",
+  "ui.journey.skip_prelab": "Skip pre-lab",
+  "ui.journey.skipped_note": "Pre-lab was skipped. Unanswered questions are not marked complete. Safety checks are still required.",
+  "ui.journey.not_answered": "Not answered",
+  "ui.answers.check": "Check answer",
+  "ui.answers.empty": "Write an answer before checking.",
+  "ui.answers.matches_guide": "The checked relationship or required concepts match the source guide.",
+  "ui.answers.needs_revision": "The checked calculation or relationship differs from the source guide. Review your answer.",
+  "ui.answers.review_required": "Your answer was received. This response needs teacher review; the available rules cannot reliably judge it.",
+  "ui.answers.scope": "This is a limited source-guide check, not a grade. English, Sinhala and mixed answers are accepted; no automatic check guarantees every explanation is correct.",
+  "ui.answers.guide": "Compare with the source answer guide"
 }

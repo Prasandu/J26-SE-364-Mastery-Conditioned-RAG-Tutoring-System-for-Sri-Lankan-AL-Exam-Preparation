@@ -1,8 +1,8 @@
 """Deterministic hybrid retrieval over the active knowledge version.
 
-1. Exact heading match: a specific (multi-word) section heading quoted in the question.
-2. Exact cosine vector search (E5 "query: " embedding) over in-scope chunks.
-3. Merge: heading matches first, then vector order; de-duplicated by chunk ID; ties broken by
+1. Bounded laboratory-topic hints select directly relevant, in-scope source passages.
+2. Exact heading match and cosine search (E5 "query: " embedding) over in-scope chunks.
+3. Merge: topic passages, heading matches, then vector order; de-duplicated; ties broken by
    chunk ID. At most 8 candidates; at most 4 are passed to generation.
 
 A similarity score is never the sole sufficiency test: sufficiency is decided by the generator
@@ -14,8 +14,9 @@ import unicodedata
 from dataclasses import dataclass
 
 from app.knowledge.models import KnowledgeChunk
-from app.rag.embeddings import EmbeddingProvider
+from app.rag.embeddings import MODEL_MAX_TOKENS, QUERY_PREFIX, EmbeddingProvider
 from app.rag.repository import KnowledgeRepository, KnowledgeUnavailable
+from app.rag.topics import TOPIC_VERSION, topic_matches, topic_query
 
 MAX_CANDIDATES = 8
 MAX_EVIDENCE = 4
@@ -87,7 +88,7 @@ class Retriever:
         """Identifies everything that shapes retrieval (part of the answer cache key)."""
         return (
             f"{self._embeddings.model_id}@{self._embeddings.revision}"
-            f"|heading+cosine|candidates={MAX_CANDIDATES}|evidence={MAX_EVIDENCE}"
+            f"|heading+cosine+{TOPIC_VERSION}|candidates={MAX_CANDIDATES}|evidence={MAX_EVIDENCE}"
         )
 
     def active_version(self) -> str:
@@ -105,7 +106,11 @@ class Retriever:
             self._embeddings.revision,
         ):
             raise KnowledgeUnavailable("query embedding model differs from the knowledge base")
-        [query] = self._embeddings.embed_queries([question])
+        expanded = question if vector_only else topic_query(question)
+        # Preserve the embedding provider's token limit; never truncate the learner's question.
+        if self._embeddings.count_tokens(f"{QUERY_PREFIX}{expanded}") > MODEL_MAX_TOKENS:
+            expanded = question
+        [query] = self._embeddings.embed_queries([expanded])
         scored = self._repository.vector_search(active.knowledge_version, query, MAX_CANDIDATES)
         scores = {c.chunk_id: s for c, s in scored}
 
@@ -113,12 +118,16 @@ class Retriever:
         seen: set[str] = set()
         if not vector_only:
             chunks = self._repository.chunks(active.knowledge_version)
+            for chunk in topic_matches(question, chunks):
+                merged.append(Candidate(chunk, scores.get(chunk.chunk_id), False))
+                seen.add(chunk.chunk_id)
             heading_hits = heading_matches(question, chunks)
             # Heading matches without a vector score rank after scored ones, then by chunk ID.
             heading_hits.sort(key=lambda c: (-scores.get(c.chunk_id, -2.0), c.chunk_id))
             for chunk in heading_hits:
-                merged.append(Candidate(chunk, scores.get(chunk.chunk_id), True))
-                seen.add(chunk.chunk_id)
+                if chunk.chunk_id not in seen:
+                    merged.append(Candidate(chunk, scores.get(chunk.chunk_id), True))
+                    seen.add(chunk.chunk_id)
         for chunk, score in scored:
             if chunk.chunk_id not in seen:
                 merged.append(Candidate(chunk, score, False))

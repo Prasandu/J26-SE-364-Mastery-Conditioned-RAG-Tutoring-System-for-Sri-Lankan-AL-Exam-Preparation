@@ -26,6 +26,8 @@ import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
 import teachingDefinitions from '../../../../content/experiments/teaching/handbook21-30.v1.json';
 
+export { checkWrittenAnswer, studentTextLocale } from '@vlab/simulation-core';
+
 export const teachingPractice = {
   bundled: teachingDefinitions.map(parseTeachingDefinition),
   parse: parseTeachingDefinition,

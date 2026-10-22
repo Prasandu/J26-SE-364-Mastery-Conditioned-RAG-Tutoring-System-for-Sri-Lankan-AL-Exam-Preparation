@@ -158,6 +158,9 @@ export const createAdminClient = ({
 }): AdminClient => {
   const doFetch = fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const root = `${baseUrl.replace(/\/+$/, '')}/admin/dev`;
+  // A hung backend request (e.g. a stalled database connection) must not leave the admin console
+  // spinning on "Loading..." forever; fail it after a bound and let the UI show "unavailable".
+  const REQUEST_TIMEOUT_MS = 15_000;
   const call = async <T>(
     method: string,
     path: string,
@@ -170,6 +173,7 @@ export const createAdminClient = ({
         method,
         headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch {
       throw new EngineError('network_unavailable', null, true);

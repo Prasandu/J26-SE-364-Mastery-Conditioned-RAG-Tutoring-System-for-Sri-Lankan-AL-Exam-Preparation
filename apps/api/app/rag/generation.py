@@ -24,7 +24,7 @@ from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-PROMPT_VERSION = "assistant-prompt-2.0.0"
+PROMPT_VERSION = "assistant-prompt-2.1.0"
 MAX_ANSWER_WORDS = 180
 MIN_SPAN_CHARS = 12
 GLOSSARY_PATH = (
@@ -51,7 +51,13 @@ Rules:
    unchanged in Sinhala answers. At most 180 words.
 6. Do not grade the student, guess their results, or describe their session; the session summary
    is context only.
-7. Do not include URLs, markup or citations in the answer text itself."""
+7. Do not include URLs, markup or citations in the answer text itself.
+8. Students may use informal English, spelling mistakes or mixed chemical notation. Interpret
+   their laboratory question using the supplied evidence; do not refuse merely for grammar.
+   If they say "wash all instruments", answer about the glassware covered by the evidence;
+   do not assume every kind of instrument can be washed the same way.
+9. Keep answers focused, normally with one to three short supported claims. Do not recite an
+   entire cleaning recipe or unrelated procedure when the student only asks why."""
 
 
 #: Technical failure kinds that may move a request to the next provider (failover routing).
@@ -566,7 +572,7 @@ def build_generation_provider(
     model: str | None = None,
     api_key: str | None = None,
     reasoning_effort: str = "low",
-    max_output_tokens: int = 512,
+    max_output_tokens: int = 2048,
     timeout_seconds: float = 20.0,
 ) -> GenerationProvider:
     """Exactly the configured provider; there is no fallback between providers or models."""

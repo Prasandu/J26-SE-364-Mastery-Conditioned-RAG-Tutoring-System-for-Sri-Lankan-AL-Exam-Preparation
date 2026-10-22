@@ -18,6 +18,7 @@ export interface PracticeJourneyState {
   safety: boolean;
   equipment: boolean;
   started: boolean;
+  prelabSkipped: boolean;
 }
 export const emptyPracticeJourney = (): PracticeJourneyState => ({
   stage: 'overview',
@@ -27,4 +28,5 @@ export const emptyPracticeJourney = (): PracticeJourneyState => ({
   safety: false,
   equipment: false,
   started: false,
+  prelabSkipped: false,
 });

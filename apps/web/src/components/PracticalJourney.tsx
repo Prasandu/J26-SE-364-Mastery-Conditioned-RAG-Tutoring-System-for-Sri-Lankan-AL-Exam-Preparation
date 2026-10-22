@@ -1,3 +1,4 @@
+import { WrittenAnswerCheck } from './WrittenAnswerCheck';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
@@ -52,27 +53,37 @@ export function PracticalJourney({
   const reflected = answered(reflection, s.reflection);
   const allowed = (stage: PracticeStage) => {
     if (stage === 'overview' || stage === 'prelab') return true;
-    if (stage === 'setup') return prepared || s.started;
+    if (stage === 'setup') return prepared || s.prelabSkipped || s.started;
     if (stage === 'reflection') return completed && s.started;
     if (stage === 'report')
-      return completed && s.started && reflected && prepared && s.safety && s.equipment;
+      return (
+        completed &&
+        s.started &&
+        reflected &&
+        (prepared || s.prelabSkipped) &&
+        s.safety &&
+        s.equipment
+      );
     return s.started;
   };
   const writing = (kind: 'prelab' | 'reflection', prompts: string[]) => (
     <div className="practical-journey__questions">
       {prompts.map((prompt, index) => (
-        <label key={index} htmlFor={`${formId}-${kind}-${index}`}>
-          <span>
-            {index + 1}. {prompt}
-          </span>
-          <textarea
-            id={`${formId}-${kind}-${index}`}
-            rows={4}
-            maxLength={4000}
-            value={s[kind][index] ?? ''}
-            onChange={(event) => update({ [kind]: { ...s[kind], [index]: event.target.value } })}
-          />
-        </label>
+        <div key={index}>
+          <label htmlFor={`${formId}-${kind}-${index}`}>
+            <span>
+              {index + 1}. {prompt}
+            </span>
+            <textarea
+              id={`${formId}-${kind}-${index}`}
+              rows={4}
+              maxLength={4000}
+              value={s[kind][index] ?? ''}
+              onChange={(event) => update({ [kind]: { ...s[kind], [index]: event.target.value } })}
+            />
+          </label>
+          <WrittenAnswerCheck value={s[kind][index] ?? ''} />
+        </div>
       ))}
     </div>
   );
@@ -81,7 +92,7 @@ export function PracticalJourney({
       {prompts.map((prompt, index) => (
         <div key={index}>
           <dt>{prompt}</dt>
-          <dd>{values[index]}</dd>
+          <dd>{values[index] || t('ui.journey.not_answered')}</dd>
         </div>
       ))}
     </dl>
@@ -124,11 +135,20 @@ export function PracticalJourney({
               onChange={(event) => update({ prediction: event.target.value })}
             />
           </label>
+          <WrittenAnswerCheck value={s.prediction} />
           {!prepared && <p className="hint-text">{t('ui.journey.answer_required')}</p>}
+          <button
+            type="button"
+            className="button"
+            onClick={() => update({ prelabSkipped: true, stage: 'setup' })}
+          >
+            {t('ui.journey.skip_prelab')}
+          </button>
           <div className="practical-journey__sources">{sources}</div>
         </section>
       ) : s.stage === 'setup' ? (
         <section className="card practical-journey__document">
+          {s.prelabSkipped && !prepared && <p className="notice">{t('ui.journey.skipped_note')}</p>}
           <h3>{t('teaching.instruments')}</h3>
           <ul>
             {apparatus.map((item, i) => (
@@ -167,7 +187,7 @@ export function PracticalJourney({
           <button
             type="button"
             className="button button--primary"
-            disabled={!prepared || !s.safety || !s.equipment}
+            disabled={(!prepared && !s.prelabSkipped) || !s.safety || !s.equipment}
             onClick={() => {
               if (onStart()) update({ started: true, stage: 'workbench' });
             }}
@@ -188,9 +208,10 @@ export function PracticalJourney({
           {s.stage === 'report' && (
             <section className="card practical-journey__document">
               <h3>{t('ui.journey.preparation_record')}</h3>
+              {s.prelabSkipped && !prepared && <p>{t('ui.journey.skipped_note')}</p>}
               {reportWriting(prelab, s.prelab)}
               <h3>{t('ui.journey.prediction')}</h3>
-              <p>{s.prediction}</p>
+              <p className="handbook-lab__notes">{s.prediction || t('ui.journey.not_answered')}</p>
               <h3>{t('ui.journey.reflection')}</h3>
               {reportWriting(reflection, s.reflection)}
               <p>{t('ui.journey.writing_notice')}</p>

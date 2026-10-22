@@ -1,6 +1,108 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-22 (workbench interactions; practicals 21–30 and local simulation authoring)_
+_Last updated: 2026-10-22 (full learner journeys; workbench interactions; practicals 21–30 and local simulation authoring)_
+
+## Admin availability restoration (2026-10-22)
+
+- The browser API on port 9100 had development admin enabled and PostgreSQL storage selected,
+  but its active short-path environment lacked the locked `psycopg-pool==3.3.3` dependency.
+  Installed that one package from the local uv cache; no package upgrades or removals were needed.
+  Missing database-driver imports now become typed `admin_storage_error` responses rather than
+  unhandled exceptions without CORS headers.
+- Read-only connection checks reached TCP but PostgreSQL SSL negotiation timed out on both
+  configured pooler ports. No successful database query or migration is claimed. The user
+  explicitly selected temporary local file storage; restarted port 9100 with
+  `LAB_ADMIN_REPOSITORY=file`, preserving existing local records and leaving Supabase unchanged.
+  Local edits do not sync to Supabase automatically. Private `.env` contents were not edited.
+- Admin loading now distinguishes disabled/non-local access (404), storage failures and other
+  API errors. Recoverable failures have a Try again action; no hard refresh is needed after
+  storage becomes available. English/Sinhala messages preserve the distinction.
+- The launcher accepts an explicit `-AdminRepository file|postgres` and synchronizes locked
+  dependencies before starting, preserving extra installed packages. To retain the temporary
+  local choice on another launch, pass `-AdminRepository file`; without the option, private
+  environment configuration still applies.
+- Verified live `/status`, drafts, library, knowledge, documents, users, translations, audit,
+  settings and simulation-model endpoints return HTTP 200. A headless installed Chrome browser
+  rendered the admin console with 45 local drafts and no unavailable notice; screenshot is
+  private at `data/admin-restored.png`. UI suite: 38 passed. Admin/access API suite: 68 passed
+  before the additional typed-error/CORS regression. Targeted lint/mypy and web type checks passed.
+
+## Support runtime and output-budget correction (2026-10-22)
+
+- Corrected the earlier diagnosis: the browser's served Vite configuration points to port
+  **9100**, whose API had failover enabled but still held knowledge `kb-exp04-1.0.0` in memory.
+  Port 8000 was a different disabled API. Always inspect the frontend's actual API address.
+- The user-approved live Groq diagnostic on the updated evidence returned HTTP 400,
+  `json_validate_failed`: 512 completion tokens exhausted before the structured JSON finished.
+  Raised the default generation budget to 2048 (settings, remote adapters, factory and sample
+  configuration); the launcher explicitly sets this budget and accepts `-Port 9100`.
+  Explicit alternate budgets remain configurable. No refusal triggers cross-provider failover.
+- A real Groq request with the larger budget produced a validated, page-cited answer to the
+  reported question on knowledge 1.1.0 (556 output tokens). This is one live regression check,
+  not a general factual-accuracy benchmark. Cleaning-reason questions now pass the unchanged
+  source reason sentence to generation rather than the surrounding cleaning recipe.
+- Model refusals are no longer cached indefinitely. An explicit resubmission can generate
+  again, while validated answers and deterministic unsupported-entity checks retain caching.
+  Cached refusals are labelled as reused source-check results rather than "Previously answered".
+- Health now exposes only the active/base knowledge version identities, making stale runtimes
+  visible without exposing passages, paths or credentials. The health contract remains compatible
+  with older instances that omit these optional fields.
+- Verification: 163 API checks passed; nine assistant UI checks and 54 schema-export checks
+  passed; web/contracts type checks, targeted Ruff/mypy, formatting and launcher syntax passed.
+
+## Grounded support: cleaning-question repair (2026-10-22)
+
+- The running local API's read-only health response reported `llm: disabled`. A disabled
+  provider cannot generate Groq/OpenAI answers. `scripts/dev/start-api.ps1` now accepts
+  `-LlmProvider failover` and resolves the repository root correctly. Stop the old backend
+  and restart with this option to use the configured Groq/OpenAI models and private keys.
+- Approved knowledge version `kb-exp04-1.1.0` adds the NIE handbook's glassware introduction,
+  PDF page 25 / printed page 17, which explicitly links clean glassware to accurate results.
+  The rebuilt corpus contains 15 chunks, 14 in scope. Text and E5 vectors stay private.
+- Bounded English/Sinhala retrieval hints distinguish cleaning apparatus from retaining
+  transfer washings. They rank relevant approved passages, never generate an answer.
+  Prompt 2.1.0 interprets informal questions and requests concise, source-supported claims.
+  Prompt/retrieval/knowledge versions invalidate old cached refusals. Citation, language,
+  formula, numerical and unsupported-entity validation remain enabled.
+- Query translation now follows the selected provider/order; disabled, fake, local-only and
+  offline modes do not construct a remote translation client merely because keys exist.
+- Validation: 177 focused API tests passed (assistant, knowledge, generation evaluation,
+  Groq/OpenAI adapters and failover). Ruff and strict mypy passed for the changed retrieval,
+  topic/translation code and regression tests. The real cached local E5 model retrieved the
+  new page first for the reported question, two English paraphrases and a Sinhala question.
+  Provider responses were mocked; no live Groq/OpenAI generation or new accuracy benchmark
+  is claimed. Published historical retrieval metrics still refer to knowledge 1.0.0.
+
+## Optional preparation and bilingual written-answer handling (2026-10-22)
+
+- Per the user's explicit choice, pre-lab questions may now be skipped using a labelled button.
+  In the shared 29-model journey, skipping preserves partial text, records that preparation was
+  skipped and unlocks setup only. Apparatus/safety acknowledgements remain required before the
+  bench; unanswered text is not counted as completed or correct. Reports show skipped/unanswered
+  preparation. Experiment 4 now has an explicit skip button to its existing mode/safety screen.
+- Written answers and predictions have an explicit Check answer action. Feedback follows the
+  language of the written response, independently of UI language, and disappears when edited.
+  This does not award grades, alter the chemistry state or ask an LLM to mark an answer correct.
+- Five existing Experiment 4 source guides have bounded deterministic checks: molar-concentration
+  relationship, preparation glassware, primary-standard examples and the two solution-preparation
+  calculations. English/Sinhala concepts, Unicode formulae, Sinhala grams and volume conversions
+  are recognized. Negated/ambiguous prose, unsupported paraphrases and questions without authored
+  checking rules require teacher review rather than receiving an invented correctness verdict.
+  Other practicals' open-ended answers are accepted bilingually but do not yet have automatic
+  chemistry rubrics. Source guides are available for comparison only after an explicit check.
+- Lab labels now recognize the existing Sinhala sodium-carbonate name aliases as the same chemical
+  as the accepted English names/formula. Comparison normalizes Unicode and joiners, while the
+  stored learner text is preserved. Unknown Sinhala names are no longer silently stripped away.
+- Assistant question-language detection is applied in both browser and service, including cache
+  language selection. English questions under a Sinhala UI receive English responses; Sinhala
+  questions under an English UI request Sinhala. Provider/knowledge availability remains required.
+  Error messages use the submitted question's language. Tests used offline/scripted providers.
+- Verification: complete core suite 231 passed; web suite 383 passed, followed by 23 targeted final
+  UI checks and 4 skip/bilingual/report regression checks. Assistant/language API checks: 53 passed on the final rerun.
+  Browser checks: 10 passed across desktop/tablet/mobile, with 2 expected desktop-only golden-path
+  skips. Web/core type checking, scoped ESLint/Ruff, formatting and the production build passed.
+  As before, the completed Windows test Vite server needed stopping by its verified port/PID before
+  Playwright teardown finished; the command exited 0. Developer configuration was not edited.
 
 ## Full learner journeys for practicals 1-30 (2026-10-22)
 
@@ -25,7 +127,16 @@ _Last updated: 2026-10-22 (workbench interactions; practicals 21–30 and local 
 - Simulation scope remains bounded guided practice. This UI change does not add automatic/manual
   modes to the other models or certify that all source branches have predictive physical models.
 - Verification this continuation: 378 web tests passed; web TypeScript and scoped ESLint passed.
-  Browser and production-build results are recorded below after completion.
+  Production web build and targeted formatting passed (existing large-chunk warning remains).
+- Browser verification: 94 student checks passed across desktop/tablet/mobile, including all 30
+  practicals, 2D/3D views, preparation gates, reflection/report, real dragging and Experiment 4's
+  golden path. Two desktop-only Experiment 4 checks were intentionally skipped on smaller projects.
+  All 3 admin author/preview/review/persistence checks passed at desktop/laptop/mobile sizes.
+- Admin test launch accepts optional `VLAB_E2E_PYTHON` for an existing interpreter when uv's cache
+  is inaccessible. This machine also needed `PYTHONPATH` to the existing API site-packages because
+  its virtual-environment configuration was disabled; no packages or .env files were changed.
+  Windows left the two test Vite servers alive after all cases; their exact loopback port/PID
+  identities were checked and those test processes stopped. Both Playwright commands then exited 0.
 
 ## Workbench interactions and apparatus coverage (2026-10-22)
 

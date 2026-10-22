@@ -1,5 +1,6 @@
 import json
 import logging
+import socket
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, TypeVar
@@ -48,6 +49,45 @@ class AppState:
     knowledge: KnowledgeRuntime
 
 
+def _warm_outbound_sockets(settings: Settings) -> None:
+    """Open and immediately close a raw connection to each external host this process will call.
+
+    On some machines the first outbound connection a background thread opens (DB driver, LLM
+    HTTP client) stalls for minutes even though the network itself is fine; a connection made
+    later, once any socket has already been opened, is fast. Paying that cost once here, up
+    front and on the main thread, keeps it off the first real request. Best-effort: a failure
+    here only means the real call pays the cost later, same as before this existed.
+    """
+    hosts: set[tuple[str, int]] = set()
+    if settings.llm_provider in ("groq", "failover"):
+        hosts.add(("api.groq.com", 443))
+    if settings.llm_provider in ("openai", "failover"):
+        hosts.add(("api.openai.com", 443))
+    for host, port in hosts:
+        try:
+            with socket.create_connection((host, port), timeout=10):
+                pass
+        except OSError as exc:
+            logger.warning("startup network warm-up failed for %s:%s: %s", host, port, exc)
+
+    # A bare TCP touch is not enough for Postgres: psycopg/libpq does its own connection setup
+    # (SSL negotiation, auth) the first time it runs, so warm it up for real.
+    db_url = settings.database_url.get_secret_value() if settings.database_url else None
+    uses_postgres = (
+        settings.repository == "postgres"
+        or settings.knowledge_repository == "postgres"
+        or settings.admin_repository == "postgres"
+    )
+    if db_url and uses_postgres:
+        try:
+            import psycopg
+
+            with psycopg.connect(db_url, connect_timeout=15) as conn:
+                conn.execute("select 1")
+        except Exception as exc:  # noqa: BLE001 - best-effort warm-up, never blocks startup
+            logger.warning("startup database warm-up failed: %s", exc)
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -58,6 +98,7 @@ def create_app(
 ) -> FastAPI:
     settings = settings or get_settings()
     settings.validate_for_startup()
+    _warm_outbound_sockets(settings)
     contracts = ContractRegistry(settings.schema_dir)
     repos, store = in_memory_repositories(load_experiments(settings.content_dir, contracts))
     verifier = verifier or NodeCliVerifier(
@@ -77,6 +118,7 @@ def create_app(
         repos, verifier, utc_offset_minutes=settings.utc_offset_minutes, **seed_kwargs
     )
     knowledge = build_knowledge_runtime(settings)
+    assistant_service = assistant or build_assistant(settings, knowledge)
     state = AppState(
         settings,
         contracts,
@@ -84,7 +126,7 @@ def create_app(
         verifier,
         store,
         build_principal_provider(settings.principal_provider),
-        assistant or build_assistant(settings, knowledge),
+        assistant_service,
         knowledge,
     )
 
@@ -155,10 +197,15 @@ def create_app(
         st = lab(request)
         ready = st.verifier.ready()
         routing = getattr(st.assistant.provider, "health", None)
+        active_knowledge = st.knowledge.repository.active() if st.knowledge.repository else None
         return {
             "status": "ok" if ready else "degraded",
             "version": API_VERSION,
             "environment": st.settings.environment,
+            "knowledge": {
+                "activeVersion": active_knowledge.knowledge_version if active_knowledge else None,
+                "baseVersion": st.knowledge.base_version,
+            },
             "adapters": {
                 "repository": st.settings.repository,
                 "llm": st.settings.llm_provider,

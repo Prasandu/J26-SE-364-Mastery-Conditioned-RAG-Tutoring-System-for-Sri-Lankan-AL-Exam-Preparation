@@ -10,6 +10,7 @@ import type {
   WaterSource,
 } from '@vlab/contracts';
 import type { SimulationContext } from './context';
+import { normalizeStudentText } from './writtenAnswers';
 import { bound, boundNumber, paramRange } from './context';
 import {
   achievedConcentration,
@@ -191,11 +192,16 @@ const checkMixing = (out: Outcome, ctx: SimulationContext) => {
   }
 };
 
-const normalizeName = (name: string): string =>
-  name
-    .toLowerCase()
-    .replace(/[₀-₉]/g, (d) => String(d.charCodeAt(0) - 0x2080))
-    .replace(/[^a-z0-9]/g, '');
+const normalizeName = (name: string): string => {
+  const normalized = normalizeStudentText(name).replace(/[^\p{L}\p{M}\p{N}]/gu, '');
+  // Same chemical-name equivalence as the existing Sinhala Experiment 4 glossary.
+  const aliases: Record<string, string> = {
+    සෝඩියම්කාබනේට්: 'sodiumcarbonate',
+    නිර්ජලීයසෝඩියම්කාබනේට්: 'anhydroussodiumcarbonate',
+    නිර්ජලසෝඩියම්කාබනේට්: 'anhydroussodiumcarbonate',
+  };
+  return aliases[normalized] ?? normalized;
+};
 
 const dissolveAll = (out: Outcome) => {
   const { flask } = out.lab;

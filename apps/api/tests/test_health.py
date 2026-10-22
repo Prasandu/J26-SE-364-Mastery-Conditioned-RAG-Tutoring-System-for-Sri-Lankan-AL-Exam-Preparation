@@ -9,6 +9,7 @@ def test_health_reports_ready_verifier_and_offline_adapters(client: TestClient) 
     body = client.get("/health").json()
     assert body["status"] == "ok"
     assert body["environment"] == "test"
+    assert body["knowledge"] == {"activeVersion": None, "baseVersion": None}
     assert body["verifier"]["ready"] is True
     assert body["adapters"] == {
         "repository": "memory",

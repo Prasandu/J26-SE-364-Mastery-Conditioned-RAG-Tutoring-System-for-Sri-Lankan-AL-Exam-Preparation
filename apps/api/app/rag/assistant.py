@@ -20,6 +20,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.errors import ApiError, correlation_id_var
 from app.knowledge.models import KnowledgeChunk
+from app.language import text_locale
 from app.rag.embeddings import EmbeddingError
 from app.rag.generation import (
     PROMPT_VERSION,
@@ -37,10 +38,12 @@ from app.rag.generation import (
 )
 from app.rag.repository import KnowledgeUnavailable
 from app.rag.retrieval import Retriever, normalize_question
+from app.rag.topics import focus_evidence
 from app.repositories import SessionRecord
 
 if TYPE_CHECKING:
     from app.knowledge_runtime import KnowledgeRuntime
+    from app.rag.translate import Translator
     from app.settings import Settings
 
 logger = logging.getLogger("vlab.assistant")
@@ -116,12 +119,14 @@ class AssistantService:
         *,
         timeout_seconds: float = 20.0,
         cache: AnswerCache | None = None,
+        translator: "Translator | None" = None,
     ) -> None:
         self._retriever = retriever
         self._provider = provider
         self._refusals = refusals
         self._timeout = timeout_seconds
         self._cache = cache or AnswerCache()
+        self._translator = translator
         self.last_cache_key: str | None = None
 
     @property
@@ -131,6 +136,10 @@ class AssistantService:
     @property
     def provider(self) -> GenerationProvider:
         return self._provider
+
+    @property
+    def translator(self) -> "Translator | None":
+        return self._translator
 
     def _refused(self, reason: str, locale: str, knowledge_version: str) -> dict[str, Any]:
         return {
@@ -166,6 +175,7 @@ class AssistantService:
         )
 
     async def ask(self, session: SessionRecord, question: str, locale: str) -> dict[str, Any]:
+        locale = text_locale(question, locale)
         if self._provider.name == "disabled":
             raise ApiError(
                 503, "assistant_unavailable", "The assistant is not configured", retryable=False
@@ -208,8 +218,13 @@ class AssistantService:
             self._log("cached", None)
             return finish(hit, True)
 
+        retrieval_question = question
+        if locale == "si" and self._translator is not None:
+            translated = await run_in_threadpool(self._translator.to_english, question)
+            if translated:
+                retrieval_question = translated
         try:
-            retrieval = await run_in_threadpool(self._retriever.retrieve, question)
+            retrieval = await run_in_threadpool(self._retriever.retrieve, retrieval_question)
         except (KnowledgeUnavailable, EmbeddingError) as exc:
             logger.warning("knowledge unavailable: %s", type(exc).__name__)
             raise ApiError(
@@ -217,7 +232,8 @@ class AssistantService:
             ) from exc
 
         evidence = tuple(
-            Evidence(c.chunk.chunk_id, c.chunk.heading, c.chunk.text) for c in retrieval.evidence
+            Evidence(c.chunk.chunk_id, c.chunk.heading, focus_evidence(question, c.chunk.text))
+            for c in retrieval.evidence
         )
         if not evidence:
             body = self._refused("insufficient_evidence", locale, retrieval.knowledge_version)
@@ -264,7 +280,8 @@ class AssistantService:
         verdict = outcome.verdict
         if not verdict.grounded:
             # Failed post-validation is refused (the established safe equivalent of a 502): the
-            # model text is never shown. Only genuine, deterministic refusals are cached.
+            # model text is never shown. A model refusal is not deterministic: an explicit
+            # resubmission must be able to try again rather than reusing it indefinitely.
             self._log("refused", verdict.category, outcome.meta)
             body = self._refused("insufficient_evidence", locale, retrieval.knowledge_version)
             if verdict.category in CACHEABLE_REFUSALS:
@@ -298,7 +315,7 @@ def _generated_by(meta: GenerationMeta) -> dict[str, str]:
 
 
 #: Refusals that do not depend on a malformed or unsupported model output.
-CACHEABLE_REFUSALS = frozenset({"model_refused", "unsupported_entity_in_question"})
+CACHEABLE_REFUSALS = frozenset({"unsupported_entity_in_question"})
 
 
 def build_assistant(
@@ -311,6 +328,7 @@ def build_assistant(
     """
     from app.knowledge_runtime import build_knowledge_runtime
     from app.rag.providers import build_configured_provider, service_timeout
+    from app.rag.translate import build_query_translator
 
     runtime = knowledge or build_knowledge_runtime(settings)
     retriever: Retriever | None = None
@@ -321,4 +339,5 @@ def build_assistant(
         build_configured_provider(settings),
         load_refusals(settings.content_dir),
         timeout_seconds=service_timeout(settings),
+        translator=build_query_translator(settings),
     )

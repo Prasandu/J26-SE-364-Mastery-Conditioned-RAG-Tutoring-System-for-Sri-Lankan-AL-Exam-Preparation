@@ -357,6 +357,23 @@ const openAdmin = async (client: AdminClient) => {
 };
 
 describe('admin availability', () => {
+  it('distinguishes storage failures from disabled access and retries successfully', async () => {
+    const client = fakeClient({
+      status: vi
+        .fn()
+        .mockRejectedValueOnce(new EngineError('admin_storage_error', 500, true))
+        .mockResolvedValue(status),
+    });
+    const ctx = await renderAdmin(client);
+    await waitFor(() => expect(client.status).toHaveBeenCalled());
+    await ctx.user.click(screen.getByRole('button', { name: tx('admin.nav') }));
+    expect(await screen.findByText(tx('admin.storage_unavailable_title'))).toBeVisible();
+    expect(screen.queryByText(tx('admin.unavailable_text'))).toBeNull();
+    await ctx.user.click(screen.getByRole('button', { name: tx('admin.retry') }));
+    expect(await screen.findByRole('navigation', { name: tx('admin.sections') })).toBeVisible();
+    expect(client.status).toHaveBeenCalledTimes(2);
+  });
+
   it('development builds list Admin; without a client the page explains how to enable it', async () => {
     const ctx = await renderAdmin(null);
     await ctx.user.click(screen.getByRole('button', { name: tx('admin.nav') }));

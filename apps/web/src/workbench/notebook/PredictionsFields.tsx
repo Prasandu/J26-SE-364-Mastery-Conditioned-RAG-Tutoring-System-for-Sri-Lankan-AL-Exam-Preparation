@@ -1,3 +1,4 @@
+import { WrittenAnswerCheck } from '../../components/WrittenAnswerCheck';
 import { useTranslation } from 'react-i18next';
 import { SourceList } from '../../components/SourceList';
 import { definition } from '../../engine/content';
@@ -56,6 +57,18 @@ export function PredictionsFields() {
               aria-describedby={`prelab-${q.id}-count`}
               onChange={(e) => saveAnswer(q.id, e.target.value)}
             />
+            <WrittenAnswerCheck
+              value={value}
+              questionKey={q.promptKey}
+              guide={
+                q.answerGuide
+                  ? {
+                      en: t(q.answerGuide.answerKey, { lng: 'en' }),
+                      si: t(q.answerGuide.answerKey, { lng: 'si' }),
+                    }
+                  : null
+              }
+            />
             <span id={`prelab-${q.id}-count`} className="field__counter">
               {t('ui.prelab.characters', { count: value.length, max: MAX_ANSWER })}
             </span>
@@ -72,6 +85,7 @@ export function PredictionsFields() {
           value={preLab.prediction}
           onChange={(e) => setPrediction(e.target.value)}
         />
+        <WrittenAnswerCheck value={preLab.prediction} />
       </div>
     </>
   );

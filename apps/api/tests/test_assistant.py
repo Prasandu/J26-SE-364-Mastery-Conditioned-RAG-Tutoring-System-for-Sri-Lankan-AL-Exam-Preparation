@@ -17,6 +17,7 @@ from app.principal import TEST_PRINCIPAL_ID, FixedPrincipalProvider, Principal
 from app.rag.assistant import AssistantService, SafeState, load_refusals
 from app.rag.embeddings import FakeEmbeddingProvider
 from app.rag.generation import (
+    FAKE_SINHALA_MARKER,
     PROMPT_VERSION,
     AnswerCache,
     DisabledGenerationProvider,
@@ -125,10 +126,14 @@ def knowledge(provider: FakeEmbeddingProvider) -> InMemoryKnowledgeRepository:
 REFUSALS = load_refusals(REPO_ROOT / "content")
 
 
-def assistant_app(generator: Any = None) -> tuple[FastAPI, FakeGenerationProvider | Any]:
+def assistant_app(
+    generator: Any = None, translator: Any = None
+) -> tuple[FastAPI, FakeGenerationProvider | Any]:
     embeddings = FakeEmbeddingProvider()
     generator = generator or FakeGenerationProvider()
-    service = AssistantService(Retriever(knowledge(embeddings), embeddings), generator, REFUSALS)
+    service = AssistantService(
+        Retriever(knowledge(embeddings), embeddings), generator, REFUSALS, translator=translator
+    )
     return build_app(assistant=service), generator
 
 
@@ -194,6 +199,23 @@ def test_in_memory_ingestion_is_idempotent_and_validated() -> None:
     bad = KnowledgeVersion("kb-test", embeddings.model_id, embeddings.revision, 768, 1, "e" * 64)
     with pytest.raises(KnowledgeUnavailable):
         repo.ingest(bad, chunks)
+
+
+def test_translating_a_sinhala_query_finds_the_chunk_the_untranslated_query_misses() -> None:
+    """The fake embedding is a hashed bag-of-words: a Sinhala query essentially never shares
+    tokens with the English corpus, so this stands in for the real multilingual model's weak
+    cross-lingual alignment without needing network access."""
+    embeddings = FakeEmbeddingProvider()
+    retriever = Retriever(knowledge(embeddings), embeddings)
+    volumetric_ids = {
+        c.chunk_id for c in make_chunks(embeddings) if "volumetric flask" in c.text.lower()
+    }
+
+    untranslated = retriever.retrieve("පරිමාමිතික කුප්පිය නිවැරදිව භාවිතා කරන්නේ කෙසේද?")
+    assert not (volumetric_ids & {c.chunk.chunk_id for c in untranslated.evidence})
+
+    translated = retriever.retrieve("What is the use of volumetric flask in this experiment?")
+    assert volumetric_ids & {c.chunk.chunk_id for c in translated.evidence}
 
 
 # ---------------------------------------------------------------- generation and validation
@@ -376,15 +398,96 @@ def test_grounded_english_answer_with_safe_citations() -> None:
 
 
 def test_repeat_question_is_served_from_cache() -> None:
-    app, generator = assistant_app()
+    app, generator = assistant_app(FakeGenerationProvider(_echo_first_evidence))
     with TestClient(app) as client:
         sid = start(client)["session"]["sessionId"]
         first = ask(client, sid, "How many grams of Na₂CO₃ are weighed?").json()
+        assert first["status"] == "grounded"
         second = ask(client, sid, "  how many GRAMS of Na₂CO₃ are   weighed? ").json()
         assert second["cached"] is True and second["answer"] == first["answer"]
         assert len(generator.requests) == 1
         third = ask(client, sid, "How many grams of Na₂CO₃ are weighed?", locale="si").json()
-        assert third["cached"] is False and len(generator.requests) == 2
+        # An English question stays English even when the UI locale is Sinhala.
+        assert third["cached"] is True and len(generator.requests) == 1
+        fourth = ask(
+            client, sid, "Na₂CO₃ ග්‍රෑම් 26.5 watch glass මත කිරා ගන්නේ කෙසේද?", locale="en"
+        ).json()
+        assert fourth["locale"] == "si" and fourth["cached"] is False
+        assert len(generator.requests) == 2
+
+
+class FakeTranslator:
+    """Records every call; never invented beyond a fixed table, so an unmapped question errors
+    loudly rather than silently returning the untranslated text."""
+
+    def __init__(self, table: dict[str, str]) -> None:
+        self._table = table
+        self.calls: list[str] = []
+
+    def to_english(self, text: str) -> str | None:
+        self.calls.append(text)
+        return self._table.get(text)
+
+
+def _echo_first_evidence(request: GenerationRequest) -> dict[str, Any]:
+    """A generation script that only proves which evidence retrieval handed it, independent of
+    FakeGenerationProvider's own (English-only) term-overlap heuristic."""
+    e = request.evidence[0]
+    line = e.text.splitlines()[-1]
+    answer = f"{FAKE_SINHALA_MARKER} {line}" if request.locale == "si" else line
+    return {
+        "decision": "answer",
+        "answer": answer,
+        "claims": [
+            {
+                "text": line,
+                "citedChunkIds": [e.chunk_id],
+                "supportingSpans": [{"chunkId": e.chunk_id, "text": line}],
+            }
+        ],
+    }
+
+
+def test_model_refusal_is_not_cached_and_explicit_retry_can_get_a_grounded_answer() -> None:
+    calls = 0
+
+    def script(request: GenerationRequest) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return {"decision": "refuse", "answer": "", "claims": []}
+        return _echo_first_evidence(request)
+
+    app, _ = assistant_app(FakeGenerationProvider(script))
+    with TestClient(app) as client:
+        sid = start(client)["session"]["sessionId"]
+        question = "How many grams of Na₂CO₃ should be weighed?"
+        first = ask(client, sid, question).json()
+        second = ask(client, sid, question).json()
+        third = ask(client, sid, question).json()
+    assert first["status"] == "refused" and first["cached"] is False
+    assert second["status"] == "grounded" and second["cached"] is False
+    assert third["status"] == "grounded" and third["cached"] is True
+    assert calls == 2
+
+
+def test_sinhala_question_is_translated_before_retrieval_english_is_not() -> None:
+    sinhala_q = "පරිමාමිතික කුප්පිය නිවැරදිව භාවිතා කරන්නේ කෙසේද?"
+    translator = FakeTranslator(
+        {sinhala_q: "What is the use of volumetric flask in this experiment?"}
+    )
+    app, generator = assistant_app(FakeGenerationProvider(_echo_first_evidence), translator)
+    with TestClient(app) as client:
+        sid = start(client)["session"]["sessionId"]
+        si_body = ask(client, sid, sinhala_q, locale="si").json()
+        assert translator.calls == [sinhala_q]
+        assert si_body["status"] == "grounded" and si_body["locale"] == "si"
+        [generated] = generator.requests
+        assert generated.evidence[0].heading == "Use of volumetric flask"
+
+        ask(client, sid, "How many grams of Na₂CO₃ are weighed?")
+        # An English question never pays for a translation call.
+        assert translator.calls == [sinhala_q]
 
 
 def test_sinhala_answer_is_labelled_ai_assistance() -> None:
@@ -406,7 +509,7 @@ def test_unsupported_question_is_refused() -> None:
         assert body["status"] == "refused" and body["refusalReason"] == "insufficient_evidence"
         assert body["citations"] == [] and body["evidenceSufficient"] is False
         assert body["answer"] == REFUSALS["en"]["insufficient_evidence"]
-        si = ask(client, sid, "Who won the cricket world cup in 1996?", locale="si").json()
+        si = ask(client, sid, "1996 ලෝක කුසලානය දිනුවේ කවුද?", locale="en").json()
         assert si["answer"] == REFUSALS["si"]["insufficient_evidence"]
 
 

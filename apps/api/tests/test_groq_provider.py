@@ -99,6 +99,7 @@ def test_request_uses_strict_json_schema_chat_completions_and_nothing_else() -> 
         "model", "messages", "response_format", "max_completion_tokens", "temperature", "timeout",
     }  # fmt: skip
     assert kwargs["model"] == GROQ_MODEL and kwargs["timeout"] == 7.5
+    assert kwargs["max_completion_tokens"] == 2048
     fmt = kwargs["response_format"]
     assert fmt["type"] == "json_schema" and fmt["json_schema"]["strict"] is True
     assert set(fmt["json_schema"]["schema"]["required"]) == {"decision", "answer", "claims"}

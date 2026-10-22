@@ -7,6 +7,33 @@ real key in `.env.example`, a commit, a chat or a screenshot.
 
 ## 1. Software on this computer
 
+For temporary local admin storage while a remote database is unavailable, explicitly select it
+when starting the development API:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\start-api.ps1 -LlmProvider failover -Port 9100 -AdminRepository file
+```
+
+This uses existing private records under `data/admin/`; it does not migrate or overwrite
+Supabase records. Local edits do not automatically sync to the database. Omit the option to use
+the configured storage again, or pass `-AdminRepository postgres` after restoring connectivity.
+Development admin mode still needs `LAB_ADMIN_MODE=development`; loopback access checks remain
+required. The launcher checks the locked API dependencies, including `psycopg-pool`, before launch.
+
+For an existing browser configured with `VITE_API_BASE_URL=http://127.0.0.1:9100`, start the
+API on that same port rather than the default 8000:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\start-api.ps1 -LlmProvider failover -Port 9100
+```
+
+Stop the older API on that port first. The launcher uses a 2048-token structured-output budget
+(override with `-MaxOutputTokens`), because 512 can truncate the answer/claims/evidence JSON.
+Check `/health` on the browser's actual API address: `knowledge.activeVersion` identifies the
+loaded evidence, and `adapters.llm` identifies the routing mode. Restarting an in-memory API
+resets its sessions; reload the practical afterward. A browser refresh alone cannot reload an
+old API's code or evidence. See [Groq's structured-output requirements](https://console.groq.com/docs/structured-outputs).
+
 | Tool              | Needed for                  | Notes                                |
 | ----------------- | --------------------------- | ------------------------------------ |
 | Node 22 + pnpm 10 | web app, tests              | already used by `pnpm check`         |

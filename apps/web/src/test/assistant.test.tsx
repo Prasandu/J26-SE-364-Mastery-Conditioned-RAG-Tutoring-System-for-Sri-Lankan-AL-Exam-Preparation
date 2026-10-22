@@ -56,6 +56,35 @@ const withAssistant = (
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
+it('answers in the question language even when it differs from the interface', async () => {
+  const { adapter, calls } = withAssistant(async (request) =>
+    grounded({
+      locale: request.locale,
+      aiAssistanceLabel: request.locale === 'si',
+      answer: request.locale === 'si' ? 'පුනීලය භාවිත කරන්න.' : 'Use a funnel.',
+    }),
+  );
+  const store = makeStore(42, adapter);
+  await startSession(store, 'manual');
+  const { user } = renderApp(store);
+  await user.click(screen.getByRole('button', { name: tx('assistant.help_button') }));
+  await user.type(
+    screen.getByLabelText(tx('assistant.question.label')),
+    'පුනීලයක් භාවිත කරන්නේ ඇයි?',
+  );
+  await user.click(screen.getByRole('button', { name: tx('assistant.submit') }));
+  expect(await screen.findByText('පුනීලය භාවිත කරන්න.')).toBeVisible();
+  expect(calls[0]!.locale).toBe('si');
+  store.getState().setLocale('si');
+  await user.type(
+    await screen.findByLabelText(sx('assistant.question.label')),
+    'Why use a funnel?',
+  );
+  await user.click(screen.getByRole('button', { name: sx('assistant.submit') }));
+  expect(await screen.findByText('Use a funnel.')).toBeVisible();
+  expect(calls[1]!.locale).toBe('en');
+});
+
 describe('assistant adapters', () => {
   it('API adapter posts only the session, question and locale', async () => {
     const fetchMock = vi.fn(async () => json(200, grounded()));
@@ -142,7 +171,7 @@ describe('assistant panel', () => {
     expect(screen.getByRole('article')).toHaveAttribute('lang', 'si');
   });
 
-  it('shows a refusal without citations', async () => {
+  it('shows a cached refusal as a source-check result, without claiming it was answered', async () => {
     const { adapter } = withAssistant(async () =>
       grounded({
         status: 'refused',
@@ -150,6 +179,7 @@ describe('assistant panel', () => {
         evidenceSufficient: false,
         refusalReason: 'insufficient_evidence',
         citations: [],
+        cached: true,
       }),
     );
     const store = makeStore(42, adapter);
@@ -160,6 +190,8 @@ describe('assistant panel', () => {
     await user.click(screen.getByRole('button', { name: tx('assistant.submit') }));
     const result = await screen.findByRole('article', { name: tx('assistant.status.refused') });
     expect(within(result).queryByRole('list')).toBeNull();
+    expect(within(result).getByText(tx('assistant.cached_refusal'))).toBeVisible();
+    expect(within(result).queryByText(tx('assistant.cached'))).toBeNull();
   });
 
   it('reports an unavailable assistant as an alert and never invents an answer', async () => {

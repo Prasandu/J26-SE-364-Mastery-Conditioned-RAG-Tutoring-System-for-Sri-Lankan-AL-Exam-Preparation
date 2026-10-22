@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "knowledgeVersion": "kb-exp04-1.0.0",
+  "knowledgeVersion": "kb-exp04-1.1.0",
   "extractorVersion": "extract-1.0.0",
   "notes": "Only these pages may be ingested. Repairs are reviewed, deterministic normalisations of the PDF text layer; each page repair must match exactly once or extraction fails.",
   "sources": [
@@ -77,7 +77,28 @@
       "section": "Laboratory techniques",
       "experimentId": null,
       "initialHeading": "Laboratory techniques",
-      "headings": ["Use of burette", "Use of volumetric flask", "Use of balances"],
+      "headings": [
+        "Use of burette",
+        "Use of volumetric flask",
+        "Use of balances"
+      ],
+      "outOfScopeHeadings": [],
+      "repairs": []
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 25,
+      "printedPage": 17,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Glassware handling and cleaning (Experiment 3 introduction)",
+      "experimentId": null,
+      "initialHeading": null,
+      "headings": [
+        "Experiment 3: Handling glassware and four beam balance",
+        "Aims:",
+        "Pre lab question:",
+        "Introduction:"
+      ],
       "outOfScopeHeadings": [],
       "repairs": []
     },
@@ -129,7 +150,10 @@
       "section": "Experiment 4: Preparation of standard solutions",
       "experimentId": "exp04_standard_solution",
       "initialHeading": "Experiment 4: Preparation of standard solutions",
-      "headings": ["Procedure:", "Post lab questions:"],
+      "headings": [
+        "Procedure:",
+        "Post lab questions:"
+      ],
       "outOfScopeHeadings": [],
       "repairs": [
         {
@@ -147,7 +171,10 @@
       "section": "3.7 Preparation of solutions",
       "experimentId": null,
       "initialHeading": "3.6.3 Balancing simple nuclear reactions",
-      "headings": ["Rules for balancing nuclear reactions", "3.7 Preparation of solutions"],
+      "headings": [
+        "Rules for balancing nuclear reactions",
+        "3.7 Preparation of solutions"
+      ],
       "outOfScopeHeadings": [
         "3.6.3 Balancing simple nuclear reactions",
         "Rules for balancing nuclear reactions"
@@ -178,7 +205,9 @@
       "section": "3.7 Preparation of solutions",
       "experimentId": null,
       "initialHeading": "3.7 Preparation of solutions",
-      "headings": ["Methods:"],
+      "headings": [
+        "Methods:"
+      ],
       "outOfScopeHeadings": [],
       "repairs": []
     },
@@ -190,7 +219,9 @@
       "section": "3.7 Preparation of solutions",
       "experimentId": null,
       "initialHeading": "3.7 Preparation of solutions",
-      "headings": ["3.8 Calculations based on chemical reactions"],
+      "headings": [
+        "3.8 Calculations based on chemical reactions"
+      ],
       "outOfScopeHeadings": [],
       "repairs": [
         {
@@ -208,7 +239,10 @@
       "section": "Competency 3.3",
       "experimentId": null,
       "initialHeading": "Competency 3.3",
-      "headings": ["Contents:", "Outcomes:"],
+      "headings": [
+        "Contents:",
+        "Outcomes:"
+      ],
       "outOfScopeHeadings": [],
       "repairs": [
         {

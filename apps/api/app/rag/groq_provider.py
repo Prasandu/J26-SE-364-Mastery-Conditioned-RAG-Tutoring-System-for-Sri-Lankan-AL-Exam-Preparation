@@ -37,7 +37,7 @@ class GroqGenerationProvider:
         *,
         model: str,
         api_key: str,
-        max_output_tokens: int = 512,
+        max_output_tokens: int = 2048,
         timeout_seconds: float = 12.0,
         client: Any = None,
     ) -> None:

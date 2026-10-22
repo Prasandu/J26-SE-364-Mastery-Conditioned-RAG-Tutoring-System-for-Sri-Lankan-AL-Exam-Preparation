@@ -156,6 +156,10 @@ export const HealthSchema = z.strictObject({
   status: z.enum(['ok', 'degraded']),
   version: z.string(),
   environment: z.enum(['development', 'test', 'production']),
+  /** Public version identities only; optional for compatibility with older API instances. */
+  knowledge: z
+    .strictObject({ activeVersion: z.string().nullable(), baseVersion: z.string().nullable() })
+    .optional(),
   adapters: z.strictObject({
     repository: z.string(),
     llm: z.string(),

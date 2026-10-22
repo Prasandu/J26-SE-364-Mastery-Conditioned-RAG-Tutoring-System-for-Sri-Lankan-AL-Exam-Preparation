@@ -1,4 +1,4 @@
-import type { AdminDraftSummary, AdminStatus } from '@vlab/contracts';
+import type { AdminDraftSummary } from '@vlab/contracts';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui/Icon';
@@ -15,6 +15,7 @@ import { DraftList } from './DraftList';
 import { DraftReview } from './DraftReview';
 import { ImportPanel } from './ImportPanel';
 import { SimulationAuthor } from './SimulationAuthor';
+import { EngineError, type EngineErrorCode } from '../engine/adapter';
 
 export type AdminSection =
   | 'overview'
@@ -36,42 +37,67 @@ export type AdminSection =
  */
 export default function AdminView() {
   const { t } = useTranslation();
-  const { client } = useAdmin();
+  // Status is fetched once by AdminContext (it also drives the nav link) and shared here, so
+  // opening the admin console does not fire a second, redundant request against a backend that
+  // may be slow to reach.
+  const { client, status, statusState, statusError, refreshStatus } = useAdmin();
+  const [draftsError, setDraftsError] = useState<EngineErrorCode | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [section, setSection] = useState<AdminSection>('overview');
   const [environmentOpen, setEnvironmentOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
-  const [status, setStatus] = useState<AdminStatus | null>(null);
   const [drafts, setDrafts] = useState<AdminDraftSummary[]>([]);
-  const [state, setState] = useState<'loading' | 'ready' | 'unavailable'>(
+  const [draftsState, setDraftsState] = useState<'loading' | 'ready' | 'unavailable'>(
     client ? 'loading' : 'unavailable',
   );
+  const state: 'loading' | 'ready' | 'unavailable' =
+    statusState === 'unavailable' || draftsState === 'unavailable'
+      ? 'unavailable'
+      : statusState === 'ready' && draftsState === 'ready'
+        ? 'ready'
+        : 'loading';
+  const failure = statusError ?? draftsError;
+  const accessUnavailable = !client || failure === 'not_found';
+  const failureKey = accessUnavailable
+    ? 'admin.unavailable'
+    : failure === 'admin_storage_error'
+      ? 'admin.storage_unavailable'
+      : 'admin.load_failed';
 
   const refresh = useCallback(async () => {
     if (!client) {
-      setState('unavailable');
+      setDraftsState('unavailable');
       return;
     }
     try {
-      const [s, d] = await Promise.all([client.status(), client.drafts()]);
-      setStatus(s);
+      setRetrying(true);
+      const [, d] = await Promise.all([refreshStatus(), client.drafts()]);
       setDrafts(d);
-      setState('ready');
-    } catch {
-      setState('unavailable');
+      setDraftsError(null);
+      setDraftsState('ready');
+    } catch (error) {
+      setDraftsError(error instanceof EngineError ? error.code : 'internal_error');
+      setDraftsState('unavailable');
+    } finally {
+      setRetrying(false);
     }
-  }, [client]);
+  }, [client, refreshStatus]);
 
   useEffect(() => {
     if (!client) return undefined;
     let active = true;
-    Promise.all([client.status(), client.drafts()]).then(
-      ([s, d]) => {
+    client.drafts().then(
+      (d) => {
         if (!active) return;
-        setStatus(s);
         setDrafts(d);
-        setState('ready');
+        setDraftsError(null);
+        setDraftsState('ready');
       },
-      () => active && setState('unavailable'),
+      (error: unknown) => {
+        if (!active) return;
+        setDraftsError(error instanceof EngineError ? error.code : 'internal_error');
+        setDraftsState('unavailable');
+      },
     );
     return () => {
       active = false;
@@ -137,8 +163,18 @@ export default function AdminView() {
 
       {state === 'loading' && <StatusMessage tone="loading" title={t('admin.loading')} />}
       {state === 'unavailable' && (
-        <StatusMessage tone="info" title={t('admin.unavailable_title')}>
-          <p>{t('admin.unavailable_text')}</p>
+        <StatusMessage
+          tone={accessUnavailable ? 'info' : 'error'}
+          title={t(`${failureKey}_title`)}
+          action={
+            client && (
+              <button className="button" disabled={retrying} onClick={() => void refresh()}>
+                {t(retrying ? 'admin.loading' : 'admin.retry')}
+              </button>
+            )
+          }
+        >
+          <p>{t(`${failureKey}_text`)}</p>
         </StatusMessage>
       )}
 

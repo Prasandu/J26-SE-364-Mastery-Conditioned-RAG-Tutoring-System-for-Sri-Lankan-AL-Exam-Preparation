@@ -1,3 +1,4 @@
+import { WrittenAnswerCheck } from '../../components/WrittenAnswerCheck';
 import { useTranslation } from 'react-i18next';
 import { SourceList } from '../../components/SourceList';
 import { definition } from '../../engine/content';
@@ -30,6 +31,18 @@ export function ReflectionQuestion({ index }: { index: number }) {
         value={value}
         aria-describedby={`reflection-${question.id}-count`}
         onChange={(e) => saveAnswer(question.id, e.target.value)}
+      />
+      <WrittenAnswerCheck
+        value={value}
+        questionKey={question.promptKey}
+        guide={
+          question.answerGuide
+            ? {
+                en: t(question.answerGuide.answerKey, { lng: 'en' }),
+                si: t(question.answerGuide.answerKey, { lng: 'si' }),
+              }
+            : null
+        }
       />
       <span id={`reflection-${question.id}-count`} className="field__counter">
         {t('ui.prelab.characters', { count: value.length, max: MAX_ANSWER })}

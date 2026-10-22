@@ -1,17 +1,18 @@
 {
   "schemaVersion": 1,
-  "knowledgeVersion": "kb-exp04-1.0.0",
+  "knowledgeVersion": "kb-exp04-1.1.0",
   "extractorVersion": "extract-1.0.0",
   "embeddingModel": "intfloat/multilingual-e5-small",
   "modelRevision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
   "dimension": 384,
-  "chunkCount": 13,
-  "inScopeChunkCount": 12,
-  "chunksFileSha256": "7aead6038a72919abba628315514d48c80c45ec82d8925cc93d72db3a6517cbd",
+  "chunkCount": 15,
+  "inScopeChunkCount": 14,
+  "chunksFileSha256": "23b7b0a21e1470b7459ffd6eb4c4dea2ecde0f91ab4b09dbfd182c9fb82b387c",
   "chunksByPage": {
     "nie-handbook-2018 p9 (printed 1)": 1,
     "nie-handbook-2018 p10 (printed 2)": 1,
     "nie-handbook-2018 p16 (printed 8)": 2,
+    "nie-handbook-2018 p25 (printed 17)": 2,
     "nie-handbook-2018 p29 (printed 21)": 1,
     "nie-handbook-2018 p30 (printed 22)": 1,
     "nie-rb-g12-en p123 (printed 113)": 2,
@@ -82,7 +83,10 @@
       "unit": "Introduction",
       "section": "Laboratory techniques",
       "heading": "Laboratory techniques",
-      "headings": ["Laboratory techniques", "Use of burette"],
+      "headings": [
+        "Laboratory techniques",
+        "Use of burette"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -102,13 +106,63 @@
       "unit": "Introduction",
       "section": "Laboratory techniques",
       "heading": "Use of volumetric flask",
-      "headings": ["Use of volumetric flask", "Use of balances"],
+      "headings": [
+        "Use of volumetric flask",
+        "Use of balances"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
       "ordinal": 1,
       "textSha256": "bbafeaf583d9679f2aaf3634c9c8d4a47e59c6ebac9887925ce20ce2fbb8e75f",
       "tokenCount": 167,
+      "extractorVersion": "extract-1.0.0"
+    },
+    {
+      "chunkId": "kc_f3f7318337c07f45c9d1",
+      "sourceId": "nie-handbook-2018",
+      "documentTitle": "G.C.E. (A/L) Chemistry Practical Handbook",
+      "edition": "2018",
+      "documentSha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+      "pdfPage": 25,
+      "printedPage": 17,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Glassware handling and cleaning (Experiment 3 introduction)",
+      "heading": "Experiment 3: Handling glassware and four beam balance",
+      "headings": [
+        "Experiment 3: Handling glassware and four beam balance",
+        "Aims:",
+        "Pre lab question:",
+        "Introduction:"
+      ],
+      "language": "en",
+      "experimentId": null,
+      "inScope": true,
+      "ordinal": 0,
+      "textSha256": "6480114dde4f5915f733f37218544fdb57d81e34549c081e684d44542a1efb49",
+      "tokenCount": 90,
+      "extractorVersion": "extract-1.0.0"
+    },
+    {
+      "chunkId": "kc_614595b8e889b973bd0f",
+      "sourceId": "nie-handbook-2018",
+      "documentTitle": "G.C.E. (A/L) Chemistry Practical Handbook",
+      "edition": "2018",
+      "documentSha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+      "pdfPage": 25,
+      "printedPage": 17,
+      "unit": "Unit 03 - Chemical Calculations",
+      "section": "Glassware handling and cleaning (Experiment 3 introduction)",
+      "heading": "Introduction:",
+      "headings": [
+        "Introduction:"
+      ],
+      "language": "en",
+      "experimentId": null,
+      "inScope": true,
+      "ordinal": 1,
+      "textSha256": "7c3eaee16ec6f5c0d6a6e25d76dab097186aba9d2471bb89702b8b8690f1ada7",
+      "tokenCount": 415,
       "extractorVersion": "extract-1.0.0"
     },
     {
@@ -149,7 +203,10 @@
       "unit": "Unit 03 - Chemical Calculations",
       "section": "Experiment 4: Preparation of standard solutions",
       "heading": "Procedure:",
-      "headings": ["Procedure:", "Post lab questions:"],
+      "headings": [
+        "Procedure:",
+        "Post lab questions:"
+      ],
       "language": "en",
       "experimentId": "exp04_standard_solution",
       "inScope": true,
@@ -169,7 +226,9 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "Rules for balancing nuclear reactions",
-      "headings": ["Rules for balancing nuclear reactions"],
+      "headings": [
+        "Rules for balancing nuclear reactions"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": false,
@@ -189,7 +248,9 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "3.7 Preparation of solutions",
-      "headings": ["3.7 Preparation of solutions"],
+      "headings": [
+        "3.7 Preparation of solutions"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -209,7 +270,9 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "Methods:",
-      "headings": ["Methods:"],
+      "headings": [
+        "Methods:"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -229,7 +292,9 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "Methods:",
-      "headings": ["Methods:"],
+      "headings": [
+        "Methods:"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -249,7 +314,9 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "3.7 Preparation of solutions",
-      "headings": ["3.7 Preparation of solutions"],
+      "headings": [
+        "3.7 Preparation of solutions"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -269,7 +336,10 @@
       "unit": "Unit 3 Chemical Calculations",
       "section": "3.7 Preparation of solutions",
       "heading": "3.7 Preparation of solutions",
-      "headings": ["3.7 Preparation of solutions", "3.8 Calculations based on chemical reactions"],
+      "headings": [
+        "3.7 Preparation of solutions",
+        "3.8 Calculations based on chemical reactions"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,
@@ -289,7 +359,11 @@
       "unit": "Unit 03 - Chemical Calculations",
       "section": "Competency 3.3",
       "heading": "Competency 3.3",
-      "headings": ["Competency 3.3", "Contents:", "Outcomes:"],
+      "headings": [
+        "Competency 3.3",
+        "Contents:",
+        "Outcomes:"
+      ],
       "language": "en",
       "experimentId": null,
       "inScope": true,

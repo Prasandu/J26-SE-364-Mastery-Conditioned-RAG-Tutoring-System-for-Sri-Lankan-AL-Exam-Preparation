@@ -18,8 +18,10 @@ import re
 import tempfile
 import threading
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +43,7 @@ class IntegrityError(StoreError):
 
 
 class StorageUnavailable(StoreError):
-    """The filesystem refused a read or write (permissions, path length, disk full...)."""
+    """Configured storage or its required driver is unavailable; never change stores silently."""
 
 
 class DuplicateApproved(StoreError):
@@ -253,6 +255,28 @@ def verify_chain(events: list[dict[str, Any]]) -> bool:
     return True
 
 
+@lru_cache(maxsize=4)
+def _pool(dsn: str) -> Any:
+    """One pooled connection set per DSN, shared by every ``PostgresAdminStore`` instance (a new
+    instance is built per request; a new instance must not mean a new remote TLS/auth handshake).
+    A single raw ``psycopg.connect()`` per admin request pays the full cross-region handshake
+    every time and has no bound on how long it may hang if the network stalls; the pool opens a
+    small number of connections once and reuses them, with a bounded wait for a free one."""
+    from psycopg_pool import ConnectionPool
+
+    pool = ConnectionPool(
+        dsn,
+        min_size=1,
+        max_size=5,
+        timeout=10,
+        max_idle=300,
+        kwargs={"autocommit": False, "connect_timeout": 10},
+        open=False,
+    )
+    pool.open(wait=False)  # connects in the background; callers wait via `timeout` above, bounded
+    return pool
+
+
 class PostgresAdminStore:
     """PostgreSQL admin records (``public.admin_records``) with the same contract as the file
     store: optimistic versions, integrity hashes verified on read, append-only audit events.
@@ -263,12 +287,18 @@ class PostgresAdminStore:
         self._files = AdminStore(upload_root)
         self.root = self._files.root
 
-    def _connect(self) -> Any:
-        import psycopg
+    @contextmanager
+    def _connect(self) -> Iterator[Any]:
+        try:
+            import psycopg
+            from psycopg_pool import PoolClosed, PoolTimeout
+        except ImportError as exc:
+            raise StorageUnavailable("admin database driver is not installed") from exc
 
         try:
-            return psycopg.connect(self._dsn, autocommit=False)
-        except psycopg.OperationalError as exc:
+            with _pool(self._dsn).connection() as conn:
+                yield conn
+        except (psycopg.OperationalError, PoolTimeout, PoolClosed) as exc:
             raise StorageUnavailable("admin database is not reachable") from exc
 
     # Uploaded PDFs stay content-addressed on disk.

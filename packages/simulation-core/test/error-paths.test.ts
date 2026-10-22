@@ -367,7 +367,13 @@ describe('11. missing or incorrect label', () => {
   });
 
   it('accepts equivalent names (sodium carbonate, Na₂CO₃)', () => {
-    for (const solutionName of ['sodium carbonate', 'Na₂CO₃', 'Anhydrous Sodium Carbonate'])
+    for (const solutionName of [
+      'sodium carbonate',
+      'Na₂CO₃',
+      'Anhydrous Sodium Carbonate',
+      'සෝඩියම් කාබනේට්',
+      'නිර්ජලීය සෝඩියම් කාබනේට්',
+    ])
       expect(errorCodes(go(s0, { ...canonicalLabel(s0), solutionName }))).toEqual([]);
   });
 

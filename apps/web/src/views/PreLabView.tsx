@@ -137,6 +137,9 @@ export function PreLabView() {
         </aside>
       </div>
 
+      <button type="button" className="button" onClick={() => navigate('mode')}>
+        {t('ui.journey.skip_prelab')}
+      </button>
       <nav className="view-nav" aria-label={t('ui.nav.steps')}>
         <button type="button" className="button" onClick={() => navigate('overview')}>
           {t('ui.nav.back_overview')}

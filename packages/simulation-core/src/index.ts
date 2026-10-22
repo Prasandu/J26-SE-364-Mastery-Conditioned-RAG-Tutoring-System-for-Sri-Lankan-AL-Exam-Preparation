@@ -21,3 +21,4 @@ export * from './scoring';
 export * from './replay';
 export * from './projection';
 export * from './operations';
+export * from './writtenAnswers';

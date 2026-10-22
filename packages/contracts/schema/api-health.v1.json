@@ -20,6 +20,28 @@
         "production"
       ]
     },
+    "knowledge": {
+      "type": "object",
+      "properties": {
+        "activeVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "activeVersion",
+        "baseVersion"
+      ],
+      "additionalProperties": false
+    },
     "adapters": {
       "type": "object",
       "properties": {

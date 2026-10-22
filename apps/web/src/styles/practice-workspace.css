@@ -16,6 +16,15 @@
 .practical-journey {
   min-width: 0;
 }
+.written-answer-check {
+  margin-block: var(--space-2) var(--space-4);
+}
+.written-answer-check [role='status'] {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-left: 3px solid var(--brand-500);
+  background: var(--surface);
+}
 .practical-journey__nav ol {
   display: flex;
   flex-wrap: wrap;

@@ -779,15 +779,15 @@
 }
 
 /*
- * The real fix for "too small to type in": four visible rows instead of two, a comfortable
- * line-height, and a resize handle so a student can pull it taller for a longer question.
+ * Two compact rows with a resize handle: enough to type a question comfortably without eating
+ * the limited popup height the answer needs to be readable in (see .help-widget__body).
  */
 .assistant__input-row textarea {
   flex: 1;
   min-width: 0;
-  min-height: 4.5em;
-  padding: var(--space-3);
-  line-height: 1.5;
+  min-height: 2.6em;
+  padding: var(--space-2) var(--space-3);
+  line-height: 1.3;
   border-radius: var(--radius);
   resize: vertical;
 }

@@ -1,5 +1,6 @@
+import { studentTextLocale } from '../engine/localAdapter';
 import { ASSISTANT_QUESTION_MAX_CHARS, type AssistantAnswer } from '@vlab/contracts';
-import { useId, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/ui/Icon';
 import { EngineError } from '../engine/adapter';
@@ -23,7 +24,14 @@ export function AssistantPanel() {
   const [status, setStatus] = useState<Status>('idle');
   const [answer, setAnswer] = useState<AssistantAnswer | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  const [askedLocale, setAskedLocale] = useState(locale);
   const ids = { title: useId(), field: useId(), hint: useId() };
+  const threadRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = threadRef.current;
+    if (el && (status === 'answered' || status === 'error')) el.scrollTop = el.scrollHeight;
+  }, [status]);
 
   if (!session) return null;
   const offline = engine.kind === 'local';
@@ -32,15 +40,17 @@ export function AssistantPanel() {
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
     if (offline || trimmed.length < 3 || status === 'asking') return;
+    const questionLocale = studentTextLocale(trimmed, locale);
     setStatus('asking');
     setErrorKey(null);
     setAsked(trimmed);
+    setAskedLocale(questionLocale);
     setQuestion('');
     try {
       const result = await engine.askAssistant({
         sessionId: session.sessionId,
         question: trimmed,
-        locale,
+        locale: questionLocale,
       });
       setAnswer(result);
       setStatus('answered');
@@ -66,20 +76,28 @@ export function AssistantPanel() {
 
   return (
     <section id="assistant-panel" className="panel assistant" aria-labelledby={ids.title}>
-      <header className="assistant__header">
-        <span className="assistant__avatar">
-          <Icon name="chat" size={20} />
-        </span>
-        <div>
-          <h2 id={ids.title}>{t('assistant.title')}</h2>
-          <p className="hint-text">{t('assistant.intro')}</p>
-        </div>
-      </header>
+      {/* The intro wastes space once a conversation exists, so it only shows up front; the
+          heading itself stays (off-screen) afterwards so the region keeps its accessible name. */}
+      {asked ? (
+        <h2 id={ids.title} className="visually-hidden">
+          {t('assistant.title')}
+        </h2>
+      ) : (
+        <header className="assistant__header">
+          <span className="assistant__avatar">
+            <Icon name="chat" size={20} />
+          </span>
+          <div>
+            <h2 id={ids.title}>{t('assistant.title')}</h2>
+            <p className="hint-text">{t('assistant.intro')}</p>
+          </div>
+        </header>
+      )}
       {offline && <p className="notice">{t('assistant.offline')}</p>}
 
-      <div className="assistant__thread" role="status" aria-live="polite">
+      <div className="assistant__thread" role="status" aria-live="polite" ref={threadRef}>
         {asked && (
-          <p className="bubble bubble--student" lang={locale}>
+          <p className="bubble bubble--student" lang={askedLocale}>
             <span className="visually-hidden">{t('assistant.you_asked')} </span>
             {asked}
           </p>
@@ -101,7 +119,11 @@ export function AssistantPanel() {
               <p className="assistant__ai-label">{t('assistant.aiLabel')}</p>
             )}
             <p className="assistant__answer">{answer.answer}</p>
-            {answer.cached && <p className="hint-text">{t('assistant.cached')}</p>}
+            {answer.cached && (
+              <p className="hint-text">
+                {t(answer.status === 'grounded' ? 'assistant.cached' : 'assistant.cached_refusal')}
+              </p>
+            )}
             {answer.citations.length > 0 && (
               <>
                 <h3 className="assistant__sources-title">{t('assistant.citations')}</h3>
@@ -125,7 +147,7 @@ export function AssistantPanel() {
       </div>
       {status === 'error' && errorKey && (
         <p role="alert" className="assistant__error">
-          {t(errorKey)}
+          {t(errorKey, { lng: askedLocale })}
         </p>
       )}
 
@@ -141,7 +163,7 @@ export function AssistantPanel() {
             aria-describedby={ids.hint}
             value={question}
             maxLength={ASSISTANT_QUESTION_MAX_CHARS}
-            rows={4}
+            rows={2}
             disabled={offline}
             placeholder={t('assistant.placeholder')}
             onChange={(e) => setQuestion(e.target.value)}

@@ -295,3 +295,25 @@ Preparation/prediction/reflection text is learner writing only. It neither enter
 engine nor produces correctness/mastery scores. Completing a text field is a readiness gate,
 not validation of its chemistry. The report includes the learner's exact writing. Existing synthetic
 practice-data labels for 7/8 and learner-entered-only kinetics data for 30 are unchanged.
+## Assistant cleaning evidence update (2026-10-22)
+
+Knowledge version `kb-exp04-1.1.0` additionally includes NIE Chemistry Practical Handbook
+(2018), PDF page 25 / printed page 17, Experiment 3's glassware-handling introduction.
+The existing approved document checksum is unchanged. This page states that clean glassware
+and laboratory items help ensure accurate results; the previously indexed Experiment 4
+instructions required cleaning but did not directly explain that reason.
+
+The page remains contextual laboratory-technique evidence for Experiment 4, alongside the
+approved handbook procedure and Grade 12 resource-book passages. It does not approve every
+instrument for washing or authorize a universal cleaning recipe. Retrieval hints can promote
+matching in-scope passages for informal English and Sinhala questions; final answers still
+require valid citations and exact supporting spans. The updated metadata manifest records
+15 chunks (14 in scope); derived text and embeddings are private under
+`data/knowledge/kb-exp04-1.1.0/`. Other machines must rebuild the approved corpus before using
+this manifest. An API restart loads the new base in memory mode. An administrator-selected
+custom active version or a PostgreSQL knowledge store requires explicit ingestion/activation
+through the existing knowledge workflow; the update does not override that selection.
+
+Existing gold-set results and published metrics are historical for `kb-exp04-1.0.0`; do not
+present them as an evaluation of the expanded corpus. The cleaning regression used four
+questions with the real cached E5 model and mocked provider responses in separate API tests.

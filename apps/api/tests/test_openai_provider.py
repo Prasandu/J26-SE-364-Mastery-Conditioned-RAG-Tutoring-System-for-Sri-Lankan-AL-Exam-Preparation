@@ -155,7 +155,7 @@ def test_request_is_stateless_tool_free_and_strict() -> None:
         "model", "instructions", "input", "text", "reasoning", "max_output_tokens", "store",
     }  # fmt: skip
     assert kwargs["model"] == MODEL and kwargs["store"] is False
-    assert kwargs["reasoning"] == {"effort": "low"} and kwargs["max_output_tokens"] == 512
+    assert kwargs["reasoning"] == {"effort": "low"} and kwargs["max_output_tokens"] == 2048
     assert "tools" not in kwargs and "previous_response_id" not in kwargs
     fmt = kwargs["text"]["format"]
     assert fmt["type"] == "json_schema" and fmt["strict"] is True
@@ -195,11 +195,14 @@ def test_payload_contains_only_question_locale_public_state_and_selected_chunks(
     with TestClient(app) as client:
         resource = start(client)
         sid = resource["session"]["sessionId"]
+        # The requested locale here is deliberately "si" with an English-script question: the
+        # answer language follows what the student actually typed, so the payload should carry
+        # "en" regardless of the UI locale passed in. See test_assistant.py for that behaviour.
         ask(client, sid, "How many grams of Na₂CO₃ should be weighed?", "si")
     [kwargs] = mock.calls
     body = payload_of(kwargs)
     assert set(body) == {"requestedLanguage", "session", "evidence", "studentQuestion"}
-    assert body["requestedLanguage"] == "si"
+    assert body["requestedLanguage"] == "en"
     assert body["session"] == {
         "experimentId": "exp04_standard_solution",
         "mode": "manual",

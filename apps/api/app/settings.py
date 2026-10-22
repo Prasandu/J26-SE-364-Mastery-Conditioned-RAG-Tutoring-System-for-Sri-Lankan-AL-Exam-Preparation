@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     #: OpenAI model; required for openai and failover. Never hard-coded (documented in .env).
     llm_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
     llm_reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] = "low"
-    llm_max_output_tokens: int = Field(default=512, ge=64, le=4096)
+    # Structured answers repeat text in claims and supporting spans; 512 can truncate valid JSON.
+    llm_max_output_tokens: int = Field(default=2048, ge=64, le=4096)
     llm_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
     #: Server-side only; read from OPENAI_API_KEY. Never logged, returned or sent to the client.
     openai_api_key: SecretStr | None = Field(

@@ -56,7 +56,7 @@ class OpenAIGenerationProvider:
         model: str,
         api_key: str,
         reasoning_effort: str = "low",
-        max_output_tokens: int = 512,
+        max_output_tokens: int = 2048,
         timeout_seconds: float = 20.0,
         client: Any = None,
     ) -> None:

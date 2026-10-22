@@ -7,7 +7,7 @@ class LLMProvider(ABC):
     """Common interface so the LLM backend can be swapped without touching callers."""
 
     @abstractmethod
-    def generate_response(self, system_prompt: str, user_message: str) -> str:
+    def generate_response(self, system_prompt: str, user_message: str, max_tokens: int = 1500) -> str:
         raise NotImplementedError
 
 
@@ -19,7 +19,7 @@ class GroqProvider(LLMProvider):
 
         self._client = Groq(api_key=api_key)
 
-    def generate_response(self, system_prompt: str, user_message: str) -> str:
+    def generate_response(self, system_prompt: str, user_message: str, max_tokens: int = 1500) -> str:
         completion = self._client.chat.completions.create(
             model=self.MODEL,
             messages=[
@@ -32,11 +32,13 @@ class GroqProvider(LLMProvider):
             # See docs/DEVELOPMENT_PROGRESS.md: the same question phrased
             # two ways answered once and abstained once at temperature=0.3.
             temperature=0.1,
-            # Raised from 800 after the correctness benchmark review found
-            # several detailed answers (worked examples, multi-part
-            # explanations) cut off mid-sentence at the old limit. See
-            # docs/DEVELOPMENT_PROGRESS.md Step 16 (continued).
-            max_tokens=1500,
+            # Default (1500) raised from 800 after the correctness benchmark
+            # review found detailed answers cut off mid-sentence at the old
+            # limit (docs/DEVELOPMENT_PROGRESS.md Step 16). Callers that want
+            # short, fast, speakable answers (e.g. voice chat) pass a lower
+            # value — fewer tokens to generate is a direct latency win on
+            # top of giving a shorter thing to listen to.
+            max_tokens=max_tokens,
         )
         return completion.choices[0].message.content
 

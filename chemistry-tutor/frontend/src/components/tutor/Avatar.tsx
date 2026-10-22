@@ -9,6 +9,7 @@ const PHASE_LABEL: Record<VoicePhase, string> = {
   listening: "Listening...",
   thinking: "Thinking...",
   speaking: "Speaking...",
+  paused: "Paused",
 };
 
 export function Avatar({ phase }: AvatarProps) {
@@ -58,7 +59,7 @@ export function Avatar({ phase }: AvatarProps) {
           )}
         </svg>
       </div>
-      <span className="text-xs font-medium text-gray-500">{PHASE_LABEL[phase]}</span>
+      <span className="text-xs font-medium text-slate-500">{PHASE_LABEL[phase]}</span>
     </div>
   );
 }

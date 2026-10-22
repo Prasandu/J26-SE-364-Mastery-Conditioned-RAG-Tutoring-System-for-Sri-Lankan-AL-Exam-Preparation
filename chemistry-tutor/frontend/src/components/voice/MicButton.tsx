@@ -39,7 +39,7 @@ export function MicButton({ language, onTranscribed, disabled }: MicButtonProps)
         disabled={disabled || transcribing}
         title={isRecording ? "Stop recording" : "Record a question"}
         className={`rounded-full p-2 text-lg disabled:opacity-50 ${
-          isRecording ? "animate-pulse bg-red-600 text-white" : "bg-gray-200 text-gray-700"
+          isRecording ? "animate-pulse bg-red-600 text-white" : "bg-slate-200 text-slate-700"
         }`}
       >
         {transcribing ? "..." : "🎤"}

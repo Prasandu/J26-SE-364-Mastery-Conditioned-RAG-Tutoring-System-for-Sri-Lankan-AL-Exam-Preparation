@@ -14,7 +14,7 @@ export function ChatMessageItem({
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[80%] rounded-lg px-4 py-2 ${
-          isUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+          isUser ? "bg-blue-800 text-white" : "bg-slate-100 text-slate-900"
         }`}
       >
         <p className="whitespace-pre-wrap">{message.text}</p>
@@ -32,7 +32,7 @@ export function ChatMessageItem({
         )}
 
         {!isUser && message.citations && message.citations.length > 0 && (
-          <div className="mt-2 border-t border-gray-300 pt-2 text-xs text-gray-500">
+          <div className="mt-2 border-t border-slate-300 pt-2 text-xs text-slate-500">
             <p className="font-semibold">Sources:</p>
             <ul className="list-disc list-inside">
               {message.citations.map((c, i) => (

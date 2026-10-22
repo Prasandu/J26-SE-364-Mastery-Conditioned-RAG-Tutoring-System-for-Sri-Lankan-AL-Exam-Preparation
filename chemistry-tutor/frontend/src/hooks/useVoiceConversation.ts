@@ -3,7 +3,7 @@ import { transcribeAudio } from "../services/voiceApi";
 import type { Language } from "../types/tutor";
 import { useAudioRecorder } from "./useAudioRecorder";
 
-export type VoicePhase = "idle" | "listening" | "thinking" | "speaking";
+export type VoicePhase = "idle" | "listening" | "thinking" | "speaking" | "paused";
 
 interface UseVoiceConversationOptions {
   language: Language;
@@ -25,6 +25,12 @@ export function useVoiceConversation({
   const [error, setError] = useState<string | null>(null);
   const recorder = useAudioRecorder();
 
+  // Set by pause() while a turn is already in flight (thinking/speaking) so
+  // the in-progress step can finish — e.g. still speak an answer that's
+  // already been asked for — without looping back into listening
+  // afterward. Reset whenever a fresh turn actually starts listening.
+  const pauseRequestedRef = useRef(false);
+
   // Keep the latest language/sendQuestion/active in refs so the recorder's
   // auto-stop callback (set up once per listening turn) always sees current
   // values without having to re-arm on every prop change.
@@ -32,6 +38,7 @@ export function useVoiceConversation({
   latest.current = { language, sendQuestion, active };
 
   function startListening() {
+    pauseRequestedRef.current = false;
     setPhase("listening");
     recorder.start(handleAutoStopBlob);
   }
@@ -50,7 +57,12 @@ export function useVoiceConversation({
     if (!latest.current.active) return;
 
     if (!transcript.trim()) {
-      // Likely background noise, not real speech — just listen again.
+      // Likely background noise, not real speech — just listen again,
+      // unless the student paused while this was in flight.
+      if (pauseRequestedRef.current) {
+        setPhase("paused");
+        return;
+      }
       startListening();
       return;
     }
@@ -60,6 +72,10 @@ export function useVoiceConversation({
 
     if (answer === null) {
       setError("Something went wrong getting an answer. Listening again...");
+      if (pauseRequestedRef.current) {
+        setPhase("paused");
+        return;
+      }
       startListening();
       return;
     }
@@ -70,10 +86,16 @@ export function useVoiceConversation({
   }
 
   // When speech finishes (isSpeaking flips true -> false) and we're still in
-  // an active conversation, loop back to listening for the next turn.
+  // an active, unpaused conversation, loop back to listening for the next turn.
   const wasSpeakingRef = useRef(false);
   useEffect(() => {
-    if (wasSpeakingRef.current && !isSpeaking && active && phase === "speaking") {
+    if (
+      wasSpeakingRef.current &&
+      !isSpeaking &&
+      active &&
+      phase === "speaking" &&
+      !pauseRequestedRef.current
+    ) {
       startListening();
     }
     wasSpeakingRef.current = isSpeaking;
@@ -93,5 +115,34 @@ export function useVoiceConversation({
     stopSpeaking();
   }
 
-  return { active, phase, error, start, stop };
+  // Pause the current turn without ending the conversation — the main fix
+  // for "I said the wrong thing": while listening, this discards whatever
+  // has been recorded so far instead of letting it finish, transcribe and
+  // get sent. While the assistant is speaking, it stops playback (barge-in)
+  // instead of waiting for it to finish. Either way, the conversation does
+  // NOT automatically start listening again — the student calls resume()
+  // when ready, same as a deliberate "I need a second" button.
+  function pause() {
+    if (!active || phase === "paused") return;
+    pauseRequestedRef.current = true;
+
+    if (phase === "listening") {
+      recorder.stop(); // finalizes the recording but its result is never used/sent
+      setPhase("paused");
+    } else if (phase === "speaking") {
+      stopSpeaking();
+      setPhase("paused");
+    }
+    // If phase === "thinking", a request is already in flight — let it
+    // resolve; handleAutoStopBlob checks pauseRequestedRef and stops at
+    // "paused" afterward instead of looping back into listening.
+  }
+
+  function resume() {
+    if (!active || phase !== "paused") return;
+    setError(null);
+    startListening();
+  }
+
+  return { active, phase, error, start, stop, pause, resume };
 }

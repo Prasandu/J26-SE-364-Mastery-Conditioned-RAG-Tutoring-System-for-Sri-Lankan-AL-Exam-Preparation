@@ -24,7 +24,7 @@ export function SpeakButton({ text, language }: SpeakButtonProps) {
           : "No English voice found on this device — will use default voice"
       }
       className={`rounded px-2 py-1 text-xs ${
-        isSpeaking ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+        isSpeaking ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
       }`}
     >
       {isSpeaking ? "⏹ Stop" : "🔊 Listen"}

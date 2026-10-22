@@ -4,6 +4,26 @@ Every chemistry fact used by the simulator, content, or assistant must trace to 
 Status values: **accepted** (verbatim/near-verbatim in source), **derived** (computed only from accepted facts),
 **flag** (absent, ambiguous, or conflicting — must not be silently inferred).
 
+## Apparatus rendering scope (2026-10-22)
+
+The added 1?20 renderers visualize the existing supported handbook procedures. Apparatus are
+schematic, share display coordinates between 2D and 3D, and do not generate measured values.
+Rendering and free arrangement add no reaction rules or calibration constants. Existing core
+observations/calculations remain the source of results. Geometry, camera distance, colours used
+for glass visibility and decorative scale markings are presentation conventions.
+
+| Apparatus family                         | Handbook PDF references | Scope                                                                                                                                                            |
+| ---------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cathode-ray tubes / supply               | 18?22                   | Existing tube choices and qualitative deflection/shadow/paddle illustrations; no field equations or calibrated voltage                                           |
+| Molecular kit / glassware / beam balance | 23?28                   | Existing molecular topology and weighing exercises; no new bond-angle or beam-range claims                                                                       |
+| Gas collection / thermometer / barometer | 31?38                   | Illustrative collection assemblies; existing entered-measurement calculations; alternative bottle/eudiometer setups are not complete predictive apparatus models |
+| Calorimeter                              | 39?49                   | Insulated-cup illustration; existing labelled synthetic or learner-entered temperature calculations                                                              |
+| Wet-test / flame / crucible equipment    | 50?58, 62?63, 65?72     | Supported qualitative procedure subsets; no extra reagents, products or readings inferred from a drawing                                                         |
+| Titration glassware                      | 59?61, 73?76            | Burette, pipette, flask, stand and funnel illustrations; entered burette readings, not continuous dispensing physics                                             |
+
+Additional instrument labels in Sinhala are draft translations. The supported-branch limits and
+source conflicts documented below continue to apply to both renderers.
+
 ## 1. Source documents
 
 | sourceId            | Normalized filename (expected in `research-sources/`) | Original filename                                                                                  | Title / edition                                                                                                                                               | SHA-256                                                            | Location status                                        |
@@ -258,3 +278,20 @@ Conflicts and limits:
 - Experiment 29 prints coupling instructions before diazotization steps. The model orders diazotization before coupling and records that interpretation in its limitations.
 - Experiment 30's fixed collection mark has no stated numerical volume: `1/time` is a relative-rate proxy in s⁻¹, never an absolute concentration rate or rate constant. The inconsistent calcium-carbonate numerical pre-lab example and mass-loss extension are excluded.
 - Rendered fill levels, colours, bubbles and apparatus dimensions are illustrative, not calibrated measurements. No time-dependent reaction curves or invented teacher approvals are supplied.
+
+## Preparation and reflection for the additional learner journeys (2026-10-22)
+
+`content/library/handbook-preparation.v1.json` records selected paraphrased questions from the
+pre-lab and post-lab sections of Experiments 1-3 and 5-20. Its per-entry question-page references
+are the chapter's opening and closing PDF pages, with the chapter ranges and printed-page offset
+retained in `handbook-first20.v1.json`; both retain the NIE handbook source identity/checksum.
+These selected prompts were checked against the relevant source sections, not generated as
+answer keys. English paraphrases and Sinhala translations await teacher review. Experiment 8's
+reflection uses the actual page 49 questions about errors and comparison with accepted enthalpies;
+it does not invent reaction readings. Practicals 21-30 and authored packages retain their existing
+source-linked `preLab` and `postLab` prompts, including their documented exclusions.
+
+Preparation/prediction/reflection text is learner writing only. It neither enters the calculation
+engine nor produces correctness/mastery scores. Completing a text field is a readiness gate,
+not validation of its chemistry. The report includes the learner's exact writing. Existing synthetic
+practice-data labels for 7/8 and learner-entered-only kinetics data for 30 are unchanged.

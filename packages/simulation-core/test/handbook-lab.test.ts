@@ -124,6 +124,31 @@ describe('independent handbook teaching models', () => {
     const moles = (((736.2 * 101000) / 760) * 0.00005) / (8.314 * 298.15);
     expect(value(mg, 'molar_mass')).toBeCloseTo(0.05 / moles, 8);
   });
+  it('accepts gas readings at measurement time while keeping sample choices locked after setup', () => {
+    let state = apply(initialHandbookRun(6), { type: 'safety', value: true });
+    for (const id of ['assemble', 'add_acid', 'invert', 'react'])
+      state = apply(state, { type: 'step', id });
+    state = apply(state, { type: 'input', id: 'gas_volume', value: 51 });
+    state = apply(state, { type: 'input', id: 'temperature', value: 24 });
+    expect(state.inputs.gas_volume).toBe(51);
+    expect(
+      transitionHandbook(
+        state,
+        { type: 'input', id: 'magnesium_mass', value: 0.04 },
+        state.sequence,
+      ),
+    ).toMatchObject({ accepted: false, error: 'wrong_order', state });
+    let calorimeter = apply(initialHandbookRun(7), { type: 'safety', value: true });
+    calorimeter = apply(calorimeter, { type: 'step', id: 'insulate' });
+    calorimeter = apply(calorimeter, { type: 'input', id: 'initial_acid', value: 24 });
+    expect(
+      transitionHandbook(
+        calorimeter,
+        { type: 'input', id: 'pair', value: 'KOH + HNO3' },
+        calorimeter.sequence,
+      ),
+    ).toMatchObject({ accepted: false, error: 'wrong_order', state: calorimeter });
+  });
   it('separates authorized synthetic calorimetry from entered readings', () => {
     const practice = trial(initialHandbookRun(7));
     expect(practice.inputs.data_mode).toBe('practice_dataset');

@@ -19,6 +19,10 @@ export interface LabRendererProps {
   heldItemId?: string | null;
   /** Direct drag of one item onto a target (2D pointer drag). */
   onDrop?: (sourceId: string, targetId: string) => void;
+  setupTargetId?: string | null | undefined;
+  onSetupAnchor?: ((point: readonly [number, number]) => void) | undefined;
+  arrange?: boolean | undefined;
+  onArrange?: ((id: string, point: { x: number; z: number }) => void) | undefined;
 }
 
 /**

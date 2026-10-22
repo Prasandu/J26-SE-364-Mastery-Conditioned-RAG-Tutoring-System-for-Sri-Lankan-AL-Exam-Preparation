@@ -141,7 +141,7 @@ export function AssistantPanel() {
             aria-describedby={ids.hint}
             value={question}
             maxLength={ASSISTANT_QUESTION_MAX_CHARS}
-            rows={2}
+            rows={4}
             disabled={offline}
             placeholder={t('assistant.placeholder')}
             onChange={(e) => setQuestion(e.target.value)}

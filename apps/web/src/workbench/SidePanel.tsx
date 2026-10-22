@@ -139,7 +139,7 @@ export function SidePanel({ model }: { model: SceneModel }) {
         </div>
       </div>
 
-      <div className="side-panel__scroll">
+      <div className="side-panel__scroll" hidden={collapsed}>
         <div className="side-panel__reading-head">
           <span>
             {index + 1}. {t(`ui.side.${active}`)}
@@ -184,8 +184,8 @@ export function SidePanel({ model }: { model: SceneModel }) {
             )}
             {id === 'protocol' && (
               <>
-                <ProtocolPanel />
                 <GuidancePanel />
+                <ProtocolPanel />
                 {!automatic && <ActionPanel />}
               </>
             )}
@@ -215,7 +215,7 @@ export function SidePanel({ model }: { model: SceneModel }) {
         ))}
       </div>
 
-      <nav className="notebook-pager" aria-label={t('ui.side.pager_label')}>
+      <nav className="notebook-pager" hidden={collapsed} aria-label={t('ui.side.pager_label')}>
         <button
           type="button"
           className="notebook-pager__button notebook-pager__button--back"

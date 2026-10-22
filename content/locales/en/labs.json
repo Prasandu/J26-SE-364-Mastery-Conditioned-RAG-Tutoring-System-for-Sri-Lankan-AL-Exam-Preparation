@@ -6,7 +6,7 @@
     "reviewer": null,
     "reviewedOn": null
   },
-  "labs.available": "Guided 2D practice",
+  "labs.available": "Guided 2D / 3D practice",
   "labs.open": "Run practical",
   "labs.open_named": "Run Experiment {{number}}",
   "labs.library": "Practical library",

@@ -1,5 +1,7 @@
-import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Component, useEffect, useMemo, type ReactNode } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Component, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { InstrumentSetupAnchor } from '../InstrumentSetupAnchor';
+import { MovableBenchGroup } from '../MovableBenchGroup';
 import { useTranslation } from 'react-i18next';
 import {
   CatmullRomCurve3,
@@ -63,7 +65,7 @@ const PIPE = new CatmullRomCurve3(
   0.05,
 );
 
-function Studio() {
+export function TeachingStudio() {
   const { gl } = useThree();
   const target = useMemo(() => {
     const generator = new PMREMGenerator(gl),
@@ -76,7 +78,15 @@ function Studio() {
   useEffect(() => () => target.dispose(), [target]);
   return <primitive attach="environment" object={target.texture} />;
 }
-function Camera({ zoom, reset }: { zoom: number; reset: number }) {
+export function TeachingCamera({
+  zoom,
+  reset,
+  moving = false,
+}: {
+  zoom: number;
+  reset: number;
+  moving?: boolean;
+}) {
   const { camera, gl, size, invalidate } = useThree();
   const controls = useMemo(() => new OrbitControls(camera, gl.domElement), [camera, gl]);
   useEffect(() => {
@@ -94,6 +104,10 @@ function Camera({ zoom, reset }: { zoom: number; reset: number }) {
     controls.update();
     invalidate();
   }, [camera, controls, invalidate, size.width, size.height, zoom, reset]);
+  useEffect(() => {
+    Object.assign(controls, { enabled: !moving });
+    invalidate();
+  }, [controls, moving, invalidate]);
   useEffect(() => {
     const changed = () => invalidate();
     controls.addEventListener('change', changed);
@@ -149,7 +163,7 @@ function Liquid({
     </mesh>
   );
 }
-function Tool({
+export function TeachingTool3D({
   kind,
   selected,
   colour,
@@ -158,6 +172,7 @@ function Tool({
   heating,
   sealed,
   bubbles,
+  flameColour = '#67b9ed',
 }: {
   kind: TeachingApparatusKind;
   selected: boolean;
@@ -167,6 +182,7 @@ function Tool({
   heating: boolean;
   sealed: boolean;
   bubbles: boolean;
+  flameColour?: string | undefined;
 }) {
   if (['test_tube', 'boiling_tube', 'gas_collector'].includes(kind))
     return (
@@ -301,7 +317,7 @@ function Tool({
         {heating && (
           <mesh position={[0, 0.77, 0]}>
             <coneGeometry args={[0.11, 0.4, 24]} />
-            <meshBasicMaterial color="#67b9ed" transparent opacity={0.8} />
+            <meshBasicMaterial color={flameColour} transparent opacity={0.8} />
           </mesh>
         )}
       </>
@@ -372,8 +388,13 @@ export default function TeachingScene3D({
   onSelect,
   zoom,
   reset,
+  offsets = {},
+  onMove,
+  setupTarget,
+  onSetupAnchor,
 }: TeachingSceneProps & { zoom: number; reset: number }) {
   const { t } = useTranslation();
+  const [moving, setMoving] = useState(false);
   const fallback = <p role="status">{t('teaching.webgl_fallback')}</p>;
   return (
     <SceneBoundary fallback={fallback}>
@@ -389,8 +410,17 @@ export default function TeachingScene3D({
         }}
       >
         <color attach="background" args={['#124969']} />
-        <Studio />
-        <Camera zoom={zoom} reset={reset} />
+        <TeachingStudio />
+        {setupTarget && (
+          <InstrumentSetupAnchor
+            position={(() => {
+              const at = teachingPlacement(d, setupTarget, offsets);
+              return [at.x, at.y + 1.7, at.z] as const;
+            })()}
+            onChange={onSetupAnchor}
+          />
+        )}
+        <TeachingCamera zoom={zoom} reset={reset} moving={moving} />
         <ambientLight intensity={0.45} />
         <directionalLight
           position={[2, 7, 5]}
@@ -414,17 +444,17 @@ export default function TeachingScene3D({
           </mesh>
         ))}
         {d.apparatus.map((a) => {
-          const pos = teachingPlacement(d, a.id);
-          const pick = (event: ThreeEvent<MouseEvent>) => {
-            event.stopPropagation();
-            onSelect(a.id);
-          };
+          const pos = teachingPlacement(d, a.id, offsets);
           return (
-            <group
+            <MovableBenchGroup
               key={a.id}
+              id={a.id}
               position={[pos.x, pos.y, pos.z]}
               rotation={[0, 0, pos.rotate]}
-              onClick={pick}
+              offset={offsets[a.id] ?? { x: 0, z: 0 }}
+              onMove={onMove}
+              onSelect={onSelect}
+              onDragging={setMoving}
             >
               {selected === a.id && (
                 <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -432,7 +462,7 @@ export default function TeachingScene3D({
                   <meshBasicMaterial color="#42c6f1" side={DoubleSide} />
                 </mesh>
               )}
-              <Tool
+              <TeachingTool3D
                 kind={a.kind}
                 selected={selected === a.id}
                 colour={TEACHING_COLOURS[p.scene.solutionColour]}
@@ -444,7 +474,7 @@ export default function TeachingScene3D({
                 sealed={d.layout === 'gas_collection'}
                 bubbles={p.scene.visual === 'bubbles'}
               />
-            </group>
+            </MovableBenchGroup>
           );
         })}
       </Canvas>

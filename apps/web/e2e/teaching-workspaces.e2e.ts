@@ -1,3 +1,4 @@
+import { preparePractical, reflectAndReport, journeyStage } from './practical-journey-helpers';
 import { expect, test } from '@playwright/test';
 import raw from '../../../content/experiments/teaching/handbook21-30.v1.json' with { type: 'json' };
 import english from '../../../content/locales/en/teaching.json' with { type: 'json' };
@@ -24,19 +25,26 @@ for (const d of raw) {
     ).toBeVisible();
     await expect(page.getByText(d.limitations.en, { exact: true })).toBeVisible();
     await noHorizontalOverflow(page);
-    await page.getByRole('button', { name: tx('enter_lab'), exact: true }).click();
-    const acknowledgment = page.getByRole('checkbox');
-    await acknowledgment.focus();
-    await page.keyboard.press('Space');
-    if (d.experimentNumber === 29) await page.getByRole('spinbutton').fill('2');
-    if (d.experimentNumber === 30) {
-      const fields = page.getByRole('spinbutton');
-      for (const [i, c] of d.concentrationsMolDm3.entries()) {
-        await expect(fields.nth(i)).toBeEmpty();
-        await fields.nth(i).fill(String(100 / c));
-      }
+    await preparePractical(page);
+    if (d.experimentNumber === 29) {
+      await page.locator('[data-setup-instrument]').click();
+      await page.getByRole('dialog').getByRole('spinbutton').fill('2');
+      await page
+        .getByRole('button', { name: en('ui.practice.save_settings'), exact: true })
+        .click();
     }
     for (const [i, step] of d.tests[0]!.steps.entries()) {
+      if (d.experimentNumber === 30 && step.effect === 'measure') {
+        await page.locator('[data-setup-instrument]').click();
+        const fields = page.getByRole('dialog').getByRole('spinbutton');
+        for (const [j, c] of d.concentrationsMolDm3.entries()) {
+          await expect(fields.nth(j)).toBeEmpty();
+          await fields.nth(j).fill(String(100 / c));
+        }
+        await page
+          .getByRole('button', { name: en('ui.practice.save_settings'), exact: true })
+          .click();
+      }
       const index = d.apparatus.findIndex((a) => a.id === step.apparatusId),
         a = d.apparatus[index]!;
       await page.getByRole('button', { name: `${index + 1}. ${a.label.en}`, exact: true }).click();
@@ -67,10 +75,12 @@ for (const d of raw) {
     });
     await page.locator('.language-switcher button[lang="en"]').click();
     await page.getByRole('button', { name: String(enLabs['labs.record']), exact: true }).click();
-    await page.getByRole('button', { name: tx('tab.notebook'), exact: true }).click();
+    await journeyStage(page, 'notebook').click();
     const notes = page.getByLabel(String(enLabs['labs.notes']), { exact: true });
     await notes.fill(`Practical ${d.experimentNumber}\nසිංහල notes`);
-    await page.getByRole('button', { name: tx('tab.report'), exact: true }).click();
+    await journeyStage(page, 'workbench').click();
+    await page.getByRole('button', { name: String(enLabs['labs.finish']), exact: true }).click();
+    await reflectAndReport(page);
     await expect(
       page.getByText(`Practical ${d.experimentNumber}\nසිංහල notes`, { exact: true }),
     ).toBeVisible();

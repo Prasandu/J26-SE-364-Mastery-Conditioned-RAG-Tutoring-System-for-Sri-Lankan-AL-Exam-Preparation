@@ -338,11 +338,18 @@
   outline-offset: 2px;
 }
 
+/*
+ * Sized as a proper support popup, not a tooltip: wide enough for a comfortable reading measure,
+ * tall enough that the composer never has to compete with the answer for room. `height` (not just
+ * `max-height`) gives the panel a real size so its flex children below can use `flex: 1` to split
+ * that space — the thread grows and scrolls internally, the composer stays put at the bottom.
+ */
 .help-widget__panel {
   display: flex;
   flex-direction: column;
-  width: min(380px, calc(100vw - 2 * var(--space-4)));
-  max-height: min(600px, calc(100vh - 2 * var(--space-4)));
+  width: min(440px, calc(100vw - 2 * var(--space-4)));
+  height: min(640px, calc(100vh - 2 * var(--space-4)));
+  max-height: min(640px, calc(100vh - 2 * var(--space-4)));
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -391,18 +398,45 @@
   background: rgb(255 255 255 / 15%);
 }
 
+/*
+ * The body fills the rest of the panel and hands that space to AssistantPanel as a flex column, so
+ * the thread (not the whole body) is the thing that scrolls — the header and the composer stay
+ * visible the whole time instead of being pushed off by a long answer.
+ */
 .help-widget__body {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   padding: var(--space-4);
+  overflow: hidden;
 }
 
 /* AssistantPanel's own card chrome is redundant inside the popup, which already has one. */
 .help-widget__body .assistant {
+  flex: 1;
+  min-height: 0;
   padding: 0;
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+.help-widget__body .assistant__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+  margin-right: calc(var(--space-1) * -1);
+}
+
+.help-widget__body .assistant__composer,
+.help-widget__body .assistant__header,
+.help-widget__body .assistant__error,
+.help-widget__body .notice,
+.help-widget__body .ai-disclosure {
+  flex: none;
 }
 
 @media (max-width: 480px) {

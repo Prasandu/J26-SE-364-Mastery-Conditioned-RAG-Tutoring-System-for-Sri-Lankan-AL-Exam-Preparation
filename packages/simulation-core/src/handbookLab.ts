@@ -462,7 +462,40 @@ const models: readonly HandbookModel[] = [
   ),
 ];
 export const handbookModels: ReadonlyMap<number, HandbookModel> = new Map(
-  models.map((m) => [m.number, m]),
+  models.map((m) => [
+    m.number,
+    {
+      ...m,
+      controls: m.controls.map((control) => {
+        // Learner-entered instrument readings can be entered at their actual procedural step.
+        // This changes input timing, never the measured values, outcomes or calculation rules.
+        const stages: Record<string, readonly string[]> = {
+          mass_before: ['weigh_before'],
+          mass_after: ['cool', 'equalize', 'read_gas'],
+          gas_volume: ['equalize', 'read_gas'],
+          temperature: ['equalize', 'read_gas'],
+          pressure: ['equalize', 'read_gas'],
+          vapour_pressure: ['equalize', 'read_gas'],
+          magnesium_mass: ['assemble'],
+          initial_acid: ['measure_initial'],
+          initial_base: ['measure_initial'],
+          final_temperature: ['read_maximum'],
+          rise_a: ['path_a'],
+          rise_b: ['path_b'],
+          rise_c: ['path_c'],
+          rise_d: ['path_d'],
+          initial_burette: ['rinse_burette'],
+          final_burette: ['titrate_endpoint', 'wait_30_seconds'],
+        };
+        const matches = m.steps.flatMap((step, index) =>
+          stages[control.id]?.includes(step) ? [index] : [],
+        );
+        return matches.length
+          ? { ...control, liveAt: [...new Set([...(control.liveAt ?? []), ...matches])] }
+          : control;
+      }),
+    },
+  ]),
 );
 export function initialHandbookRun(number: number): HandbookRun {
   const spec = handbookModels.get(number);

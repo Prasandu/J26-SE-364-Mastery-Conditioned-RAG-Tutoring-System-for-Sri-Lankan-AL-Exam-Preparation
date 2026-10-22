@@ -41,9 +41,10 @@ test('viewport layout keeps the scene, contextual forms and help reachable', asy
       const take = dock.getByRole('button', { name: text('ui.stage.take_to_bench') });
       if (await take.isVisible()) await take.click();
       await dock.getByRole('button', { name: text('exp04.action.set_balance_sliders') }).click();
-      const field = dock.getByLabel(text('ui.form.slider_total'));
+      const dialog = page.getByRole('dialog');
+      const field = dialog.getByLabel(text('ui.form.slider_total'));
       await field.fill('42');
-      const submit = dock.getByRole('button', {
+      const submit = dialog.getByRole('button', {
         name: text('exp04.action.set_balance_sliders'),
         exact: true,
       });
@@ -55,7 +56,8 @@ test('viewport layout keeps the scene, contextual forms and help reachable', asy
         }),
       ).toBe(true);
       await page.screenshot({ path: `final-screens/fs/${width}-${lang}-actions.png` });
-      await dock.getByRole('button', { name: text('ui.stage.cancel') }).click();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
       await dock.getByRole('button', { name: text('ui.stage.close_menu') }).click();
       const help = page.locator('.help-widget__launcher');
       await help.focus();

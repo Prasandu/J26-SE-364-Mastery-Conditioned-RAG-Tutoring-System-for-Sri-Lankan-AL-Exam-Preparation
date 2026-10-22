@@ -263,9 +263,31 @@ def test_connectivity_check_is_opt_in_and_needs_both_keys() -> None:
     assert dry.returncode == 0 and "Dry run: nothing was sent" in dry.stdout
     assert "1 request to groq:" in dry.stdout and "1 request to openai:" in dry.stdout
     live = _script("check_providers.py", "--confirm-live")
-    assert (
-        live.returncode == 2 and "GROQ_API_KEY" in live.stdout and "OPENAI_API_KEY" in live.stdout
+    assert live.returncode == 2 and "Offline connectivity guard enabled" in live.stdout
+    assert "nothing was sent" in live.stdout
+
+
+def test_connectivity_offline_guard_precedes_settings_and_provider_creation(
+    monkeypatch: Any,
+) -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "offline_connectivity_check", REPO_ROOT / "scripts" / "ingest" / "check_providers.py"
     )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("An offline check must not read credentials or create a provider")
+
+    monkeypatch.setenv("LAB_EVAL_OFFLINE", "1")
+    monkeypatch.setattr(sys, "argv", ["check_providers.py", "--confirm-live"])
+    monkeypatch.setattr(module, "Settings", forbidden)
+    monkeypatch.setattr(module, "GroqGenerationProvider", forbidden)
+    monkeypatch.setattr(module, "OpenAIGenerationProvider", forbidden)
+    assert module.main() == 2
 
 
 def test_checkpoint_resumes_without_repeating_and_never_records_429(tmp_path: Any) -> None:

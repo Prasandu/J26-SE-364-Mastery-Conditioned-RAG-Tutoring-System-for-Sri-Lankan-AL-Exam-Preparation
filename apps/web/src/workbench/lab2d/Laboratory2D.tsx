@@ -141,6 +141,7 @@ interface Drag {
   x: number;
   y: number;
   moved: boolean;
+  offset: { x: number; z: number };
 }
 
 /** Pointer travel (px) after which a press becomes a drag. */
@@ -153,6 +154,10 @@ export default function Laboratory2D({
   heldItemId = null,
   onDrop,
   toolbarTarget,
+  setupTargetId,
+  onSetupAnchor,
+  arrange = false,
+  onArrange,
 }: LabRendererProps) {
   const { t, i18n } = useTranslation();
   const locale = (i18n.language === 'si' ? 'si' : 'en') as Locale;
@@ -166,6 +171,28 @@ export default function Laboratory2D({
    * is wider than the base frame. 0 means "not measured yet"; the base frame is used until then.
    */
   const [stageAspect, setStageAspect] = useState(0);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !setupTargetId || !onSetupAnchor) return;
+    const locate = () => {
+      const item = svg.querySelector<SVGGElement>(`[data-lab-item="${setupTargetId}"]`);
+      if (!item) return;
+      const bounds = svg.getBoundingClientRect(),
+        box = item.getBoundingClientRect();
+      if (bounds.width && bounds.height)
+        onSetupAnchor([
+          (box.right - bounds.left) / bounds.width,
+          (box.top - bounds.top - 36) / bounds.height,
+        ]);
+    };
+    const observer = new ResizeObserver(locate);
+    observer.observe(svg);
+    const frame = requestAnimationFrame(locate);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [setupTargetId, onSetupAnchor, model, view, stageAspect]);
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -196,8 +223,26 @@ export default function Laboratory2D({
     return pt.matrixTransform(matrix.inverse());
   };
   const onItemPointerDown = (id: string) => (e: PointerEvent<SVGGElement>) => {
-    if (!onDrop || e.button !== 0) return;
-    drag.current = { id, x: e.clientX, y: e.clientY, moved: false };
+    if ((!onDrop && !onArrange) || e.button !== 0) return;
+    if (
+      arrange &&
+      placementOf(
+        model.items.find((i) => i.id === id)!,
+        model,
+      ) !== 'bench'
+    )
+      return;
+    drag.current = {
+      id,
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      offset: model.positionOffsets?.[id] ?? { x: 0, z: 0 },
+    };
+    if (arrange) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      onPick(id);
+    }
   };
   const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
     const d = drag.current;
@@ -205,18 +250,28 @@ export default function Laboratory2D({
     if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < DRAG_START) return;
     d.moved = true;
     const p = toSvg(e.clientX, e.clientY);
+    if (arrange && onArrange && p) {
+      const start = toSvg(d.x, d.y);
+      if (start)
+        onArrange(d.id, {
+          x: d.offset.x + (p.x - start.x) / 100,
+          z: d.offset.z + (p.y - start.y) / 60,
+        });
+      return;
+    }
     if (p) setGhost({ id: d.id, x: p.x, y: p.y });
   };
   const endDrag = (e: PointerEvent<SVGSVGElement>) => {
     const d = drag.current;
     drag.current = null;
     setGhost(null);
-    if (!d?.moved || !onDrop) return;
+    if (!d?.moved) return;
     // Ignore the click the browser fires right after this pointer-up (only that one).
     suppressClick.current = true;
     window.setTimeout(() => {
       suppressClick.current = false;
     }, 0);
+    if (arrange || !onDrop) return;
     const hit = document
       .elementFromPoint(e.clientX, e.clientY)
       ?.closest(`[${LAB_ITEM_ATTRIBUTE}]`)

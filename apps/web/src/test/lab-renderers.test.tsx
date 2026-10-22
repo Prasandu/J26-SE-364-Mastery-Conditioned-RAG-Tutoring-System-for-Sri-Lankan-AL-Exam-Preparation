@@ -34,6 +34,53 @@ const tx = (k: string) => resources.en.translation[k] ?? k;
 const checklist = definition.safetyRules.filter((r) => r.kind === 'checklist').map((r) => r.id);
 
 const svgItem = (id: string) => document.querySelector(`[data-lab-item="${id}"]`) as SVGGElement;
+
+describe('guided instrument setup', () => {
+  it('targets the next setup instrument independently of selection and keeps edits uncommitted on close', async () => {
+    const store = makeStore();
+    await startSession(store, 'guided', 'beginner');
+    const { user } = renderApp(store);
+    await screen.findByRole('tab', { name: tx('ui.side.protocol') });
+    expect(document.querySelector('[data-setup-instrument]')).toBeNull();
+    await act(async () => {
+      await store.getState().dispatchLabAction(
+        {
+          type: 'select_apparatus',
+          apparatusIds: definition.apparatus.filter((a) => a.role === 'required').map((a) => a.id),
+        },
+        { confirmed: true, acknowledgeSafety: true },
+      );
+      await store.getState().dispatchLabAction(
+        {
+          type: 'clean_glassware',
+          apparatusIds: definition.apparatus
+            .filter((a) => a.role === 'required' && a.requiresCleaning)
+            .map((a) => a.id),
+        },
+        { confirmed: true, acknowledgeSafety: true },
+      );
+      await store
+        .getState()
+        .dispatchLabAction(
+          { type: 'weigh_watch_glass' },
+          { confirmed: true, acknowledgeSafety: true },
+        );
+    });
+    expect(store.getState().session!.guidance.suggestedAction).toBe('set_balance_sliders');
+    act(() => store.getState().pickItem('reagent_na2co3'));
+    const gear = document.querySelector('[data-setup-instrument="four_beam_balance"]')!;
+    expect(gear).toBeVisible();
+    const before = store.getState().session!.events.length;
+    await user.click(gear);
+    const dialog = screen.getByRole('dialog', { name: tx('exp04.action.set_balance_sliders') });
+    await user.type(within(dialog).getByLabelText(tx('ui.form.slider_total')), '42');
+    await user.click(within(dialog).getByRole('button', { name: tx('ui.stage.close_setup') }));
+    expect(
+      screen.queryByRole('dialog', { name: tx('exp04.action.set_balance_sliders') }),
+    ).toBeNull();
+    expect(store.getState().session!.events.length).toBe(before);
+  });
+});
 const placements2D = () =>
   Object.fromEntries(
     [...document.querySelectorAll('[data-lab-item]')].map((el) => [

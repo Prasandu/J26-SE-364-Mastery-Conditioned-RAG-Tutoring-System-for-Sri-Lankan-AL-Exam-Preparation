@@ -39,10 +39,12 @@ export function CameraRig({
   initial,
   reducedMotion,
   onReady,
+  enabled = true,
 }: {
   initial: CameraPose;
   reducedMotion: boolean;
   onReady: (api: CameraApi) => void;
+  enabled?: boolean;
 }) {
   const { camera, gl, invalidate } = useThree();
   const aspect = useThree((state) => state.size.width / Math.max(1, state.size.height));
@@ -50,6 +52,10 @@ export function CameraRig({
   const flight = useRef<Flight | null>(null);
   const initialRef = useRef(initial);
   const overview = useRef(true);
+  useEffect(() => {
+    Object.assign(controls, { enabled });
+    invalidate();
+  }, [controls, enabled, invalidate]);
 
   useEffect(() => {
     Object.assign(controls, LIMITS, { enablePan: false, enableDamping: false });

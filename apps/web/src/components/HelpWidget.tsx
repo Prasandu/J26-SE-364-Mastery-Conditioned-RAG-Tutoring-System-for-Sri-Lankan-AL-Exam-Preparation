@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
 import { AssistantPanel } from '../workbench/AssistantPanel';
@@ -11,7 +11,7 @@ import { Icon } from './ui/Icon';
  * half-typed question or the last answer (the panel stays the same component instance); only
  * "End chat" resets it, by remounting with a fresh key.
  */
-export function HelpWidget() {
+export function HelpWidget({ children }: { children?: ReactNode }) {
   const { t } = useTranslation();
   const session = useSession((s) => s.session);
   const [open, setOpen] = useState(false);
@@ -26,7 +26,7 @@ export function HelpWidget() {
     wasOpen.current = open;
   }, [open]);
 
-  if (!session) return null;
+  if (!session && !children) return null;
 
   const endChat = () => {
     setInstance((n) => n + 1);
@@ -60,9 +60,7 @@ export function HelpWidget() {
               −
             </button>
           </div>
-          <div className="help-widget__body">
-            <AssistantPanel key={instance} />
-          </div>
+          <div className="help-widget__body">{children ?? <AssistantPanel key={instance} />}</div>
         </div>
       ) : (
         <button

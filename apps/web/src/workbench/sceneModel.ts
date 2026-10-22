@@ -26,6 +26,8 @@ export interface SceneItem {
 export type PointerState = 'below' | 'at' | 'above';
 
 export interface SceneModel {
+  /** Learner's bench arrangement; never part of the scientific session projection. */
+  positionOffsets?: Readonly<Record<string, { x: number; z: number }>>;
   items: SceneItem[];
   workingFlaskId: string | null;
   watchGlassHasSolid: boolean;

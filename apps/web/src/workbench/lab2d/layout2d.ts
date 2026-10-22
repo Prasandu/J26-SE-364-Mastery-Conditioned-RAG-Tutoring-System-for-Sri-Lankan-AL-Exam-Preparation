@@ -67,6 +67,13 @@ export interface Point {
 }
 
 export const itemPosition = (item: SceneItem, model: SceneModel): Point => {
+  const base = baseItemPosition(item, model),
+    offset = model.positionOffsets?.[item.id];
+  return offset && placementOf(item, model) === 'bench'
+    ? { ...base, x: base.x + offset.x * 100, y: base.y + offset.z * 60 }
+    : base;
+};
+const baseItemPosition = (item: SceneItem, model: SceneModel): Point => {
   const placement = placementOf(item, model);
   if (placement === 'on_balance') {
     const balance = model.items.find((i) => i.kind === 'balance');

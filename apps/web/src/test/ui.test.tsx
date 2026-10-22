@@ -52,7 +52,8 @@ describe('student flow', () => {
       await screen.findByRole('heading', { level: 1, name: tx('exp04.title') }),
     ).toBeInTheDocument();
     // The mode chip was removed from the workbench; the Protocol section is the check now.
-    await user.click(screen.getByRole('tab', { name: tx('ui.side.protocol') }));
+    const protocol = screen.getByRole('tab', { name: tx('ui.side.protocol') });
+    if (protocol.getAttribute('aria-expanded') !== 'true') await user.click(protocol);
     expect(screen.getByRole('heading', { name: tx('ui.actions.title') })).toBeInTheDocument();
   }, 15_000); // long multi-view flow; slow only under full parallel load
 

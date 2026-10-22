@@ -1,5 +1,6 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { MovableBenchGroup } from './MovableBenchGroup';
 import { ACESFilmicToneMapping, Group, PMREMGenerator, Vector3 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { BENCH_TARGET } from './interaction/gestures';
@@ -210,6 +211,34 @@ export interface LabSceneProps extends LabRendererProps {
   onCameraReady: (api: CameraApi) => void;
 }
 
+function SetupAnchor({
+  model,
+  id,
+  onAnchor,
+}: {
+  model: SceneModel;
+  id: string | null;
+  onAnchor: NonNullable<LabRendererProps['onSetupAnchor']>;
+}) {
+  const camera = useThree((s) => s.camera);
+  const previous = useRef<readonly [number, number] | null>(null);
+  useFrame(() => {
+    const item = model.items.find((i) => i.id === id);
+    if (!item) return;
+    const [x, y, z] = itemPosition3D(item, model);
+    const p = new Vector3(x + 0.3, y + 1.6, z).project(camera);
+    const next = [(p.x + 1) / 2, (1 - p.y) / 2] as const;
+    if (
+      !previous.current ||
+      Math.abs(next[0] - previous.current[0]) + Math.abs(next[1] - previous.current[1]) > 0.002
+    ) {
+      previous.current = next;
+      onAnchor(next);
+    }
+  });
+  return null;
+}
+
 export default function LabScene({
   model,
   onPick,
@@ -218,7 +247,12 @@ export default function LabScene({
   labelLines,
   reducedMotion,
   onCameraReady,
+  setupTargetId = null,
+  onSetupAnchor,
+  arrange = false,
+  onArrange,
 }: LabSceneProps) {
+  const [moving, setMoving] = useState(false);
   return (
     <Canvas
       frameloop="demand"
@@ -235,7 +269,13 @@ export default function LabScene({
           letting the glassware disappear into it. */}
       <color attach="background" args={['#bdcbd5']} />
       <Environment />
-      <CameraRig initial={OVERVIEW_POSE} reducedMotion={reducedMotion} onReady={onCameraReady} />
+      {onSetupAnchor && <SetupAnchor model={model} id={setupTargetId} onAnchor={onSetupAnchor} />}
+      <CameraRig
+        initial={OVERVIEW_POSE}
+        reducedMotion={reducedMotion}
+        onReady={onCameraReady}
+        enabled={!moving}
+      />
       <hemisphereLight args={['#f2f7ff', '#3c5369', 0.4]} />
       <directionalLight
         castShadow
@@ -257,7 +297,7 @@ export default function LabScene({
         const [x, y, z] = itemPosition3D(item, model);
         // A picked-up item is drawn lifted above its place until the engine moves it.
         const lift = heldItemId === item.id ? HELD_LIFT : 0;
-        return (
+        const content = (
           <SettledGroup
             key={item.id}
             name={item.id}
@@ -269,6 +309,22 @@ export default function LabScene({
               <ItemMesh item={item} model={model} placement={placement} labelLines={labelLines} />
             </Pickable>
           </SettledGroup>
+        );
+        return arrange && placement === 'bench' && onArrange ? (
+          <MovableBenchGroup
+            key={item.id}
+            id={item.id}
+            position={[0, 0, 0]}
+            rotation={[0, 0, 0]}
+            offset={model.positionOffsets?.[item.id] ?? { x: 0, z: 0 }}
+            onMove={onArrange}
+            onSelect={onPick}
+            onDragging={setMoving}
+          >
+            {content}
+          </MovableBenchGroup>
+        ) : (
+          content
         );
       })}
     </Canvas>

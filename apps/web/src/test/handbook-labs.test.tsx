@@ -1,3 +1,4 @@
+import { preparePractical, reflectAndReport, stageButton } from './practical-journey-helpers';
 import { act, cleanup, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { calculateHandbook, handbookModels, initialHandbookRun } from '@vlab/simulation-core';
@@ -41,7 +42,9 @@ describe('handbook model integration', () => {
       const store = makeStore();
       const legacy = store.getState().engine;
       store.getState().openHandbookLab(number);
-      renderApp(store);
+      const { user } = renderApp(store);
+      await screen.findByRole('heading', { name: en['ui.journey.overview']! });
+      await preparePractical(user);
       await screen.findByRole('img');
       expect(
         screen.getByRole('button', {
@@ -52,7 +55,7 @@ describe('handbook model integration', () => {
             ),
           ),
         }),
-      ).toBeDisabled();
+      ).toBeEnabled();
       expect(store.getState().engine).toBe(legacy);
       expect(store.getState().view).toBe('handbook_lab');
     },
@@ -62,16 +65,19 @@ describe('handbook model integration', () => {
     const store = makeStore();
     store.getState().openHandbookLab(7);
     const { user } = renderApp(store);
+    await screen.findByRole('heading', { name: en['ui.journey.overview']! });
+    await preparePractical(user);
     await screen.findByRole('img');
     expect(screen.getByText(en['labs.synthetic_notice']!)).toBeVisible();
     expect(screen.queryByLabelText(/Maximum mixture temperature/)).toBeNull();
-    await user.click(screen.getByRole('checkbox'));
     for (const id of handbookModels.get(7)!.steps)
       await user.click(screen.getByRole('button', { name: new RegExp(en[`labs.action.${id}`]!) }));
     await user.click(screen.getByRole('button', { name: en['labs.record']! }));
-    await user.click(screen.getByRole('button', { name: en['labs.tab.notebook']! }));
+    await user.click(stageButton('notebook'));
     await user.type(screen.getByLabelText(en['labs.notes']!), 'My exact text. සිංහල');
-    await user.click(screen.getByRole('button', { name: en['labs.tab.report']! }));
+    await user.click(stageButton('workbench'));
+    await user.click(screen.getByRole('button', { name: en['labs.finish']! }));
+    await reflectAndReport(user);
     expect(screen.getByText(en['labs.choice.practice_dataset']!)).toBeVisible();
     expect(screen.getByText('My exact text. සිංහල')).toBeVisible();
     act(() => {

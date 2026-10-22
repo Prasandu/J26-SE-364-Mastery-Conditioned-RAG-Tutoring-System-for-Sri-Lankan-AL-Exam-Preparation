@@ -43,6 +43,13 @@ export const PAN_TOP: Vec3 = [-0.55, 0.64, 0];
 export const FLASK_TOP_Y = FLASK_PROFILE.at(-1)![1];
 
 export const itemPosition3D = (item: SceneItem, model: SceneModel): Vec3 => {
+  const base = baseItemPosition3D(item, model),
+    offset = model.positionOffsets?.[item.id];
+  return offset && placementOf(item, model) === 'bench'
+    ? [base[0] + offset.x, base[1], base[2] + offset.z]
+    : base;
+};
+const baseItemPosition3D = (item: SceneItem, model: SceneModel): Vec3 => {
   const placement = placementOf(item, model);
   if (placement === 'on_balance') {
     const balance = model.items.find((i) => i.kind === 'balance');

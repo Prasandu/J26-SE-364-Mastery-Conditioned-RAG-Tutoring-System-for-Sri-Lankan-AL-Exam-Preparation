@@ -10,6 +10,7 @@ the provider-returned model ID and the validation category; never keys, prompts 
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -44,6 +45,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--confirm-live", action="store_true")
     args = parser.parse_args()
+    # Test subprocesses must never inherit usable credentials from the repository .env.
+    # Match evaluate_generation.py's offline guard before constructing Settings/providers.
+    if args.confirm_live and os.getenv("LAB_EVAL_OFFLINE") == "1":
+        print("Offline connectivity guard enabled: nothing was sent.")
+        return 2
     settings = Settings()
     groq_key = settings.groq_api_key.get_secret_value() if settings.groq_api_key else ""
     openai_key = settings.openai_api_key.get_secret_value() if settings.openai_api_key else ""

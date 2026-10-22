@@ -250,8 +250,10 @@
 }
 
 /* The help launcher floats bottom-right (see flow.css); its panel opens upward from there. */
+/* Matches the taller panel set in flow.css; dvh-aware for mobile browser chrome. */
 .help-widget__panel {
-  max-height: min(600px, calc(100dvh - 180px));
+  height: min(640px, calc(100dvh - 160px));
+  max-height: min(640px, calc(100dvh - 160px));
 }
 
 .help-widget__body {
@@ -461,30 +463,23 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* Help belongs in the title bar, clear of notebook text and its navigation. */
+/* A consistent bottom-right launcher, with space reserved beside notebook navigation. */
 .flow-shell--lab > .help-widget {
-  grid-area: 1 / 1;
-  position: relative;
-  align-self: start;
-  justify-self: end;
-  margin: 10px 12px 0 0;
-  right: auto;
-  bottom: auto;
+  position: fixed;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  margin: 0;
 }
 .flow-shell--lab .help-widget__launcher {
-  width: 40px;
-  height: 40px;
+  min-height: 44px;
   justify-content: center;
-  padding: 0;
-  box-shadow: none;
+  padding: 10px 16px;
 }
 .flow-shell--lab .help-widget__launcher span {
-  display: none;
+  display: inline;
 }
 .flow-shell--lab .help-widget__panel {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: static;
 }
 
 .flow-shell--lab .flow-shell__title {
@@ -633,14 +628,16 @@
 
 @media (min-width: 901px) {
   .flow-shell--lab .workbench__grid {
-    grid-template-columns: minmax(0, 1fr) clamp(340px, 25vw, 420px);
+    grid-template-columns: minmax(0, 1fr) clamp(500px, 44vw, 720px);
   }
   .flow-shell--lab .workbench__grid:has(.side-panel--collapsed) {
     grid-template-columns: minmax(0, 1fr) 220px;
   }
   .flow-shell--lab .workbench__side .side-panel {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: 'reading rail' 'pager rail';
     height: 100%;
     border: 0;
     border-left: 1px solid var(--line);
@@ -648,24 +645,26 @@
     box-shadow: none;
   }
   .flow-shell--lab .side-panel__toolbar {
+    grid-area: rail;
     flex: none;
     padding: var(--space-2);
-    border-left: 0;
-    border-bottom: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+    border-bottom: 0;
+    padding-bottom: 80px;
   }
   .flow-shell--lab .side-panel__head {
     padding: 4px 6px 8px;
   }
   .flow-shell--lab .notebook-nav ol {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 3px;
   }
   .flow-shell--lab .notebook-nav__item {
-    min-height: 40px;
-    padding: 5px;
-    gap: 4px;
-    font-size: var(--text-xs);
+    min-height: 48px;
+    padding: 10px;
+    gap: 8px;
+    font-size: var(--text-sm);
   }
   .flow-shell--lab .notebook-nav__item .icon {
     display: none;
@@ -698,6 +697,10 @@
   }
   .flow-shell--lab .side-panel--collapsed .notebook-nav ol {
     display: flex;
+  }
+  .flow-shell--lab .workbench__side .side-panel--collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'rail' 'rail';
   }
   .flow-shell--lab .side-panel--collapsed .notebook-nav__item {
     min-height: 48px;
@@ -858,4 +861,44 @@
   .flow-shell--lab .workbench__grid {
     min-height: 380px;
   }
+}
+
+.notebook-drawer .notebook-nav ol {
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-shell--lab .scene-frame__bar {
+  flex-wrap: wrap;
+}
+.flow-shell--lab .scene-frame__bar > .button {
+  flex: none;
+}
+.flow-shell--lab .scene-frame__presets {
+  order: 4;
+  flex-basis: 100%;
+}
+.flow-shell--lab .scene-frame__presets .lab-toolbar {
+  flex-wrap: wrap;
+}
+.flow-shell--lab .scene-frame__presets button {
+  white-space: nowrap;
+}
+
+.flow-shell--lab .scene-frame__bar {
+  position: relative;
+}
+.flow-shell--lab .bench-details {
+  position: static;
+}
+
+.bench-details:not([open]) > .bench-details__content {
+  display: none;
+}
+
+.scene-frame__arrange {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  flex: none;
 }

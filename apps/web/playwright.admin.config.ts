@@ -11,6 +11,8 @@ const API = 8013;
 const WEB = 5197;
 process.env.VLAB_ADMIN_E2E_DIR ??= join(tmpdir(), `vlab-admin-e2e-${Date.now()}`);
 const DATA = process.env.VLAB_ADMIN_E2E_DIR;
+// Optional existing interpreter for restricted/offline machines where uv's global cache is unavailable.
+const API_PYTHON = process.env.VLAB_E2E_PYTHON;
 
 export default defineConfig({
   testDir: './e2e',
@@ -35,7 +37,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `uv run uvicorn app.main:app --host 127.0.0.1 --port ${API}`,
+      command: `${API_PYTHON ? `"${API_PYTHON}"` : 'uv run python'} -m uvicorn app.main:app --host 127.0.0.1 --port ${API}`,
       cwd: '../api',
       url: `http://127.0.0.1:${API}/health`,
       reuseExistingServer: false,
@@ -45,6 +47,11 @@ export default defineConfig({
         LAB_ENVIRONMENT: 'development',
         LAB_ADMIN_MODE: 'development',
         LAB_ADMIN_DATA_DIR: DATA,
+        // Keep browser checks independent of a developer's .env storage/auth choices.
+        LAB_REPOSITORY: 'memory',
+        LAB_ADMIN_REPOSITORY: 'file',
+        LAB_KNOWLEDGE_REPOSITORY: 'memory',
+        LAB_PRINCIPAL_PROVIDER: 'development',
         LAB_EMBEDDING_PROVIDER: 'fake',
         LAB_KNOWLEDGE_MANIFEST: join(DATA, 'no-manifest.json'),
         LAB_LLM_PROVIDER: 'disabled',

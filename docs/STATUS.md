@@ -1,6 +1,82 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-22 (practicals 21–30 and local simulation authoring)_
+_Last updated: 2026-10-22 (workbench interactions; practicals 21–30 and local simulation authoring)_
+
+## Full learner journeys for practicals 1-30 (2026-10-22)
+
+- The 29 additional models now open Overview instead of a shortened direct-to-bench workspace.
+  Their shared flow is Overview, Pre-lab, Workbench setup, Workbench, Notebook, Reflection,
+  Report. Experiment 4 keeps its established engine and flow.
+- Pre-lab writing and a prediction unlock setup. Apparatus and safety acknowledgements unlock
+  the bench and dispatch the existing engine's safety action. These checks do not perform a
+  scientific step, select a reaction outcome or create a grade.
+- The engine still determines procedure order, recordability, repeat requirements and completion.
+  Complete practice moves to the notebook; reflection requires an engine-completed run, and the
+  report requires completed preparation and reflection. Report writing is ungraded learner text.
+- Version-keyed Zustand journey state keeps stage, preparation, prediction, setup checks and
+  reflection separate from bench notes and chemistry events. Writing survives stage changes,
+  language switches and library revisits in the current tab; refresh still clears these local runs.
+  Admin previews get separate per-mount journey identities and use the same preparation flow.
+- `content/library/handbook-preparation.v1.json` provides selected, paraphrased pre/post questions
+  for the 19 earlier models with chapter/question page references and the existing source checksum.
+  Practicals 21-30 and locally authored definitions use their own preLab/postLab content directly.
+  Selected questions are not advertised as an exhaustive transcription; authored translations
+  remain draft pending teacher review. Reports include these answers, predictions and bench notes.
+- Simulation scope remains bounded guided practice. This UI change does not add automatic/manual
+  modes to the other models or certify that all source branches have predictive physical models.
+- Verification this continuation: 378 web tests passed; web TypeScript and scoped ESLint passed.
+  Browser and production-build results are recorded below after completion.
+
+## Workbench interactions and apparatus coverage (2026-10-22)
+
+- All 30 library practicals now expose 2D and 3D apparatus views. The 19 earlier handbook
+  workspaces use apparatus appropriate to their supported procedure families, including cathode
+  tubes, molecular kits, balances, gas collection, insulated calorimeters, flame tests, crucibles
+  and titrations. These are original schematic renderings; this does not certify physical fidelity.
+- Notebook sections follow Context, Materials, Predictions, Protocol, Results, Reflection,
+  Summary, one section per row. Clicking the open section hides its reading panel; opening it
+  restores controlled learner text. Desktop notebook semantics no longer claim to be a modal.
+  Experiment 4's guidance appears before its full protocol/history, keeping the next instruction
+  near the top of the reading panel.
+- Instrument setup uses a native modal dialog positioned over the worktop. Setup gears target
+  the instrument needed for an editable reading/setup step and follow its camera projection in
+  3D. Escape, focus restoration, mobile scrolling and keyboard controls are covered by checks.
+- Instrument arrangements are shared between renderers and bounded to the worktop. Connected
+  collection/heating assemblies move together. Experiment 4 has an explicit Arrange instruments
+  mode so moving a drawing cannot accidentally pour or dispatch a chemistry action. Keyboard
+  arrows and reset provide an alternative to pointer dragging.
+- Measurement fields can be edited at their relevant procedure steps, while sample/reagent
+  choices remain locked after setup. Existing calculations, safety gates, replay and reports
+  remain authoritative. Experiment 30 still starts with blank, learner-entered timing fields;
+  synthetic calorimetry datasets retain their practice labels.
+- Support opens at bottom-right. The other practicals expose their current source-linked
+  procedure, precautions and model limits; they do not submit an Experiment 4 session to RAG.
+- Remaining scientific scope: Experiment 4 retains the full validated engine and mode/report
+  behavior. The other practicals remain bounded local guided teaching/calculation models;
+  automatic/manual parity, continuous transfer/reaction physics, unsupported procedure branches
+  and competency scoring are not implemented by these graphics. Sinhala additions await review.
+- Verification: 95 contracts, 223 simulation-core, 372 frontend and 361 API tests pass
+  (1,051 total). Workspace typechecks and build pass. The affected student browser suite passed
+  91 tests, with two existing desktop-only golden-path skips; all 30 practicals were exercised
+  at 1440 x 900, 834 x 1112 and 390 x 844 in English/Sinhala. Experiment 4 also passed
+  1366 x 768 and 1920 x 1080 checks. Separate pointer-dragging/support tests passed on all
+  three browser projects; step-specific setup follow-ups passed on desktop/mobile. Admin
+  authoring, 3D preview, local review, persistence and edit invalidation passed at 1440 x 900,
+  1366 x 768 and 390 x 844. The Admin test server now explicitly uses file/memory repositories
+  and the project Python module launcher, independent of developer storage/auth configuration.
+- Regression incident: the existing connectivity test attempted live provider requests because
+  its CLI did not honor LAB_EVAL_OFFLINE; Groq responded and OpenAI returned a rate-limit error.
+  The CLI now checks the offline guard before constructing Settings or either provider. A new
+  test forbids all three constructors, and the complete API suite passes with the guard.
+- Changed-file ESLint and Python Ruff checks pass. Root pnpm check still stops at an existing
+  EPERM while scanning .pytest_cache; no cache permissions or developer configuration were
+  changed. The build retains its documented large-chunk warning. No commit or push was made.
+
+Changed implementation areas: HandbookSimulationView / TeachingWorkspace; shared
+PracticeNotebook, StageSetupDialog, BenchArrangeControls, MovableBenchGroup and camera
+anchors; handbook, teaching and Experiment 4 renderer/layout files; shared support, scoped
+workspace styles and English/Sinhala locales; handbook measurement-stage metadata; affected
+unit/browser tests and Admin browser configuration; the offline connectivity guard and tests.
 
 ## Practicals 21–30 and local authoring
 
@@ -35,7 +111,7 @@ _Last updated: 2026-10-22 (practicals 21–30 and local simulation authoring)_
 
 - The library now opens a runnable workspace for each of its first 20 practicals. Experiment 4
   retains its existing versioned engine, modes, API, 2D/3D workbench and competency report.
-  The other 19 use an independent, versioned, deterministic **local guided 2D teaching model**;
+  The other 19 use an independent, versioned, deterministic **local guided 2D/3D teaching model**;
   they are not registered as validated ExperimentDefinitions or published API simulations.
 - Added ordered procedure actions, sample/reagent choices, safety acknowledgements, calculated
   or qualitative outcomes, repeatable trials, exact learner notes and trial reports. Rejected

@@ -88,6 +88,7 @@ export function NotebookSheet({ model }: { model: SceneModel }) {
       <dialog
         ref={dialogRef}
         className="notebook-drawer"
+        role={isSheet ? 'dialog' : 'complementary'}
         aria-label={t('ui.side.notebook')}
         // `cancel` covers Escape; `close` covers every other route out.
         onCancel={() => setOpen(false)}

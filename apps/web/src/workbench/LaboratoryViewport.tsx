@@ -1,5 +1,5 @@
 import type { ActionType } from '@vlab/contracts';
-import { useState, type KeyboardEvent } from 'react';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../store/StoreProvider';
 import { BenchDescription, CanvasFallback } from './CanvasFallback';
@@ -14,7 +14,14 @@ import { StageFeedback } from './interaction/StageFeedback';
 import Laboratory2D from './lab2d/Laboratory2D';
 import { LabCanvas } from './LabCanvas';
 import { LaboratoryModeSwitcher } from './LaboratoryModeSwitcher';
-import type { SceneItem, SceneModel } from './sceneModel';
+import { StageActionForm } from './ActionParameterForm';
+import { Icon } from '../components/ui/Icon';
+import { StageSetupDialog } from './StageSetupDialog';
+import { BenchArrangeControls } from './BenchArrangeControls';
+import { boundedOffset, type BenchOffsets, type BenchOffset } from './benchLayout';
+import { placementOf, type SceneItem, type SceneModel } from './sceneModel';
+import { itemPosition, itemBox, VIEW_W, BENCH_Y } from './lab2d/layout2d';
+import { itemPosition3D } from './scene3d/layout3d';
 
 /**
  * Shared visualization boundary and interaction controller. Both renderers receive the same scene
@@ -22,7 +29,7 @@ import type { SceneItem, SceneModel } from './sceneModel';
  * `interaction/gestures`; the engine decides every outcome, and the drawing changes only when the
  * returned projection changes. Switching renderer changes presentation only.
  */
-export function LaboratoryViewport({ model }: { model: SceneModel }) {
+export function LaboratoryViewport({ model: projectedModel }: { model: SceneModel }) {
   const { t } = useTranslation();
   const labView = useSession((s) => s.labView);
   const setLabView = useSession((s) => s.setLabView);
@@ -41,11 +48,61 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
   const [notice, setNotice] = useState<{ key: string; id: number } | null>(null);
   const [closedFor, setClosedFor] = useState<string | null>(null);
   const [toolbarTarget, setToolbarTarget] = useState<HTMLDivElement | null>(null);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const [arrange, setArrange] = useState(false);
+  const [offsets, setOffsets] = useState<BenchOffsets>({});
+  const model = useMemo(
+    () => ({ ...projectedModel, positionOffsets: offsets }),
+    [projectedModel, offsets],
+  );
+  const move = (id: string, value: BenchOffset) =>
+    setOffsets((old) => {
+      const item = projectedModel.items.find((i) => i.id === id);
+      if (!item || placementOf(item, projectedModel) !== 'bench') return old;
+      const at = itemPosition(item, projectedModel),
+        box = itemBox(item, 'bench');
+      const [worldX, , worldZ] = itemPosition3D(item, projectedModel);
+      const next = boundedOffset(value);
+      const half = (box.w * at.s) / 2 + 8;
+      return {
+        ...old,
+        [id]: {
+          x: Math.max(
+            (half - at.x) / 100,
+            -4.5 - worldX,
+            Math.min((VIEW_W - half - at.x) / 100, 4.5 - worldX, next.x),
+          ),
+          z: Math.max(
+            (370 - at.y) / 60,
+            -1.5 - worldZ,
+            Math.min((BENCH_Y - at.y) / 60, 1.9 - worldZ, next.z),
+          ),
+        },
+      };
+    });
 
   const find = (id: string | null) => model.items.find((i) => i.id === id) ?? null;
   const held = find(heldId);
   const focused = focusedId !== closedFor ? find(focusedId) : null;
   const openForm = form && form.sequence === sequence ? form.type : null;
+  const setupKind: Partial<Record<ActionType, SceneItem['kind']>> = {
+    set_balance_sliders: 'balance',
+    add_solid: 'reagent',
+    remove_solid: 'reagent',
+    add_water: 'wash_bottle',
+    adjust_to_mark: 'volumetric_flask',
+    apply_label: 'volumetric_flask',
+  };
+  const setupTarget =
+    suggested && setupKind[suggested]
+      ? model.items.find(
+          (i) =>
+            i.kind === setupKind[suggested] &&
+            (i.kind !== 'volumetric_flask' || i.id === model.workingFlaskId),
+        )
+      : null;
+  const setupAction = setupTarget ? suggested : null;
+  const [anchor, setAnchor] = useState<readonly [number, number] | null>(null);
 
   const run = (result: GestureResult) => {
     if (result.kind === 'dispatch') {
@@ -64,6 +121,10 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
     if (source && target) run(resolveGesture(source, target, model));
   };
   const onPick = (id: string) => {
+    if (arrange) {
+      if (id !== BENCH_TARGET) pickItem(id);
+      return;
+    }
     if (automatic) {
       if (id !== BENCH_TARGET) pickItem(id);
       return;
@@ -91,13 +152,40 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
   };
 
   const label = t('ui.lab.scene_label');
-  const rendererProps = { model, onPick, label, heldItemId: heldId, onDrop, toolbarTarget };
+  const rendererProps = {
+    model,
+    onPick,
+    label,
+    heldItemId: heldId,
+    onDrop,
+    toolbarTarget,
+    setupTargetId: setupTarget?.id ?? null,
+    onSetupAnchor: setAnchor,
+    arrange,
+    onArrange: move,
+  };
   const lab2d = <Laboratory2D {...rendererProps} />;
 
   return (
     <div className="scene-frame" onKeyDown={onKeyDown}>
       <div className="scene-frame__bar">
         <LaboratoryModeSwitcher value={labView} onChange={setLabView} />
+        {!automatic && (
+          <button
+            type="button"
+            className="button scene-frame__arrange"
+            aria-pressed={arrange}
+            aria-label={t(arrange ? 'ui.practice.action_mode' : 'ui.practice.arrange_mode')}
+            title={t(arrange ? 'ui.practice.action_mode' : 'ui.practice.arrange_mode')}
+            onClick={() => {
+              setArrange((a) => !a);
+              setHeldId(null);
+              setForm(null);
+            }}
+          >
+            <Icon name="move" size={20} />
+          </button>
+        )}
         <div className="scene-frame__presets" ref={setToolbarTarget} />
         <details className="bench-details">
           <summary>{t('ui.stage.text_description')}</summary>
@@ -110,7 +198,7 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
           </div>
         </details>
       </div>
-      <div className={held ? 'lab-stage lab-stage--holding' : 'lab-stage'}>
+      <div ref={setStage} className={held ? 'lab-stage lab-stage--holding' : 'lab-stage'}>
         {labView === '3d' ? (
           <LabCanvas
             {...rendererProps}
@@ -125,13 +213,56 @@ export function LaboratoryViewport({ model }: { model: SceneModel }) {
           lab2d
         )}
         <StageFeedback notice={notice} />
+        {setupAction && !openForm && !held && (
+          <button
+            type="button"
+            className="lab-stage__setup-trigger"
+            style={
+              anchor
+                ? {
+                    left: `clamp(12px, ${anchor[0] * 100}%, calc(100% - 100px))`,
+                    top: `clamp(12px, ${anchor[1] * 100}%, calc(100% - 52px))`,
+                    right: 'auto',
+                  }
+                : undefined
+            }
+            data-setup-instrument={setupTarget?.id}
+            aria-label={t('ui.stage.open_setup', { action: t(`exp04.action.${setupAction}`) })}
+            title={t('ui.stage.open_setup', { action: t(`exp04.action.${setupAction}`) })}
+            onClick={() => {
+              if (setupTarget) pickItem(setupTarget.id);
+              setForm({ type: setupAction, sequence });
+            }}
+          >
+            <Icon name="settings" size={18} />
+            <span>{t('ui.stage.setup')}</span>
+          </button>
+        )}
+        {openForm && (
+          <StageSetupDialog
+            title={t(`exp04.action.${openForm}`)}
+            stage={stage}
+            onClose={() => setForm(null)}
+          >
+            <StageActionForm type={openForm} suggested={suggested === openForm} />
+          </StageSetupDialog>
+        )}
       </div>
+      {arrange && (
+        <BenchArrangeControls
+          selected={focused && placementOf(focused, model) === 'bench' ? focused.id : ''}
+          label={focused ? t(focused.nameKey) : t('ui.practice.instrument')}
+          offsets={offsets}
+          onMove={move}
+          onReset={() => setOffsets({})}
+        />
+      )}
       {!automatic && (
         <StageDock
           model={model}
           focused={focused}
           held={held}
-          form={openForm}
+          form={null}
           suggestedAction={suggested}
           busy={busy}
           onAction={(type: ActionType, item: SceneItem) =>

@@ -51,6 +51,10 @@ export function LabCanvas({
   heldItemId = null,
   fallback,
   toolbarTarget,
+  setupTargetId,
+  onSetupAnchor,
+  arrange,
+  onArrange,
 }: LabRendererProps & { fallback: (reason: FallbackReason) => ReactNode }) {
   const { t, i18n } = useTranslation();
   const locale = (i18n.language === 'si' ? 'si' : 'en') as Locale;
@@ -107,6 +111,10 @@ export function LabCanvas({
         <Suspense fallback={<p className="canvas-loading">{t('ui.canvas.loading')}</p>}>
           <div className="lab-canvas">
             <LabScene
+              arrange={arrange}
+              onArrange={onArrange}
+              setupTargetId={setupTargetId}
+              onSetupAnchor={onSetupAnchor}
               model={model}
               onPick={onPick}
               label={label}

@@ -1,3 +1,4 @@
+import { preparePractical } from './practical-journey-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import teaching from '../../../content/locales/en/teaching.json' with { type: 'json' };
 import admin from '../../../content/locales/en/admin.json' with { type: 'json' };
@@ -39,7 +40,7 @@ test('no-code model preview, local review, persistence and edit invalidation', a
   await preview.click();
   const modal = page.getByRole('dialog');
   await expect(modal).toBeVisible();
-  await modal.getByRole('button', { name: tx('enter_lab'), exact: true }).click();
+  await preparePractical(modal);
   await expect(modal.getByRole('img', { name: tx('scene2d'), exact: true })).toBeVisible();
   await modal.getByRole('button', { name: tx('3d'), exact: true }).click();
   await expect(modal.locator('canvas[data-ready="true"]')).toBeVisible({ timeout: 30_000 });

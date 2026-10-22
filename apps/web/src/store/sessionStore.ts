@@ -1,3 +1,4 @@
+import { emptyPracticeJourney, type PracticeJourneyState } from './practiceJourney';
 import {
   emptyNotebook,
   type Action,
@@ -112,6 +113,8 @@ export type WorkbenchTab =
 export type NotebookStatus = 'pristine' | 'unsaved' | 'saving' | 'saved' | 'error' | 'conflict';
 
 export interface SessionStoreState {
+  practiceJourneys: Record<string, PracticeJourneyState>;
+  updatePracticeJourney(id: string, patch: Partial<PracticeJourneyState>): void;
   /** Read-only engine boundary (static content and the adapter kind). */
   readonly engine: EngineAdapter;
   view: View;
@@ -346,6 +349,14 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
       notebook: freshNotebook(),
       report: { status: 'idle', data: null },
       catalog: { status: 'idle', items: [] },
+      practiceJourneys: {},
+      updatePracticeJourney: (id, patch) =>
+        set((s) => ({
+          practiceJourneys: {
+            ...s.practiceJourneys,
+            [id]: { ...(s.practiceJourneys[id] ?? emptyPracticeJourney()), ...patch },
+          },
+        })),
       handbookLab: { active: null, runs: {}, error: null },
       teaching: { authored: [], active: null, runs: {}, error: null },
       setAuthoredTeaching: (definitions) => {

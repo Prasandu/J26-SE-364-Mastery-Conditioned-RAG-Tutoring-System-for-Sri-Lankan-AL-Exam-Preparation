@@ -38,7 +38,7 @@ describe('first 20 handbook practicals', () => {
       ).toBeInTheDocument();
       if (entry.experimentNumber !== 4) expect(within(cards[i]!).getByRole('button')).toBeEnabled();
     }
-    expect(screen.getAllByText(en['labs.available']!)).toHaveLength(19);
+    expect(screen.getAllByText(en['labs.available']!)).toHaveLength(29);
     expect(screen.getAllByRole('button', { name: en['ui.card.start']! })).toHaveLength(1);
   });
 
@@ -77,6 +77,6 @@ describe('first 20 handbook practicals', () => {
     await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(30));
     expect(screen.queryByRole('button', { name: en['ui.card.start']! })).toBeNull();
     expect(screen.getAllByText(en['ui.handbook.reference']!)).toHaveLength(1);
-    expect(screen.getAllByText(en['labs.available']!)).toHaveLength(19);
+    expect(screen.getAllByText(en['labs.available']!)).toHaveLength(29);
   });
 });

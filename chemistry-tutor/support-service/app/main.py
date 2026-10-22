@@ -45,9 +45,25 @@ def _warm_up_database_connection() -> None:
     logger.error("DB warm-up failed after %d attempts; continuing anyway", max_attempts)
 
 
+def _warm_up_models() -> None:
+    """Load the local embedding model at startup instead of on whichever
+    request happens to be first (lazy-loaded via lru_cache otherwise, which
+    made the first chat/voice request after any server restart multiple
+    seconds slower than every request after it). Speech-to-text has no
+    local model to warm up — it runs on Groq's hosted API.
+    """
+    from app.services.rag.embeddings import warm_up as warm_up_embeddings
+
+    try:
+        warm_up_embeddings()
+    except Exception as exc:
+        logger.warning("Warm-up of embedding model failed, will load lazily on first use: %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _warm_up_database_connection()
+    _warm_up_models()
     yield
 
 

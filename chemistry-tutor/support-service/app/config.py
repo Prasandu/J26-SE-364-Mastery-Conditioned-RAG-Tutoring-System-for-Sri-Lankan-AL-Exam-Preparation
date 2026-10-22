@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
     groq_api_key: str = ""
 
+    # Sinhala speech-to-text only (app/services/speech/transcription.py) —
+    # English STT stays on Groq Whisper.
+    gemini_api_key: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

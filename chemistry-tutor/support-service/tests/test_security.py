@@ -22,7 +22,7 @@ def _unique_student_id(label: str) -> str:
 
 
 class FakeProvider:
-    def generate_response(self, system_prompt: str, user_message: str) -> str:
+    def generate_response(self, system_prompt: str, user_message: str, max_tokens: int = 1500) -> str:
         # Simulate the LLM inventing a citation-like claim in its prose.
         # The important thing is that the *structured* citations field
         # never includes this fabricated source — it only ever lists what

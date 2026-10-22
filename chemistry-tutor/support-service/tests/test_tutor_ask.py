@@ -9,12 +9,12 @@ client = TestClient(app)
 
 
 class FakeProvider:
-    def generate_response(self, system_prompt: str, user_message: str) -> str:
+    def generate_response(self, system_prompt: str, user_message: str, max_tokens: int = 1500) -> str:
         return "A mole is the SI unit for amount of substance."
 
 
 class FailingProvider:
-    def generate_response(self, system_prompt: str, user_message: str) -> str:
+    def generate_response(self, system_prompt: str, user_message: str, max_tokens: int = 1500) -> str:
         raise RuntimeError("connection refused: api.groq.com unreachable (fake, for testing)")
 
 

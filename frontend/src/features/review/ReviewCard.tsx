@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ReviewItem } from "@/api/types";
 import { Badge } from "@/components/Badge";
@@ -12,9 +12,9 @@ import { AnswerPhotos } from "./AnswerPhotos";
 import { MachineReading } from "./MachineReading";
 
 interface Props {
-  item: ReviewItem;
-  busy: boolean;
-  onDecide: (awarded: boolean, comment: string, peeked: boolean) => void;
+  readonly item: ReviewItem;
+  readonly busy: boolean;
+  readonly onDecide: (awarded: boolean, comment: string, peeked: boolean) => void;
 }
 
 /**
@@ -26,7 +26,24 @@ interface Props {
 export function ReviewCard({ item, busy, onDecide }: Props) {
   const [comment, setComment] = useState("");
   const [peeked, setPeeked] = useState(false);
+  // Which button was pressed, so the card says what is being saved rather than
+  // only that something is. A decided point leaves the queue, so this is cleared
+  // again only when the save failed and the card is still here.
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const wasBusy = useRef(false);
   const reason = reviewReason(item);
+
+  useEffect(() => {
+    if (wasBusy.current && !busy) {
+      setChoice(null);
+    }
+    wasBusy.current = busy;
+  }, [busy]);
+
+  function decide(awarded: boolean) {
+    setChoice(awarded);
+    onDecide(awarded, comment, peeked);
+  }
 
   return (
     <Card>
@@ -81,17 +98,17 @@ export function ReviewCard({ item, busy, onDecide }: Props) {
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
         />
         <div className="flex flex-wrap items-center gap-3">
-          <Button disabled={busy} onClick={() => onDecide(true, comment, peeked)}>
-            Award {marks(item.marks)}
+          <Button disabled={busy} onClick={() => decide(true)}>
+            {choice === true ? `Awarding ${marks(item.marks)}...` : `Award ${marks(item.marks)}`}
           </Button>
-          <Button
-            variant="secondary"
-            disabled={busy}
-            onClick={() => onDecide(false, comment, peeked)}
-          >
-            Do not award
+          <Button variant="secondary" disabled={busy} onClick={() => decide(false)}>
+            {choice === false ? "Not awarding..." : "Do not award"}
           </Button>
-          {busy && <span className="text-xs text-slate-500">Saving your decision...</span>}
+          {busy && (
+            <span className="text-xs font-medium text-brand-700">
+              Saving - this point will leave the list once it is done
+            </span>
+          )}
         </div>
         <MachineOpinion item={item} open={false} onOpen={() => setPeeked(true)} />
       </div>

@@ -128,7 +128,18 @@ def refresh_scores(attempt: Attempt) -> None:
 
 
 def paper_max_score(paper: Paper) -> float:
-    return _sum_sections(paper, lambda question: question.max_marks or 0.0)
+    """The marks a paper is out of, counted the same way a score is counted.
+
+    Marks live on the leaves: a structured question like 4 carries none of its own,
+    only 4(a), 4(b)(i) and so on do. Reading max_marks off the top-level question
+    alone therefore totals zero for a whole structured paper, while _paper_score
+    adds up the leaves - which is how an attempt ends up scored "29 / 0".
+    """
+    return _sum_sections(paper, _question_max)
+
+
+def _question_max(question: Question) -> float:
+    return sum(leaf.max_marks or 0.0 for leaf in question.walk() if not leaf.sub_questions)
 
 
 def quote_in_answer(quote: str | None, answer_text: str) -> bool:

@@ -191,9 +191,20 @@ function ExtractSummary({
 
       {result.failed.length > 0 && (
         <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Pages {result.failed.map((entry) => entry.pages.join("-")).join(", ")} could not be read
-          ({result.failed[0].error}). Re-run the import for just those pages and merge the questions by
-          hand below, or accept what was read.
+          <strong>Some pages need a manual review.</strong> Pages{" "}
+          {result.failed.map((entry) => entry.pages.join("-")).join(", ")} could not be read. Re-run
+          the import for just those pages and merge the questions by hand below, or accept what was
+          read.
+        </p>
+      )}
+
+      {result.failed.length === 0 && result.extracted.questions.length > 0 && (
+        <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+          <strong>Done.</strong> {result.pages_read.length}{" "}
+          {result.pages_read.length === 1 ? "page" : "pages"} read successfully,{" "}
+          {result.extracted.questions.length} question
+          {result.extracted.questions.length === 1 ? "" : "s"} found. Check the result below before
+          you submit.
         </p>
       )}
 
@@ -201,10 +212,10 @@ function ExtractSummary({
         result.extracted.questions.length === 0 &&
         (result.extracted.mcq_answers ?? []).length === 0 && (
           <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
-            {result.pages_read.length} page(s) were read by {result.model} without an error, but nothing
-            was extracted from any of them - that almost never means the pages were genuinely blank. It
-            usually means this model could not make sense of the scan (a common gap for a newly-tried
-            model). Try a different, known-working model, or re-run just one page to confirm.
+            Reading failed. {result.pages_read.length} page(s) were processed without an error, but
+            nothing was extracted from any of them - that almost never means the pages were genuinely
+            blank. The scan could not be made sense of. Try re-running just one page to confirm, or
+            use a clearer scan.
           </p>
         )}
 

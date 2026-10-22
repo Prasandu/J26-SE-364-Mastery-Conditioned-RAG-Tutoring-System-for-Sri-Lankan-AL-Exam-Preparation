@@ -228,6 +228,12 @@ export function AttemptPage() {
   // rather than hiding every other already-decided question behind them too.
   const marking = attempt.status === "submitted" && points.some((point) => point.status === "pending");
   const needsTeacherCount = points.filter((point) => point.status === "needs_review").length;
+  // The mark to show, and whether it can still move. A point parked for a teacher
+  // can only add marks, so until those are decided this is a floor, not the result.
+  const shownScore = attempt.score ?? confirmedSoFar(points);
+  const scoreIsFinal = attempt.score !== null && needsTeacherCount === 0;
+  const scorePercent =
+    attempt.max_score > 0 ? Math.round((shownScore / attempt.max_score) * 100) : null;
   const items = answerableQuestions(paper);
   const mcqOptionLabels = optionLabels(paper);
   const answered = items.filter((item) => {
@@ -242,20 +248,22 @@ export function AttemptPage() {
       ) : locked ? (
         <Card>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-lg font-medium tracking-tight">Result</h2>
-            {attempt.score !== null ? (
-              <p className="text-3xl font-semibold tabular-nums text-brand-700">
-                {attempt.score}{" "}
-                <span className="text-base font-normal text-slate-400">/ {attempt.max_score}</span>
+            <div>
+              <h2 className="text-lg font-medium tracking-tight">Result</h2>
+              <p className="text-sm text-slate-500">
+                {scoreIsFinal ? "Final mark" : "Marked so far - not your final mark yet"}
               </p>
-            ) : (
+            </div>
+            <div className="text-right">
               <p className="text-3xl font-semibold tabular-nums text-brand-700">
-                {confirmedSoFar(points)}{" "}
-                <span className="text-base font-normal text-slate-400">
-                  / {attempt.max_score} confirmed
-                </span>
+                {shownScore}
+                <span className="text-xl font-normal text-slate-400"> / {attempt.max_score}</span>
+                <span className="text-base font-normal text-slate-500"> marks</span>
               </p>
-            )}
+              {scorePercent !== null && (
+                <p className="text-sm tabular-nums text-slate-500">{scorePercent}%</p>
+              )}
+            </div>
           </div>
           {needsTeacherCount > 0 && (
             <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">

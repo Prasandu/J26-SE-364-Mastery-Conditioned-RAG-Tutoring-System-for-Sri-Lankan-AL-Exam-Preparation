@@ -126,7 +126,12 @@ export function ReviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Teacher review</h1>
-        <p className="mt-1 text-sm text-slate-500">Signed in as {user?.name ?? "teacher"}.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Signed in as {user?.name ?? "teacher"}.{" "}
+          <span className="font-medium text-slate-700">
+            {decided.length} decided in this session, {items.length} still waiting.
+          </span>
+        </p>
       </div>
 
       {error && <ErrorBox message={error} />}

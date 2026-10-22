@@ -111,17 +111,12 @@ function PointRow({ point, compact }: { point: PointResult; compact: boolean }) 
   );
 }
 
-/** "marked by AI judge, 99% sure" - so a teacher can see where a mark came from. */
+/** "marked by the chemistry checker" - which kind of marker decided this point. The
+ * model behind it and how sure it was are internal, so neither is shown. */
 function MarkedBy({ point }: { point: PointResult }) {
   if (point.method === null) {
     return null;
   }
   const who = MARKERS[point.method] ?? point.method;
-  const sure = point.confidence === null ? "" : `, ${Math.round(point.confidence * 100)}% sure`;
-  return (
-    <span className="text-xs text-slate-400" title={point.marker ?? undefined}>
-      marked by {who}
-      {sure}
-    </span>
-  );
+  return <span className="text-xs text-slate-400">marked by {who}</span>;
 }

@@ -221,8 +221,7 @@ function ReadReview({ read, chosen, optionLabels, missing, busy, saving, onPick,
           </Badge>
         )}
         <span className="text-slate-500">
-          read as {read.questions_found} questions with {read.options_found} options
-          {read.read_by === "detected grid" && " (layout worked out from the photo)"}
+          {read.questions_found} of your answers were found on this sheet
         </span>
       </div>
 

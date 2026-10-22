@@ -127,7 +127,7 @@ export function CheckPaper({ made, onPublished }: Props) {
   return (
     <div className="space-y-5">
       <Card>
-        <SectionHeading hint={`written by ${made.written_by}`}>{made.title}</SectionHeading>
+        <SectionHeading>{made.title}</SectionHeading>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Badge tone="good">{made.kept} questions kept</Badge>
           {made.dropped.length > 0 && <Badge tone="warn">{made.dropped.length} dropped</Badge>}

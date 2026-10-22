@@ -17,7 +17,6 @@ export function MachineReading({ item }: { item: ReviewItem }) {
     <div>
       <dt className="flex flex-wrap items-baseline gap-2 text-slate-500">
         <span>What the camera read</span>
-        {item.read_by && <span className="text-xs text-slate-400">by {item.read_by}</span>}
         {item.corrected_by_student && (
           <span className="text-xs text-amber-700">the student corrected this</span>
         )}

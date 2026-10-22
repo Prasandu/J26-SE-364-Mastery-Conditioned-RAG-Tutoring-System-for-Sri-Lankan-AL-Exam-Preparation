@@ -60,8 +60,10 @@ def get_flagged_question(db: Session, flagged_question_id: int) -> FlaggedQuesti
     return db.get(FlaggedQuestion, flagged_question_id)
 
 
-def mark_reviewed(db: Session, flagged: FlaggedQuestion) -> None:
+def mark_reviewed(db: Session, flagged: FlaggedQuestion, explanation_text: str | None = None) -> None:
     flagged.status = "reviewed"
+    if explanation_text is not None:
+        flagged.explanation_text = explanation_text
     db.commit()
 
 

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { getConsultation } from "../services/studentsApi";
 import type { Consultation } from "../types/consultation";
 
 export function ConsultationPage() {
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [nameInput, setNameInput] = useState("");
+  const { user } = useAuth();
+  const studentId = user!.id;
 
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,44 +21,19 @@ export function ConsultationPage() {
   }
 
   useEffect(() => {
-    if (studentId) loadConsultation(studentId);
+    loadConsultation(studentId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId]);
 
-  if (!studentId) {
-    return (
-      <div className="flex h-full items-center justify-center bg-gray-50">
-        <div className="w-80 rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-2 text-lg font-semibold">Get a study consultation</h2>
-          <input
-            className="w-full rounded border px-3 py-2 text-sm"
-            placeholder="Student name"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && nameInput.trim() && setStudentId(nameInput.trim())}
-          />
-          <button
-            onClick={() => nameInput.trim() && setStudentId(nameInput.trim())}
-            disabled={!nameInput.trim()}
-            className="mt-3 w-full rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-          >
-            Get Consultation
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 p-6">
+    <div className="h-full overflow-y-auto bg-slate-50 p-6">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Study Consultation: {studentId}</h1>
-          <button onClick={() => setStudentId(null)} className="text-sm text-blue-600 underline">
-            Switch student
-          </button>
+        <div className="mb-4">
+          <h1 className="text-lg font-semibold text-blue-950">How are you doing?</h1>
+          <p className="text-sm text-slate-500">A quick check-in based on your recent practice.</p>
         </div>
 
-        {loading && <p className="text-gray-400">Generating your consultation...</p>}
+        {loading && <p className="text-slate-400">Thinking about how to best support you...</p>}
         {error && (
           <div className="rounded border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-700">Could not load consultation: {error}</p>
@@ -80,16 +56,17 @@ export function ConsultationPage() {
 
             {consultation.has_data && (
               <>
-                <div className="rounded-lg border bg-white p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-gray-700">Revision Plan</h2>
-                  <p className="whitespace-pre-wrap text-sm text-gray-800">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-5">
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-blue-950">
                     {consultation.revision_plan}
                   </p>
                 </div>
 
-                <div className="mt-4 rounded-lg border bg-white p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-gray-700">Topics to focus on</h2>
-                  <ul className="space-y-1 text-sm text-gray-700">
+                <details className="mt-4 rounded-lg border bg-white p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+                    What's behind this (questions you've been finding tricky)
+                  </summary>
+                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
                     {consultation.weak_topics.map((wt) => (
                       <li key={wt.question_code}>
                         <span className="font-medium">{wt.question_code}</span> (Unit {wt.unit}) —{" "}
@@ -103,16 +80,17 @@ export function ConsultationPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </details>
               </>
             )}
 
             <div className="mt-4 rounded-lg border bg-white p-4">
-              <h2 className="mb-2 text-sm font-semibold text-gray-700">General study tips</h2>
-              <p className="mb-2 text-xs text-gray-400">
-                Generic advice, not personalized to your emotional state.
+              <h2 className="mb-2 text-sm font-semibold text-slate-700">A few general wellbeing tips</h2>
+              <p className="mb-2 text-xs text-slate-400">
+                General advice, not personalized — this app doesn't detect your actual emotional
+                state.
               </p>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-gray-700">
+              <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
                 {consultation.wellness_tips.map((tip, i) => (
                   <li key={i}>{tip}</li>
                 ))}

@@ -10,7 +10,7 @@ export function HintPanel({ hints }: { hints: HintResponse[] }) {
           <p className="text-xs font-semibold text-amber-700">
             Level {h.level} — {h.level_name}
           </p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">{h.content}</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{h.content}</p>
         </div>
       ))}
     </div>

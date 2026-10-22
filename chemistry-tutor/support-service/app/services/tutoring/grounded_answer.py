@@ -34,10 +34,19 @@ student still gets something useful. Only say the syllabus/resource book does no
 the topic at all if the context is genuinely unrelated to the question.
 
 Respond in {language_name}.
-
+{concise_instruction}
 Context passages:
 {context}
 """
+
+# Appended only for voice chat: a long, markdown-table-heavy answer is both
+# slow to generate (more tokens) and bad to listen to read aloud. Keeping it
+# short directly cuts response latency, not just listening time.
+CONCISE_INSTRUCTION = (
+    "\nThis answer will be read aloud, not displayed as text. Keep it SHORT and "
+    "conversational — 2-4 sentences covering just the core answer. Do not use markdown "
+    "formatting, headings, tables, or numbered/bulleted lists; write plain spoken sentences.\n"
+)
 
 LLM_UNAVAILABLE_MESSAGE = "The AI service is temporarily unavailable. Please try again in a moment."
 
@@ -58,7 +67,7 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
     return "\n\n".join(parts)
 
 
-def answer_question(db: Session, question: str, language: str = "en") -> GroundedAnswer:
+def answer_question(db: Session, question: str, language: str = "en", concise: bool = False) -> GroundedAnswer:
     results = search_chunks(db, question, top_k=TOP_K)
     relevant = [r for r in results if r.similarity >= MIN_SIMILARITY]
 
@@ -74,12 +83,14 @@ def answer_question(db: Session, question: str, language: str = "en") -> Grounde
 
     language_name = LANGUAGE_NAMES.get(language, "English")
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        language_name=language_name, context=_format_context(relevant)
+        language_name=language_name,
+        concise_instruction=CONCISE_INSTRUCTION if concise else "",
+        context=_format_context(relevant),
     )
 
     provider = get_llm_provider()
     try:
-        answer = provider.generate_response(system_prompt, question)
+        answer = provider.generate_response(system_prompt, question, max_tokens=350 if concise else 1500)
     except Exception:
         # Covers network errors, auth failures, rate limits, timeouts, etc.
         # from whichever LLM provider is configured. Never leak the raw

@@ -11,10 +11,12 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.flagged_question import FlaggedQuestion
 from app.models.student_attempt import StudentAttempt
 from app.models.verified_question import VerifiedQuestion
 from app.services.learning_state.intervention_history import get_intervention_history
 from app.services.mastery.evidence import get_student_dashboard
+from app.services.practice.explain import explain_flagged_question
 from app.services.tutoring.llm_adapter import get_llm_provider
 
 LLM_UNAVAILABLE_MESSAGE = "The AI service is temporarily unavailable. Please try again in a moment."
@@ -145,14 +147,57 @@ def _build_corrected_answers(db: Session, student_id: str) -> list[CorrectedAnsw
     return corrected
 
 
+def _build_flagged_corrected_answers(db: Session, student_id: str) -> list[CorrectedAnswer]:
+    """Every Review Mistakes question (from another component, e.g. a model
+    paper) belonging to this student — a second source alongside
+    verified_questions attempts, since that's the Practice flow most
+    students currently use. The Wivarana report shows every one of them
+    with a full step-by-step explanation, not just the ones the student
+    happened to click all the way through in Practice: if a question
+    doesn't have a stored explanation yet, one is generated now (and cached
+    on the row, so this doesn't regenerate on every report view).
+    """
+    flagged = (
+        db.execute(select(FlaggedQuestion).where(FlaggedQuestion.student_id == student_id))
+        .scalars()
+        .all()
+    )
+
+    corrected: list[CorrectedAnswer] = []
+    for f in flagged:
+        explanation_text = f.explanation_text
+        if explanation_text is None:
+            result = explain_flagged_question(db, f)
+            if result.grounded:
+                explanation_text = result.text
+                f.explanation_text = explanation_text
+                db.commit()
+            else:
+                explanation_text = result.text  # abstention/unavailable message, not cached
+
+        corrected.append(
+            CorrectedAnswer(
+                question_code=f"flagged-{f.id}",
+                question_text=f.question_text,
+                wrong_answers=[f.submitted_answer],
+                theory_explanation=f"Topic: {f.topic}" + (f" ({f.sub_topic})" if f.sub_topic else ""),
+                worked_solution=explanation_text,
+                final_answer=f.correct_answer or "(see explanation above)",
+            )
+        )
+    return corrected
+
+
 def generate_wivarana_report(db: Session, student_id: str) -> WivaranaReport:
     dashboard = get_student_dashboard(db, student_id)
     history = get_intervention_history(db, student_id)
     evidence = _build_question_evidence(db, dashboard.per_question)
-    corrected_answers = _build_corrected_answers(db, student_id)
+    verified_corrected_answers = _build_corrected_answers(db, student_id)
+    flagged_corrected_answers = _build_flagged_corrected_answers(db, student_id)
+    corrected_answers = verified_corrected_answers + flagged_corrected_answers
     intervention_summary = [h.message for h in history]
 
-    if not evidence:
+    if not evidence and not corrected_answers:
         return WivaranaReport(
             student_id=student_id,
             generated_at=datetime.now(UTC),
@@ -166,6 +211,12 @@ def generate_wivarana_report(db: Session, student_id: str) -> WivaranaReport:
         )
 
     evidence_text = "\n".join(f"- {e.question_code} (Unit {e.unit}): {e.explanation}" for e in evidence)
+    if flagged_corrected_answers:
+        evidence_text += (
+            f"\n- Also has {len(flagged_corrected_answers)} question(s) flagged wrong on model "
+            "papers (Review Mistakes practice), each with a step-by-step explanation below."
+        )
+    evidence_text = evidence_text.strip() or "(no verified_questions attempts recorded yet)"
     intervention_text = "\n".join(f"- {m}" for m in intervention_summary) or "(none)"
     independent_percent = round(dashboard.independent_rate * 100)
 

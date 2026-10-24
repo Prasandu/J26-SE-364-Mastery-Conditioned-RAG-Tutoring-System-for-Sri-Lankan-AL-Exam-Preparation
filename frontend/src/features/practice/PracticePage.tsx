@@ -81,7 +81,9 @@ export function PracticePage() {
         topic_codes: [...chosen],
         counts,
       });
-      navigate(`/papers/${made.paper_id}`);
+      navigate(`/papers/${made.paper_id}`, {
+        state: { kept: made.kept, dropped: made.dropped, keptDespite: made.kept_despite ?? [] },
+      });
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
       setBusy(false);
@@ -154,7 +156,6 @@ export function PracticePage() {
                 </p>
               </div>
             )}
-
           </Card>
 
           {problem && <ErrorBox message={problem} hint={hintFor(problem)} />}

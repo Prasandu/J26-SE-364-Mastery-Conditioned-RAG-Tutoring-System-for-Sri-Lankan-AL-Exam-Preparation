@@ -1,5 +1,8 @@
 import { request } from "./client";
 import type {
+  DerivedEdges,
+  EdgeKind,
+  EdgeStatus,
   AdminPaperDetail,
   AdminUser,
   Counts,
@@ -10,6 +13,7 @@ import type {
   SchemeValidationOut,
   Shape,
   SuggestionStatus,
+  TopicEdge,
   Topic,
   TopicSuggestion } from "./types";
 
@@ -236,5 +240,57 @@ export function appendQuestions(
   return request<AdminPaperDetail>(`/admin/papers/${paperId}/sections/${sectionCode}/questions`, {
     method: "POST",
     body: { questions },
+  });
+}
+
+// The syllabus graph
+
+/** Propose edges from the syllabus text. Nothing is used until it is approved. */
+export async function deriveTopicEdges(): Promise<DerivedEdges> {
+  return request<DerivedEdges>("/admin/topics/edges/derive", { method: "POST" });
+}
+
+export async function listTopicEdges(
+  status?: EdgeStatus,
+  signal?: AbortSignal,
+): Promise<TopicEdge[]> {
+  const query = status ? `?status=${status}` : "";
+  return request<TopicEdge[]>(`/admin/topics/edges${query}`, { signal });
+}
+
+export async function decideTopicEdge(
+  edgeId: number,
+  approved: boolean,
+  decidedBy: string,
+): Promise<TopicEdge> {
+  const what = approved ? "approve" : "reject";
+  return request<TopicEdge>(`/admin/topics/edges/${edgeId}/${what}`, {
+    method: "POST",
+    body: { decided_by: decidedBy },
+  });
+}
+
+/** An edge a teacher states themselves - approved as it is created. */
+export async function addTopicEdge(
+  fromCode: string,
+  toCode: string,
+  kind: EdgeKind,
+  decidedBy: string,
+): Promise<TopicEdge> {
+  return request<TopicEdge>(`/admin/topics/edges?decided_by=${encodeURIComponent(decidedBy)}`, {
+    method: "POST",
+    body: { from_code: fromCode, to_code: toCode, kind },
+  });
+}
+
+/** Decide several edges at once - the ids are the ones the reviewer had on screen. */
+export async function decideTopicEdges(
+  edgeIds: number[],
+  approved: boolean,
+  decidedBy: string,
+): Promise<{ decided: number }> {
+  return request<{ decided: number }>("/admin/topics/edges/decide", {
+    method: "POST",
+    body: { edge_ids: edgeIds, approved, decided_by: decidedBy },
   });
 }

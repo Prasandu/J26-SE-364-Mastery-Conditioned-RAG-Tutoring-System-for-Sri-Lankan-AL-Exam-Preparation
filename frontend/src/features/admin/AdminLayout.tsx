@@ -11,6 +11,7 @@ const SECTIONS = [
   { to: "/admin/past-papers", label: "Past paper (PDF)", end: false },
   { to: "/admin/resources", label: "Resource books", end: false },
   { to: "/admin/suggestions", label: "Topic suggestions", end: false },
+  { to: "/admin/topics", label: "Syllabus graph", end: false },
   { to: "/admin/generate", label: "Generate a paper", end: false },
   { to: "/admin/users", label: "Users Management", end: false },
 ];

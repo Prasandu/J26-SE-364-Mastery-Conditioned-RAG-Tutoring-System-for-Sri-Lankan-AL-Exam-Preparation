@@ -55,12 +55,17 @@ from app.services.papers import get_paper
 from app.services.reader import AnswerReader, ReadRequest
 from app.services.schemes import latest_published_scheme
 from app.services.storage import CONTENT_TYPES, FileStore
+from app.services.timing import attempt_minutes, expires_at
+from app.services.topic_graph import prerequisites
+from app.services.topics import topics_by_code
 
 logger = logging.getLogger(__name__)
 
 SessionFactory = Callable[[], AbstractContextManager[Session]]
 
 WRONG_ANSWER_TYPE = "Wrong answer type"
+# Enough syllabus to settle ambiguous handwriting, not enough to crowd the prompt.
+SYLLABUS_LINES = 8
 
 
 def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
@@ -212,7 +217,14 @@ def add_answer_image(
         )
 
     try:
-        result = reader.read(ReadRequest(image=image, content_type=content_type, question=question.text))
+        result = reader.read(
+            ReadRequest(
+                image=image,
+                content_type=content_type,
+                question=question.text,
+                syllabus=_syllabus_for(db, question),
+            )
+        )
     except Exception as error:  # network, quota, a busy model, or a reply that is not valid JSON
         # The provider's own exception text can hold request internals, so it is
         # logged here, server-side only, and never put in the message the student sees.
@@ -240,6 +252,11 @@ def add_answer_image(
     # One page with a drawing is enough: the answer as a whole cannot be marked from
     # its text alone, however many other pages transcribed cleanly.
     answer.has_drawing = answer.has_drawing or result.has_drawing
+    if result.structures:
+        # Kept beside the graph data rather than in a column of their own: one
+        # answer can have several pages, so they accumulate as pages are read.
+        already = (answer.data or {}).get("structures") or []
+        answer.data = {**(answer.data or {}), "structures": [*already, *result.structures]}
     answer.reader = reader.name
     answer.reading_confidence = result.confidence
     attempt.mode = AttemptMode.PAPER
@@ -348,6 +365,8 @@ def to_attempt_out(attempt: Attempt) -> AttemptOut:
         started_at=attempt.started_at,
         submitted_at=attempt.submitted_at,
         marked_at=attempt.marked_at,
+        duration_minutes=attempt_minutes(attempt.paper),
+        expires_at=expires_at(attempt.paper, attempt.started_at),
         questions=[
             _question_result(question, answers.get(question.id), submitted)
             for question in attempt.paper.iter_questions()
@@ -428,3 +447,25 @@ def _check_answer_kind(question: Question, data: AnswerIn) -> None:
         raise ContentValidationError(
             "Unknown option", [f"{where}: mcq_option must be one of {', '.join(options)}"]
         )
+
+
+def _syllabus_for(db: Session, question: Question) -> tuple[str, ...]:
+    """What the syllabus says this question's topics, and their prerequisites, cover.
+
+    Reading chemistry handwriting is ambiguous - "N03" against "NO3", "Cl" against
+    "C1" - and the page alone cannot settle it. The topic can: a question on acid
+    rain is about oxides of sulphur and nitrogen, so those are what an ambiguous
+    mark is read as. Empty until a teacher has approved edges, and the reader then
+    behaves exactly as it did before the graph existed.
+    """
+    codes = [topic.code for topic in question.topics]
+    if not codes:
+        return ()
+    nearby = [reached.code for reached in prerequisites(db, codes)]
+    topics = topics_by_code(db)
+    lines = [
+        f"{topics[code].name}: {topics[code].content}" if topics[code].content else topics[code].name
+        for code in [*codes, *nearby]
+        if code in topics
+    ]
+    return tuple(lines[:SYLLABUS_LINES])

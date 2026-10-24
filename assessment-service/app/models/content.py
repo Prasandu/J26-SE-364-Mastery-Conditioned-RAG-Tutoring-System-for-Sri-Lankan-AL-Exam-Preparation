@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,6 +66,59 @@ class Topic(Base):
     # What the syllabus says this topic covers, one bullet per line. Used to keep a
     # generated question inside the syllabus instead of wherever the model wanders.
     content: Mapped[str | None] = mapped_column(Text)
+
+
+class EdgeKind(StrEnum):
+    """How one topic relates to another.
+
+    REQUIRES is directed: "U13 REQUIRES U03" means the mole concept has to be in
+    place before electrochemistry makes sense. The other two are symmetric, and are
+    stored once in the direction they were derived.
+    """
+
+    REQUIRES = "requires"
+    RELATED_TO = "related_to"
+    CONFUSED_WITH = "confused_with"
+
+
+class EdgeStatus(StrEnum):
+    """Derived edges are proposed, never trusted: a teacher decides, as with topic tags."""
+
+    PROPOSED = "proposed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class TopicEdge(Base):
+    """One relationship between two topics - the edges of the syllabus graph.
+
+    The topics table is a containment tree and nothing else: it can say U01_5 is part
+    of U01, but not that electrochemistry needs the mole concept first. These edges
+    carry that, so retrieval can walk from a topic to what it depends on, and mastery
+    can say which topics a weak one puts at risk.
+    """
+
+    __tablename__ = "topic_edges"
+    __table_args__ = (UniqueConstraint("from_topic_id", "to_topic_id", "kind"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_topic_id: Mapped[int] = mapped_column(
+        ForeignKey("topics.id", ondelete="CASCADE"), index=True
+    )
+    to_topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[EdgeKind] = mapped_column(text_enum(EdgeKind))
+    status: Mapped[EdgeStatus] = mapped_column(
+        text_enum(EdgeStatus), default=EdgeStatus.PROPOSED, index=True
+    )
+    # How strongly the source suggested this edge, 0 to 1. Ranks what a teacher sees
+    # first; it is not a probability and nothing reads it as one.
+    weight: Mapped[float] = mapped_column(Float, default=0.0)
+    # Where it came from ("syllabus-text", "teacher"), and why - shown at approval.
+    source: Mapped[str] = mapped_column(String(40))
+    evidence: Mapped[str | None] = mapped_column(Text)
+    decided_by: Mapped[str | None] = mapped_column(String(120))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Paper(Base):

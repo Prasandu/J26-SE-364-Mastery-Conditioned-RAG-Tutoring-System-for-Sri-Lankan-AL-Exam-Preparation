@@ -32,20 +32,27 @@ export function shapeFrom(counts: Counts, rates: Rates): Shape {
     minutes += count * (rates.minutes_per_question[mode] ?? 0);
   }
 
-  const step = rates.round_to_minutes || 1;
-  const rounded = Math.ceil(minutes / step) * step;
+  // Up to a whole half minute, matching the service - a one-question paper is
+  // 2.4 minutes, and rounding that to five would hand out twice the time.
+  const step = rates.round_to_seconds || 1;
+  const rounded = (Math.ceil((minutes * 60) / step) * step) / 60;
   return { questions, marks, minutes: rounded, duration: spell(rounded) };
 }
 
 function spell(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
+  const total = Math.round(minutes * 60);
+  const hours = Math.floor(total / 3600);
+  const whole = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
   const parts: string[] = [];
   if (hours) {
     parts.push(`${hours} hour${hours === 1 ? "" : "s"}`);
   }
-  if (rest || !hours) {
-    parts.push(`${rest} minute${rest === 1 ? "" : "s"}`);
+  if (whole || !(hours || seconds)) {
+    parts.push(`${whole} minute${whole === 1 ? "" : "s"}`);
+  }
+  if (seconds) {
+    parts.push(`${seconds} second${seconds === 1 ? "" : "s"}`);
   }
   return parts.join(" ");
 }

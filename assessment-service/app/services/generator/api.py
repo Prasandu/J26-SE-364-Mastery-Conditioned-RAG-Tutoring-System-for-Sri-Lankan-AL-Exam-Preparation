@@ -1,5 +1,8 @@
 """The generator as the API uses it: plan a paper, or write one."""
 
+from collections import Counter
+from dataclasses import replace
+
 from sqlalchemy.orm import Session
 
 from app.ai.author import QuestionAuthor
@@ -18,7 +21,7 @@ from app.services.generator.blueprint import (
     MARKS_PER_QUESTION,
     MAX_QUESTIONS_PER_SECTION,
     MINUTES_PER_QUESTION,
-    ROUND_TO_MINUTES,
+    ROUND_TO_SECONDS,
     Blueprint,
     build_blueprint,
     problems,
@@ -35,7 +38,7 @@ def rates() -> RatesOut:
     return RatesOut(
         minutes_per_question={mode.value: m for mode, m in MINUTES_PER_QUESTION.items()},
         marks_per_question={mode.value: m for mode, m in MARKS_PER_QUESTION.items()},
-        round_to_minutes=ROUND_TO_MINUTES,
+        round_to_seconds=ROUND_TO_SECONDS,
         max_per_section=MAX_QUESTIONS_PER_SECTION,
     )
 
@@ -79,10 +82,10 @@ def write(
     scheme = create_scheme(db, paper.id, written.scheme)
     validate_scheme(db, paper.id, scheme.version)
     db.commit()
-    return _generated_out(paper, scheme.version, written, blueprint)
+    return generated_out(paper, scheme.version, written, blueprint)
 
 
-def _generated_out(paper, version: int, written, blueprint) -> GeneratedOut:
+def generated_out(paper, version: int, written, blueprint) -> GeneratedOut:
     return GeneratedOut(
         paper_id=paper.id,
         scheme_version=version,
@@ -90,11 +93,32 @@ def _generated_out(paper, version: int, written, blueprint) -> GeneratedOut:
         written_by=written.written_by,
         kept=written.kept,
         dropped=written.dropped,
+        kept_despite=written.kept_despite,
         attempts=written.attempts,
         checked_by=written.checked_by,
         needs_teacher=[str(finding) for finding in written.needs_teacher],
         sources=written.sources,
-        shape=shape_of(blueprint),
+        shape=shape_of(_as_built(paper, blueprint)),
+    )
+
+
+def _as_built(paper, blueprint: Blueprint) -> Blueprint:
+    """The blueprint as the paper actually came out.
+
+    A question the checks rejected is listed in `dropped` and never reaches the
+    paper, so reporting the requested shape overstates the marks and the duration
+    of what was really written - a paper of three questions described as four.
+    """
+    kept: Counter = Counter()
+    for section in paper.sections:
+        kept[section.answer_mode] += sum(1 for q in section.questions if q.parent is None)
+    return replace(
+        blueprint,
+        sections=[
+            replace(plan, count=kept[plan.answer_mode])
+            for plan in blueprint.sections
+            if kept[plan.answer_mode]
+        ],
     )
 
 

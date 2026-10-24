@@ -80,6 +80,7 @@ class PointType(StrEnum):
     CALCULATION = "calculation"
     UNIT = "unit"
     DIAGRAM = "diagram"
+    STRUCTURE = "structure"  # a drawn structural formula, marked as a molecular graph
     GRAPH = "graph"
 
 

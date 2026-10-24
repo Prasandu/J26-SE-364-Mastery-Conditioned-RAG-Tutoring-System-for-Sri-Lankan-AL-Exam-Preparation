@@ -24,14 +24,29 @@ from app.ai.judge import AnswerJudge
 from app.api.deps import get_drawing_judge, get_file_store, get_judge
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import AnswerMode, ContentStatus, PaperKind, SuggestionStatus, User, UserRole
+from app.models import (
+    AnswerMode,
+    ContentStatus,
+    EdgeStatus,
+    PaperKind,
+    SuggestionStatus,
+    Topic,
+    User,
+    UserRole,
+)
 from app.schemas.admin import (
     AppendQuestionsIn,
     AppendSchemeQuestionsIn,
+    DecidedEdgesOut,
+    DecideEdgeIn,
+    DecideEdgesIn,
+    DerivedEdgesOut,
     MarkingSchemeIn,
     PaperIn,
     PastPaperShellIn,
     QuestionTopicsIn,
+    TopicEdgeIn,
+    TopicEdgeOut,
     TopicIn,
 )
 from app.schemas.attempts import AttemptOut
@@ -53,7 +68,7 @@ from app.schemas.generate import (
 )
 from app.schemas.topics import ClassifyIn, DecideSuggestionIn, TopicSuggestionOut
 from app.security import require_admin
-from app.services import attempts, auth, export, papers, schemes, topics, topics_classify
+from app.services import attempts, auth, export, papers, schemes, topic_graph, topics, topics_classify
 from app.services.drawing_judge import DrawingJudge
 from app.services.generator import api as generator
 from app.services.generator import practice
@@ -489,3 +504,70 @@ def judge_attempt(
             store=store,
         )
     )
+
+
+# The syllabus graph: which topics need which
+
+
+def _edge_out(edge, codes: dict[int, str]) -> TopicEdgeOut:
+    return TopicEdgeOut(
+        id=edge.id,
+        from_code=codes[edge.from_topic_id],
+        to_code=codes[edge.to_topic_id],
+        kind=edge.kind,
+        status=edge.status,
+        weight=edge.weight,
+        source=edge.source,
+        evidence=edge.evidence,
+        decided_by=edge.decided_by,
+    )
+
+
+def _topic_codes(db: Session) -> dict[int, str]:
+    return {topic.id: topic.code for topic in db.scalars(select(Topic))}
+
+
+@router.post("/topics/edges/derive", response_model=DerivedEdgesOut)
+def derive_topic_edges(db: Session = Depends(get_db)):
+    """Propose edges from the syllabus text. Nothing is used until it is approved."""
+    found = topic_graph.derive_edges(db)
+    added = topic_graph.save_proposals(db, found)
+    return DerivedEdgesOut(proposed=added, already_known=len(found) - added)
+
+
+@router.get("/topics/edges", response_model=list[TopicEdgeOut])
+def list_topic_edges(
+    status: EdgeStatus | None = None, limit: int = 200, db: Session = Depends(get_db)
+):
+    codes = _topic_codes(db)
+    return [_edge_out(edge, codes) for edge in topic_graph.list_edges(db, status=status, limit=limit)]
+
+
+@router.post("/topics/edges/{edge_id}/approve", response_model=TopicEdgeOut)
+def approve_topic_edge(edge_id: int, data: DecideEdgeIn, db: Session = Depends(get_db)):
+    edge = topic_graph.decide_edge(db, edge_id, approved=True, decided_by=data.decided_by)
+    return _edge_out(edge, _topic_codes(db))
+
+
+@router.post("/topics/edges/{edge_id}/reject", response_model=TopicEdgeOut)
+def reject_topic_edge(edge_id: int, data: DecideEdgeIn, db: Session = Depends(get_db)):
+    edge = topic_graph.decide_edge(db, edge_id, approved=False, decided_by=data.decided_by)
+    return _edge_out(edge, _topic_codes(db))
+
+
+@router.post("/topics/edges", response_model=TopicEdgeOut, status_code=status.HTTP_201_CREATED)
+def add_topic_edge(data: TopicEdgeIn, decided_by: str, db: Session = Depends(get_db)):
+    """An edge a teacher states themselves - approved as it is created."""
+    edge = topic_graph.add_edge(
+        db, from_code=data.from_code, to_code=data.to_code, kind=data.kind, decided_by=decided_by
+    )
+    return _edge_out(edge, _topic_codes(db))
+
+
+@router.post("/topics/edges/decide", response_model=DecidedEdgesOut)
+def decide_topic_edges(data: DecideEdgesIn, db: Session = Depends(get_db)):
+    """Decide the edges a reviewer had in front of them, in one go."""
+    decided = topic_graph.decide_edges(
+        db, data.edge_ids, approved=data.approved, decided_by=data.decided_by
+    )
+    return DecidedEdgesOut(decided=decided)

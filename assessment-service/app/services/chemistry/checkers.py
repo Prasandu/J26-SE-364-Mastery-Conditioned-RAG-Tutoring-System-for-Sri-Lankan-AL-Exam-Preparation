@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.models import MarkingPoint, PointType
+from app.services.chemistry import structures
 from app.services.chemistry.graphs import (
     DEFAULT_MIN_R2,
     GraphAnswer,
@@ -35,6 +36,8 @@ GRAPH_CHECKS = ("axes", "points", "linear", "gradient", "intercept")
 class StudentAnswer:
     text: str = ""
     graph: GraphAnswer | None = None
+    # Structures the reader wrote as SMILES from a drawing in the answer.
+    structures: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -56,6 +59,8 @@ def check_point(point: MarkingPoint, answer: StudentAnswer) -> CheckOutcome | No
             return _check_unit(point.expected, normalize(answer.text))
         case PointType.GRAPH if answer.graph is not None:
             return _check_graph(point.expected, answer.graph)
+        case PointType.STRUCTURE if answer.structures:
+            return _check_structure(point.expected, answer.structures)
         case _:
             return None  # formulas and equations are checked by the AI judge for now
 
@@ -187,3 +192,37 @@ def _check_line_value(expected: dict[str, Any], graph: GraphAnswer, name: str) -
 
 def _axis(label: str | None, unit: str | None) -> str:
     return f"{label or '(not labelled)'}{f' ({unit})' if unit else ''}"
+
+
+# Drawn structures
+
+
+def _check_structure(expected: dict[str, Any], drawn: tuple[str, ...]) -> CheckOutcome | None:
+    """A drawn structure against the one the scheme expects, as molecular graphs.
+
+    Several structures can be read off one answer - a mechanism has a few - so the
+    mark is earned if any of them is the one asked for.
+    """
+    wanted = expected.get("smiles")
+    group = expected.get("smarts")
+    if not isinstance(wanted, str) and not isinstance(group, str):
+        return None  # nothing to compare against; the AI judge decides
+
+    resonance = expected.get("allow_resonance", True)
+    for smiles in drawn:
+        if isinstance(wanted, str) and structures.same_species(
+            smiles, wanted, allow_resonance=bool(resonance)
+        ):
+            return _structure_hit(smiles, f"matches {wanted}")
+        if isinstance(group, str) and structures.contains(smiles, group):
+            return _structure_hit(smiles, f"contains {group}")
+
+    read = ", ".join(drawn)
+    asked = wanted or group
+    return CheckOutcome(False, f"The structure drawn ({read}) is not {asked}", evidence=read)
+
+
+def _structure_hit(smiles: str, why: str) -> CheckOutcome:
+    parsed = structures.parse(smiles)
+    note = f" after correcting the notation ({parsed.repaired})" if parsed and parsed.repaired else ""
+    return CheckOutcome(True, f"The structure drawn {why}{note}", evidence=smiles)

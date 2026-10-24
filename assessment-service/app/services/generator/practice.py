@@ -24,7 +24,7 @@ from app.config import Settings
 from app.errors import ConflictError, ContentValidationError, NotFoundError
 from app.models import Attempt, ContentStatus, Paper, utcnow
 from app.schemas.generate import GeneratedOut, PracticeIn
-from app.services.generator.api import check_topics, shape_of
+from app.services.generator.api import check_topics, generated_out
 from app.services.generator.blueprint import build_blueprint, problems
 from app.services.generator.build import generate
 from app.services.generator.grounding import material_for
@@ -98,6 +98,7 @@ def make_practice_paper(
         *material_for(db, data.topic_codes, blueprint, known, embedder),
         critic=critic,
         attempts=settings.generate_max_attempts,
+        keep_rejected=settings.generate_keep_rejected,
     )
 
     paper = create_paper(db, written.paper)
@@ -113,22 +114,10 @@ def make_practice_paper(
     # Published at once: the student made it to sit it, and no teacher is waiting to
     # check it. It stays unapproved, and they are told on screen that a machine wrote
     # the questions and that it may contain mistakes.
-    publish_scheme(db, paper.id, scheme.version)
+    publish_scheme(db, paper.id, scheme.version, allow_failed=settings.generate_keep_rejected)
     publish_paper(db, paper.id)
 
-    return GeneratedOut(
-        paper_id=paper.id,
-        scheme_version=scheme.version,
-        title=paper.title,
-        written_by=written.written_by,
-        kept=written.kept,
-        dropped=written.dropped,
-        attempts=written.attempts,
-        checked_by=written.checked_by,
-        needs_teacher=[str(finding) for finding in written.needs_teacher],
-        sources=written.sources,
-        shape=shape_of(blueprint),
-    )
+    return generated_out(paper, scheme.version, written, blueprint)
 
 
 def is_practice(paper: Paper) -> bool:

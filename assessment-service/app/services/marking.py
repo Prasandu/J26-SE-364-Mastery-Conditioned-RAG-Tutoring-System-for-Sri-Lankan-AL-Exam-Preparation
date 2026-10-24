@@ -190,16 +190,22 @@ def _first_pass(
 
 
 def _is_drawing_point(point: MarkingPoint, answer: Answer) -> bool:
-    """A drawing is judged from its photo, not from typed text - unless the student
-    plotted a graph as data instead of photographing it, which the chemistry checker
-    already handles like any other structured answer."""
+    """A drawing is judged from its photo, not from typed text - unless the reader
+    already turned it into something the chemistry checker can decide: a graph plotted
+    as data, or a structural formula written as SMILES."""
     if point.point_type == PointType.DIAGRAM:
         return True
+    if point.point_type == PointType.STRUCTURE:
+        return not (answer.data or {}).get("structures")
     return point.point_type == PointType.GRAPH and answer.data is None
 
 
 def _student_answer(answer: Answer) -> StudentAnswer:
-    return StudentAnswer(text=answer.text or "", graph=GraphAnswer.from_data(answer.data))
+    return StudentAnswer(
+        text=answer.text or "",
+        graph=GraphAnswer.from_data(answer.data),
+        structures=tuple((answer.data or {}).get("structures") or ()),
+    )
 
 
 def _finalize_from_checker(result: PointResult) -> None:

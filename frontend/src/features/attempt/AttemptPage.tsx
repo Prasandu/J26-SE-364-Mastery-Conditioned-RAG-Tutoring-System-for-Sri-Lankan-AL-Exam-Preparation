@@ -14,6 +14,7 @@ import { Spinner } from "@/components/Spinner";
 import { answerableQuestions, hasMcq, isMcq, optionLabels } from "@/lib/questions";
 
 import { AnswerSheetUpload } from "./AnswerSheetUpload";
+import { ExamTimer } from "./ExamTimer";
 import { MarkingProgress } from "./MarkingProgress";
 import { Progress } from "./Progress";
 import { QuestionBlock } from "./QuestionBlock";
@@ -201,7 +202,7 @@ export function AttemptPage() {
     }));
   }, []);
 
-  async function submit() {
+  const submit = useCallback(async () => {
     setSubmitting(true);
     try {
       setAttempt(await submitAttempt(attemptId));
@@ -210,7 +211,11 @@ export function AttemptPage() {
     } finally {
       setSubmitting(false);
     }
-  }
+  }, [attemptId]);
+
+  // Time is up: send whatever has been answered. Unlike the Submit button this does
+  // not wait for a tidy state - an unfinished paper still has to go in.
+  const submitOnTime = useCallback(() => void submit(), [submit]);
 
   if (loadError) {
     return <ErrorBox message={loadError} />;
@@ -295,6 +300,13 @@ export function AttemptPage() {
       ) : (
         <>
           <Card className="sticky top-4 z-10">
+            <div className="mb-3">
+              <ExamTimer
+                expiresAt={attempt.expires_at}
+                durationMinutes={attempt.duration_minutes}
+                onExpire={submitOnTime}
+              />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-48 flex-1">
                 <Progress answered={answered} total={items.length} readyToSave={readyToSave} />

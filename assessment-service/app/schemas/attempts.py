@@ -113,6 +113,10 @@ class AttemptOut(BaseModel):
     started_at: datetime
     submitted_at: datetime | None
     marked_at: datetime | None
+    # The time allowed, and when it runs out. Both are the server's, so a clock
+    # changed on the student's machine cannot buy more time (see services/timing.py).
+    duration_minutes: float
+    expires_at: datetime
     questions: list[QuestionResultOut]
 
 

@@ -23,11 +23,14 @@ from app.models.base import JSON_DOC, utcnow
 from app.models.content import (
     AnswerMode,
     ContentStatus,
+    EdgeKind,
+    EdgeStatus,
     Paper,
     PaperKind,
     Question,
     Section,
     Topic,
+    TopicEdge,
     question_topics,
 )
 from app.models.resources import (
@@ -64,6 +67,8 @@ __all__ = [
     "AttemptMode",
     "AttemptStatus",
     "ContentStatus",
+    "EdgeKind",
+    "EdgeStatus",
     "MarkingMethod",
     "MarkingPoint",
     "MarkingRule",
@@ -87,6 +92,7 @@ __all__ = [
     "SuggestionStatus",
     "TopicSuggestion",
     "Topic",
+    "TopicEdge",
     "User",
     "UserRole",
     "question_topics",

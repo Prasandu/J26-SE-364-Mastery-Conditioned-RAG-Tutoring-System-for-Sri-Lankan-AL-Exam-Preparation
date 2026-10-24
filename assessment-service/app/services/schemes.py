@@ -214,12 +214,25 @@ def approve_scheme(db: Session, paper_id: int, version: int, approver: str) -> M
     return scheme
 
 
-def publish_scheme(db: Session, paper_id: int, version: int) -> MarkingScheme:
+def publish_scheme(db: Session, paper_id: int, version: int, *, allow_failed: bool = False) -> MarkingScheme:
+    """Publish a scheme so it can mark.
+
+    `allow_failed` publishes one the validators rejected. It exists for demonstrating
+    the system with a deliberately complete paper (Settings.generate_keep_rejected)
+    and is never on by default. What the validators found stays in the scheme's
+    validation_reasons, so the record of why it was rejected survives publishing.
+
+    The lifecycle does not allow validation_failed -> published, and that stays true
+    for every ordinary path: the step is waived here only for this one scheme, rather
+    than by widening SCHEME_TRANSITIONS for everybody.
+    """
     scheme = get_scheme(db, paper_id, version)
-    ensure_transition(scheme, SchemeStatus.PUBLISHED)
+    waived = allow_failed and scheme.status == SchemeStatus.VALIDATION_FAILED
+    if not waived:
+        ensure_transition(scheme, SchemeStatus.PUBLISHED)
     if errors := check_scheme_ready(scheme):
         raise ContentValidationError("The marking scheme is not ready to publish", errors)
-    if problems := _unvalidated_generated(scheme):
+    if problems := _unvalidated_generated(scheme, allow_failed):
         raise ContentValidationError("The marking scheme is not ready to publish", problems)
 
     scheme.status = SchemeStatus.PUBLISHED
@@ -237,13 +250,17 @@ def retire_scheme(db: Session, paper_id: int, version: int) -> MarkingScheme:
     return scheme
 
 
-def _unvalidated_generated(scheme: MarkingScheme) -> list[str]:
-    """A machine-written scheme has to have been checked before it marks anybody."""
+def _unvalidated_generated(scheme: MarkingScheme, allow_failed: bool = False) -> list[str]:
+    """A machine-written scheme has to have been checked before it marks anybody.
+
+    Having been checked is required even when `allow_failed` waives the result: an
+    unchecked scheme has no record of what is wrong with it, a failed one does.
+    """
     if scheme.source != SchemeSource.GENERATED:
         return []
     if scheme.validated_at is None:
         return ["A generated marking scheme has to be validated before it is published"]
-    if scheme.status == SchemeStatus.VALIDATION_FAILED:
+    if scheme.status == SchemeStatus.VALIDATION_FAILED and not allow_failed:
         return ["The validators rejected this marking scheme"]
     return []
 

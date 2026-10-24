@@ -66,7 +66,7 @@ class ShapeOut(BaseModel):
     sections: list[SectionShapeOut]
     questions: int
     marks: float
-    minutes: int
+    minutes: float
     duration: str
     problems: list[str]
 
@@ -76,7 +76,7 @@ class RatesOut(BaseModel):
 
     minutes_per_question: dict[str, float]
     marks_per_question: dict[str, float]
-    round_to_minutes: int
+    round_to_seconds: int
     max_per_section: int
 
 
@@ -87,6 +87,10 @@ class GeneratedOut(BaseModel):
     written_by: str
     kept: int
     dropped: list[str]  # questions the checks rejected, with the reason
+    # Rejected but kept anyway, with the reason. Always empty unless the service is
+    # set to keep them (Settings.generate_keep_rejected); marks from these are not
+    # trustworthy, so whatever shows a paper has to say so.
+    kept_despite: list[str] = []
     attempts: int = 1  # how many times the model had to be asked
     checked_by: list[str] = []  # which validators ran
     # Findings no check could settle. The paper is usable; these need a person.

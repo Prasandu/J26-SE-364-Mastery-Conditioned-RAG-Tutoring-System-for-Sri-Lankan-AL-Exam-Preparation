@@ -42,7 +42,9 @@ SECTION_TITLES = {
 }
 
 # A paper's time is rounded up to a whole five minutes, the way a real one is written.
-ROUND_TO_MINUTES = 5
+# A paper's time is rounded up to a whole half minute, so a one-question practice
+# paper reads "2 minutes 30 seconds" rather than being given a flat five.
+ROUND_TO_SECONDS = 30
 MAX_QUESTIONS_PER_SECTION = 60
 
 
@@ -85,10 +87,15 @@ class Blueprint:
         return sum(section.marks for section in self.sections)
 
     @property
-    def minutes(self) -> int:
-        """Rounded up to a whole five minutes, as a printed paper would say."""
+    def minutes(self) -> float:
+        """Rounded up to a whole half minute.
+
+        A real paper's time is a round number because it has fifty questions; a
+        practice paper of one is 2.4 minutes, and rounding that to the nearest five
+        would hand out twice the time the question is worth.
+        """
         raw = sum(section.minutes for section in self.sections)
-        return int(ceil(raw / ROUND_TO_MINUTES) * ROUND_TO_MINUTES)
+        return _rounded_minutes(raw)
 
     @property
     def duration(self) -> str:
@@ -96,13 +103,20 @@ class Blueprint:
         return spell_minutes(self.minutes)
 
 
-def spell_minutes(minutes: int) -> str:
-    hours, rest = divmod(minutes, 60)
+def _rounded_minutes(raw: float) -> float:
+    return ceil(raw * 60 / ROUND_TO_SECONDS) * ROUND_TO_SECONDS / 60
+
+
+def spell_minutes(minutes: float) -> str:
+    hours, rest = divmod(round(minutes * 60), 3600)
+    whole, seconds = divmod(rest, 60)
     parts = []
     if hours:
         parts.append(f"{hours} hour{'' if hours == 1 else 's'}")
-    if rest or not hours:
-        parts.append(f"{rest} minute{'' if rest == 1 else 's'}")
+    if whole or not (hours or seconds):
+        parts.append(f"{whole} minute{'' if whole == 1 else 's'}")
+    if seconds:
+        parts.append(f"{seconds} second{'' if seconds == 1 else 's'}")
     return " ".join(parts)
 
 

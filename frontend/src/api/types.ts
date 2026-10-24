@@ -134,6 +134,10 @@ export interface Attempt {
   started_at: string;
   submitted_at: string | null;
   marked_at: string | null;
+  // How long this paper allows, and when that runs out. Both come from the server,
+  // so the countdown cannot be extended by changing the clock on this machine.
+  duration_minutes: number;
+  expires_at: string;
   questions: QuestionResult[];
 }
 
@@ -299,7 +303,7 @@ export interface Shape {
 export interface Rates {
   minutes_per_question: Record<string, number>;
   marks_per_question: Record<string, number>;
-  round_to_minutes: number;
+  round_to_seconds: number;
   max_per_section: number;
 }
 
@@ -310,6 +314,7 @@ export interface GeneratedPaper {
   written_by: string;
   kept: number;
   dropped: string[]; // questions the checks rejected, with the reason
+  kept_despite?: string[]; // rejected but kept anyway, with the reason - marks are not trustworthy
   attempts: number; // how many times the model had to be asked
   checked_by: string[]; // which validators ran
   needs_teacher: string[]; // findings no check could settle; the paper is usable
@@ -476,4 +481,28 @@ export interface ExtractResult {
     // correct response: 01 mark") - null if the page never states it.
     mcq_marks?: number | null;
   };
+}
+
+// The syllabus graph: which topics need which. See app/services/topic_graph.py.
+
+export type EdgeKind = "requires" | "related_to" | "confused_with";
+export type EdgeStatus = "proposed" | "approved" | "rejected";
+
+export interface TopicEdge {
+  id: number;
+  from_code: string;
+  to_code: string;
+  kind: EdgeKind;
+  status: EdgeStatus;
+  // How strongly the syllabus text suggested it, 0 to 1. Ranks what a reviewer sees
+  // first; it is not a probability.
+  weight: number;
+  source: string;
+  evidence: string | null;
+  decided_by: string | null;
+}
+
+export interface DerivedEdges {
+  proposed: number;
+  already_known: number;
 }

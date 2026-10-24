@@ -115,6 +115,13 @@ class Settings(BaseSettings):
     # How many times a section may be asked for again when questions are rejected.
     # Bounded on purpose: a bad run must end with a clear error, not a loop.
     generate_max_attempts: int = Field(default=2, ge=1, le=5)
+    # Demonstration switch, off by default. On, a question the verification rejects is
+    # kept in the paper instead of dropped, and its scheme is published although the
+    # validators failed it. The scheme still records that it failed, and the result
+    # still names every problem - nothing is hidden, it is just not withheld. Marks
+    # from such a question are not trustworthy, so this is for showing the system, not
+    # for marking anybody.
+    generate_keep_rejected: bool = Field(default=False)
 
     # Practice papers a student may generate per day. The AI quota is shared and
     # small, so one person cannot use it all up.

@@ -43,6 +43,7 @@ from app.models import (
 )
 from app.services.resources.retrieve import DEFAULT_LIMIT
 from app.services.resources.retrieve import search as search_resources
+from app.services.topic_graph import prerequisites
 from app.services.topics import topic_contents
 
 MOST_EXAMPLES = 3
@@ -208,10 +209,16 @@ def material_for(
     Returns the syllabus lines for the chosen topics, a few real past questions of
     each kind the paper asks for, the retrieved resource passages (empty without an
     embedder), and the source record for those passages.
+
+    The chosen topics decide what may be asked. Their prerequisites decide what a
+    question may draw on - a question about electrochemistry can expect the mole
+    concept - so passages are retrieved for both, while the syllabus lines stay on
+    the chosen topics alone. Without an approved graph this is exactly what it was.
     """
     topics = [known[code] for code in codes]
+    background = [known[reached.code] for reached in prerequisites(db, codes) if reached.code in known]
+    passages, sources = resource_passages(db, embedder, [*topics, *background])
     examples = {
         section.answer_mode: example_questions(db, section.answer_mode) for section in blueprint.sections
     }
-    passages, sources = resource_passages(db, embedder, topics)
     return syllabus_lines(topics), examples, passages, sources

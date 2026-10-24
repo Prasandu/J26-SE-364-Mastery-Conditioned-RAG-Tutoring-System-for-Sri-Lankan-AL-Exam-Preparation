@@ -58,6 +58,9 @@ class Generated:
     written_by: str
     kept: int = 0
     dropped: list[str] = field(default_factory=list)
+    # Questions the verification rejected but that were kept anyway, with the reason
+    # (only ever non-empty when the caller asks for it - see Settings.generate_keep_rejected).
+    kept_despite: list[str] = field(default_factory=list)
     findings: list[Finding] = field(default_factory=list)
     checked_by: list[str] = field(default_factory=list)
     attempts: int = 1
@@ -81,6 +84,7 @@ def generate(
     *,
     critic: QuestionCritic | None = None,
     attempts: int = DEFAULT_ATTEMPTS,
+    keep_rejected: bool = False,
 ) -> Generated:
     """Write every section of the paper, verify it, then assemble the draft.
 
@@ -92,6 +96,7 @@ def generate(
     sections: list[SectionIn] = []
     entries: list[QuestionSchemeIn] = []
     dropped: list[str] = []
+    kept_despite: list[str] = []
     findings: list[Finding] = []
     asked: list[str] = []
     checks = VerificationReport()
@@ -112,13 +117,15 @@ def generate(
                 asked,
                 kept,
                 dropped,
+                kept_despite,
                 findings,
                 checks,
                 critic,
+                keep_rejected,
             )
 
         if kept:
-            sections.append(_section(plan, kept[: plan.count], blueprint.topic_codes))
+            sections.append(_section(plan, kept[: plan.count], blueprint.topic_codes, keep_rejected))
             entries.extend(_scheme_entries(plan, kept[: plan.count]))
 
     if not sections:
@@ -145,6 +152,7 @@ def generate(
         written_by=author.name,
         kept=sum(len(s.questions) for s in sections),
         dropped=dropped,
+        kept_despite=kept_despite,
         findings=findings,
         checked_by=checks.checks_run,
         attempts=used or 1,
@@ -161,9 +169,11 @@ def _write_round(
     asked: list[str],
     kept: list[WrittenQuestion],
     dropped: list[str],
+    kept_despite: list[str],
     findings: list[Finding],
     checks: VerificationReport,
     critic: QuestionCritic | None,
+    keep_rejected: bool,
 ) -> list[WrittenQuestion]:
     """Ask for the questions still missing from this section, and check what comes back."""
     wanted = plan.count - len(kept)
@@ -183,8 +193,7 @@ def _write_round(
         # here and the caller gets a fixed, safe one it can act on.
         logger.exception("Question author failed for section %s", plan.title)
         raise ProviderError(
-            "The question writer is busy right now. Try again in a moment, "
-            "or ask for fewer questions."
+            "The question writer is busy right now. Try again in a moment, or ask for fewer questions."
         ) from error
 
     accepted = []
@@ -206,8 +215,14 @@ def _write_round(
         checks.merge(report)
         if report.rejected:
             reasons = "; ".join(finding.message for finding in report.errors)
-            dropped.append(f"{plan.title} {label}: {reasons}")
-            continue
+            if not keep_rejected:
+                dropped.append(f"{plan.title} {label}: {reasons}")
+                continue
+            # Kept on purpose, so the paper is complete for a demonstration. The
+            # reasons travel with it rather than being lost, and its errors are
+            # raised for a teacher so nothing silently counts as marked correctly.
+            kept_despite.append(f"{plan.title} {label}: {reasons}")
+            findings.extend(report.errors)
 
         findings.extend(report.for_teacher)
         findings.extend(report.notes)
@@ -256,7 +271,31 @@ def _unusable_mcq(question: WrittenQuestion) -> str | None:
     return None
 
 
-def _section(plan: SectionPlan, questions: list[WrittenQuestion], topics: list[str]) -> SectionIn:
+def _question_marks(plan: SectionPlan, question: WrittenQuestion, keep_rejected: bool) -> float:
+    """What this question is worth.
+
+    Normally the blueprint decides, and the marks check rejects any question whose
+    points do not add up to it. When such a question is kept anyway, the blueprint's
+    figure would leave the paper incoherent - a perfect answer could not reach the
+    stated total - and publishing refuses it. So the question is worth what its own
+    points are worth instead: a 15 mark question written with 14 marks of points
+    becomes a 14 mark question, rather than a broken one or no question at all.
+
+    For a question that passes the checks the two are equal, so this changes nothing.
+    """
+    planned = plan.marks / plan.count
+    if not keep_rejected:
+        return planned
+    written = sum(point.marks for point in question.points)
+    return written or planned
+
+
+def _section(
+    plan: SectionPlan,
+    questions: list[WrittenQuestion],
+    topics: list[str],
+    keep_rejected: bool = False,
+) -> SectionIn:
     return SectionIn(
         code=plan.code,
         title=plan.title,
@@ -267,7 +306,7 @@ def _section(plan: SectionPlan, questions: list[WrittenQuestion], topics: list[s
             QuestionIn(
                 label=str(number),
                 text=question.text.strip(),
-                max_marks=plan.marks / plan.count,
+                max_marks=_question_marks(plan, question, keep_rejected),
                 options=(
                     [OptionIn(label=o.label, text=o.text) for o in question.options]
                     if plan.answer_mode == AnswerMode.MCQ

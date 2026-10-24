@@ -63,6 +63,35 @@ class Unit:
         return f"U{self.number:02d}"
 
 
+# A PDF that sets text in Symbol or a similar font extracts into the Unicode private
+# use area, one code point per glyph: U+F06E is Symbol's own 0x6E, which prints as a
+# nu. Left in, the syllabus says "E = h" with the frequency missing, and a word split
+# by one of them ("H-bonding") never matches when a topic is searched for.
+SYMBOLS = {
+    "￾": "-",  # a hyphen the extractor lost: "carbon-oxygen", "H-bonding"
+    "": " ",
+    "": "-",
+    "": "=",
+    "": "λ",  # lambda, wavelength
+    "": "ν",  # nu, frequency
+    "": "→",  # the arrow of a rate equation
+    "": "|",  # the phase boundary of an electrode, Pt(s) | Fe3+(aq)
+}
+# The pieces Symbol uses to draw one tall bracket over several lines. They mean
+# nothing once the lines are joined, so they go rather than becoming stray glyphs.
+BRACKET_PIECES = ""
+
+
+def clean_symbols(text: str) -> str:
+    """Put back the characters a symbol font cost the extraction."""
+    for found, meant in SYMBOLS.items():
+        text = text.replace(found, meant)
+    for piece in BRACKET_PIECES:
+        text = text.replace(piece, "")
+    # Anything else from the private use area is a glyph with no text meaning left.
+    return "".join(" " if "" <= ch <= "" else ch for ch in text)
+
+
 def read_pdf_text(path: Path) -> str:
     document = pdfium.PdfDocument(path)
     try:

@@ -9,7 +9,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models import AnswerMode, PaperKind, PointType, SchemeSource
+from app.models import AnswerMode, EdgeKind, EdgeStatus, PaperKind, PointType, SchemeSource
 
 Code = Annotated[str, Field(min_length=1, max_length=20)]
 Title = Annotated[str, Field(min_length=1, max_length=200)]
@@ -170,3 +170,48 @@ class QuestionTopicsIn(_Input):
     published included, since it never touches marks or a marking scheme."""
 
     topics: list[str] = []
+
+
+class TopicEdgeOut(BaseModel):
+    """One relationship between two topics, for review."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    from_code: str
+    to_code: str
+    kind: EdgeKind
+    status: EdgeStatus
+    weight: float
+    source: str
+    evidence: str | None
+    decided_by: str | None
+
+
+class DecideEdgeIn(BaseModel):
+    decided_by: str = Field(min_length=1, max_length=120)
+
+
+class TopicEdgeIn(BaseModel):
+    """An edge a teacher writes themselves."""
+
+    from_code: str = Field(min_length=1, max_length=30)
+    to_code: str = Field(min_length=1, max_length=30)
+    kind: EdgeKind = EdgeKind.REQUIRES
+
+
+class DerivedEdgesOut(BaseModel):
+    proposed: int
+    already_known: int
+
+
+class DecideEdgesIn(BaseModel):
+    """Several edges decided together, named by id."""
+
+    edge_ids: list[int] = Field(min_length=1, max_length=500)
+    approved: bool
+    decided_by: str = Field(min_length=1, max_length=120)
+
+
+class DecidedEdgesOut(BaseModel):
+    decided: int

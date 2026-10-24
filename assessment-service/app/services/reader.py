@@ -27,6 +27,10 @@ class ReadRequest:
     image: bytes
     content_type: str
     question: str | None = None  # the wording helps the model expect the right chemistry
+    # What the syllabus says this question's topic and its prerequisites cover.
+    # Narrows what the reader expects to see, so an ambiguous "N03" is read as the
+    # nitrate the topic is actually about (see app/services/topic_graph.py).
+    syllabus: tuple[str, ...] = ()
 
 
 class ReadResult(BaseModel):
@@ -34,6 +38,9 @@ class ReadResult(BaseModel):
     confidence: float = Field(ge=0, le=1)
     unclear: list[str] = []  # parts that could not be read with certainty
     has_drawing: bool = False  # a diagram or graph that cannot be written out as text
+    # Each drawn structural formula as SMILES, so it can be marked as a molecular
+    # graph rather than judged from its description (app/services/chemistry/structures.py).
+    structures: list[str] = []
 
 
 class AnswerReader(Protocol):
@@ -70,14 +77,35 @@ Rules:
    in the photo. Example:
    [{DRAWING_MARK}: benzene ring with OH at the top, negative charge on a ring carbon, curved
    arrow from that carbon towards the ring]
-7. confidence: 0 to 1, how sure you are that the whole transcription is right.
+7. A drawn structural formula also goes into `structures`, one SMILES per structure, in
+   the order drawn. Keep the [{DRAWING_MARK}: ...] line as well - the SMILES is for marking,
+   the description is for the teacher.
+   - A charge belongs ON its atom inside brackets: [C+], [CH2+], [CH2-], [O-]. Never write a
+     charge as an atom of its own: "CC1(CCCCC1)[+]" is wrong, "C[C+]1CCCCC1" is right.
+   - Every ring digit you open must close again, and each SMILES must parse on its own.
+   - A curved arrow shows electron movement, not an atom. Leave arrows out of the SMILES.
+   - Leave out anything you cannot write with confidence, rather than guessing a structure.
+   A graph, apparatus sketch or energy profile is not a structural formula: describe those
+   in the text and leave `structures` empty for them.
+8. confidence: 0 to 1, how sure you are that the whole transcription is right.
 """
 
 
-def build_user_prompt(question: str | None) -> str:
-    if not question:
-        return "Transcribe this handwritten answer."
-    return f"The student was answering this question:\n{question}\n\nTranscribe their handwritten answer."
+def build_user_prompt(question: str | None, syllabus: tuple[str, ...] = ()) -> str:
+    parts = []
+    if question:
+        parts.append(f"The student was answering this question:\n{question}")
+    if syllabus:
+        # Context for reading, never an answer key: it says which chemistry is in
+        # scope, so an ambiguous mark is read as a species this topic actually uses.
+        covered = "\n".join(f"- {line}" for line in syllabus)
+        parts.append(
+            f"The syllabus for this question, and for what it builds on, covers:\n{covered}\n"
+            "Use this only to read ambiguous handwriting and formulae. Do not correct the "
+            "student towards it, and do not write anything they did not put on the page."
+        )
+    parts.append("Transcribe their handwritten answer.")
+    return "\n\n".join(parts)
 
 
 class VisionAnswerReader:
@@ -90,7 +118,7 @@ class VisionAnswerReader:
     def read(self, request: ReadRequest) -> ReadResult:
         return self._model.ask(
             system=SYSTEM_PROMPT,
-            user=build_user_prompt(request.question),
+            user=build_user_prompt(request.question, request.syllabus),
             images=[Image(request.image, request.content_type)],
             shape=ReadResult,
         )

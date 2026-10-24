@@ -63,7 +63,14 @@ _SEARCH_SQL = text(
     JOIN resources ON resources.id = resource_chunks.resource_id
     WHERE resources.status = :status
       AND resource_chunks.embedding IS NOT NULL
-      AND (CAST(:topic_code AS text) IS NULL OR resources.topic_code = CAST(:topic_code AS text))
+      -- A book with no topic of its own is a general one and answers for any
+      -- topic. Requiring an exact match made the only textbook ingested here
+      -- unreachable, so every grounded question was written from nothing.
+      AND (
+        CAST(:topic_code AS text) IS NULL
+        OR resources.topic_code IS NULL
+        OR resources.topic_code = CAST(:topic_code AS text)
+      )
       AND (CAST(:resource_code AS text) IS NULL OR resources.code = CAST(:resource_code AS text))
     ORDER BY resource_chunks.embedding <=> CAST(:query_vector AS vector)
     LIMIT :limit

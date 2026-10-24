@@ -14,6 +14,9 @@ opencv-python-headless>=4.10
 numpy>=2
 httpx>=0.27
 sympy>=1.13
+# Molecular graphs: compares a drawn structure with the one the scheme expects,
+# resonance forms included, without asking an AI to judge it (app/services/chemistry).
+rdkit>=2024.3
 pgvector>=0.3
 bcrypt>=4.0
 pyjwt>=2.9

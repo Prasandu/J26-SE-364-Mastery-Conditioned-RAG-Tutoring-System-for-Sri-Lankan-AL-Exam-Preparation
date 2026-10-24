@@ -11,6 +11,7 @@ import { PapersListPage } from "./PapersListPage";
 import { PastPaperImportPage } from "./PastPaperImportPage";
 import { ResourcesPage } from "./ResourcesPage";
 import { SuggestionsPage } from "./SuggestionsPage";
+import { TopicGraphPage } from "./TopicGraphPage";
 import { UsersPage } from "./UsersPage";
 
 /**
@@ -27,6 +28,7 @@ export function AdminPage() {
         <Route path="papers" element={<PapersListPage />} />
         <Route path="papers/:paperId" element={<PaperDetailPage />} />
         <Route path="suggestions" element={<SuggestionsPage />} />
+        <Route path="topics" element={<TopicGraphPage />} />
         <Route path="resources" element={<ResourcesPage />} />
         <Route path="import" element={<ImportPage />} />
         <Route path="past-papers" element={<PastPaperImportPage />} />

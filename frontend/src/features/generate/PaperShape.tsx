@@ -23,7 +23,9 @@ export function PaperShape({ counts, rates }: { counts: Counts; rates: Rates }) 
                 {counts[key]} x {label.toLowerCase()}
               </span>
               <span className="tabular-nums">
-                {Math.round(counts[key] * (rates.minutes_per_question[mode] ?? 0))} min
+                {/* Not rounded to whole minutes: one multiple choice is 2.4, and
+                 * showing "2 min" made the row disagree with the total above it. */}
+                {+(counts[key] * (rates.minutes_per_question[mode] ?? 0)).toFixed(1)} min
               </span>
             </li>
           ))}

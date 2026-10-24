@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 import { getPaper } from "@/api/papers";
 import { Badge } from "@/components/Badge";
@@ -10,11 +10,15 @@ import { StartAttempt } from "@/features/attempt/StartAttempt";
 import { useApi } from "@/hooks/useApi";
 import { paperSubtitle } from "@/lib/format";
 
+import type { MadeNote } from "./DroppedNote";
+import { DroppedNote } from "./DroppedNote";
 import { QuestionTree } from "./QuestionTree";
 
 export function PaperDetail() {
   const { paperId } = useParams();
   const id = Number(paperId);
+  // Set only when this page was reached by generating the paper (see PracticePage).
+  const made = useLocation().state as MadeNote | null;
 
   const load = useCallback((signal: AbortSignal) => getPaper(id, signal), [id]);
   const { data: paper, error, loading } = useApi(load, [id]);
@@ -38,6 +42,10 @@ export function PaperDetail() {
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">{paper.title}</h1>
         <p className="mt-1 text-sm text-slate-500">{paperSubtitle(paper)}</p>
       </div>
+
+      {made?.dropped && (
+        <DroppedNote kept={made.kept} dropped={made.dropped} keptDespite={made.keptDespite} />
+      )}
 
       <Card>
         <h2 className="font-medium">Answer this paper</h2>

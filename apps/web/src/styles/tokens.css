@@ -1,0 +1,107 @@
+/*
+ * Chemistry Studio design tokens — one palette for every page of the student app and the admin
+ * console. Measured contrast (sRGB, against both #ffffff and --canvas #f3f6fa):
+ *
+ *   --brand-600 #2563b8  5.91 / 5.45 — AA for normal text and white on blue
+ *   --ink-900   #1c3048 13.41 / 12.37
+ *   --ink-500   #53677e  5.82 / 5.37
+ *   --navy-900  #132e4f 13.71 / 12.65
+ *
+ * The light blue highlight (#6ea8e6) and the warning accent (#d79224) do NOT reach
+ * text contrast, so they are deliberately confined to fills, borders and indicators; the text
+ * tokens beside them (--warning) stay dark enough to read. Do not swap those roles.
+ */
+:root {
+  color-scheme: light;
+
+  /* brand: studio blue */
+  --brand-800: #173c6b;
+  --brand-700: #1e4f91;
+  --brand-600: #2563b8;
+  /* Cyan highlight: fills, indicators and gradients only — never body text. */
+  --brand-500: #6ea8e6;
+  --brand-200: #c2d8f0;
+  --brand-100: #e1edf9;
+  --brand-50: #f0f6fc;
+  --teal-600: #315e98;
+  --teal-500: #487fbd;
+  --teal-100: #e6effa;
+
+  /* neutrals */
+  --navy-900: #132e4f;
+  --ink-900: #1c3048;
+  --ink-700: #354d67;
+  --ink-500: #53677e;
+  --ink-300: #93a4b1;
+  --line: #dce5ef;
+  --line-strong: #b5c5d0;
+  --surface: #ffffff;
+  --surface-2: #f7f9fc;
+  --canvas: #f3f6fa;
+
+  /* status */
+  --ok: #17805d;
+  --ok-soft: #e2f4ec;
+  --warning: #8a5207;
+  /* Warning accent: borders and markers only (2.62 on white). */
+  --warning-line: #d79224;
+  --warning-soft: #fdf3e2;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --info-soft: var(--brand-50);
+
+  /* aliases kept for existing components */
+  --bg: var(--canvas);
+  --fg: var(--ink-900);
+  --fg-muted: var(--ink-500);
+  --border: var(--line);
+  --accent: var(--brand-600);
+  --accent-strong: var(--brand-700);
+  --accent-soft: var(--brand-100);
+  --teal: var(--teal-600);
+  --focus: #0b6fd6;
+
+  /* type */
+  --font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-si: 'Noto Sans Sinhala', var(--font);
+  /* Instructional text carries meaning here, so the small end of the scale starts at 14px rather
+   * than 13px; body stays at 16px. Nothing in the UI is allowed below --text-xs. */
+  --text-xs: 0.875rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.4375rem;
+  --text-2xl: 1.8125rem;
+  --text-3xl: 2.25rem;
+  --leading: 1.55;
+  --leading-si: 1.75;
+
+  /* space (4 px scale) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* shape and depth */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(19 33 43 / 6%);
+  --shadow: 0 1px 2px rgb(19 33 43 / 6%), 0 4px 16px rgb(19 33 43 / 6%);
+  --shadow-lg: 0 8px 32px rgb(19 33 43 / 12%);
+
+  /* layout */
+  --content-max: 1280px;
+  --workbench-max: 1680px;
+  /* Page templates differ by task: a questionnaire or report reads better at a document measure,
+   * the notebook is a wider structured workspace, and the laboratory takes the whole shell. */
+  --flow-step-max: 1440px;
+  --flow-notebook-max: 1560px;
+  --header-h: 64px;
+  --control-h: 44px;
+}

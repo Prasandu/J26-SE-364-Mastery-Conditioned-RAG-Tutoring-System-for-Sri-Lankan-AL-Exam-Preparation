@@ -1,0 +1,14 @@
+ apps/web/e2e/graphics-upgrade.e2e.ts               |  67 [32m+++++++[m
+ apps/web/src/test/apparatus-assets.test.tsx        | 199 [32m+++++++++++++++++++++[m
+ apps/web/src/workbench/LabScene.tsx                |  88 [32m+++[m[31m------[m
+ apps/web/src/workbench/lab2d/Lab2DDefs.tsx         |  22 [32m+[m[31m--[m
+ apps/web/src/workbench/lab2d/Laboratory2D.tsx      |  41 [32m+++[m[31m--[m
+ apps/web/src/workbench/scene3d/Apparatus3D.tsx     |  75 [32m+++[m[31m-----[m
+ .../src/workbench/scene3d/AuthoredFlaskBody.tsx    |  52 [32m++++++[m
+ apps/web/src/workbench/scene3d/LaboratoryRoom.tsx  | 196 [32m++++++++++++++++++++[m
+ apps/web/src/workbench/scene3d/apparatusAssets.ts  | 162 [32m+++++++++++++++++[m
+ apps/web/src/workbench/scene3d/layout3d.ts         |   9 [32m+[m[31m-[m
+ .../src/workbench/scene3d/loadApparatusModel.ts    | 109 [32m+++++++++++[m
+ docs/ASSET_SPEC.md                                 |  67 [32m+++++++[m
+ docs/STATUS.md                                     |  51 [32m+++++[m[31m-[m
+ 13 files changed, 993 insertions(+), 145 deletions(-)

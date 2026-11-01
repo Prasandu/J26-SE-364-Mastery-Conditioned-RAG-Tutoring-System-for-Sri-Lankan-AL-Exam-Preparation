@@ -1,0 +1,95 @@
+{
+  "session": {
+    "sessionId": "fixture",
+    "experimentId": "exp04_standard_solution",
+    "definitionVersion": "1.1.0",
+    "assessmentVersion": "1.0.0",
+    "mode": "guided",
+    "guidanceLevel": "beginner",
+    "startedOn": "2026-10-10",
+    "attempt": 1,
+    "hints": 0,
+    "retries": 0,
+    "elapsedMs": 1000,
+    "nextSequence": 1,
+    "status": "active",
+    "disclosure": "full",
+    "stage": "setup",
+    "bench": {
+      "safetyConfirmed": true,
+      "selectedApparatus": [],
+      "cleanliness": {
+        "volumetric_flask_250": "dirty",
+        "volumetric_flask_100": "dirty",
+        "volumetric_flask_500": "dirty",
+        "funnel": "dirty",
+        "watch_glass": "dirty"
+      },
+      "workingFlaskId": null,
+      "flaskCapacity": null,
+      "balance": {
+        "pan": "empty",
+        "sliderSetting": null,
+        "watchGlassReading": null
+      },
+      "watchGlassHasSolid": false,
+      "funnelOnFlask": false,
+      "stoppered": false,
+      "madeUp": false,
+      "liquid": "empty",
+      "liquidFraction": 0,
+      "undissolvedVisible": false,
+      "label": null
+    },
+    "validity": {
+      "purityRisks": [],
+      "homogeneity": "not_applicable",
+      "volumeValidity": "not_made_up",
+      "restartRequired": false
+    },
+    "events": [
+      {
+        "seq": 0,
+        "attempt": 1,
+        "actor": "student",
+        "actionType": "confirm_safety",
+        "action": {
+          "type": "confirm_safety",
+          "checklistItemIds": [
+            "read_procedure",
+            "goggles",
+            "no_food_drink",
+            "closed_shoes",
+            "hair_restrained",
+            "report_incidents"
+          ]
+        },
+        "accepted": true,
+        "rejectionCode": null,
+        "elapsedMs": 1000,
+        "hintUsed": false,
+        "observations": [],
+        "measurements": [],
+        "errors": [],
+        "resolvedErrors": []
+      }
+    ],
+    "guidance": {
+      "profile": "guided_beginner",
+      "promptKey": "exp04.step.select_apparatus.instruction",
+      "nextAction": null,
+      "suggestedAction": "select_apparatus",
+      "stepSourceRefs": [],
+      "confirmPredictedErrors": true,
+      "showProceduralFeedback": true,
+      "safetyPolicy": "confirm"
+    }
+  },
+  "locale": "en",
+  "createdAt": "2026-10-10T03:00:00.000Z",
+  "notebook": {
+    "version": 0,
+    "document": null,
+    "updatedAt": null
+  }
+}

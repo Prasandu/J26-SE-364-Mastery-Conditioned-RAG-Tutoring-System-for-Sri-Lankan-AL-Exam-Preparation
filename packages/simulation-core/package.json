@@ -1,0 +1,22 @@
+{
+  "name": "@vlab/simulation-core",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
+    "test": "vite build --config vite.verifier.config.ts --logLevel warn && vitest run",
+    "build": "vite build --config vite.verifier.config.ts",
+    "fixtures:write": "vitest run --config vitest.write-fixtures.config.ts"
+  },
+  "dependencies": {
+    "@vlab/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4",
+    "zod": "^4.6.5"
+  }
+}

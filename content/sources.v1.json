@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    {
+      "sourceId": "nie-handbook-2018",
+      "filename": "nie-chemistry-practical-handbook-2018.pdf",
+      "titleKey": "sources.nie_handbook_2018.title",
+      "edition": "2018",
+      "kind": "nie_official",
+      "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe"
+    },
+    {
+      "sourceId": "nie-rb-g12-en",
+      "filename": "nie-grade-12-chemistry-resource-book-en.pdf",
+      "titleKey": "sources.nie_rb_g12_en.title",
+      "edition": "2021 print (English)",
+      "kind": "nie_official",
+      "sha256": "805b9e585bbbd9d012d0f8a8dd1864b525542fb1b9927e8ff91490429f4afe86"
+    },
+    {
+      "sourceId": "nie-syllabus-2017",
+      "filename": "nie-al-chemistry-syllabus-2017.pdf",
+      "titleKey": "sources.nie_syllabus_2017.title",
+      "edition": "implemented from 2017",
+      "kind": "nie_official",
+      "sha256": "57f5e7d51dcff00448cd3f43046b0958da62261860f3b0412690cebec3bdd887"
+    },
+    {
+      "sourceId": "proposal-c01",
+      "filename": "component-01-virtual-lab-proposal.pdf",
+      "titleKey": "sources.proposal_c01.title",
+      "edition": "project draft",
+      "kind": "project_material",
+      "sha256": "795c0b2b6228d58bafbb920549cfdfc37e7bc753d74c306237e940a2d91155fb"
+    }
+  ],
+  "facts": [
+    {
+      "factId": "E1",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E2",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E3",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E4",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E5",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E6",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E7",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E8",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E9",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E10",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E11",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "factId": "E12",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E13",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E14",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E15",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E16",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E17",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E18",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E19",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E20",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E27",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 30,
+      "printedPage": 22
+    },
+    {
+      "factId": "E21",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 123,
+      "printedPage": 113
+    },
+    {
+      "factId": "E22",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 123,
+      "printedPage": 113
+    },
+    {
+      "factId": "E23",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 124,
+      "printedPage": 114
+    },
+    {
+      "factId": "E24",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 124,
+      "printedPage": 114
+    },
+    {
+      "factId": "E25",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 125,
+      "printedPage": 115
+    },
+    {
+      "factId": "E28",
+      "sourceId": "nie-rb-g12-en",
+      "pdfPage": 125,
+      "printedPage": 115
+    },
+    {
+      "factId": "E26",
+      "sourceId": "nie-syllabus-2017",
+      "pdfPage": 22,
+      "printedPage": 11
+    },
+    {
+      "factId": "S1",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S2",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S3",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S4",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S5",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S6",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S8",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 9,
+      "printedPage": 1
+    },
+    {
+      "factId": "S7",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 10,
+      "printedPage": 2
+    },
+    {
+      "factId": "V1",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V2",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V3",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V4",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V5",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V6",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "V7",
+      "sourceId": "nie-handbook-2018",
+      "pdfPage": 16,
+      "printedPage": 8
+    },
+    {
+      "factId": "P1",
+      "sourceId": "proposal-c01",
+      "pdfPage": 1,
+      "printedPage": null
+    },
+    {
+      "factId": "P2",
+      "sourceId": "proposal-c01",
+      "pdfPage": 3,
+      "printedPage": null
+    },
+    {
+      "factId": "P3",
+      "sourceId": "proposal-c01",
+      "pdfPage": 2,
+      "printedPage": null
+    },
+    {
+      "factId": "P4",
+      "sourceId": "proposal-c01",
+      "pdfPage": 3,
+      "printedPage": null
+    },
+    {
+      "factId": "P5",
+      "sourceId": "proposal-c01",
+      "pdfPage": 4,
+      "printedPage": null
+    },
+    {
+      "factId": "P6",
+      "sourceId": "proposal-c01",
+      "pdfPage": 5,
+      "printedPage": null
+    },
+    {
+      "factId": "P7",
+      "sourceId": "proposal-c01",
+      "pdfPage": 6,
+      "printedPage": null
+    },
+    {
+      "factId": "P8",
+      "sourceId": "proposal-c01",
+      "pdfPage": 7,
+      "printedPage": null
+    },
+    {
+      "factId": "P9",
+      "sourceId": "proposal-c01",
+      "pdfPage": 9,
+      "printedPage": null
+    },
+    {
+      "factId": "P10",
+      "sourceId": "proposal-c01",
+      "pdfPage": 9,
+      "printedPage": null
+    },
+    {
+      "factId": "P11",
+      "sourceId": "proposal-c01",
+      "pdfPage": 10,
+      "printedPage": null
+    },
+    {
+      "factId": "P12",
+      "sourceId": "proposal-c01",
+      "pdfPage": 11,
+      "printedPage": null
+    }
+  ]
+}

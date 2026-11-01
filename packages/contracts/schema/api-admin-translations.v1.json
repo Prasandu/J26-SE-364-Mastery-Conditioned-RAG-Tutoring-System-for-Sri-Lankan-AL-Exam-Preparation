@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "file": {
+        "type": "string",
+        "maxLength": 40
+      },
+      "keys": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "translated": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "reviewed"
+        ]
+      },
+      "reviewer": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 120
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "reviewedOn": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 10
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "file",
+      "keys",
+      "translated",
+      "status",
+      "reviewer",
+      "reviewedOn"
+    ],
+    "additionalProperties": false
+  }
+}

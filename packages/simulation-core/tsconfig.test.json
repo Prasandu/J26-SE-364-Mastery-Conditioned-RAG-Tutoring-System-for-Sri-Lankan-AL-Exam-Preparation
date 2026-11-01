@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src", "test", "cli", "*.config.ts", "scripts-write-fixtures.test.ts"]
+}

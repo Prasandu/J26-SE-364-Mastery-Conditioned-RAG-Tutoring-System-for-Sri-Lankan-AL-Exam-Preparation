@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "stale_sequence",
+    "message": "The session has moved on; reload before acting",
+    "correlationId": "c0ffee00-0000-4000-8000-000000000001",
+    "retryable": false,
+    "details": {
+      "currentSequence": 3
+    }
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "exp36-e4.5",
+  "status": "teacher-review-pending",
+  "runnable": false,
+  "ragApproved": false,
+  "source": {
+    "sourceId": "nie-handbook-2018",
+    "filename": "nie-chemistry-practical-handbook-2018.pdf",
+    "title": "G.C.E. (A/L) Chemistry Practical Handbook",
+    "edition": "2018",
+    "sha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+    "pages": [
+      { "pdfPage": 119, "printedPage": 111 },
+      { "pdfPage": 120, "printedPage": 112 },
+      { "pdfPage": 121, "printedPage": 113 }
+    ]
+  },
+  "experiment": {
+    "number": 36,
+    "title": "Titration between Na₂CO₃ and HCl using phenolphthalein and methyl orange",
+    "unit": "Unit 12 — Equilibrium",
+    "sourceRefs": [
+      {
+        "pdfPage": 119,
+        "printedPage": 111,
+        "fields": ["identity", "objectives", "equilibrium-description"]
+      },
+      {
+        "pdfPage": 120,
+        "printedPage": 112,
+        "fields": ["apparatus", "chemicals", "quantities", "procedure", "endpoints"]
+      },
+      { "pdfPage": 121, "printedPage": 113, "fields": ["repetition", "questions"] }
+    ]
+  },
+  "normalizedContent": {
+    "objectives": [
+      "Learn the shape of the titration curve for titration between Na₂CO₃ and HCl.",
+      "Investigate the pH ranges of the equivalence points and detect them using suitable indicators."
+    ],
+    "apparatus": [
+      { "name": "250 cm³ volumetric flask", "sourceRefs": [120] },
+      { "name": "pipette", "sourceRefs": [120] },
+      { "name": "burette", "sourceRefs": [120] },
+      { "name": "plastic weighing dish", "sourceRefs": [120], "listedIn": "procedure_only" },
+      { "name": "titration flask", "sourceRefs": [120], "listedIn": "procedure_only" }
+    ],
+    "chemicals": [
+      { "name": "solid Na₂CO₃", "quantity": "0.20–0.22 g", "sourceRefs": [120] },
+      {
+        "name": "distilled water",
+        "quantity": "50.00 cm³ initial addition; make up to 250 cm³ mark",
+        "sourceRefs": [120]
+      },
+      {
+        "name": "HCl",
+        "quantity": "approximately 0.1 / 0.100 mol dm⁻³",
+        "sourceRefs": [120],
+        "review": "exact concentration wording"
+      },
+      { "name": "phenolphthalein", "quantity": "4–5 drops", "sourceRefs": [120] },
+      {
+        "name": "methyl orange",
+        "sourceRefs": [120],
+        "listedIn": "procedure_and_endpoint_text",
+        "review": "chemical-list omission"
+      }
+    ],
+    "endpoints": [
+      {
+        "indicator": "phenolphthalein",
+        "observation": "pink to colourless",
+        "pH": 9.8,
+        "sourceRefs": [120]
+      },
+      {
+        "indicator": "methyl orange",
+        "observation": "orange to red",
+        "pH": 3.8,
+        "sourceRefs": [120]
+      }
+    ],
+    "repetition": "Repeat the titration at least three times, average endpoint volumes, and tabulate trial data.",
+    "sourceRefs": [121]
+  },
+  "textRepairs": [
+    {
+      "pdfPage": 120,
+      "original": "50.cm³",
+      "candidate": "50 cm³",
+      "kind": "spacing",
+      "status": "review_pending",
+      "note": "The source extraction does not establish whether the aliquot precision is 50 cm³ or 50.00 cm³."
+    },
+    {
+      "pdfPage": 119,
+      "original": "line-broken carbonate formula notation",
+      "candidate": "Na₂CO₃, CO₃²⁻, HCO₃⁻, H₂CO₃, H⁺",
+      "kind": "typography",
+      "status": "deterministic",
+      "note": "Restores subscript and superscript presentation without changing chemistry."
+    },
+    {
+      "pdfPage": 121,
+      "original": "phenolpthalein / phenolpthalien variants",
+      "candidate": "preserve source spelling in provenance; use canonical name only in a reviewed field",
+      "kind": "spelling",
+      "status": "review_pending"
+    }
+  ],
+  "calculations": {
+    "status": "conditional_derived",
+    "molarMass": "M(Na₂CO₃) = 105.99 g mol⁻¹; 106 g mol⁻¹ is a rounded school-level value",
+    "sampleMoles": "n = m / M",
+    "preparedConcentration": "c(Na₂CO₃) = (m / M) / 0.250 dm³ if the final mark is 250 cm³",
+    "aliquotMoles": "nₐ = c(Na₂CO₃) × Vₐ if Vₐ is teacher-confirmed",
+    "firstEndpoint": "n(HCl) = nₐ(Na₂CO₃)",
+    "secondEndpoint": "n(HCl) = 2 × nₐ(Na₂CO₃), cumulative",
+    "endpointVolumes": "V₁ = nₐ / c(HCl); V₂,cumulative = 2 × nₐ / c(HCl)",
+    "trialAverage": "mean(V) = ΣVᵢ / k, with k ≥ 3 only if the repetition instruction is implemented",
+    "officialResultsProvided": false
+  },
+  "safetyReview": {
+    "reusableApprovedFacts": [
+      {
+        "fact": "Read the experiment and complete pre-lab work before starting.",
+        "pdfPage": 9,
+        "printedPage": 1
+      },
+      {
+        "fact": "Read labels and do not use unlabelled containers.",
+        "pdfPage": 9,
+        "printedPage": 1
+      },
+      { "fact": "Do not pipette by mouth.", "pdfPage": 9, "printedPage": 1 },
+      {
+        "fact": "Report accidents, spills, and broken glass promptly.",
+        "pdfPage": 9,
+        "printedPage": 1
+      },
+      {
+        "fact": "Follow the handbook waste and clean-up instructions.",
+        "pdfPage": 9,
+        "printedPage": 1
+      }
+    ],
+    "experimentSpecificRules": "Not supplied by the approved Experiment 36 pages; teacher review required.",
+    "runnableSafetyRulesApproved": false
+  },
+  "teacherApproval": {
+    "required": true,
+    "items": [
+      "Aliquot precision and burette/titration-flask capacity",
+      "Methyl orange chemical-list inclusion",
+      "Endpoint colour semantics and acceptance",
+      "Warming and CO₂ consequence",
+      "Endpoint-volume model and expected ranges",
+      "Mass, volume, reading, repeatability, and calculation tolerances",
+      "Experiment-specific safety rules",
+      "Assessment weights and thresholds",
+      "Unit 12 syllabus competency mapping",
+      "Sinhala terminology and reviewed translation"
+    ]
+  },
+  "implementationBoundary": {
+    "handlerKindProposal": "carbonate_hcl_double_endpoint_titration",
+    "registrationAllowed": false,
+    "activeCatalogChangeAllowed": false,
+    "activeRagManifestChangeAllowed": false,
+    "blockedUntilApproval": [
+      "endpoint thresholds",
+      "warming consequence",
+      "scoring thresholds",
+      "experiment-specific hazard consequences",
+      "full titration curve behavior"
+    ]
+  }
+}

@@ -1,0 +1,3064 @@
+{
+  "schemaVersion": 1,
+  "kind": "standard_solution_by_mass",
+  "experimentId": "exp04_standard_solution",
+  "definitionVersion": "1.1.0",
+  "experimentNumber": 4,
+  "titleKey": "exp04.title",
+  "syllabusUnit": {
+    "unitNumber": 3,
+    "titleKey": "exp04.unit.title",
+    "competency": "3.3",
+    "sourceRefs": [
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E1",
+        "pdfPage": 29,
+        "printedPage": 21
+      },
+      {
+        "sourceId": "nie-syllabus-2017",
+        "factId": "E26",
+        "pdfPage": 22,
+        "printedPage": 11
+      }
+    ]
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "nie-handbook-2018",
+      "factId": "E1",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "sourceId": "nie-handbook-2018",
+      "factId": "E5",
+      "pdfPage": 29,
+      "printedPage": 21
+    },
+    {
+      "sourceId": "nie-syllabus-2017",
+      "factId": "E26",
+      "pdfPage": 22,
+      "printedPage": 11
+    }
+  ],
+  "learningObjectives": [
+    {
+      "id": "aim_glassware_balance",
+      "textKey": "exp04.objective.aim_glassware_balance",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E2",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "aim_measure_volumes",
+      "textKey": "exp04.objective.aim_measure_volumes",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E2",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "aim_prepare_solutions",
+      "textKey": "exp04.objective.aim_prepare_solutions",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E2",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "outcome_explain_methods",
+      "textKey": "exp04.objective.outcome_explain_methods",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-syllabus-2017",
+          "factId": "E26",
+          "pdfPage": 22,
+          "printedPage": 11
+        }
+      ]
+    },
+    {
+      "id": "outcome_prepare_na2co3",
+      "textKey": "exp04.objective.outcome_prepare_na2co3",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-syllabus-2017",
+          "factId": "E26",
+          "pdfPage": 22,
+          "printedPage": 11
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    {
+      "id": "concentration_definition",
+      "textKey": "exp04.prereq.concentration_definition",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E4",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "standard_solution",
+      "textKey": "exp04.prereq.standard_solution",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E21",
+          "pdfPage": 123,
+          "printedPage": 113
+        }
+      ]
+    },
+    {
+      "id": "primary_standard",
+      "textKey": "exp04.prereq.primary_standard",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E22",
+          "pdfPage": 123,
+          "printedPage": 113
+        }
+      ]
+    }
+  ],
+  "apparatus": [
+    {
+      "id": "volumetric_flask_250",
+      "kind": "volumetric_flask",
+      "nameKey": "exp04.apparatus.volumetric_flask_250",
+      "role": "required",
+      "capacity": {
+        "quantity": {
+          "value": 250,
+          "unit": "cm3"
+        },
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E9",
+            "pdfPage": 29,
+            "printedPage": 21
+          },
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E5",
+            "pdfPage": 29,
+            "printedPage": 21
+          }
+        ]
+      },
+      "requiresCleaning": true,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "volumetric_flask_100",
+      "kind": "volumetric_flask",
+      "nameKey": "exp04.apparatus.volumetric_flask_100",
+      "role": "distractor",
+      "capacity": {
+        "quantity": {
+          "value": 100,
+          "unit": "cm3"
+        },
+        "sourceRefs": [
+          {
+            "sourceId": "nie-rb-g12-en",
+            "factId": "E28",
+            "pdfPage": 125,
+            "printedPage": 115
+          }
+        ]
+      },
+      "requiresCleaning": true,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E28",
+          "pdfPage": 125,
+          "printedPage": 115
+        }
+      ]
+    },
+    {
+      "id": "volumetric_flask_500",
+      "kind": "volumetric_flask",
+      "nameKey": "exp04.apparatus.volumetric_flask_500",
+      "role": "distractor",
+      "capacity": {
+        "quantity": {
+          "value": 500,
+          "unit": "cm3"
+        },
+        "sourceRefs": [
+          {
+            "sourceId": "nie-rb-g12-en",
+            "factId": "E24",
+            "pdfPage": 124,
+            "printedPage": 114
+          }
+        ]
+      },
+      "requiresCleaning": true,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        }
+      ]
+    },
+    {
+      "id": "beaker",
+      "kind": "beaker",
+      "nameKey": "exp04.apparatus.beaker",
+      "role": "optional",
+      "capacity": null,
+      "requiresCleaning": false,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "funnel",
+      "kind": "funnel",
+      "nameKey": "exp04.apparatus.funnel",
+      "role": "required",
+      "capacity": null,
+      "requiresCleaning": true,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "watch_glass",
+      "kind": "watch_glass",
+      "nameKey": "exp04.apparatus.watch_glass",
+      "role": "required",
+      "capacity": null,
+      "requiresCleaning": true,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "four_beam_balance",
+      "kind": "balance",
+      "nameKey": "exp04.apparatus.four_beam_balance",
+      "role": "required",
+      "capacity": null,
+      "requiresCleaning": false,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "wash_bottle",
+      "kind": "wash_bottle",
+      "nameKey": "exp04.apparatus.wash_bottle",
+      "role": "required",
+      "capacity": null,
+      "requiresCleaning": false,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "dropper_or_glass_tube",
+      "kind": "dropper",
+      "nameKey": "exp04.apparatus.dropper_or_glass_tube",
+      "role": "optional",
+      "capacity": null,
+      "requiresCleaning": false,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E27",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    }
+  ],
+  "chemicals": [
+    {
+      "id": "na2co3_anhydrous",
+      "nameKey": "exp04.chemical.na2co3_anhydrous",
+      "formula": "Na2CO3",
+      "physicalState": "solid",
+      "role": "solute",
+      "molarMass": {
+        "quantity": {
+          "value": 106,
+          "unit": "g mol-1"
+        },
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E7",
+            "pdfPage": 29,
+            "printedPage": 21
+          },
+          {
+            "sourceId": "nie-rb-g12-en",
+            "factId": "E22",
+            "pdfPage": 123,
+            "printedPage": 113
+          }
+        ]
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E10",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E22",
+          "pdfPage": 123,
+          "printedPage": 113
+        }
+      ]
+    },
+    {
+      "id": "distilled_water",
+      "nameKey": "exp04.chemical.distilled_water",
+      "formula": "H2O",
+      "physicalState": "liquid",
+      "role": "solvent",
+      "molarMass": null,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "tap_water",
+      "nameKey": "exp04.chemical.tap_water",
+      "formula": "H2O",
+      "physicalState": "liquid",
+      "role": "incorrect_solvent",
+      "molarMass": null,
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    }
+  ],
+  "safetyRules": [
+    {
+      "id": "read_procedure",
+      "textKey": "exp04.safety.read_procedure",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "goggles",
+      "textKey": "exp04.safety.goggles",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "no_food_drink",
+      "textKey": "exp04.safety.no_food_drink",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "closed_shoes",
+      "textKey": "exp04.safety.closed_shoes",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "hair_restrained",
+      "textKey": "exp04.safety.hair_restrained",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "report_incidents",
+      "textKey": "exp04.safety.report_incidents",
+      "kind": "checklist",
+      "violationCode": "SAFETY_CHECKLIST_INCOMPLETE",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S4",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "prepare_before_work",
+      "textKey": "exp04.safety.prepare_before_work",
+      "kind": "handling",
+      "violationCode": "SAFETY_NOT_CONFIRMED",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "avoid_touching_chemicals",
+      "textKey": "exp04.safety.avoid_touching_chemicals",
+      "kind": "handling",
+      "violationCode": "CHEMICAL_SKIN_CONTACT",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S7",
+          "pdfPage": 10,
+          "printedPage": 2
+        }
+      ]
+    }
+  ],
+  "initialState": {
+    "glassware": [
+      {
+        "apparatusId": "volumetric_flask_250",
+        "cleanliness": "dirty"
+      },
+      {
+        "apparatusId": "volumetric_flask_100",
+        "cleanliness": "dirty"
+      },
+      {
+        "apparatusId": "volumetric_flask_500",
+        "cleanliness": "dirty"
+      },
+      {
+        "apparatusId": "funnel",
+        "cleanliness": "dirty"
+      },
+      {
+        "apparatusId": "watch_glass",
+        "cleanliness": "dirty"
+      }
+    ],
+    "sourceRefs": [
+      {
+        "sourceId": "nie-handbook-2018",
+        "factId": "E11",
+        "pdfPage": 29,
+        "printedPage": 21
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "safety",
+      "titleKey": "exp04.stage.safety.title",
+      "goalKey": "exp04.stage.safety.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "id": "setup",
+      "titleKey": "exp04.stage.setup.title",
+      "goalKey": "exp04.stage.setup.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "id": "weighing",
+      "titleKey": "exp04.stage.weighing.title",
+      "goalKey": "exp04.stage.weighing.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "transfer",
+      "titleKey": "exp04.stage.transfer.title",
+      "goalKey": "exp04.stage.transfer.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "dissolution",
+      "titleKey": "exp04.stage.dissolution.title",
+      "goalKey": "exp04.stage.dissolution.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "make_up",
+      "titleKey": "exp04.stage.make_up.title",
+      "goalKey": "exp04.stage.make_up.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "mixing",
+      "titleKey": "exp04.stage.mixing.title",
+      "goalKey": "exp04.stage.mixing.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        }
+      ]
+    },
+    {
+      "id": "labelling",
+      "titleKey": "exp04.stage.labelling.title",
+      "goalKey": "exp04.stage.labelling.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "titleKey": "exp04.stage.review.title",
+      "goalKey": "exp04.stage.review.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "complete",
+      "titleKey": "exp04.stage.complete.title",
+      "goalKey": "exp04.stage.complete.goal",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E8",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    }
+  ],
+  "availableActions": [
+    {
+      "type": "confirm_safety",
+      "labelKey": "exp04.action.confirm_safety",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "type": "select_apparatus",
+      "labelKey": "exp04.action.select_apparatus",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "type": "clean_glassware",
+      "labelKey": "exp04.action.clean_glassware",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "type": "weigh_watch_glass",
+      "labelKey": "exp04.action.weigh_watch_glass",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "set_balance_sliders",
+      "labelKey": "exp04.action.set_balance_sliders",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "add_solid",
+      "labelKey": "exp04.action.add_solid",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "remove_solid",
+      "labelKey": "exp04.action.remove_solid",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "place_funnel",
+      "labelKey": "exp04.action.place_funnel",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "type": "transfer_solid",
+      "labelKey": "exp04.action.transfer_solid",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "rinse_watch_glass",
+      "labelKey": "exp04.action.rinse_watch_glass",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "rinse_funnel",
+      "labelKey": "exp04.action.rinse_funnel",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "type": "remove_funnel",
+      "labelKey": "exp04.action.remove_funnel",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "add_water",
+      "labelKey": "exp04.action.add_water",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "type": "stopper_flask",
+      "labelKey": "exp04.action.stopper_flask",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "type": "dissolve_solute",
+      "labelKey": "exp04.action.dissolve_solute",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "type": "adjust_to_mark",
+      "labelKey": "exp04.action.adjust_to_mark",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E27",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "mix_solution",
+      "labelKey": "exp04.action.mix_solution",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        }
+      ]
+    },
+    {
+      "type": "apply_label",
+      "labelKey": "exp04.action.apply_label",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "type": "request_hint",
+      "labelKey": "exp04.action.request_hint",
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P2",
+          "pdfPage": 3,
+          "printedPage": null
+        }
+      ]
+    },
+    {
+      "type": "submit_experiment",
+      "labelKey": "exp04.action.submit_experiment",
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P4",
+          "pdfPage": 3,
+          "printedPage": null
+        }
+      ]
+    },
+    {
+      "type": "restart_experiment",
+      "labelKey": "exp04.action.restart_experiment",
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P7",
+          "pdfPage": 6,
+          "printedPage": null
+        }
+      ]
+    }
+  ],
+  "transitionRules": [
+    {
+      "action": "confirm_safety",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "action": "select_apparatus",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted", "apparatus_known", "flask_switch_allowed"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "action": "clean_glassware",
+      "requiresApparatus": [],
+      "preconditions": [
+        "not_submitted",
+        "apparatus_known",
+        "apparatus_selected",
+        "glassware_cleanable_and_empty"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "action": "weigh_watch_glass",
+      "requiresApparatus": ["balance", "watch_glass"],
+      "preconditions": ["not_submitted", "apparatus_selected", "transfer_not_started"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "set_balance_sliders",
+      "requiresApparatus": ["balance"],
+      "preconditions": ["not_submitted", "apparatus_selected", "transfer_not_started"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "add_solid",
+      "requiresApparatus": ["balance", "watch_glass"],
+      "preconditions": ["not_submitted", "apparatus_selected", "watch_glass_on_balance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "remove_solid",
+      "requiresApparatus": ["balance", "watch_glass"],
+      "preconditions": [
+        "not_submitted",
+        "apparatus_selected",
+        "watch_glass_on_balance",
+        "sufficient_solid"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "place_funnel",
+      "requiresApparatus": ["funnel"],
+      "preconditions": [
+        "not_submitted",
+        "apparatus_selected",
+        "flask_selected",
+        "funnel_not_on_flask",
+        "flask_unstoppered"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "action": "transfer_solid",
+      "requiresApparatus": ["funnel", "watch_glass"],
+      "preconditions": [
+        "not_submitted",
+        "apparatus_selected",
+        "flask_selected",
+        "transfer_not_started",
+        "solid_on_watch_glass",
+        "funnel_on_flask"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "action": "rinse_watch_glass",
+      "requiresApparatus": ["wash_bottle", "watch_glass", "funnel"],
+      "preconditions": ["not_submitted", "apparatus_selected", "funnel_on_flask", "within_brim"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "rinse_funnel",
+      "requiresApparatus": ["wash_bottle", "funnel"],
+      "preconditions": ["not_submitted", "apparatus_selected", "funnel_on_flask", "within_brim"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "action": "remove_funnel",
+      "requiresApparatus": ["funnel"],
+      "preconditions": ["not_submitted", "funnel_on_flask"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "add_water",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted", "flask_selected", "flask_unstoppered", "within_brim"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "stopper_flask",
+      "requiresApparatus": [],
+      "preconditions": [
+        "not_submitted",
+        "flask_selected",
+        "funnel_not_on_flask",
+        "stopper_state_changes"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "dissolve_solute",
+      "requiresApparatus": [],
+      "preconditions": [
+        "not_submitted",
+        "flask_selected",
+        "flask_stoppered",
+        "flask_has_liquid",
+        "flask_has_solute"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "action": "adjust_to_mark",
+      "requiresApparatus": [],
+      "preconditions": [
+        "not_submitted",
+        "flask_selected",
+        "flask_unstoppered",
+        "funnel_not_on_flask",
+        "below_mark"
+      ],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E27",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "mix_solution",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted", "flask_selected", "flask_stoppered", "flask_has_liquid"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "action": "apply_label",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted", "flask_selected"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "action": "request_hint",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted"],
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P2",
+          "pdfPage": 3,
+          "printedPage": null
+        }
+      ]
+    },
+    {
+      "action": "submit_experiment",
+      "requiresApparatus": [],
+      "preconditions": ["not_submitted"],
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P4",
+          "pdfPage": 3,
+          "printedPage": null
+        }
+      ]
+    },
+    {
+      "action": "restart_experiment",
+      "requiresApparatus": [],
+      "preconditions": [],
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P7",
+          "pdfPage": 6,
+          "printedPage": null
+        }
+      ]
+    }
+  ],
+  "procedure": [
+    {
+      "stepId": "confirm_safety",
+      "stage": "safety",
+      "action": "confirm_safety",
+      "instructionKey": "exp04.step.confirm_safety.instruction",
+      "hintKey": "exp04.step.confirm_safety.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "select_apparatus",
+      "stage": "setup",
+      "action": "select_apparatus",
+      "instructionKey": "exp04.step.select_apparatus.instruction",
+      "hintKey": "exp04.step.select_apparatus.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E5",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "clean_glassware",
+      "stage": "setup",
+      "action": "clean_glassware",
+      "instructionKey": "exp04.step.clean_glassware.instruction",
+      "hintKey": "exp04.step.clean_glassware.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "weigh_watch_glass",
+      "stage": "weighing",
+      "action": "weigh_watch_glass",
+      "instructionKey": "exp04.step.weigh_watch_glass.instruction",
+      "hintKey": "exp04.step.weigh_watch_glass.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "set_balance_sliders",
+      "stage": "weighing",
+      "action": "set_balance_sliders",
+      "instructionKey": "exp04.step.set_balance_sliders.instruction",
+      "hintKey": "exp04.step.set_balance_sliders.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E7",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "add_solid",
+      "stage": "weighing",
+      "action": "add_solid",
+      "instructionKey": "exp04.step.add_solid.instruction",
+      "hintKey": "exp04.step.add_solid.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "place_funnel",
+      "stage": "transfer",
+      "action": "place_funnel",
+      "instructionKey": "exp04.step.place_funnel.instruction",
+      "hintKey": "exp04.step.place_funnel.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "transfer_solid",
+      "stage": "transfer",
+      "action": "transfer_solid",
+      "instructionKey": "exp04.step.transfer_solid.instruction",
+      "hintKey": "exp04.step.transfer_solid.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "rinse_watch_glass",
+      "stage": "transfer",
+      "action": "rinse_watch_glass",
+      "instructionKey": "exp04.step.rinse_watch_glass.instruction",
+      "hintKey": "exp04.step.rinse_watch_glass.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "rinse_funnel",
+      "stage": "transfer",
+      "action": "rinse_funnel",
+      "instructionKey": "exp04.step.rinse_funnel.instruction",
+      "hintKey": "exp04.step.rinse_funnel.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "remove_funnel",
+      "stage": "dissolution",
+      "action": "remove_funnel",
+      "instructionKey": "exp04.step.remove_funnel.instruction",
+      "hintKey": "exp04.step.remove_funnel.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "add_dissolution_water",
+      "stage": "dissolution",
+      "action": "add_water",
+      "instructionKey": "exp04.step.add_dissolution_water.instruction",
+      "hintKey": "exp04.step.add_dissolution_water.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        }
+      ],
+      "parameterIds": ["param.demo_dissolution_water"]
+    },
+    {
+      "stepId": "stopper_for_dissolution",
+      "stage": "dissolution",
+      "action": "stopper_flask",
+      "instructionKey": "exp04.step.stopper_for_dissolution.instruction",
+      "hintKey": "exp04.step.stopper_for_dissolution.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "dissolve_solute",
+      "stage": "dissolution",
+      "action": "dissolve_solute",
+      "instructionKey": "exp04.step.dissolve_solute.instruction",
+      "hintKey": "exp04.step.dissolve_solute.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V6",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "unstopper_for_make_up",
+      "stage": "make_up",
+      "action": "stopper_flask",
+      "instructionKey": "exp04.step.unstopper_for_make_up.instruction",
+      "hintKey": "exp04.step.unstopper_for_make_up.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "add_water_near_mark",
+      "stage": "make_up",
+      "action": "add_water",
+      "instructionKey": "exp04.step.add_water_near_mark.instruction",
+      "hintKey": "exp04.step.add_water_near_mark.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": ["param.demo_dropwise_margin"]
+    },
+    {
+      "stepId": "adjust_to_mark",
+      "stage": "make_up",
+      "action": "adjust_to_mark",
+      "instructionKey": "exp04.step.adjust_to_mark.instruction",
+      "hintKey": "exp04.step.adjust_to_mark.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E27",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V7",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "stopper_for_mixing",
+      "stage": "mixing",
+      "action": "stopper_flask",
+      "instructionKey": "exp04.step.stopper_for_mixing.instruction",
+      "hintKey": "exp04.step.stopper_for_mixing.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "mix_solution",
+      "stage": "mixing",
+      "action": "mix_solution",
+      "instructionKey": "exp04.step.mix_solution.instruction",
+      "hintKey": "exp04.step.mix_solution.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V6",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ],
+      "parameterIds": ["param.required_inversions"]
+    },
+    {
+      "stepId": "apply_label",
+      "stage": "labelling",
+      "action": "apply_label",
+      "instructionKey": "exp04.step.apply_label.instruction",
+      "hintKey": "exp04.step.apply_label.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "parameterIds": []
+    },
+    {
+      "stepId": "submit_experiment",
+      "stage": "review",
+      "action": "submit_experiment",
+      "instructionKey": "exp04.step.submit_experiment.instruction",
+      "hintKey": "exp04.step.submit_experiment.hint",
+      "sourceRefs": [
+        {
+          "sourceId": "proposal-c01",
+          "factId": "P4",
+          "pdfPage": 3,
+          "printedPage": null
+        }
+      ],
+      "parameterIds": []
+    }
+  ],
+  "observations": [
+    {
+      "id": "pointer_below_zero",
+      "kind": "balance_pointer",
+      "textKey": "exp04.observation.pointer_below_zero",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "pointer_at_zero",
+      "kind": "balance_pointer",
+      "textKey": "exp04.observation.pointer_at_zero",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "pointer_above_zero",
+      "kind": "balance_pointer",
+      "textKey": "exp04.observation.pointer_above_zero",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "solid_in_flask_undissolved",
+      "kind": "dissolution",
+      "textKey": "exp04.observation.solid_in_flask_undissolved",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "solid_dissolved",
+      "kind": "dissolution",
+      "textKey": "exp04.observation.solid_dissolved",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "liquid_below_mark",
+      "kind": "volume_level",
+      "textKey": "exp04.observation.liquid_below_mark",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "meniscus_at_mark",
+      "kind": "volume_level",
+      "textKey": "exp04.observation.meniscus_at_mark",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V7",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "liquid_above_mark",
+      "kind": "volume_level",
+      "textKey": "exp04.observation.liquid_above_mark",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "solution_homogeneous",
+      "kind": "homogeneity",
+      "textKey": "exp04.observation.solution_homogeneous",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "solid_spilled",
+      "kind": "loss",
+      "textKey": "exp04.observation.solid_spilled",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    }
+  ],
+  "measurementRules": [
+    {
+      "id": "watch_glass_mass",
+      "kind": "mass",
+      "unit": "g",
+      "method": "balance_reading",
+      "formulaId": null,
+      "descriptionKey": "exp04.measurement.watch_glass_mass",
+      "parameterIds": ["param.balance_resolution"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E12",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "balance_slider_setting",
+      "kind": "mass",
+      "unit": "g",
+      "method": "balance_reading",
+      "formulaId": null,
+      "descriptionKey": "exp04.measurement.balance_slider_setting",
+      "parameterIds": ["param.slider_tolerance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "weighed_solute_mass",
+      "kind": "mass",
+      "unit": "g",
+      "method": "balance_reading",
+      "formulaId": null,
+      "descriptionKey": "exp04.measurement.weighed_solute_mass",
+      "parameterIds": ["param.mass_tolerance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "id": "transferred_solute_mass",
+      "kind": "mass",
+      "unit": "g",
+      "method": "calculated",
+      "formulaId": null,
+      "descriptionKey": "exp04.measurement.transferred_solute_mass",
+      "parameterIds": ["param.watch_glass_residue_fraction", "param.funnel_residue_fraction"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "final_volume",
+      "kind": "volume",
+      "unit": "cm3",
+      "method": "flask_mark",
+      "formulaId": null,
+      "descriptionKey": "exp04.measurement.final_volume",
+      "parameterIds": ["param.eye_level_volume_error"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V7",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "id": "achieved_concentration",
+      "kind": "concentration",
+      "unit": "mol dm-3",
+      "method": "calculated",
+      "formulaId": "concentration_from_mass_and_volume",
+      "descriptionKey": "exp04.measurement.achieved_concentration",
+      "parameterIds": ["param.concentration_relative_tolerance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E4",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E6",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E7",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    }
+  ],
+  "errorRules": [
+    {
+      "code": "SAFETY_NOT_CONFIRMED",
+      "category": "safety_violation",
+      "consequence": "safety",
+      "recoverability": "not_correctable",
+      "messageKey": "exp04.error.safety_not_confirmed.message",
+      "explanationKey": "exp04.error.safety_not_confirmed.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S1",
+          "pdfPage": 9,
+          "printedPage": 1
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "code": "SAFETY_CHECKLIST_INCOMPLETE",
+      "category": "safety_violation",
+      "consequence": "safety",
+      "recoverability": "not_correctable",
+      "messageKey": "exp04.error.safety_checklist_incomplete.message",
+      "explanationKey": "exp04.error.safety_checklist_incomplete.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S3",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "code": "CHEMICAL_SKIN_CONTACT",
+      "category": "safety_violation",
+      "consequence": "safety",
+      "recoverability": "not_correctable",
+      "messageKey": "exp04.error.chemical_skin_contact.message",
+      "explanationKey": "exp04.error.chemical_skin_contact.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S7",
+          "pdfPage": 10,
+          "printedPage": 2
+        }
+      ]
+    },
+    {
+      "code": "DIRTY_FLASK_USED",
+      "category": "technique_error",
+      "consequence": "purity_risk",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.dirty_flask_used.message",
+      "explanationKey": "exp04.error.dirty_flask_used.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "code": "DIRTY_GLASSWARE_USED",
+      "category": "technique_error",
+      "consequence": "purity_risk",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.dirty_glassware_used.message",
+      "explanationKey": "exp04.error.dirty_glassware_used.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E11",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "code": "INCOMPLETE_TRANSFER",
+      "category": "technique_error",
+      "consequence": "numeric_mass",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.incomplete_transfer.message",
+      "explanationKey": "exp04.error.incomplete_transfer.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V2",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "code": "WATCH_GLASS_NOT_RINSED",
+      "category": "technique_error",
+      "consequence": "numeric_mass",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.watch_glass_not_rinsed.message",
+      "explanationKey": "exp04.error.watch_glass_not_rinsed.explanation",
+      "parameterIds": ["param.watch_glass_residue_fraction"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "FUNNEL_NOT_RINSED",
+      "category": "technique_error",
+      "consequence": "numeric_mass",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.funnel_not_rinsed.message",
+      "explanationKey": "exp04.error.funnel_not_rinsed.explanation",
+      "parameterIds": ["param.funnel_residue_fraction"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V3",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "code": "UNDISSOLVED_AT_MARK",
+      "category": "technique_error",
+      "consequence": "volume_validity",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.undissolved_at_mark.message",
+      "explanationKey": "exp04.error.undissolved_at_mark.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E17",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "code": "TAP_WATER_USED",
+      "category": "technique_error",
+      "consequence": "purity_risk",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.tap_water_used.message",
+      "explanationKey": "exp04.error.tap_water_used.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E16",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V4",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "code": "INSUFFICIENT_MIXING",
+      "category": "technique_error",
+      "consequence": "homogeneity_risk",
+      "recoverability": "recoverable",
+      "messageKey": "exp04.error.insufficient_mixing.message",
+      "explanationKey": "exp04.error.insufficient_mixing.explanation",
+      "parameterIds": ["param.required_inversions"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V5",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-rb-g12-en",
+          "factId": "E24",
+          "pdfPage": 124,
+          "printedPage": 114
+        }
+      ]
+    },
+    {
+      "code": "FLASK_HELD_BY_BODY",
+      "category": "technique_error",
+      "consequence": "technique_only",
+      "recoverability": "not_correctable",
+      "messageKey": "exp04.error.flask_held_by_body.message",
+      "explanationKey": "exp04.error.flask_held_by_body.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V6",
+          "pdfPage": 16,
+          "printedPage": 8
+        }
+      ]
+    },
+    {
+      "code": "SLIDER_SETTING_INCORRECT",
+      "category": "measurement_error",
+      "consequence": "numeric_mass",
+      "recoverability": "recoverable",
+      "messageKey": "exp04.error.slider_setting_incorrect.message",
+      "explanationKey": "exp04.error.slider_setting_incorrect.explanation",
+      "parameterIds": ["param.slider_tolerance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E13",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "MASS_OUT_OF_TOLERANCE",
+      "category": "measurement_error",
+      "consequence": "numeric_mass",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.mass_out_of_tolerance.message",
+      "explanationKey": "exp04.error.mass_out_of_tolerance.explanation",
+      "parameterIds": ["param.mass_tolerance"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E7",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E14",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "WRONG_FLASK_CAPACITY",
+      "category": "measurement_error",
+      "consequence": "numeric_volume",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.wrong_flask_capacity.message",
+      "explanationKey": "exp04.error.wrong_flask_capacity.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E5",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E9",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    {
+      "code": "OVERSHOOT_MARK",
+      "category": "measurement_error",
+      "consequence": "numeric_volume",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.overshoot_mark.message",
+      "explanationKey": "exp04.error.overshoot_mark.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "EYE_LEVEL_INCORRECT",
+      "category": "measurement_error",
+      "consequence": "numeric_volume",
+      "recoverability": "numeric_consequence",
+      "messageKey": "exp04.error.eye_level_incorrect.message",
+      "explanationKey": "exp04.error.eye_level_incorrect.explanation",
+      "parameterIds": ["param.eye_level_volume_error"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "V7",
+          "pdfPage": 16,
+          "printedPage": 8
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E18",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "LABEL_MISSING",
+      "category": "completion_error",
+      "consequence": "completion",
+      "recoverability": "not_correctable",
+      "messageKey": "exp04.error.label_missing.message",
+      "explanationKey": "exp04.error.label_missing.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "S2",
+          "pdfPage": 9,
+          "printedPage": 1
+        }
+      ]
+    },
+    {
+      "code": "LABEL_INCORRECT",
+      "category": "completion_error",
+      "consequence": "completion",
+      "recoverability": "recoverable",
+      "messageKey": "exp04.error.label_incorrect.message",
+      "explanationKey": "exp04.error.label_incorrect.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    },
+    {
+      "code": "INCOMPLETE_PROCEDURE",
+      "category": "completion_error",
+      "consequence": "completion",
+      "recoverability": "restart_required",
+      "messageKey": "exp04.error.incomplete_procedure.message",
+      "explanationKey": "exp04.error.incomplete_procedure.explanation",
+      "parameterIds": [],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E8",
+          "pdfPage": 29,
+          "printedPage": 21
+        },
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E15",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    }
+  ],
+  "expectedResults": {
+    "soluteChemicalId": "na2co3_anhydrous",
+    "solventChemicalId": "distilled_water",
+    "targetVolume": {
+      "quantity": {
+        "value": 250,
+        "unit": "cm3"
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E5",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    "targetConcentration": {
+      "quantity": {
+        "value": 1,
+        "unit": "mol dm-3"
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E5",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    "requiredAmount": {
+      "quantity": {
+        "value": 0.25,
+        "unit": "mol"
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E6",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    "targetMass": {
+      "quantity": {
+        "value": 26.5,
+        "unit": "g"
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E7",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ]
+    },
+    "calculations": [
+      {
+        "id": "amount",
+        "stepKey": "exp04.calc.amount",
+        "result": {
+          "quantity": {
+            "value": 0.25,
+            "unit": "mol"
+          },
+          "sourceRefs": [
+            {
+              "sourceId": "nie-handbook-2018",
+              "factId": "E6",
+              "pdfPage": 29,
+              "printedPage": 21
+            }
+          ]
+        }
+      },
+      {
+        "id": "mass",
+        "stepKey": "exp04.calc.mass",
+        "result": {
+          "quantity": {
+            "value": 26.5,
+            "unit": "g"
+          },
+          "sourceRefs": [
+            {
+              "sourceId": "nie-handbook-2018",
+              "factId": "E7",
+              "pdfPage": 29,
+              "printedPage": 21
+            }
+          ]
+        }
+      }
+    ],
+    "label": {
+      "requiredFields": ["solution_name", "concentration", "preparation_date"],
+      "acceptedSolutionNames": ["na2co3", "sodiumcarbonate", "anhydroussodiumcarbonate"],
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E19",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ]
+    }
+  },
+  "assessmentRef": {
+    "assessmentId": "exp04_assessment",
+    "version": "1.0.0"
+  },
+  "preLabQuestions": [
+    {
+      "id": "q1",
+      "promptKey": "exp04.prelab.q1.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E3",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "answerGuide": null,
+      "revealAnswerAfter": "submission"
+    },
+    {
+      "id": "q2",
+      "promptKey": "exp04.prelab.q2.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E3",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "answerGuide": {
+        "answerKey": "exp04.prelab.q2.answer",
+        "basis": "source",
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E4",
+            "pdfPage": 29,
+            "printedPage": 21
+          }
+        ]
+      },
+      "revealAnswerAfter": "submission"
+    },
+    {
+      "id": "q3",
+      "promptKey": "exp04.prelab.q3.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E3",
+          "pdfPage": 29,
+          "printedPage": 21
+        }
+      ],
+      "answerGuide": {
+        "answerKey": "exp04.prelab.q3.answer",
+        "basis": "source",
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E9",
+            "pdfPage": 29,
+            "printedPage": 21
+          },
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "V1",
+            "pdfPage": 16,
+            "printedPage": 8
+          }
+        ]
+      },
+      "revealAnswerAfter": "submission"
+    }
+  ],
+  "postLabQuestions": [
+    {
+      "id": "q1a",
+      "promptKey": "exp04.postlab.q1a.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E20",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "answerGuide": {
+        "answerKey": "exp04.postlab.q1a.answer",
+        "basis": "derived_from_source",
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E20",
+            "pdfPage": 30,
+            "printedPage": 22
+          },
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E4",
+            "pdfPage": 29,
+            "printedPage": 21
+          }
+        ]
+      },
+      "revealAnswerAfter": "submission"
+    },
+    {
+      "id": "q1b",
+      "promptKey": "exp04.postlab.q1b.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E20",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "answerGuide": {
+        "answerKey": "exp04.postlab.q1b.answer",
+        "basis": "derived_from_source",
+        "sourceRefs": [
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E20",
+            "pdfPage": 30,
+            "printedPage": 22
+          },
+          {
+            "sourceId": "nie-handbook-2018",
+            "factId": "E4",
+            "pdfPage": 29,
+            "printedPage": 21
+          }
+        ]
+      },
+      "revealAnswerAfter": "submission"
+    },
+    {
+      "id": "q2",
+      "promptKey": "exp04.postlab.q2.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E20",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "answerGuide": null,
+      "revealAnswerAfter": "submission"
+    },
+    {
+      "id": "q3",
+      "promptKey": "exp04.postlab.q3.prompt",
+      "sourceRefs": [
+        {
+          "sourceId": "nie-handbook-2018",
+          "factId": "E20",
+          "pdfPage": 30,
+          "printedPage": 22
+        }
+      ],
+      "answerGuide": {
+        "answerKey": "exp04.postlab.q3.answer",
+        "basis": "source",
+        "sourceRefs": [
+          {
+            "sourceId": "nie-rb-g12-en",
+            "factId": "E22",
+            "pdfPage": 123,
+            "printedPage": 113
+          }
+        ]
+      },
+      "revealAnswerAfter": "submission"
+    }
+  ],
+  "localisationKeys": [
+    "exp04.action.add_solid",
+    "exp04.action.add_water",
+    "exp04.action.adjust_to_mark",
+    "exp04.action.apply_label",
+    "exp04.action.clean_glassware",
+    "exp04.action.confirm_safety",
+    "exp04.action.dissolve_solute",
+    "exp04.action.mix_solution",
+    "exp04.action.place_funnel",
+    "exp04.action.remove_funnel",
+    "exp04.action.remove_solid",
+    "exp04.action.request_hint",
+    "exp04.action.restart_experiment",
+    "exp04.action.rinse_funnel",
+    "exp04.action.rinse_watch_glass",
+    "exp04.action.select_apparatus",
+    "exp04.action.set_balance_sliders",
+    "exp04.action.stopper_flask",
+    "exp04.action.submit_experiment",
+    "exp04.action.transfer_solid",
+    "exp04.action.weigh_watch_glass",
+    "exp04.apparatus.beaker",
+    "exp04.apparatus.dropper_or_glass_tube",
+    "exp04.apparatus.four_beam_balance",
+    "exp04.apparatus.funnel",
+    "exp04.apparatus.volumetric_flask_100",
+    "exp04.apparatus.volumetric_flask_250",
+    "exp04.apparatus.volumetric_flask_500",
+    "exp04.apparatus.wash_bottle",
+    "exp04.apparatus.watch_glass",
+    "exp04.calc.amount",
+    "exp04.calc.mass",
+    "exp04.chemical.distilled_water",
+    "exp04.chemical.na2co3_anhydrous",
+    "exp04.chemical.tap_water",
+    "exp04.error.chemical_skin_contact.explanation",
+    "exp04.error.chemical_skin_contact.message",
+    "exp04.error.dirty_flask_used.explanation",
+    "exp04.error.dirty_flask_used.message",
+    "exp04.error.dirty_glassware_used.explanation",
+    "exp04.error.dirty_glassware_used.message",
+    "exp04.error.eye_level_incorrect.explanation",
+    "exp04.error.eye_level_incorrect.message",
+    "exp04.error.flask_held_by_body.explanation",
+    "exp04.error.flask_held_by_body.message",
+    "exp04.error.funnel_not_rinsed.explanation",
+    "exp04.error.funnel_not_rinsed.message",
+    "exp04.error.incomplete_procedure.explanation",
+    "exp04.error.incomplete_procedure.message",
+    "exp04.error.incomplete_transfer.explanation",
+    "exp04.error.incomplete_transfer.message",
+    "exp04.error.insufficient_mixing.explanation",
+    "exp04.error.insufficient_mixing.message",
+    "exp04.error.label_incorrect.explanation",
+    "exp04.error.label_incorrect.message",
+    "exp04.error.label_missing.explanation",
+    "exp04.error.label_missing.message",
+    "exp04.error.mass_out_of_tolerance.explanation",
+    "exp04.error.mass_out_of_tolerance.message",
+    "exp04.error.overshoot_mark.explanation",
+    "exp04.error.overshoot_mark.message",
+    "exp04.error.safety_checklist_incomplete.explanation",
+    "exp04.error.safety_checklist_incomplete.message",
+    "exp04.error.safety_not_confirmed.explanation",
+    "exp04.error.safety_not_confirmed.message",
+    "exp04.error.slider_setting_incorrect.explanation",
+    "exp04.error.slider_setting_incorrect.message",
+    "exp04.error.tap_water_used.explanation",
+    "exp04.error.tap_water_used.message",
+    "exp04.error.undissolved_at_mark.explanation",
+    "exp04.error.undissolved_at_mark.message",
+    "exp04.error.watch_glass_not_rinsed.explanation",
+    "exp04.error.watch_glass_not_rinsed.message",
+    "exp04.error.wrong_flask_capacity.explanation",
+    "exp04.error.wrong_flask_capacity.message",
+    "exp04.measurement.achieved_concentration",
+    "exp04.measurement.balance_slider_setting",
+    "exp04.measurement.final_volume",
+    "exp04.measurement.transferred_solute_mass",
+    "exp04.measurement.watch_glass_mass",
+    "exp04.measurement.weighed_solute_mass",
+    "exp04.objective.aim_glassware_balance",
+    "exp04.objective.aim_measure_volumes",
+    "exp04.objective.aim_prepare_solutions",
+    "exp04.objective.outcome_explain_methods",
+    "exp04.objective.outcome_prepare_na2co3",
+    "exp04.observation.liquid_above_mark",
+    "exp04.observation.liquid_below_mark",
+    "exp04.observation.meniscus_at_mark",
+    "exp04.observation.pointer_above_zero",
+    "exp04.observation.pointer_at_zero",
+    "exp04.observation.pointer_below_zero",
+    "exp04.observation.solid_dissolved",
+    "exp04.observation.solid_in_flask_undissolved",
+    "exp04.observation.solid_spilled",
+    "exp04.observation.solution_homogeneous",
+    "exp04.postlab.q1a.answer",
+    "exp04.postlab.q1a.prompt",
+    "exp04.postlab.q1b.answer",
+    "exp04.postlab.q1b.prompt",
+    "exp04.postlab.q2.prompt",
+    "exp04.postlab.q3.answer",
+    "exp04.postlab.q3.prompt",
+    "exp04.prelab.q1.prompt",
+    "exp04.prelab.q2.answer",
+    "exp04.prelab.q2.prompt",
+    "exp04.prelab.q3.answer",
+    "exp04.prelab.q3.prompt",
+    "exp04.prereq.concentration_definition",
+    "exp04.prereq.primary_standard",
+    "exp04.prereq.standard_solution",
+    "exp04.safety.avoid_touching_chemicals",
+    "exp04.safety.closed_shoes",
+    "exp04.safety.goggles",
+    "exp04.safety.hair_restrained",
+    "exp04.safety.no_food_drink",
+    "exp04.safety.prepare_before_work",
+    "exp04.safety.read_procedure",
+    "exp04.safety.report_incidents",
+    "exp04.stage.complete.goal",
+    "exp04.stage.complete.title",
+    "exp04.stage.dissolution.goal",
+    "exp04.stage.dissolution.title",
+    "exp04.stage.labelling.goal",
+    "exp04.stage.labelling.title",
+    "exp04.stage.make_up.goal",
+    "exp04.stage.make_up.title",
+    "exp04.stage.mixing.goal",
+    "exp04.stage.mixing.title",
+    "exp04.stage.review.goal",
+    "exp04.stage.review.title",
+    "exp04.stage.safety.goal",
+    "exp04.stage.safety.title",
+    "exp04.stage.setup.goal",
+    "exp04.stage.setup.title",
+    "exp04.stage.transfer.goal",
+    "exp04.stage.transfer.title",
+    "exp04.stage.weighing.goal",
+    "exp04.stage.weighing.title",
+    "exp04.step.add_dissolution_water.hint",
+    "exp04.step.add_dissolution_water.instruction",
+    "exp04.step.add_solid.hint",
+    "exp04.step.add_solid.instruction",
+    "exp04.step.add_water_near_mark.hint",
+    "exp04.step.add_water_near_mark.instruction",
+    "exp04.step.adjust_to_mark.hint",
+    "exp04.step.adjust_to_mark.instruction",
+    "exp04.step.apply_label.hint",
+    "exp04.step.apply_label.instruction",
+    "exp04.step.clean_glassware.hint",
+    "exp04.step.clean_glassware.instruction",
+    "exp04.step.confirm_safety.hint",
+    "exp04.step.confirm_safety.instruction",
+    "exp04.step.dissolve_solute.hint",
+    "exp04.step.dissolve_solute.instruction",
+    "exp04.step.mix_solution.hint",
+    "exp04.step.mix_solution.instruction",
+    "exp04.step.place_funnel.hint",
+    "exp04.step.place_funnel.instruction",
+    "exp04.step.remove_funnel.hint",
+    "exp04.step.remove_funnel.instruction",
+    "exp04.step.rinse_funnel.hint",
+    "exp04.step.rinse_funnel.instruction",
+    "exp04.step.rinse_watch_glass.hint",
+    "exp04.step.rinse_watch_glass.instruction",
+    "exp04.step.select_apparatus.hint",
+    "exp04.step.select_apparatus.instruction",
+    "exp04.step.set_balance_sliders.hint",
+    "exp04.step.set_balance_sliders.instruction",
+    "exp04.step.stopper_for_dissolution.hint",
+    "exp04.step.stopper_for_dissolution.instruction",
+    "exp04.step.stopper_for_mixing.hint",
+    "exp04.step.stopper_for_mixing.instruction",
+    "exp04.step.submit_experiment.hint",
+    "exp04.step.submit_experiment.instruction",
+    "exp04.step.transfer_solid.hint",
+    "exp04.step.transfer_solid.instruction",
+    "exp04.step.unstopper_for_make_up.hint",
+    "exp04.step.unstopper_for_make_up.instruction",
+    "exp04.step.weigh_watch_glass.hint",
+    "exp04.step.weigh_watch_glass.instruction",
+    "exp04.title",
+    "exp04.unit.title"
+  ]
+}

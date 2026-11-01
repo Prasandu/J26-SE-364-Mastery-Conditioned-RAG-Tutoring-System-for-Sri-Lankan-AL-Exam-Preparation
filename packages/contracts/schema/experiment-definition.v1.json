@@ -1,0 +1,2530 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "standard_solution_by_mass"
+        },
+        "experimentId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "definitionVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "experimentNumber": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "titleKey": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+        },
+        "syllabusUnit": {
+          "type": "object",
+          "properties": {
+            "unitNumber": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "titleKey": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+            },
+            "competency": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+$"
+            },
+            "sourceRefs": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "enum": [
+                      "nie-handbook-2018",
+                      "nie-rb-g12-en",
+                      "nie-syllabus-2017",
+                      "proposal-c01"
+                    ]
+                  },
+                  "factId": {
+                    "type": "string",
+                    "pattern": "^[ESVP]\\d+$"
+                  },
+                  "pdfPage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "printedPage": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "factId",
+                  "pdfPage",
+                  "printedPage"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "unitNumber",
+            "titleKey",
+            "competency",
+            "sourceRefs"
+          ],
+          "additionalProperties": false
+        },
+        "sourceRefs": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "enum": [
+                  "nie-handbook-2018",
+                  "nie-rb-g12-en",
+                  "nie-syllabus-2017",
+                  "proposal-c01"
+                ]
+              },
+              "factId": {
+                "type": "string",
+                "pattern": "^[ESVP]\\d+$"
+              },
+              "pdfPage": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "printedPage": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "sourceId",
+              "factId",
+              "pdfPage",
+              "printedPage"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "learningObjectives": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "textKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "textKey",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "textKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "textKey",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "apparatus": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "volumetric_flask",
+                  "beaker",
+                  "funnel",
+                  "watch_glass",
+                  "balance",
+                  "wash_bottle",
+                  "dropper"
+                ]
+              },
+              "nameKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "required",
+                  "optional",
+                  "distractor"
+                ]
+              },
+              "capacity": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "quantity": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg",
+                              "cm3",
+                              "dm3",
+                              "mol",
+                              "mol dm-3",
+                              "g mol-1"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sourceRefs": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceId": {
+                              "type": "string",
+                              "enum": [
+                                "nie-handbook-2018",
+                                "nie-rb-g12-en",
+                                "nie-syllabus-2017",
+                                "proposal-c01"
+                              ]
+                            },
+                            "factId": {
+                              "type": "string",
+                              "pattern": "^[ESVP]\\d+$"
+                            },
+                            "pdfPage": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "printedPage": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sourceId",
+                            "factId",
+                            "pdfPage",
+                            "printedPage"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "quantity",
+                      "sourceRefs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "requiresCleaning": {
+                "type": "boolean"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "nameKey",
+              "role",
+              "capacity",
+              "requiresCleaning",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "chemicals": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "nameKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "formula": {
+                "type": "string",
+                "minLength": 1
+              },
+              "physicalState": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "liquid"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "solute",
+                  "solvent",
+                  "incorrect_solvent"
+                ]
+              },
+              "molarMass": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "quantity": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg",
+                              "cm3",
+                              "dm3",
+                              "mol",
+                              "mol dm-3",
+                              "g mol-1"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sourceRefs": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceId": {
+                              "type": "string",
+                              "enum": [
+                                "nie-handbook-2018",
+                                "nie-rb-g12-en",
+                                "nie-syllabus-2017",
+                                "proposal-c01"
+                              ]
+                            },
+                            "factId": {
+                              "type": "string",
+                              "pattern": "^[ESVP]\\d+$"
+                            },
+                            "pdfPage": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "printedPage": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sourceId",
+                            "factId",
+                            "pdfPage",
+                            "printedPage"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "quantity",
+                      "sourceRefs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "nameKey",
+              "formula",
+              "physicalState",
+              "role",
+              "molarMass",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "safetyRules": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "textKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "checklist",
+                  "handling"
+                ]
+              },
+              "violationCode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "SAFETY_NOT_CONFIRMED",
+                      "SAFETY_CHECKLIST_INCOMPLETE",
+                      "CHEMICAL_SKIN_CONTACT",
+                      "DIRTY_FLASK_USED",
+                      "DIRTY_GLASSWARE_USED",
+                      "INCOMPLETE_TRANSFER",
+                      "WATCH_GLASS_NOT_RINSED",
+                      "FUNNEL_NOT_RINSED",
+                      "UNDISSOLVED_AT_MARK",
+                      "TAP_WATER_USED",
+                      "INSUFFICIENT_MIXING",
+                      "FLASK_HELD_BY_BODY",
+                      "SLIDER_SETTING_INCORRECT",
+                      "MASS_OUT_OF_TOLERANCE",
+                      "WRONG_FLASK_CAPACITY",
+                      "OVERSHOOT_MARK",
+                      "EYE_LEVEL_INCORRECT",
+                      "LABEL_MISSING",
+                      "LABEL_INCORRECT",
+                      "INCOMPLETE_PROCEDURE"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "textKey",
+              "kind",
+              "violationCode",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "initialState": {
+          "type": "object",
+          "properties": {
+            "glassware": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "apparatusId": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "cleanliness": {
+                    "type": "string",
+                    "enum": [
+                      "dirty",
+                      "clean"
+                    ]
+                  }
+                },
+                "required": [
+                  "apparatusId",
+                  "cleanliness"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "sourceRefs": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "enum": [
+                      "nie-handbook-2018",
+                      "nie-rb-g12-en",
+                      "nie-syllabus-2017",
+                      "proposal-c01"
+                    ]
+                  },
+                  "factId": {
+                    "type": "string",
+                    "pattern": "^[ESVP]\\d+$"
+                  },
+                  "pdfPage": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "printedPage": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "factId",
+                  "pdfPage",
+                  "printedPage"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "glassware",
+            "sourceRefs"
+          ],
+          "additionalProperties": false
+        },
+        "stages": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "safety",
+                  "setup",
+                  "weighing",
+                  "transfer",
+                  "dissolution",
+                  "make_up",
+                  "mixing",
+                  "labelling",
+                  "review",
+                  "complete"
+                ]
+              },
+              "titleKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "goalKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "titleKey",
+              "goalKey",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "availableActions": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "confirm_safety",
+                  "select_apparatus",
+                  "clean_glassware",
+                  "weigh_watch_glass",
+                  "set_balance_sliders",
+                  "add_solid",
+                  "remove_solid",
+                  "place_funnel",
+                  "transfer_solid",
+                  "rinse_watch_glass",
+                  "rinse_funnel",
+                  "remove_funnel",
+                  "add_water",
+                  "stopper_flask",
+                  "dissolve_solute",
+                  "adjust_to_mark",
+                  "mix_solution",
+                  "apply_label",
+                  "request_hint",
+                  "submit_experiment",
+                  "restart_experiment"
+                ]
+              },
+              "labelKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "type",
+              "labelKey",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "transitionRules": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "confirm_safety",
+                  "select_apparatus",
+                  "clean_glassware",
+                  "weigh_watch_glass",
+                  "set_balance_sliders",
+                  "add_solid",
+                  "remove_solid",
+                  "place_funnel",
+                  "transfer_solid",
+                  "rinse_watch_glass",
+                  "rinse_funnel",
+                  "remove_funnel",
+                  "add_water",
+                  "stopper_flask",
+                  "dissolve_solute",
+                  "adjust_to_mark",
+                  "mix_solution",
+                  "apply_label",
+                  "request_hint",
+                  "submit_experiment",
+                  "restart_experiment"
+                ]
+              },
+              "requiresApparatus": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "volumetric_flask",
+                    "beaker",
+                    "funnel",
+                    "watch_glass",
+                    "balance",
+                    "wash_bottle",
+                    "dropper"
+                  ]
+                }
+              },
+              "preconditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "not_submitted",
+                    "apparatus_known",
+                    "apparatus_selected",
+                    "glassware_cleanable_and_empty",
+                    "flask_selected",
+                    "flask_switch_allowed",
+                    "watch_glass_on_balance",
+                    "transfer_not_started",
+                    "solid_on_watch_glass",
+                    "sufficient_solid",
+                    "funnel_on_flask",
+                    "funnel_not_on_flask",
+                    "flask_unstoppered",
+                    "flask_stoppered",
+                    "stopper_state_changes",
+                    "flask_has_liquid",
+                    "flask_has_solute",
+                    "below_mark",
+                    "within_brim"
+                  ]
+                }
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "action",
+              "requiresApparatus",
+              "preconditions",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "procedure": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stepId": {
+                "type": "string",
+                "enum": [
+                  "confirm_safety",
+                  "select_apparatus",
+                  "clean_glassware",
+                  "weigh_watch_glass",
+                  "set_balance_sliders",
+                  "add_solid",
+                  "place_funnel",
+                  "transfer_solid",
+                  "rinse_watch_glass",
+                  "rinse_funnel",
+                  "remove_funnel",
+                  "add_dissolution_water",
+                  "stopper_for_dissolution",
+                  "dissolve_solute",
+                  "unstopper_for_make_up",
+                  "add_water_near_mark",
+                  "adjust_to_mark",
+                  "stopper_for_mixing",
+                  "mix_solution",
+                  "apply_label",
+                  "submit_experiment"
+                ]
+              },
+              "stage": {
+                "type": "string",
+                "enum": [
+                  "safety",
+                  "setup",
+                  "weighing",
+                  "transfer",
+                  "dissolution",
+                  "make_up",
+                  "mixing",
+                  "labelling",
+                  "review",
+                  "complete"
+                ]
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "confirm_safety",
+                  "select_apparatus",
+                  "clean_glassware",
+                  "weigh_watch_glass",
+                  "set_balance_sliders",
+                  "add_solid",
+                  "remove_solid",
+                  "place_funnel",
+                  "transfer_solid",
+                  "rinse_watch_glass",
+                  "rinse_funnel",
+                  "remove_funnel",
+                  "add_water",
+                  "stopper_flask",
+                  "dissolve_solute",
+                  "adjust_to_mark",
+                  "mix_solution",
+                  "apply_label",
+                  "request_hint",
+                  "submit_experiment",
+                  "restart_experiment"
+                ]
+              },
+              "instructionKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "hintKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "parameterIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^param\\.[a-z0-9_]+$"
+                }
+              }
+            },
+            "required": [
+              "stepId",
+              "stage",
+              "action",
+              "instructionKey",
+              "hintKey",
+              "sourceRefs",
+              "parameterIds"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "pointer_below_zero",
+                  "pointer_at_zero",
+                  "pointer_above_zero",
+                  "solid_in_flask_undissolved",
+                  "solid_dissolved",
+                  "liquid_below_mark",
+                  "meniscus_at_mark",
+                  "liquid_above_mark",
+                  "solution_homogeneous",
+                  "solid_spilled"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "balance_pointer",
+                  "dissolution",
+                  "volume_level",
+                  "homogeneity",
+                  "loss"
+                ]
+              },
+              "textKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "textKey",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "measurementRules": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "watch_glass_mass",
+                  "balance_slider_setting",
+                  "weighed_solute_mass",
+                  "transferred_solute_mass",
+                  "final_volume",
+                  "achieved_concentration"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "mass",
+                  "volume",
+                  "concentration"
+                ]
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "g",
+                  "cm3",
+                  "mol dm-3"
+                ]
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "balance_reading",
+                  "flask_mark",
+                  "calculated"
+                ]
+              },
+              "formulaId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "concentration_from_mass_and_volume"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "descriptionKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "parameterIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^param\\.[a-z0-9_]+$"
+                }
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "unit",
+              "method",
+              "formulaId",
+              "descriptionKey",
+              "parameterIds",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "errorRules": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "safety_violation",
+                  "technique_error",
+                  "measurement_error",
+                  "completion_error"
+                ]
+              },
+              "consequence": {
+                "type": "string",
+                "enum": [
+                  "numeric_mass",
+                  "numeric_volume",
+                  "purity_risk",
+                  "homogeneity_risk",
+                  "volume_validity",
+                  "technique_only",
+                  "completion",
+                  "safety"
+                ]
+              },
+              "recoverability": {
+                "type": "string",
+                "enum": [
+                  "recoverable",
+                  "not_correctable",
+                  "numeric_consequence",
+                  "restart_required"
+                ]
+              },
+              "messageKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "explanationKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "parameterIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^param\\.[a-z0-9_]+$"
+                }
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "code",
+              "category",
+              "consequence",
+              "recoverability",
+              "messageKey",
+              "explanationKey",
+              "parameterIds",
+              "sourceRefs"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "expectedResults": {
+          "type": "object",
+          "properties": {
+            "soluteChemicalId": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "solventChemicalId": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "targetVolume": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg",
+                        "cm3",
+                        "dm3",
+                        "mol",
+                        "mol dm-3",
+                        "g mol-1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "sourceRefs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "quantity",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            },
+            "targetConcentration": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg",
+                        "cm3",
+                        "dm3",
+                        "mol",
+                        "mol dm-3",
+                        "g mol-1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "sourceRefs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "quantity",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            },
+            "requiredAmount": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg",
+                        "cm3",
+                        "dm3",
+                        "mol",
+                        "mol dm-3",
+                        "g mol-1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "sourceRefs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "quantity",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            },
+            "targetMass": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "g",
+                        "kg",
+                        "cm3",
+                        "dm3",
+                        "mol",
+                        "mol dm-3",
+                        "g mol-1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                "sourceRefs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "quantity",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            },
+            "calculations": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "stepKey": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "quantity": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "g",
+                              "kg",
+                              "cm3",
+                              "dm3",
+                              "mol",
+                              "mol dm-3",
+                              "g mol-1"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sourceRefs": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceId": {
+                              "type": "string",
+                              "enum": [
+                                "nie-handbook-2018",
+                                "nie-rb-g12-en",
+                                "nie-syllabus-2017",
+                                "proposal-c01"
+                              ]
+                            },
+                            "factId": {
+                              "type": "string",
+                              "pattern": "^[ESVP]\\d+$"
+                            },
+                            "pdfPage": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "printedPage": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sourceId",
+                            "factId",
+                            "pdfPage",
+                            "printedPage"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "quantity",
+                      "sourceRefs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "stepKey",
+                  "result"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "label": {
+              "type": "object",
+              "properties": {
+                "requiredFields": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "solution_name",
+                      "concentration",
+                      "preparation_date"
+                    ]
+                  }
+                },
+                "acceptedSolutionNames": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+$"
+                  }
+                },
+                "sourceRefs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "requiredFields",
+                "acceptedSolutionNames",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "soluteChemicalId",
+            "solventChemicalId",
+            "targetVolume",
+            "targetConcentration",
+            "requiredAmount",
+            "targetMass",
+            "calculations",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "assessmentRef": {
+          "type": "object",
+          "properties": {
+            "assessmentId": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$"
+            }
+          },
+          "required": [
+            "assessmentId",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "preLabQuestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "promptKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "answerGuide": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "answerKey": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+                      },
+                      "basis": {
+                        "type": "string",
+                        "enum": [
+                          "source",
+                          "derived_from_source"
+                        ]
+                      },
+                      "sourceRefs": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceId": {
+                              "type": "string",
+                              "enum": [
+                                "nie-handbook-2018",
+                                "nie-rb-g12-en",
+                                "nie-syllabus-2017",
+                                "proposal-c01"
+                              ]
+                            },
+                            "factId": {
+                              "type": "string",
+                              "pattern": "^[ESVP]\\d+$"
+                            },
+                            "pdfPage": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "printedPage": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sourceId",
+                            "factId",
+                            "pdfPage",
+                            "printedPage"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "answerKey",
+                      "basis",
+                      "sourceRefs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "revealAnswerAfter": {
+                "type": "string",
+                "const": "submission"
+              }
+            },
+            "required": [
+              "id",
+              "promptKey",
+              "sourceRefs",
+              "answerGuide",
+              "revealAnswerAfter"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "postLabQuestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "promptKey": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+              },
+              "sourceRefs": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "enum": [
+                        "nie-handbook-2018",
+                        "nie-rb-g12-en",
+                        "nie-syllabus-2017",
+                        "proposal-c01"
+                      ]
+                    },
+                    "factId": {
+                      "type": "string",
+                      "pattern": "^[ESVP]\\d+$"
+                    },
+                    "pdfPage": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "printedPage": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "factId",
+                    "pdfPage",
+                    "printedPage"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "answerGuide": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "answerKey": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+                      },
+                      "basis": {
+                        "type": "string",
+                        "enum": [
+                          "source",
+                          "derived_from_source"
+                        ]
+                      },
+                      "sourceRefs": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "sourceId": {
+                              "type": "string",
+                              "enum": [
+                                "nie-handbook-2018",
+                                "nie-rb-g12-en",
+                                "nie-syllabus-2017",
+                                "proposal-c01"
+                              ]
+                            },
+                            "factId": {
+                              "type": "string",
+                              "pattern": "^[ESVP]\\d+$"
+                            },
+                            "pdfPage": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "printedPage": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "sourceId",
+                            "factId",
+                            "pdfPage",
+                            "printedPage"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "answerKey",
+                      "basis",
+                      "sourceRefs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "revealAnswerAfter": {
+                "type": "string",
+                "const": "submission"
+              }
+            },
+            "required": [
+              "id",
+              "promptKey",
+              "sourceRefs",
+              "answerGuide",
+              "revealAnswerAfter"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "localisationKeys": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "experimentId",
+        "definitionVersion",
+        "experimentNumber",
+        "titleKey",
+        "syllabusUnit",
+        "sourceRefs",
+        "learningObjectives",
+        "prerequisites",
+        "apparatus",
+        "chemicals",
+        "safetyRules",
+        "initialState",
+        "stages",
+        "availableActions",
+        "transitionRules",
+        "procedure",
+        "observations",
+        "measurementRules",
+        "errorRules",
+        "expectedResults",
+        "assessmentRef",
+        "preLabQuestions",
+        "postLabQuestions",
+        "localisationKeys"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

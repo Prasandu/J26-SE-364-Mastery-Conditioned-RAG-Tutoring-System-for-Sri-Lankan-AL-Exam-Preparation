@@ -1,0 +1,26 @@
+{
+  "scenarioId": "perfect_run",
+  "description": "Guided beginner follows the canonical procedure exactly: 26.5 g Na2CO3 made up to 250 cm3.",
+  "init": {
+    "sessionId": "fixture-perfect",
+    "mode": "guided",
+    "guidanceLevel": "beginner",
+    "seed": 2026,
+    "startedOn": "2026-10-10"
+  },
+  "steps": [{ "canonicalUntil": "end" }],
+  "expect": {
+    "attempt": 1,
+    "submitted": true,
+    "errorCodes": [],
+    "resolvedCodes": [],
+    "openErrors": [],
+    "restartRequired": false,
+    "purityRisks": [],
+    "homogeneity": "homogeneous",
+    "volumeValidity": "valid",
+    "transferredMass": { "value": 26.5, "tolerance": 1e-9 },
+    "finalVolume": { "value": 250, "tolerance": 1e-9 },
+    "concentration": { "value": 1, "tolerance": 1e-9 }
+  }
+}

@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "exp04_assessment",
+  "version": "1.0.0",
+  "experimentId": "exp04_standard_solution",
+  "resultLabel": "practical competency estimate",
+  "disclaimerKey": "assessment.exp04.disclaimer",
+  "parameters": [
+    {
+      "parameterId": "param.mass_tolerance",
+      "value": 0.05,
+      "unit": "g",
+      "rationale": "NIE pages give no mass tolerance (gap F3). About 0.2% of 26.5 g; within reach of a four beam balance read to 0.01 g.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "measurement_tolerance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.slider_tolerance",
+      "value": 0.01,
+      "unit": "g",
+      "rationale": "Slider setting must equal (26.5 + w) g to the assumed balance resolution (gap F3).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "measurement_tolerance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.balance_resolution",
+      "value": 0.01,
+      "unit": "g",
+      "rationale": "Four beam balance readability is not stated on the approved pages (gap F3); 0.01 g assumed for display rounding and the zero band.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "measurement_tolerance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.concentration_relative_tolerance",
+      "value": 0.01,
+      "unit": "fraction",
+      "rationale": "No concentration tolerance in NIE sources (gap F3). 1% relative error accepted as a provisional teaching threshold.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "measurement_tolerance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.watch_glass_mass_range",
+      "value": {
+        "min": 20,
+        "max": 40
+      },
+      "unit": "g",
+      "rationale": "The handbook calls the watch-glass mass w g without a value; a seeded value in this range makes each session's w different but reproducible.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "initial_state",
+      "version": 1
+    },
+    {
+      "parameterId": "param.watch_glass_residue_fraction",
+      "value": 0.004,
+      "unit": "fraction",
+      "rationale": "Fraction of transferred solid left on the watch glass if it is not rinsed (gap F16). Deterministic, about 0.1 g of 26.5 g.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "numeric_consequence",
+      "version": 1
+    },
+    {
+      "parameterId": "param.funnel_residue_fraction",
+      "value": 0.003,
+      "unit": "fraction",
+      "rationale": "Fraction of solid passing through the funnel that stays in it if the funnel is not rinsed (gap F16). Deterministic.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "numeric_consequence",
+      "version": 1
+    },
+    {
+      "parameterId": "param.rinse_volume",
+      "value": 10,
+      "unit": "cm3",
+      "rationale": "Volume of distilled water added to the flask by one rinse from the wash bottle; not stated in sources.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "numeric_consequence",
+      "version": 1
+    },
+    {
+      "parameterId": "param.eye_level_volume_error",
+      "value": {
+        "min": 0.3,
+        "max": 1.0
+      },
+      "unit": "cm3",
+      "rationale": "Seeded parallax error magnitude when the meniscus is judged with the eye above (+) or below (−) the mark (gap F2). Not an NIE value.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "numeric_consequence",
+      "version": 1
+    },
+    {
+      "parameterId": "param.required_inversions",
+      "value": 10,
+      "unit": "count",
+      "rationale": "Handbook p.16 requires further mixing to homogenise but gives no count; 10 inversions assumed.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "homogeneity",
+      "version": 1
+    },
+    {
+      "parameterId": "param.flask_brim_fraction",
+      "value": 1.1,
+      "unit": "fraction",
+      "rationale": "Maximum liquid a volumetric flask can hold, as a multiple of its nominal capacity; additions beyond this are physically impossible.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "numeric_consequence",
+      "version": 1
+    },
+    {
+      "parameterId": "param.demo_dissolution_water",
+      "value": 100,
+      "unit": "cm3",
+      "rationale": "Volume used only by the automatic demonstration to represent 'a sufficient amount' of distilled water. The minimum volume needed to dissolve 26.5 g Na₂CO₃ is not on the approved sources and is not modelled; dissolution is a procedural/observational step (SOURCE_MAP F17).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "automatic_demonstration",
+      "version": 1
+    },
+    {
+      "parameterId": "param.demo_dropwise_margin",
+      "value": 2,
+      "unit": "cm3",
+      "rationale": "How far below the mark the automatic demonstration stops bulk addition before using the dropper.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "automatic_demonstration",
+      "version": 1
+    },
+    {
+      "parameterId": "param.weight_safety",
+      "value": 0.2,
+      "unit": "weight",
+      "rationale": "Provisional weight of the safety category in the practical competency estimate; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.weight_technique",
+      "value": 0.25,
+      "unit": "weight",
+      "rationale": "Provisional weight of the technique category in the practical competency estimate; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.weight_measurement",
+      "value": 0.25,
+      "unit": "weight",
+      "rationale": "Provisional weight of the measurement category in the practical competency estimate; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.weight_completeness",
+      "value": 0.15,
+      "unit": "weight",
+      "rationale": "Provisional weight of the completeness category in the practical competency estimate; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.weight_independence",
+      "value": 0.15,
+      "unit": "weight",
+      "rationale": "Provisional weight of the independence category in the practical competency estimate; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_safety_not_confirmed",
+      "value": 20,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for SAFETY_NOT_CONFIRMED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_safety_checklist_incomplete",
+      "value": 10,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for SAFETY_CHECKLIST_INCOMPLETE; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_chemical_skin_contact",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for CHEMICAL_SKIN_CONTACT; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_dirty_flask_used",
+      "value": 25,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for DIRTY_FLASK_USED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_dirty_glassware_used",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for DIRTY_GLASSWARE_USED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_incomplete_transfer",
+      "value": 25,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for INCOMPLETE_TRANSFER; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_watch_glass_not_rinsed",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for WATCH_GLASS_NOT_RINSED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_funnel_not_rinsed",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for FUNNEL_NOT_RINSED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_undissolved_at_mark",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for UNDISSOLVED_AT_MARK; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_tap_water_used",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for TAP_WATER_USED; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_insufficient_mixing",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for INSUFFICIENT_MIXING; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_flask_held_by_body",
+      "value": 5,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for FLASK_HELD_BY_BODY; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_slider_setting_incorrect",
+      "value": 10,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for SLIDER_SETTING_INCORRECT; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_mass_out_of_tolerance",
+      "value": 25,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for MASS_OUT_OF_TOLERANCE; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_wrong_flask_capacity",
+      "value": 40,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for WRONG_FLASK_CAPACITY; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_overshoot_mark",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for OVERSHOOT_MARK; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_eye_level_incorrect",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for EYE_LEVEL_INCORRECT; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_label_missing",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for LABEL_MISSING; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_label_incorrect",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for LABEL_INCORRECT; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_incomplete_procedure",
+      "value": 40,
+      "unit": "points",
+      "rationale": "Provisional points deducted from the error's category for INCOMPLETE_PROCEDURE; not an NIE marking criterion.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.recovered_error_factor",
+      "value": 0.5,
+      "unit": "fraction",
+      "rationale": "Share of a deduction kept when a recoverable error is later corrected; rewards self-correction.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_hint",
+      "value": 5,
+      "unit": "points",
+      "rationale": "Independence points deducted per hint requested.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.guidance_deduction_automatic",
+      "value": 0,
+      "unit": "points",
+      "rationale": "Independence points deducted for working with the automatic support profile (automatic is not assessed for independence).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.guidance_deduction_guided_beginner",
+      "value": 30,
+      "unit": "points",
+      "rationale": "Independence points deducted for working with the guided_beginner support profile (automatic is not assessed for independence).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.guidance_deduction_guided_intermediate",
+      "value": 15,
+      "unit": "points",
+      "rationale": "Independence points deducted for working with the guided_intermediate support profile (automatic is not assessed for independence).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.guidance_deduction_guided_advanced",
+      "value": 5,
+      "unit": "points",
+      "rationale": "Independence points deducted for working with the guided_advanced support profile (automatic is not assessed for independence).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.guidance_deduction_manual",
+      "value": 0,
+      "unit": "points",
+      "rationale": "Independence points deducted for working with the manual support profile (automatic is not assessed for independence).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_concentration_out_of_tolerance",
+      "value": 20,
+      "unit": "points",
+      "rationale": "Measurement points deducted when achieved concentration differs from target by more than the relative tolerance.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.deduction_concentration_unavailable",
+      "value": 40,
+      "unit": "points",
+      "rationale": "Measurement points deducted when no valid concentration can be calculated (not made up, or volume invalid).",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "scoring",
+      "version": 1
+    },
+    {
+      "parameterId": "param.safety_policy_automatic",
+      "value": "warn",
+      "unit": "policy",
+      "rationale": "'warn': unsafe actions are performed with an immediate safety warning. Violation is recorded either way.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.safety_policy_guided_beginner",
+      "value": "confirm",
+      "unit": "policy",
+      "rationale": "'confirm': unsafe actions need explicit acknowledgement before they are performed. Violation is recorded either way.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.safety_policy_guided_intermediate",
+      "value": "confirm",
+      "unit": "policy",
+      "rationale": "'confirm': unsafe actions need explicit acknowledgement before they are performed. Violation is recorded either way.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.safety_policy_guided_advanced",
+      "value": "warn",
+      "unit": "policy",
+      "rationale": "'warn': unsafe actions are performed with an immediate safety warning. Violation is recorded either way.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.safety_policy_manual",
+      "value": "warn",
+      "unit": "policy",
+      "rationale": "'warn': unsafe actions are performed with an immediate safety warning. Violation is recorded either way.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.adapt_window_actions",
+      "value": 6,
+      "unit": "count",
+      "rationale": "Number of recent student actions examined by the rule-based guidance recommendation.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.adapt_errors_to_step_down",
+      "value": 2,
+      "unit": "count",
+      "rationale": "Errors within the window that trigger a recommendation for more support.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    },
+    {
+      "parameterId": "param.adapt_clean_actions_to_step_up",
+      "value": 6,
+      "unit": "count",
+      "rationale": "Consecutive error-free, hint-free actions that trigger a recommendation for less support.",
+      "sourceType": "simulation_assumption",
+      "reviewStatus": "teacher_review_pending",
+      "effectCategory": "guidance",
+      "version": 1
+    }
+  ],
+  "bindings": {
+    "massTolerance": "param.mass_tolerance",
+    "sliderTolerance": "param.slider_tolerance",
+    "balanceResolution": "param.balance_resolution",
+    "concentrationRelativeTolerance": "param.concentration_relative_tolerance",
+    "watchGlassMassRange": "param.watch_glass_mass_range",
+    "watchGlassResidueFraction": "param.watch_glass_residue_fraction",
+    "funnelResidueFraction": "param.funnel_residue_fraction",
+    "rinseVolume": "param.rinse_volume",
+    "eyeLevelVolumeError": "param.eye_level_volume_error",
+    "requiredInversions": "param.required_inversions",
+    "flaskBrimFraction": "param.flask_brim_fraction",
+    "demoDissolutionWater": "param.demo_dissolution_water",
+    "demoDropwiseMargin": "param.demo_dropwise_margin"
+  },
+  "scoring": {
+    "categoryWeights": {
+      "safety": "param.weight_safety",
+      "technique": "param.weight_technique",
+      "measurement": "param.weight_measurement",
+      "completeness": "param.weight_completeness",
+      "independence": "param.weight_independence"
+    },
+    "errorDeductions": [
+      {
+        "errorCode": "SAFETY_NOT_CONFIRMED",
+        "parameterId": "param.deduction_safety_not_confirmed"
+      },
+      {
+        "errorCode": "SAFETY_CHECKLIST_INCOMPLETE",
+        "parameterId": "param.deduction_safety_checklist_incomplete"
+      },
+      {
+        "errorCode": "CHEMICAL_SKIN_CONTACT",
+        "parameterId": "param.deduction_chemical_skin_contact"
+      },
+      {
+        "errorCode": "DIRTY_FLASK_USED",
+        "parameterId": "param.deduction_dirty_flask_used"
+      },
+      {
+        "errorCode": "DIRTY_GLASSWARE_USED",
+        "parameterId": "param.deduction_dirty_glassware_used"
+      },
+      {
+        "errorCode": "INCOMPLETE_TRANSFER",
+        "parameterId": "param.deduction_incomplete_transfer"
+      },
+      {
+        "errorCode": "WATCH_GLASS_NOT_RINSED",
+        "parameterId": "param.deduction_watch_glass_not_rinsed"
+      },
+      {
+        "errorCode": "FUNNEL_NOT_RINSED",
+        "parameterId": "param.deduction_funnel_not_rinsed"
+      },
+      {
+        "errorCode": "UNDISSOLVED_AT_MARK",
+        "parameterId": "param.deduction_undissolved_at_mark"
+      },
+      {
+        "errorCode": "TAP_WATER_USED",
+        "parameterId": "param.deduction_tap_water_used"
+      },
+      {
+        "errorCode": "INSUFFICIENT_MIXING",
+        "parameterId": "param.deduction_insufficient_mixing"
+      },
+      {
+        "errorCode": "FLASK_HELD_BY_BODY",
+        "parameterId": "param.deduction_flask_held_by_body"
+      },
+      {
+        "errorCode": "SLIDER_SETTING_INCORRECT",
+        "parameterId": "param.deduction_slider_setting_incorrect"
+      },
+      {
+        "errorCode": "MASS_OUT_OF_TOLERANCE",
+        "parameterId": "param.deduction_mass_out_of_tolerance"
+      },
+      {
+        "errorCode": "WRONG_FLASK_CAPACITY",
+        "parameterId": "param.deduction_wrong_flask_capacity"
+      },
+      {
+        "errorCode": "OVERSHOOT_MARK",
+        "parameterId": "param.deduction_overshoot_mark"
+      },
+      {
+        "errorCode": "EYE_LEVEL_INCORRECT",
+        "parameterId": "param.deduction_eye_level_incorrect"
+      },
+      {
+        "errorCode": "LABEL_MISSING",
+        "parameterId": "param.deduction_label_missing"
+      },
+      {
+        "errorCode": "LABEL_INCORRECT",
+        "parameterId": "param.deduction_label_incorrect"
+      },
+      {
+        "errorCode": "INCOMPLETE_PROCEDURE",
+        "parameterId": "param.deduction_incomplete_procedure"
+      }
+    ],
+    "recoveredErrorFactor": "param.recovered_error_factor",
+    "hintDeduction": "param.deduction_hint",
+    "guidanceDeductions": {
+      "automatic": "param.guidance_deduction_automatic",
+      "guided_beginner": "param.guidance_deduction_guided_beginner",
+      "guided_intermediate": "param.guidance_deduction_guided_intermediate",
+      "guided_advanced": "param.guidance_deduction_guided_advanced",
+      "manual": "param.guidance_deduction_manual"
+    },
+    "concentrationOutOfTolerance": "param.deduction_concentration_out_of_tolerance",
+    "concentrationUnavailable": "param.deduction_concentration_unavailable"
+  },
+  "safetyPolicy": {
+    "automatic": "param.safety_policy_automatic",
+    "guided_beginner": "param.safety_policy_guided_beginner",
+    "guided_intermediate": "param.safety_policy_guided_intermediate",
+    "guided_advanced": "param.safety_policy_guided_advanced",
+    "manual": "param.safety_policy_manual"
+  },
+  "adaptation": {
+    "windowActions": "param.adapt_window_actions",
+    "errorsToStepDown": "param.adapt_errors_to_step_down",
+    "cleanActionsToStepUp": "param.adapt_clean_actions_to_step_up"
+  }
+}

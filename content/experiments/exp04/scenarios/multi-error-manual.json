@@ -1,0 +1,89 @@
+{
+  "scenarioId": "multi_error_manual",
+  "description": "Manual run with many independent mistakes: partial safety checklist, no cleaning, bare-hand contact, spillage, no rinsing, tap water, body grip, eye above the mark, under-mixing and no label.",
+  "init": {
+    "sessionId": "fixture-multi",
+    "mode": "manual",
+    "guidanceLevel": null,
+    "seed": 9,
+    "startedOn": "2026-10-10"
+  },
+  "steps": [
+    {
+      "action": {
+        "type": "confirm_safety",
+        "checklistItemIds": [
+          "read_procedure",
+          "no_food_drink",
+          "closed_shoes",
+          "hair_restrained",
+          "report_incidents"
+        ]
+      }
+    },
+    {
+      "action": {
+        "type": "select_apparatus",
+        "apparatusIds": [
+          "volumetric_flask_250",
+          "watch_glass",
+          "funnel",
+          "four_beam_balance",
+          "wash_bottle"
+        ]
+      }
+    },
+    { "action": { "type": "weigh_watch_glass" } },
+    { "canonicalUntil": "add_solid", "skip": ["clean_glassware"] },
+    {
+      "action": { "type": "add_solid", "mass": { "value": 26.5, "unit": "g" }, "handContact": true }
+    },
+    { "action": { "type": "place_funnel" } },
+    { "action": { "type": "transfer_solid", "fractionIntoFunnel": 0.98, "handContact": false } },
+    { "action": { "type": "remove_funnel" } },
+    {
+      "action": { "type": "add_water", "volume": { "value": 60, "unit": "cm3" }, "source": "tap" }
+    },
+    { "action": { "type": "stopper_flask", "inserted": true } },
+    { "action": { "type": "dissolve_solute", "grip": "body" } },
+    { "action": { "type": "stopper_flask", "inserted": false } },
+    {
+      "action": {
+        "type": "add_water",
+        "volume": { "value": 180, "unit": "cm3" },
+        "source": "distilled"
+      }
+    },
+    { "action": { "type": "adjust_to_mark", "source": "distilled", "eyeLevel": "above" } },
+    { "action": { "type": "stopper_flask", "inserted": true } },
+    { "action": { "type": "mix_solution", "inversions": 3, "grip": "neck" } },
+    { "action": { "type": "submit_experiment" } }
+  ],
+  "expect": {
+    "attempt": 1,
+    "submitted": true,
+    "errorCodes": [
+      "SAFETY_CHECKLIST_INCOMPLETE",
+      "DIRTY_GLASSWARE_USED",
+      "CHEMICAL_SKIN_CONTACT",
+      "DIRTY_FLASK_USED",
+      "INCOMPLETE_TRANSFER",
+      "WATCH_GLASS_NOT_RINSED",
+      "FUNNEL_NOT_RINSED",
+      "TAP_WATER_USED",
+      "FLASK_HELD_BY_BODY",
+      "EYE_LEVEL_INCORRECT",
+      "LABEL_MISSING",
+      "INSUFFICIENT_MIXING"
+    ],
+    "resolvedCodes": [],
+    "openErrors": ["INSUFFICIENT_MIXING"],
+    "restartRequired": true,
+    "purityRisks": ["DIRTY_GLASSWARE_USED", "DIRTY_FLASK_USED", "TAP_WATER_USED"],
+    "homogeneity": "partially_mixed",
+    "volumeValidity": "valid",
+    "transferredMass": { "value": 25.78852164, "tolerance": 1e-8 },
+    "finalVolume": { "greaterThan": 250 },
+    "concentration": { "lessThan": 1 }
+  }
+}

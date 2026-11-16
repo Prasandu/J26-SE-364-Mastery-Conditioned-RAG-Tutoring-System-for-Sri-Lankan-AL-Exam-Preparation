@@ -18,6 +18,8 @@ WEAK_SCORE_WEIGHTS = {
 
 DIFFICULTY_ADJUSTMENT = 0.5
 DIFFICULTY_WEIGHT_BASE = 0.75
+# Decay time: recency weight = exp(-age_days / 45), so a result loses half its
+# weight after about 31 days (45 x ln 2), not 45.
 RECENCY_HALF_LIFE_DAYS = 45.0
 COVERAGE_TARGET_EVIDENCE = 5
 STALE_HALF_LIFE_DAYS = 30.0

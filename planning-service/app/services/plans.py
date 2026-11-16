@@ -12,6 +12,7 @@ from app.models import (
     LearnerTopicState,
     ReplanLog,
     StudyPlan,
+    StudyTask,
     Topic,
     TopicEvidence,
 )
@@ -144,6 +145,13 @@ def update_plan(
     for slot in session.scalars(select(AvailabilitySlot).where(AvailabilitySlot.plan_id == plan.id)).all():
         session.delete(slot)
     _save_availability(session, plan.id, data)
+    # A replaced plan starts fresh: drop earlier missed sessions so they do not
+    # reappear in the new schedule. Completed and partial sessions are kept as
+    # study history; notifications pointing at deleted sessions are cleared.
+    for task in session.scalars(
+        select(StudyTask).where(StudyTask.plan_id == plan.id, StudyTask.status == "missed")
+    ).all():
+        session.delete(task)
 
     if changes:
         session.add(

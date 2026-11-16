@@ -207,7 +207,7 @@ For each result on the topic:
 
 ```
 adjusted score = score/max + 0.5 × (difficulty − 0.5)          (harder questions count a little higher)
-weight         = recency × (0.75 + difficulty)                  (recency halves every 45 days)
+weight         = recency × (0.75 + difficulty)                  (recency = e^(−age in days ÷ 45), so a result loses half its weight in about 31 days)
 ```
 
 ```

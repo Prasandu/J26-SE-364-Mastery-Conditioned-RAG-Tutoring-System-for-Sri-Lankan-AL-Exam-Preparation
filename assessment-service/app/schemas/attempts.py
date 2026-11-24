@@ -1,0 +1,156 @@
+"""Shapes for students answering papers and seeing their results."""
+
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.models import AttemptMode, AttemptStatus, MarkingMethod, PointStatus
+
+
+class AttemptCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    paper_id: int
+    # Always overwritten server-side from the signed-in account before this is used
+    # (see POST /attempts) - whatever a caller sends here is ignored.
+    student_ref: str = Field(default="", max_length=64)
+
+
+class GraphIn(BaseModel):
+    """A plotted graph as data, not a picture, so it can be marked exactly."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    points: list[tuple[float, float]] = Field(default_factory=list, max_length=200)
+    x_label: str | None = Field(default=None, max_length=100)
+    x_unit: str | None = Field(default=None, max_length=50)
+    y_label: str | None = Field(default=None, max_length=100)
+    y_unit: str | None = Field(default=None, max_length=50)
+    gradient: float | None = None  # what the student read off their line
+    intercept: float | None = None
+
+
+class AnswerIn(BaseModel):
+    """`mcq_option` for MCQ questions; `text` and/or `graph` for structured and essay questions."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    mcq_option: str | None = Field(default=None, min_length=1, max_length=20)
+    text: str | None = Field(default=None, min_length=1, max_length=20_000)
+    graph: GraphIn | None = None
+
+    @model_validator(mode="after")
+    def one_kind_of_answer(self) -> "AnswerIn":
+        written = self.text is not None or self.graph is not None
+        if self.mcq_option is not None and written:
+            raise ValueError("Send mcq_option on its own, without text or graph")
+        if self.mcq_option is None and not written:
+            raise ValueError("Send mcq_option, text or graph")
+        return self
+
+
+class AnswerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    question_id: int
+    mcq_option: str | None
+    text: str | None
+    graph: GraphIn | None = Field(default=None, validation_alias="data")
+    # Paper mode: what was read, by which model, and whether the student changed it.
+    extracted_text: str | None = None
+    reader: str | None = None
+    reading_confidence: float | None = None
+    corrected_by_student: bool = False
+    # The reader saw a diagram it could not write out as text, so the text below is
+    # not the whole answer - a teacher marks it from the photo.
+    has_drawing: bool = False
+    image_count: int = Field(default=0, validation_alias="images")
+    updated_at: datetime
+
+    @field_validator("image_count", mode="before")
+    @classmethod
+    def count_images(cls, value: object) -> object:
+        return len(value) if isinstance(value, list) else value
+
+
+class PointResultOut(BaseModel):
+    code: str
+    description: str
+    marks: float
+    status: PointStatus
+    awarded: float | None  # empty until the decision is final
+    method: MarkingMethod | None
+    marker: str | None
+    # What each marker decided on its own (empty when that marker did not judge this point)
+    checker_awarded: bool | None
+    ai_awarded: bool | None
+    teacher_comment: str | None
+    evidence: str | None
+    reason: str | None
+    confidence: float | None
+
+
+class QuestionResultOut(BaseModel):
+    question_id: int
+    section: str
+    label: str
+    max_marks: float | None
+    answer: AnswerOut | None
+    score: float | None  # empty while in progress or while points are pending
+    points: list[PointResultOut]  # empty until submitted
+
+
+class AttemptOut(BaseModel):
+    id: uuid.UUID
+    paper_id: int
+    scheme_version: int
+    student_ref: str
+    mode: AttemptMode
+    status: AttemptStatus
+    score: float | None
+    max_score: float
+    started_at: datetime
+    submitted_at: datetime | None
+    marked_at: datetime | None
+    # The time allowed, and when it runs out. Both are the server's, so a clock
+    # changed on the student's machine cannot buy more time (see services/timing.py).
+    duration_minutes: float
+    expires_at: datetime
+    questions: list[QuestionResultOut]
+
+
+class SheetAnswerOut(BaseModel):
+    """One row of a read answer sheet, lined up with a real question."""
+
+    question_id: int
+    label: str  # the question as the paper numbers it, e.g. "7"
+    option: str | None  # what the reader saw, empty when it could not tell
+    state: str  # filled, blank or unsure
+    already: str | None  # what this attempt has saved for the question already
+
+
+class SheetReadOut(BaseModel):
+    """What a photographed answer sheet says. Nothing is saved until the student agrees."""
+
+    read_by: str  # "answer sheet" (our own layout) or "detected grid"
+    questions_found: int
+    options_found: int
+    answers: list[SheetAnswerOut]
+
+    @property
+    def filled(self) -> int:
+        return sum(1 for a in self.answers if a.option)
+
+
+class BulkAnswerIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_id: int
+    mcq_option: str = Field(min_length=1, max_length=20)
+
+
+class BulkAnswersIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answers: list[BulkAnswerIn] = Field(min_length=1, max_length=200)

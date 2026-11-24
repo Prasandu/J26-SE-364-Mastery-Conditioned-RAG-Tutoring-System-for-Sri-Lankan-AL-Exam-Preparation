@@ -1,0 +1,471 @@
+"""Attempts: a student answers a published paper, submits, and gets marked.
+
+Life cycle: in_progress -> submitted -> marked.
+Answers can only change while in progress. The scheme version is fixed at the
+start, so publishing a corrected scheme later never changes this attempt's marks.
+
+In paper mode the student uploads a photo, a vision model reads it into `extracted_text`,
+and the student confirms or corrects it before marking (FR3, FR4). Both versions are kept.
+
+Written answers are marked by the AI judge after submit, in the background. If the
+judge fails (no internet, quota), the points simply stay pending and can be retried.
+"""
+
+import logging
+import uuid
+from collections.abc import Callable, Sequence
+from contextlib import AbstractContextManager
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+
+from app.ai.judge import AnswerJudge
+from app.errors import ConflictError, ContentValidationError, NotFoundError, ProviderError
+from app.models import (
+    Answer,
+    AnswerImage,
+    AnswerMode,
+    Attempt,
+    AttemptMode,
+    AttemptStatus,
+    Paper,
+    PointResult,
+    Question,
+    Section,
+    utcnow,
+)
+from app.schemas.attempts import (
+    AnswerIn,
+    AnswerOut,
+    AttemptCreate,
+    AttemptOut,
+    PointResultOut,
+    QuestionResultOut,
+)
+from app.services.drawing_judge import DrawingJudge
+from app.services.marking import (
+    FINAL_STATUSES,
+    finalize_without_ai,
+    judge_answer,
+    mark_attempt,
+    paper_max_score,
+    refresh_scores,
+)
+from app.services.papers import get_paper
+from app.services.reader import AnswerReader, ReadRequest
+from app.services.schemes import latest_published_scheme
+from app.services.storage import CONTENT_TYPES, FileStore
+from app.services.timing import attempt_minutes, expires_at
+from app.services.topic_graph import prerequisites
+from app.services.topics import topics_by_code
+
+logger = logging.getLogger(__name__)
+
+SessionFactory = Callable[[], AbstractContextManager[Session]]
+
+WRONG_ANSWER_TYPE = "Wrong answer type"
+# Enough syllabus to settle ambiguous handwriting, not enough to crowd the prompt.
+SYLLABUS_LINES = 8
+
+
+def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
+    paper = get_paper(db, data.paper_id, published_only=True)
+    scheme = latest_published_scheme(paper)
+    if scheme is None:  # cannot happen for a published paper, but never mark without a scheme
+        raise ConflictError("This paper has no published marking scheme")
+
+    attempt = Attempt(
+        paper=paper,
+        scheme=scheme,
+        student_ref=data.student_ref,
+        mode=AttemptMode.DIGITAL,
+        max_score=paper_max_score(paper),
+    )
+    db.add(attempt)
+    db.commit()
+    return attempt
+
+
+# Everything to_attempt_out reads. Without these the result is built one question at
+# a time, which is a round trip each: over two hundred for a fifty question paper.
+MAX_HISTORY = 100
+
+OUTPUT_LOADING = (
+    selectinload(Attempt.answers).selectinload(Answer.point_results).selectinload(PointResult.point),
+    selectinload(Attempt.answers).selectinload(Answer.images),
+    selectinload(Attempt.paper)
+    .selectinload(Paper.sections)
+    .selectinload(Section.questions)
+    .selectinload(Question.sub_questions, recursion_depth=3),
+)
+
+
+def list_attempts(db: Session, student_ref: str, limit: int = 50) -> Sequence[Attempt]:
+    """A student's own attempts, newest first.
+
+    Keyed on the student ref they give, like everything else until there is a real
+    sign-in. It shows only what that ref has done, never anyone else's work.
+    """
+    stmt = (
+        select(Attempt)
+        .where(Attempt.student_ref == student_ref)
+        .order_by(Attempt.started_at.desc())
+        .limit(min(limit, MAX_HISTORY))
+        .options(*OUTPUT_LOADING)
+    )
+    return db.scalars(stmt).all()
+
+
+def get_attempt(db: Session, attempt_id: uuid.UUID) -> Attempt:
+    # populate_existing: an attempt already in the session was probably loaded without
+    # these options, and the eager loading would then be quietly skipped.
+    attempt = db.get(Attempt, attempt_id, options=OUTPUT_LOADING, populate_existing=True)
+    if attempt is None:
+        raise NotFoundError("Attempt not found")
+    return attempt
+
+
+def save_answer(db: Session, attempt_id: uuid.UUID, question_id: int, data: AnswerIn) -> Answer:
+    """Create or replace the answer to one question."""
+    attempt = get_in_progress(db, attempt_id)
+    answer = apply_answer(attempt, question_id, data)
+    db.commit()
+    return answer
+
+
+def clear_answer(db: Session, attempt_id: uuid.UUID, question_id: int) -> None:
+    """Back to unanswered - clicking a chosen mcq option again, or any other "never
+    mind". Not a validation error like an empty AnswerIn would be (one kind of
+    answer is still required to save one), so this is its own endpoint rather than
+    a PUT with nothing in it."""
+    attempt = get_in_progress(db, attempt_id)
+    question = _answerable_question(attempt, question_id)
+    answer = next((a for a in attempt.answers if a.question_id == question.id), None)
+    if answer is None:
+        return
+    answer.mcq_option = None
+    answer.text = None
+    answer.data = None
+    db.commit()
+
+
+def question_index(db: Session, attempt: Attempt) -> dict[int, Question]:
+    """Every question of the paper by id, in two queries.
+
+    Worth building once when several answers are saved together. Walking the paper
+    instead loads each question's sub-questions on demand, which is one round trip
+    per question: fifty of them is several seconds against a remote database.
+    """
+    stmt = (
+        select(Question)
+        .join(Question.section)
+        .where(Section.paper_id == attempt.paper_id)
+        .options(selectinload(Question.sub_questions))
+    )
+    return {question.id: question for question in db.scalars(stmt)}
+
+
+def apply_answer(
+    attempt: Attempt,
+    question_id: int,
+    data: AnswerIn,
+    index: dict[int, Question] | None = None,
+) -> Answer:
+    """Change one answer without saving.
+
+    Kept apart from save_answer so a whole answer sheet can be written in one
+    transaction. Committing per answer means a round trip to the database per
+    question, which is slow enough to notice with fifty of them.
+    """
+    question = _answerable_question(attempt, question_id, index)
+    _check_answer_kind(question, data)
+
+    answer = next((a for a in attempt.answers if a.question_id == question_id), None)
+    if answer is None:
+        answer = Answer(question=question)
+        attempt.answers.append(answer)
+    answer.mcq_option = data.mcq_option
+    answer.data = data.graph.model_dump() if data.graph else None
+    if answer.extracted_text is not None and data.text is not None:
+        # Paper mode: this is the student confirming or correcting what the machine read.
+        answer.corrected_by_student = _differs(data.text, answer.extracted_text)
+    answer.text = data.text
+    return answer
+
+
+def add_answer_image(
+    db: Session,
+    attempt_id: uuid.UUID,
+    question_id: int,
+    *,
+    image: bytes,
+    content_type: str,
+    store: FileStore,
+    reader: AnswerReader,
+) -> Answer:
+    """Save a photo of a handwritten answer and read it into text the student can correct."""
+    attempt = get_in_progress(db, attempt_id)
+    question = _answerable_question(attempt, question_id)
+    if question.section.answer_mode == AnswerMode.MCQ:
+        raise ContentValidationError(
+            WRONG_ANSWER_TYPE,
+            [f"Section {question.section.code} Q{question.full_label}: upload the MCQ sheet instead"],
+        )
+    if content_type not in CONTENT_TYPES:
+        raise ContentValidationError(
+            "Unsupported image", [f"Send one of: {', '.join(sorted(CONTENT_TYPES))}"]
+        )
+
+    try:
+        result = reader.read(
+            ReadRequest(
+                image=image,
+                content_type=content_type,
+                question=question.text,
+                syllabus=_syllabus_for(db, question),
+            )
+        )
+    except Exception as error:  # network, quota, a busy model, or a reply that is not valid JSON
+        # The provider's own exception text can hold request internals, so it is
+        # logged here, server-side only, and never put in the message the student sees.
+        logger.exception("Handwriting reader failed for attempt %s, question %s", attempt_id, question_id)
+        raise ProviderError(
+            "The handwriting reader is busy right now. Try again in a moment, or type the answer instead."
+        ) from error
+
+    answer = next((a for a in attempt.answers if a.question_id == question_id), None)
+    if answer is None:
+        answer = Answer(question=question)
+        attempt.answers.append(answer)
+    answer.images.append(
+        AnswerImage(
+            storage_key=store.save(image, content_type),
+            content_type=content_type,
+            order_no=len(answer.images),
+        )
+    )
+
+    pages = [page for page in [answer.extracted_text, result.text] if page]
+    answer.extracted_text = "\n\n".join(pages)
+    answer.text = answer.extracted_text  # a draft the student may still correct
+    answer.corrected_by_student = False
+    # One page with a drawing is enough: the answer as a whole cannot be marked from
+    # its text alone, however many other pages transcribed cleanly.
+    answer.has_drawing = answer.has_drawing or result.has_drawing
+    if result.structures:
+        # Kept beside the graph data rather than in a column of their own: one
+        # answer can have several pages, so they accumulate as pages are read.
+        already = (answer.data or {}).get("structures") or []
+        answer.data = {**(answer.data or {}), "structures": [*already, *result.structures]}
+    answer.reader = reader.name
+    answer.reading_confidence = result.confidence
+    attempt.mode = AttemptMode.PAPER
+    db.commit()
+    return answer
+
+
+def _differs(confirmed: str, extracted: str) -> bool:
+    return " ".join(confirmed.split()) != " ".join(extracted.split())
+
+
+def preload_point_results(db: Session, attempt: Attempt) -> None:
+    """Fetch every answer's marking results in one query.
+
+    Marking reads answer.point_results for each answer in turn, which is otherwise a
+    round trip per question.
+    """
+    db.scalars(
+        select(Answer).where(Answer.attempt_id == attempt.id).options(selectinload(Answer.point_results))
+    ).all()
+
+
+def submit_attempt(
+    db: Session, attempt_id: uuid.UUID, cross_check: bool = False, drawing_judge_available: bool = False
+) -> Attempt:
+    attempt = get_in_progress(db, attempt_id)
+    preload_point_results(db, attempt)
+    attempt.status = AttemptStatus.SUBMITTED
+    attempt.submitted_at = utcnow()
+    mark_attempt(attempt, cross_check=cross_check, drawing_judge_available=drawing_judge_available)
+    db.commit()
+    return attempt
+
+
+def judge_pending(
+    db: Session,
+    attempt_id: uuid.UUID,
+    judge: AnswerJudge | None,
+    min_confidence: float,
+    *,
+    drawing_judge: DrawingJudge | None = None,
+    drawing_min_confidence: float = 1.0,
+    store: FileStore | None = None,
+) -> Attempt:
+    """Let the AI judge decide every pending point. Progress is saved answer by answer."""
+    attempt = get_attempt(db, attempt_id)
+    if attempt.status == AttemptStatus.IN_PROGRESS:
+        raise ConflictError("Submit the attempt before marking it")
+
+    for answer in attempt.answers:
+        try:
+            judge_answer(
+                answer,
+                judge,
+                min_confidence,
+                drawing_judge=drawing_judge,
+                drawing_min_confidence=drawing_min_confidence,
+                store=store,
+            )
+        except Exception:  # network, quota or a bad AI reply
+            logger.exception("AI judge failed for attempt %s, question %s", attempt.id, answer.question_id)
+            db.rollback()
+            finalize_without_ai(answer)  # points the checker decided do not wait for the AI
+        db.commit()
+
+    refresh_scores(attempt)
+    db.commit()
+    return attempt
+
+
+def judge_pending_in_background(
+    session_factory: SessionFactory,
+    judge: AnswerJudge | None,
+    attempt_id: uuid.UUID,
+    min_confidence: float,
+    *,
+    drawing_judge: DrawingJudge | None = None,
+    drawing_min_confidence: float = 1.0,
+    store: FileStore | None = None,
+) -> None:
+    """Runs after the submit response is sent, with its own database session."""
+    with session_factory() as db:
+        judge_pending(
+            db,
+            attempt_id,
+            judge,
+            min_confidence,
+            drawing_judge=drawing_judge,
+            drawing_min_confidence=drawing_min_confidence,
+            store=store,
+        )
+
+
+def to_attempt_out(attempt: Attempt) -> AttemptOut:
+    answers = {answer.question_id: answer for answer in attempt.answers}
+    submitted = attempt.status != AttemptStatus.IN_PROGRESS
+    return AttemptOut(
+        id=attempt.id,
+        paper_id=attempt.paper_id,
+        scheme_version=attempt.scheme.version,
+        student_ref=attempt.student_ref,
+        mode=attempt.mode,
+        status=attempt.status,
+        score=attempt.score,
+        max_score=attempt.max_score,
+        started_at=attempt.started_at,
+        submitted_at=attempt.submitted_at,
+        marked_at=attempt.marked_at,
+        duration_minutes=attempt_minutes(attempt.paper),
+        expires_at=expires_at(attempt.paper, attempt.started_at),
+        questions=[
+            _question_result(question, answers.get(question.id), submitted)
+            for question in attempt.paper.iter_questions()
+            if not question.sub_questions
+        ],
+    )
+
+
+def _question_result(question: Question, answer: Answer | None, submitted: bool) -> QuestionResultOut:
+    unanswered_score = 0.0 if submitted else None  # not answered = no marks
+    score = answer.score if answer else unanswered_score
+    return QuestionResultOut(
+        question_id=question.id,
+        section=question.section.code,
+        label=question.full_label,
+        max_marks=question.max_marks,
+        answer=AnswerOut.model_validate(answer) if answer else None,
+        score=score,
+        points=[
+            PointResultOut(
+                code=result.point.code,
+                description=result.point.description,
+                marks=result.point.marks,
+                status=result.status,
+                awarded=result.awarded if result.status in FINAL_STATUSES else None,
+                method=result.method,
+                marker=result.marker,
+                checker_awarded=result.checker_awarded,
+                ai_awarded=result.ai_awarded,
+                teacher_comment=result.teacher_comment,
+                evidence=result.evidence,
+                reason=result.reason,
+                confidence=result.confidence,
+            )
+            for result in (answer.point_results if answer and submitted else [])
+        ],
+    )
+
+
+def get_in_progress(db: Session, attempt_id: uuid.UUID) -> Attempt:
+    attempt = get_attempt(db, attempt_id)
+    if attempt.status != AttemptStatus.IN_PROGRESS:
+        raise ConflictError("This attempt is already submitted")
+    return attempt
+
+
+def _answerable_question(
+    attempt: Attempt, question_id: int, index: dict[int, Question] | None = None
+) -> Question:
+    if index is not None:
+        question = index.get(question_id)
+    else:
+        question = next((q for q in attempt.paper.iter_questions() if q.id == question_id), None)
+    if question is None:
+        raise NotFoundError("Question not found in this paper")
+    if question.sub_questions:
+        raise ContentValidationError(
+            "Answer the sub-questions instead", [f"Question {question.full_label} has sub-questions"]
+        )
+    return question
+
+
+def _check_answer_kind(question: Question, data: AnswerIn) -> None:
+    where = f"Section {question.section.code} Q{question.full_label}"
+    if question.section.answer_mode != AnswerMode.MCQ:
+        if data.mcq_option is not None:
+            raise ContentValidationError(WRONG_ANSWER_TYPE, [f"{where}: send text or graph, not mcq_option"])
+        return
+
+    options = [option["label"] for option in question.options or []]
+    if data.mcq_option is None:
+        raise ContentValidationError(WRONG_ANSWER_TYPE, [f"{where}: send mcq_option, not text or graph"])
+    # No recorded options (a past paper's own PDF shows them instead, see
+    # app/services/papers.py's ensure_mcq_question_skeletons) - nothing to check the
+    # chosen option against, so it is trusted, same as the scheme's own mcq_key
+    # validation (app/services/validation.py's _check_points).
+    if options and data.mcq_option not in options:
+        raise ContentValidationError(
+            "Unknown option", [f"{where}: mcq_option must be one of {', '.join(options)}"]
+        )
+
+
+def _syllabus_for(db: Session, question: Question) -> tuple[str, ...]:
+    """What the syllabus says this question's topics, and their prerequisites, cover.
+
+    Reading chemistry handwriting is ambiguous - "N03" against "NO3", "Cl" against
+    "C1" - and the page alone cannot settle it. The topic can: a question on acid
+    rain is about oxides of sulphur and nitrogen, so those are what an ambiguous
+    mark is read as. Empty until a teacher has approved edges, and the reader then
+    behaves exactly as it did before the graph existed.
+    """
+    codes = [topic.code for topic in question.topics]
+    if not codes:
+        return ()
+    nearby = [reached.code for reached in prerequisites(db, codes)]
+    topics = topics_by_code(db)
+    lines = [
+        f"{topics[code].name}: {topics[code].content}" if topics[code].content else topics[code].name
+        for code in [*codes, *nearby]
+        if code in topics
+    ]
+    return tuple(lines[:SYLLABUS_LINES])

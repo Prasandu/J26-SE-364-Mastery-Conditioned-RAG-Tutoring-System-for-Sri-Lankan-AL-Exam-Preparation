@@ -1,0 +1,180 @@
+import type { GuidanceLevel, Mode } from '@vlab/contracts';
+import { useTranslation } from 'react-i18next';
+import { FlowSteps } from '../components/FlowSteps';
+import { SourceList } from '../components/SourceList';
+import { Icon, type IconName } from '../components/ui/Icon';
+import { PageHeader } from '../components/ui/PageHeader';
+import { definition } from '../engine/content';
+import { useSession } from '../store/StoreProvider';
+
+const MODES: { mode: Mode; icon: IconName }[] = [
+  { mode: 'automatic', icon: 'play' },
+  { mode: 'guided', icon: 'compass' },
+  { mode: 'manual', icon: 'hand' },
+];
+const LEVELS: GuidanceLevel[] = ['beginner', 'intermediate', 'advanced'];
+
+/** ModeSelector: the chosen mode and level are frozen into the session when it starts. */
+export function ModeSelectView() {
+  const { t } = useTranslation();
+  const selection = useSession((s) => s.selection);
+  const selectMode = useSession((s) => s.selectMode);
+  const canStart = useSession((s) => s.canStart());
+  const createSession = useSession((s) => s.createSession);
+  const requestModeChange = useSession((s) => s.requestModeChange);
+  const session = useSession((s) => s.session);
+  const navigate = useSession((s) => s.navigate);
+  const preLab = useSession((s) => s.preLab);
+  const toggleSafetyAcknowledgement = useSession((s) => s.toggleSafetyAcknowledgement);
+  const checklist = definition.safetyRules.filter((rule) => rule.kind === 'checklist');
+  const allAcknowledged = checklist.every((rule) => preLab.acknowledgedSafety.includes(rule.id));
+
+  const start = () => {
+    if (session) requestModeChange(selection.mode, selection.guidanceLevel);
+    else void createSession();
+  };
+
+  return (
+    <section className="view view--mode" aria-labelledby="mode-title">
+      <PageHeader id="mode-title" title={t('ui.mode.title')} lead={t('ui.mode.lead')} />
+      <FlowSteps current="mode" />
+      <fieldset className="mode-options">
+        <legend className="visually-hidden">{t('ui.mode.legend')}</legend>
+        {MODES.map(({ mode: m, icon }) => (
+          <div
+            key={m}
+            className={
+              selection.mode === m
+                ? `mode-option mode-option--${m} mode-option--selected`
+                : `mode-option mode-option--${m}`
+            }
+          >
+            <div className="mode-option__head">
+              <span className="mode-option__icon">
+                <Icon name={icon} size={26} />
+              </span>
+              <input
+                type="radio"
+                id={`mode-${m}`}
+                name="mode"
+                checked={selection.mode === m}
+                onChange={() =>
+                  selectMode(m, m === 'guided' ? (selection.guidanceLevel ?? 'beginner') : null)
+                }
+                aria-describedby={`mode-${m}-desc mode-${m}-support`}
+              />
+              <label htmlFor={`mode-${m}`}>{t(`ui.mode.${m}.title`)}</label>
+            </div>
+            <p id={`mode-${m}-desc`} className="mode-option__desc">
+              {t(`ui.mode.${m}.description`)}
+            </p>
+            <p id={`mode-${m}-support`} className="mode-option__support">
+              <span className="label">{t('ui.mode.support_label')}</span>{' '}
+              {t(`ui.mode.${m}.support`)}
+            </p>
+          </div>
+        ))}
+      </fieldset>
+
+      {/* The guidance levels sit below the comparison rather than inside the Guided card: nesting
+          them there stretched all three cards to the tallest one, leaving Automatic and Manual
+          with large empty areas. Still shown only while Guided is the selected mode. */}
+      {selection.mode === 'guided' && (
+        <fieldset className="level-options">
+          <legend>{t('ui.mode.level_legend')}</legend>
+          <div className="level-options__row">
+            {LEVELS.map((l) => (
+              <div
+                className={
+                  selection.guidanceLevel === l ? 'level-option is-selected' : 'level-option'
+                }
+                key={l}
+              >
+                <input
+                  type="radio"
+                  id={`level-${l}`}
+                  name="level"
+                  checked={selection.guidanceLevel === l}
+                  onChange={() => selectMode('guided', l)}
+                  aria-describedby={`level-${l}-desc`}
+                />
+                <label htmlFor={`level-${l}`}>{t(`ui.level.${l}.title`)}</label>
+                <span id={`level-${l}-desc`} className="hint-text">
+                  {t(`ui.level.${l}.description`)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      {selection.mode === 'automatic' && (
+        <p className="notice" role="note">
+          {t('ui.mode.automatic_prelab_note')}
+        </p>
+      )}
+      {selection.mode !== 'automatic' && (
+        <section className="mode-safety card card--safety" aria-labelledby="mode-safety-title">
+          <div className="mode-safety__heading">
+            <span className="mode-safety__icon">
+              <Icon name="shield" size={22} />
+            </span>
+            <div>
+              <h2 id="mode-safety-title">{t('ui.mode.safety_title')}</h2>
+              <p className="hint-text">{t('ui.mode.safety_lead')}</p>
+            </div>
+          </div>
+          <fieldset className="checklist">
+            <legend>{t('ui.prelab.safety_ack_legend')}</legend>
+            {checklist.map((rule) => (
+              <div className="check check--card" key={rule.id}>
+                <input
+                  type="checkbox"
+                  id={`mode-ack-${rule.id}`}
+                  checked={preLab.acknowledgedSafety.includes(rule.id)}
+                  onChange={() => toggleSafetyAcknowledgement(rule.id)}
+                />
+                <label htmlFor={`mode-ack-${rule.id}`}>{t(rule.textKey)}</label>
+              </div>
+            ))}
+          </fieldset>
+          <SourceList refs={checklist.flatMap((rule) => rule.sourceRefs)} />
+          <p
+            className={allAcknowledged ? 'status status--ok' : 'status status--pending'}
+            aria-live="polite"
+          >
+            {t(allAcknowledged ? 'ui.prelab.safety_complete' : 'ui.prelab.safety_incomplete')}
+          </p>
+        </section>
+      )}
+      {session && <p className="hint-text">{t('ui.mode.restart_note')}</p>}
+      {/* The reason Start is unavailable belongs beside Start, not as a separate banner higher up
+          the page (which repeated the checklist's own status). `canStart()` stays authoritative. */}
+      <nav className="view-nav mode-actions" aria-label={t('ui.nav.steps')}>
+        <button type="button" className="button" onClick={() => navigate('prelab')}>
+          {t('ui.nav.back_prelab')}
+        </button>
+        {session && (
+          <button type="button" className="button" onClick={() => navigate('workbench')}>
+            {t('ui.nav.back_workbench')}
+          </button>
+        )}
+        <div className="mode-actions__start">
+          {!canStart && (
+            <p id="start-blocked" className="status status--pending">
+              {t('ui.mode.safety_required')}
+            </p>
+          )}
+          <button
+            type="button"
+            className="button button--primary button--lg"
+            disabled={!canStart}
+            aria-describedby={canStart ? undefined : 'start-blocked'}
+            onClick={start}
+          >
+            {t(session ? 'ui.mode.start_new' : 'ui.mode.start')}
+          </button>
+        </div>
+      </nav>
+    </section>
+  );
+}

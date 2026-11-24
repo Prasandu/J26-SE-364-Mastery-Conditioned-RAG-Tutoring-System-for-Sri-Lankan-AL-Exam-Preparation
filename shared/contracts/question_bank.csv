@@ -1,0 +1,10 @@
+dataset_label,paper_id,year,type,total_marks,question_id,question_no,topic_id,sub_topic_id,max_marks
+SAMPLE - synthetic demonstration data,AL-CHEM-2022-P1,2022,past_paper,100,AL-CHEM-2022-P1-Q01,1,chem-u3-mole-concept,chem-u3-amount-of-substance,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2022-P1,2022,past_paper,100,AL-CHEM-2022-P1-Q02,2,chem-u3-mole-concept,chem-u3-molar-mass,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2022-P1,2022,past_paper,100,AL-CHEM-2022-P1-Q03,3,chem-u3-stoichiometry,chem-u3-equation-ratios,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2023-P1,2023,past_paper,100,AL-CHEM-2023-P1-Q01,1,chem-u3-mole-concept,chem-u3-amount-of-substance,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2023-P1,2023,past_paper,100,AL-CHEM-2023-P1-Q02,2,chem-u3-mole-concept,chem-u3-molar-mass,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2023-P1,2023,past_paper,100,AL-CHEM-2023-P1-Q03,3,chem-u3-stoichiometry,chem-u3-equation-ratios,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2024-P1,2024,past_paper,100,AL-CHEM-2024-P1-Q01,1,chem-u3-mole-concept,chem-u3-amount-of-substance,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2024-P1,2024,past_paper,100,AL-CHEM-2024-P1-Q02,2,chem-u3-mole-concept,chem-u3-molar-mass,10
+SAMPLE - synthetic demonstration data,AL-CHEM-2024-P1,2024,past_paper,100,AL-CHEM-2024-P1-Q03,3,chem-u3-stoichiometry,chem-u3-equation-ratios,10

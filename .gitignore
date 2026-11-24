@@ -69,137 +69,106 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
+# Secrets - NEVER commit (API keys, Supabase keys, DB passwords)
+# Commit a .env.example with empty values instead.
 .env
 .env.*
 !.env.example
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-.output
-
-# Gatsby files
-.cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# public
-
-# vuepress build output
-.vuepress/dist
-
-# vuepress v2.x temp directory
-.temp
-
-# Sveltekit cache directory
-.svelte-kit/
-
-# vitepress build output
-**/.vitepress/dist
-
-# vitepress cache directory
-**/.vitepress/cache
-
-# Docusaurus cache and generated files
-.docusaurus
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# Firebase cache directory
-.firebase/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# pnpm
-.pnpm-store
-
-# yarn v3
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-# Vite files
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-.vite/
-
-# =============================================================
-# .NET / ASP.NET Core Web API  ->  backend/
-# =============================================================
-bin/
-obj/
-.vs/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-[Dd]ebug/
-[Rr]elease/
-
-# The two rules above are for Visual Studio build output. They also matched
-# android/app/src/debug/, which is not build output at all: it is the source
-# folder Android uses for files that apply only to a debug build. Ours holds
-# the network rule that lets a debug build reach the API over plain HTTP.
-#
-# Without these exceptions that file is never committed, and a member who
-# clones the repository gets the release rule in their debug build. The app
-# then fails with "CLEARTEXT communication to ... not permitted".
-#
-# The directory has to be un-ignored before its contents can be, because git
-# does not look inside a directory it has already excluded.
-!android/app/src/debug/
-!android/app/src/debug/**
-
-# Secrets: Mongo connection string, JWT signing key. NEVER commit.
-# A committed *.example.json template shows the shape instead.
-appsettings.Development.json
-appsettings.Production.json
-appsettings.Local.json
 secrets.json
 
-# IIS publish output
-publish/
-*.pubxml.user
+# Research proposal document
+IT23215306.pdf
 
-# =============================================================
-# Android (pure native)  ->  mobile/     [used from Phase E]
-# =============================================================
-local.properties
-.gradle/
-*/build/
-*.apk
-*.aab
-*.keystore
-*.jks
-.cxx/
-captures/
+# Python  ->  assessment-service/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local SQLite database (development only)
+*.db
+*.db-journal
+
+# Jupyter (fine-tuning / experiment notebooks)
+.ipynb_checkpoints/
+
+# Node / Next.js  ->  frontend/
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+.vercel
+
+# Research data and models
+# Student answer scripts are private (consent + PII rules in the
+# proposal), so raw data stays out of git. Model weights are too large.
+data/raw/
+data/private/
+uploads/
+assessment-service/resources/
+assessment-service/papers/
+assessment-service/Past Papers/
+assessment-service/Marking Schemes
+samples/
+assessment-service/samples/
+drafts/
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.ckpt
+models/checkpoints/
+wandb/
+
+# Logs, editors, OS
+logs/
+*.log
 .idea/
-
-# =============================================================
-# Windows / editor noise
-# =============================================================
+.vscode/*
+!.vscode/extensions.json
 Thumbs.db
 desktop.ini
+.DS_Store
+
+tests/
+docs/
+sheets/
+results/
+state/
+Viva Prep - System Overview.docx
 *.swp
+
+# --- Virtual Chemistry Lab (M1) ---
+# Private source PDFs (licensing): never commit
+research-sources/*.pdf
+# Node / build
+node_modules/
+dist/
+coverage/
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+# Manual visual-QA screenshot packages. Kept outside test-results/, which Playwright wipes at the
+# start of every run (so a later suite would delete an earlier suite's screenshots).
+final-screens/
+
+# Private derived research data (chunk text, embeddings) and model caches
+data/
+.cache/huggingface/

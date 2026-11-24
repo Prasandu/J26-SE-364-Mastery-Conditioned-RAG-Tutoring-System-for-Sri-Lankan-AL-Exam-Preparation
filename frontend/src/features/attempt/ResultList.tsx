@@ -1,0 +1,122 @@
+import type { Attempt, PointResult, QuestionResult } from "@/api/types";
+import type { BadgeTone } from "@/components/Badge";
+import { Badge } from "@/components/Badge";
+
+const TONES: Record<string, BadgeTone> = {
+  awarded: "good",
+  not_awarded: "bad",
+  needs_review: "warn",
+  pending: "neutral",
+};
+
+const WORDS: Record<string, string> = {
+  awarded: "correct",
+  not_awarded: "wrong",
+  needs_review: "teacher will check",
+  pending: "waiting to be marked",
+};
+
+// Who decided this point. The research compares these against each other.
+const MARKERS: Record<string, string> = {
+  rule: "answer key",
+  checker: "chemistry checker",
+  llm: "AI judge",
+  teacher: "teacher",
+};
+
+/** Per question: what was answered, what it scored, and the reason for each point. */
+export function ResultList({ attempt }: { attempt: Attempt }) {
+  const answered = attempt.questions.filter((question) => question.answer !== null);
+
+  if (answered.length === 0) {
+    return <p className="text-sm text-slate-500">No answers were given.</p>;
+  }
+
+  const anyProvisional = answered.some((question) => question.score === null && question.points.length > 0);
+
+  return (
+    <>
+      <ol className="divide-y divide-slate-100">
+        {answered.map((question) => (
+          <li key={question.question_id} className="py-4">
+            <QuestionResultRow question={question} />
+          </li>
+        ))}
+      </ol>
+      {anyProvisional && (
+        <p className="mt-2 text-xs text-slate-400">* provisional - a point of this question still needs a teacher</p>
+      )}
+    </>
+  );
+}
+
+function QuestionResultRow({ question }: { question: QuestionResult }) {
+  const answer = question.answer!;
+  const mcq = answer.mcq_option !== null;
+
+  return (
+    <div className="flex gap-3">
+      <span className="w-12 shrink-0 font-mono text-sm text-brand-700">{question.label}</span>
+
+      <div className="min-w-0 flex-1 space-y-2">
+        {mcq ? (
+          <p className="text-sm text-slate-600">
+            you chose <strong className="font-mono">{answer.mcq_option}</strong>
+          </p>
+        ) : (
+          <p className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 font-mono text-sm text-slate-700">
+            {answer.text || "(left blank)"}
+          </p>
+        )}
+
+        {question.points.length === 0 ? (
+          <p className="text-sm text-slate-400">Not marked yet.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {question.points.map((point) => (
+              <PointRow key={point.code} point={point} compact={mcq} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <span className="shrink-0 text-sm tabular-nums text-slate-500">
+        {question.score ?? provisionalScore(question.points)} / {question.max_marks ?? 0}
+        {question.score === null && question.points.length > 0 && "*"}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Marks confirmed so far for one question whose overall score is not final yet (some
+ * point still needs a teacher) - the sum of only its decided points, not 0. A
+ * needs_review point's own `awarded` is a 0.0 placeholder, not a real decision, so
+ * it is left out rather than counted as a loss.
+ */
+function provisionalScore(points: readonly PointResult[]): number {
+  return points
+    .filter((point) => point.status === "awarded" || point.status === "not_awarded")
+    .reduce((total, point) => total + (point.awarded ?? 0), 0);
+}
+
+function PointRow({ point, compact }: { point: PointResult; compact: boolean }) {
+  return (
+    <li className="flex flex-wrap items-baseline gap-2 text-sm">
+      <Badge tone={TONES[point.status] ?? "neutral"}>{WORDS[point.status] ?? point.status}</Badge>
+      {!compact && <span className="text-slate-600">{point.description}</span>}
+      {point.reason && <span className="text-slate-500">{point.reason}</span>}
+      <MarkedBy point={point} />
+    </li>
+  );
+}
+
+/** "marked by the chemistry checker" - which kind of marker decided this point. The
+ * model behind it and how sure it was are internal, so neither is shown. */
+function MarkedBy({ point }: { point: PointResult }) {
+  if (point.method === null) {
+    return null;
+  }
+  const who = MARKERS[point.method] ?? point.method;
+  return <span className="text-xs text-slate-400">marked by {who}</span>;
+}

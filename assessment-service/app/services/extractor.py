@@ -1,0 +1,213 @@
+"""Reading a scanned past paper or marking scheme into the shapes the admin API accepts.
+
+The model only copies what is printed. The result is always a draft for a person to
+check before it is published, so a misread question can never become a live paper.
+"""
+
+from collections.abc import Sequence
+from typing import Any
+
+import httpx
+import openai
+from google.genai import errors as genai_errors
+from pydantic import BaseModel, Field, ValidationError, model_validator
+
+from app.ai.vision import Image, VisionModel
+
+CHEMISTRY_NOTATION = (
+    "Write chemistry in plain standard notation: H2SO4, SO4^2-, Ca^2+, NaOH(aq), -> for a "
+    "reaction arrow, <=> for an equilibrium, 2.00 x 10^-3 for powers of ten, mol dm-3 for units."
+)
+
+# A busy or refusing model, a dropped connection, or a reply that is not valid JSON -
+# shared by app/import_pdf.py (the CLI, file-based pipeline) and app/api/extract.py
+# (the same reading, returned to the browser instead of written to a file).
+READ_ERRORS = (genai_errors.APIError, openai.APIError, httpx.HTTPError, ValidationError)
+
+
+class ExtractedOption(BaseModel):
+    label: str  # "1".."5" as printed
+    text: str
+
+
+class ExtractedQuestion(BaseModel):
+    label: str = Field(description='As printed: "7", "(a)", "(i)"')
+    text: str
+    max_marks: float | None = None
+    options: list[ExtractedOption] = []  # MCQ only
+    sub_questions: list["ExtractedQuestion"] = []
+    has_figure: bool = False  # a diagram, graph or structure the text cannot carry
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_malformed_sub_questions(cls, data: Any) -> Any:
+        """The model is told to stop nesting at 3 levels (see PAPER_PROMPT rule 3),
+        but on a dense page it still sometimes replaces a too-deep sub_questions entry
+        with a bare string or number (a stray list marker like "1" or "label") instead
+        of leaving it out. That used to fail the whole page. One malformed item is not
+        worth losing every question on the page over, so it is dropped here instead -
+        the surrounding text still carries whatever that item said, per the same rule.
+        """
+        if not isinstance(data, dict):
+            return data
+        subs = data.get("sub_questions")
+        if isinstance(subs, list):
+            data = {**data, "sub_questions": [sub for sub in subs if isinstance(sub, dict)]}
+        return data
+
+
+class ExtractedPaper(BaseModel):
+    questions: list[ExtractedQuestion] = []
+    notes: list[str] = []  # anything a person should check, e.g. "Q9 depends on a figure"
+
+
+class ExpectedAnswer(BaseModel):
+    """The part of an answer code can check. Only the fields that apply are filled."""
+
+    option: str | None = Field(default=None, description="mcq_key: the correct option number")
+    value: float | None = Field(default=None, description="calculation: the numeric answer")
+    unit: str | None = Field(default=None, description='calculation or unit: e.g. "mol dm-3"')
+    equation: str | None = Field(default=None, description="equation: the balanced equation")
+
+    def as_dict(self) -> dict[str, Any] | None:
+        filled = {key: value for key, value in self.model_dump().items() if value is not None}
+        return filled or None
+
+
+class ExtractedPoint(BaseModel):
+    description: str = Field(description="What earns the mark, in the marking scheme's own words")
+    marks: float
+    point_type: str = Field(
+        description=(
+            "Exactly one of: mcq_key, concept, equation, formula, calculation, unit, diagram, "
+            'graph. Never two of these joined together, e.g. never "diagram or graph".'
+        )
+    )
+    expected: ExpectedAnswer | None = None
+    alternatives: list[str] = []
+
+
+class ExtractedScheme(BaseModel):
+    question: str = Field(description='Full label as printed: "2(b)(ii)"')
+    model_answer: str | None = None
+    points: list[ExtractedPoint] = []
+
+
+class McqAnswer(BaseModel):
+    question: str = Field(description='Question number as printed, e.g. "7"')
+    option: str = Field(description='Correct option number, e.g. "4"')
+
+
+class QuestionTotal(BaseModel):
+    """A total the page prints for a whole question, e.g. a boxed "4(c) 22 Marks".
+
+    The scheme's own checksum: if the points read off that question do not add up
+    to this, something on the page was missed (see drafts.py's _mark_totals).
+    """
+
+    question: str = Field(description='Full label as printed, e.g. "4(c)"')
+    marks: float = Field(description="The total printed for that whole question, e.g. 22")
+
+
+class ExtractedSchemePage(BaseModel):
+    questions: list[ExtractedScheme] = []
+    mcq_answers: list[McqAnswer] = Field(default_factory=list, description="An answer key table")
+    mcq_marks: float | None = Field(
+        default=None, description="Marks for one correct MCQ answer, if the page states it"
+    )
+    question_totals: list[QuestionTotal] = Field(
+        default_factory=list, description="Totals the page prints for a whole question"
+    )
+    notes: list[str] = []
+
+
+PAPER_PROMPT = f"""\
+You copy printed Sri Lankan G.C.E. A/L Chemistry exam questions from a scanned page into data.
+
+Rules:
+1. Copy only what is printed. Do NOT answer the questions and do NOT invent anything.
+2. {CHEMISTRY_NOTATION}
+3. Use the labels exactly as printed: "7", "(a)", "(i)". Put sub-parts in sub_questions, up to
+   3 levels deep (question, letter, number). If a lettered/numbered part has its own further
+   numbered items (e.g. "I.", "II." inside part (iv)), keep those as plain lines of text inside
+   that part's own text field instead of adding a 4th level of sub_questions.
+4. A multiple choice question must never come back with an empty options list. Copy all five,
+   with their printed numbers, however they are laid out: as a table of columns, as drawn
+   structures, or as a row across the page. For a table, join each row into one line
+   (e.g. "- +"). For a structure or graph, describe it in square brackets.
+5. If a question continues past the bottom of the page, copy what is visible and say so in notes.
+6. Set has_figure to true where the question relies on a diagram, graph or structure, and
+   describe it in one short line in square brackets inside the text.
+7. max_marks only when the page prints a mark allocation for that question.
+"""
+
+SCHEME_PROMPT = f"""\
+You copy a printed Sri Lankan G.C.E. A/L Chemistry marking scheme from a scanned page into data.
+
+Rules:
+1. Copy only what is printed. Do NOT invent marking points and do NOT add your own chemistry.
+2. {CHEMISTRY_NOTATION}
+3. Use the full question label as printed, for example "2(b)(ii)".
+4. Split the marks the way the scheme does. "04 marks x 8 = 32 marks" means eight separate
+   points worth 4 marks each, so list eight points.
+5. point_type: mcq_key for an answer key, calculation for a numeric answer, equation for a
+   chemical equation, unit for a unit, diagram for a structure or other drawing, graph for a
+   plotted graph, otherwise concept. Exactly one of these words - never "diagram or graph".
+6. Fill expected only with what code can check: option for an answer key, value and unit for a
+   numeric answer, equation for a balanced equation. Leave the rest empty.
+7. Put any instruction to the examiner, such as "deduct 01 mark if ...", into notes.
+8. For an answer key table, list every question and its correct option in mcq_answers, and set
+   mcq_marks to the marks awarded for one correct answer if the page states it anywhere (e.g.
+   "each correct response: 01 mark", or a total divided evenly across the questions listed).
+   Leave mcq_marks empty if the page never says.
+9. Where the page prints a total for a whole question, such as a boxed "4(c) 22 Marks" or
+   "3(a) 70 marks", copy it into question_totals. That is the scheme's own total for the
+   question, so never also list it as a marking point.
+10. Read every mark the page awards, including ones written beside a drawn structure, beside a
+   curved arrow in a mechanism, or against one line of a worked calculation. A circled "(03)"
+   next to an arrow is a marking point just as much as a sentence is.
+"""
+
+
+class ContentExtractor:
+    """Reads scanned pages with any vision model."""
+
+    def __init__(self, model: VisionModel) -> None:
+        self._model = model
+        self.name = model.name
+
+    def read_paper(self, images: Sequence[Image], hint: str | None = None) -> ExtractedPaper:
+        return self._model.ask(
+            system=PAPER_PROMPT,
+            user=_user_prompt("exam paper", len(images), hint),
+            images=images,
+            shape=ExtractedPaper,
+        )
+
+    def read_scheme(
+        self, images: Sequence[Image], hint: str | None = None, continuing_from: str | None = None
+    ) -> ExtractedSchemePage:
+        return self._model.ask(
+            system=SCHEME_PROMPT,
+            user=_user_prompt("marking scheme", len(images), hint, continuing_from),
+            images=images,
+            shape=ExtractedSchemePage,
+        )
+
+
+def _user_prompt(kind: str, count: int, hint: str | None, continuing_from: str | None = None) -> str:
+    pages = "this page" if count == 1 else f"these {count} pages, in order"
+    parts = [f"Copy the {kind} content from {pages}."]
+    if continuing_from:
+        # A scheme rarely repeats the whole label on a continuation page: a part
+        # printed as just "(iii)" here is "1(b)(iii)" if the last page ended in
+        # "1(b)(ii)". Without this the part comes back as its own question.
+        parts.append(
+            f"The previous page ended inside question {continuing_from}. A part printed on this "
+            f'page as just "(iii)", "(c)" or "II." continues that same question, so give it its '
+            f"full label in the same style as {continuing_from} - never the bare part on its own. "
+            f"Working that carries straight on from the previous page belongs to that question too."
+        )
+    if hint:
+        parts.append(f"Context: {hint}")
+    return "\n\n".join(parts)

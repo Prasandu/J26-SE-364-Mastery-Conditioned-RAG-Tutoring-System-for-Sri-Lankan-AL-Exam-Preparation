@@ -77,12 +77,23 @@ web_modules/
 secrets.json
 
 # Research proposal document
+IT23278530.pdf
+
+docs/
+infra/
+shared/
+state/
+CLAUDE.md
+.claude/
+migrations/
+chemistry-tutor/support-service/migrations/versions/
 IT23215306.pdf
 
 # Python  ->  assessment-service/
 __pycache__/
 *.py[cod]
 .venv/
+.venv_local/
 venv/
 env/
 *.egg-info/
@@ -139,6 +150,7 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+IT23278530.txt
 tests/
 docs/
 sheets/

@@ -1,0 +1,31 @@
+# Env secrets
+*.env
+!.env.example
+
+# Python
+**/venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Node
+**/node_modules/
+**/dist/
+
+# Student data (never commit)
+**/uploads/
+*.db
+
+# Copyrighted NIE textbook PDFs (keep on disk, not in git)
+support-service/knowledge/sources/*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+support-service/scripts/

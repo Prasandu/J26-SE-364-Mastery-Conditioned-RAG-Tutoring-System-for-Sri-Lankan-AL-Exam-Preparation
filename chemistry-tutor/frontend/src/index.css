@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Avatar (TutorPage voice-chat mode). The mouth itself is driven directly
+   by a continuous mouthOpenness value in React (real audio amplitude for
+   Sinhala, word-boundary pulses for English — see useSpeechSynthesis.ts),
+   not a CSS loop. These keyframes are just the idle/listening liveliness. */
+@keyframes avatar-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+.avatar-eye-blinking {
+  animation: avatar-blink 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes avatar-listen-ring {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+.avatar-ring-listening {
+  animation: avatar-listen-ring 1.1s ease-in-out infinite;
+}

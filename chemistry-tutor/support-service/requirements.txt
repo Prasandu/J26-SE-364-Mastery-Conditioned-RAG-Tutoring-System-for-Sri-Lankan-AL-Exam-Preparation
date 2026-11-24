@@ -1,0 +1,22 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+pydantic-settings==2.6.0
+python-dotenv==1.0.1
+pytest==8.3.3
+httpx==0.27.2
+sqlalchemy==2.0.36
+psycopg[binary]==3.2.3
+alembic==1.14.0
+pgvector==0.3.6
+PyMuPDF==1.24.13
+sentence-transformers==3.3.1
+groq==0.13.1
+hf_xet==1.7.0
+python-multipart==0.0.17
+sympy==1.13.3
+slowapi==0.1.10
+scipy==1.14.1  # WAV encoding for Sinhala TTS output (transformers/torch already pulled in by sentence-transformers)
+pyjwt==2.15.1
+cryptography==50.0.2  # RS256/ES256 JWT signature verification (Supabase Auth tokens)
+google-genai==2.32.0  # Gemini — Sinhala speech-to-text only, see app/services/speech/transcription.py

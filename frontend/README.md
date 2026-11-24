@@ -1,5 +1,65 @@
 # Frontend
 
+The frontend is a Vite, React, and TypeScript application. Its API client is the
+only layer that should make requests to backend services.
+
+## Requirements
+
+- Node.js 20.19+ or 22.12+
+- npm
+
+## Run locally
+
+From this directory:
+
+```sh
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
+
+Vite prints the local URL after startup. Set `VITE_API_URL` to the shared API
+URL and `VITE_PLANNING_API_URL` to the planning service URL when they differ
+from `http://127.0.0.1:8081` and `http://127.0.0.1:8083`, respectively. Set
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable student sign-in.
+
+The planning screens are available at `/planning/setup`, `/planning/plan`, and
+`/planning/dashboard`. They use the planning-service API and require an
+authenticated bearer token; planning routes prompt for Supabase email/password
+sign-in when no session is available.
+
+The planning setup uses the shared syllabus topic tree and validates future
+exam dates, topic selection, session limits, and non-overlapping weekly
+availability before submission. The plan screen supports calendar/list views,
+task outcome updates, schedule regeneration, and a notice describing sessions
+that were moved or added.
+
+The planning dashboard uses Recharts for adherence, mastery, and grade
+visualizations. It relies on the API's data-availability flags and shows
+"Not enough data yet" instead of presenting fallback values as learner results.
+The dated mastery line chart uses weekly snapshots calculated from assessment
+evidence.
+
+## Checks
+
+```sh
+npm run lint
+npm test
+npm run build
+```
+
+## Structure
+
+- `src/api/` contains backend communication, shared API types, and resource
+  modules.
+- `src/features/` contains page-level features.
+- `src/components/` contains reusable UI components, including loading and
+  error states shared by planning screens.
+- `src/hooks/` and `src/lib/` hold reusable React logic and plain helpers.
+- `src/test/` contains test setup; `tests/` contains application tests.
+
+Other feature pages remain starter placeholders until their API contracts are
+agreed.
 React web app for the **Intelligent Assessment & Automated Evaluation** component
 (J26-SE-364). It talks to `assessment-service` over HTTP and holds no data of its own.
 

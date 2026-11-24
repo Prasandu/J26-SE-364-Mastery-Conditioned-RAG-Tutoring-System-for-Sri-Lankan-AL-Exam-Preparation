@@ -1,0 +1,16 @@
+{
+  "name": "@vlab/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "uv run uvicorn app.main:app --reload --port 8000",
+    "format": "uv run ruff format .",
+    "format:check": "uv run ruff format --check .",
+    "lint": "uv run ruff check .",
+    "typecheck": "uv run mypy app tests",
+    "test": "pnpm --filter @vlab/simulation-core build && uv run pytest"
+  },
+  "devDependencies": {
+    "@vlab/simulation-core": "workspace:*"
+  }
+}

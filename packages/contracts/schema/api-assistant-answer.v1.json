@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "grounded",
+        "refused"
+      ]
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "locale": {
+      "type": "string",
+      "enum": [
+        "en",
+        "si"
+      ]
+    },
+    "evidenceSufficient": {
+      "type": "boolean"
+    },
+    "refusalReason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "insufficient_evidence",
+            "out_of_scope",
+            "unsafe_request"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "citations": {
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chunkId": {
+            "type": "string",
+            "pattern": "^kc_[0-9a-f]{20}$"
+          },
+          "documentTitle": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1900,
+                "maximum": 2100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pdfPage": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "printedPage": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "section": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "heading": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "chunkId",
+          "documentTitle",
+          "year",
+          "pdfPage",
+          "printedPage",
+          "section",
+          "heading"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "aiAssistanceLabel": {
+      "type": "boolean"
+    },
+    "knowledgeVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "stateFingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "cached": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "status",
+    "answer",
+    "locale",
+    "evidenceSufficient",
+    "refusalReason",
+    "citations",
+    "aiAssistanceLabel",
+    "knowledgeVersion",
+    "sequence",
+    "stateFingerprint",
+    "cached"
+  ],
+  "additionalProperties": false
+}

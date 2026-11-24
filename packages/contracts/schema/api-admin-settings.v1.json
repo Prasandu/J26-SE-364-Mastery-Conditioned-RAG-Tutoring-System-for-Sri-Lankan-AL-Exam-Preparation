@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ]
+    },
+    "adminRepository": {
+      "type": "string",
+      "enum": [
+        "file",
+        "postgres"
+      ]
+    },
+    "knowledgeRepository": {
+      "type": "string",
+      "enum": [
+        "memory",
+        "postgres"
+      ]
+    },
+    "databaseConfigured": {
+      "type": "boolean"
+    },
+    "embedding": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ],
+      "additionalProperties": false
+    },
+    "generation": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "openaiModel": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "groqModel": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ollamaModel": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "openaiKeyConfigured": {
+          "type": "boolean"
+        },
+        "groqKeyConfigured": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "provider",
+        "openaiModel",
+        "groqModel",
+        "ollamaModel",
+        "openaiKeyConfigured",
+        "groqKeyConfigured"
+      ],
+      "additionalProperties": false
+    },
+    "ollamaBaseUrl": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "extractionAssist": {
+      "type": "string",
+      "enum": [
+        "disabled",
+        "ollama",
+        "fake"
+      ]
+    },
+    "loginEnabled": {
+      "type": "boolean",
+      "const": false
+    }
+  },
+  "required": [
+    "environment",
+    "adminRepository",
+    "knowledgeRepository",
+    "databaseConfigured",
+    "embedding",
+    "generation",
+    "ollamaBaseUrl",
+    "extractionAssist",
+    "loginEnabled"
+  ],
+  "additionalProperties": false
+}

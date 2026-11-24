@@ -1,0 +1,13 @@
+{
+  "glossaryVersion": "glossary-exp04-1.0.0",
+  "reviewStatus": "teacher_review_pending",
+  "notes": "Name-to-formula equivalences for compounds that appear (by formula or name) on the approved pages. Used only by server validation to recognise that a name and its formula refer to the same entity; it never adds facts to an answer. A chemical name or formula that is neither in the supplied evidence nor equivalent to something in it is treated as unsupported.",
+  "entries": [
+    { "names": ["sodium carbonate", "anhydrous sodium carbonate"], "formula": "Na₂CO₃" },
+    { "names": ["potassium dichromate"], "formula": "K₂Cr₂O₇" },
+    { "names": ["potassium iodate"], "formula": "KIO₃" },
+    { "names": ["potassium oxalate"], "formula": "K₂C₂O₄" },
+    { "names": ["sodium hydroxide"], "formula": "NaOH" },
+    { "names": ["hydrochloric acid"], "formula": "HCl" }
+  ]
+}

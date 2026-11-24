@@ -1,0 +1,336 @@
+{
+  "sourceId": "nie-handbook-2018",
+  "documentSha256": "1d32553317439d992adccc75ba905f98e35b87536607362736f175722ab9fcbe",
+  "documentTitleKey": "ui.handbook.source_title",
+  "edition": 2018,
+  "questionPolicy": "Selected, paraphrased handbook questions; no answer key or automatic grading.",
+  "translationStatus": {
+    "en": "draft",
+    "si": "draft"
+  },
+  "entries": [
+    {
+      "experimentNumber": 1,
+      "preLab": [
+        {
+          "en": "Name the subatomic particles. List the scientists who pioneered their discovery.",
+          "si": "උප පරමාණුක අංශු නම් කර ඒවා සොයාගත් විද්‍යාඥයන් ලැයිස්තුගත කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "List the properties of cathode rays observed in this experiment.",
+          "si": "මෙම පරීක්ෂණයේ නිරීක්ෂණය කළ කැතෝඩ කිරණවල ගුණ ලැයිස්තුගත කරන්න."
+        }
+      ],
+      "preLabPdfPage": 18,
+      "postLabPdfPage": 22
+    },
+    {
+      "experimentNumber": 2,
+      "preLab": [
+        {
+          "en": "State VSEPR theory and use examples to predict the shapes of molecules and ions.",
+          "si": "VSEPR න්‍යාය සඳහන් කර උදාහරණ මගින් අණු හා අයනවල හැඩ පුරෝකථනය කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Is CO₂ polar or nonpolar? Give reasons.",
+          "si": "CO₂ ධ්‍රැවීය ද නිර්ධ්‍රැවීය ද? හේතු දක්වන්න."
+        }
+      ],
+      "preLabPdfPage": 23,
+      "postLabPdfPage": 24
+    },
+    {
+      "experimentNumber": 3,
+      "preLab": [
+        {
+          "en": "List the types of glassware you expect to see in a chemistry laboratory.",
+          "si": "රසායන විද්‍යාගාරයක දැකිය හැකි වීදුරු උපකරණ වර්ග ලැයිස්තුගත කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Which glassware can measure volumes? State the minimum volume each can measure.",
+          "si": "පරිමා මැනීමට භාවිත කළ හැකි වීදුරු උපකරණ මොනවාද? එක් එක් උපකරණයට මැනිය හැකි අවම පරිමාව සඳහන් කරන්න."
+        }
+      ],
+      "preLabPdfPage": 25,
+      "postLabPdfPage": 28
+    },
+    {
+      "experimentNumber": 5,
+      "preLab": [
+        {
+          "en": "List reactions that release oxygen under laboratory conditions. Which is most suitable for collecting and measuring the gas, and why?",
+          "si": "විද්‍යාගාරයේ ඔක්සිජන් නිපදවන ප්‍රතික්‍රියා ලැයිස්තුගත කරන්න. වායුව එකතු කර පරිමාව මැනීමට සුදුසුම ප්‍රතික්‍රියාව කුමක් ද? හේතු දක්වන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Explain why the heated tube must cool to room temperature before weighing, and why water levels must be equalized before removing tube B.",
+          "si": "රත් කළ නළය කිරීමට පෙර කාමර උෂ්ණත්වයට සිසිල් කළ යුත්තේ ඇයි? B නළය ඉවත් කිරීමට පෙර ජල මට්ටම් සමාන කළ යුත්තේ ඇයි?"
+        }
+      ],
+      "preLabPdfPage": 31,
+      "postLabPdfPage": 34
+    },
+    {
+      "experimentNumber": 6,
+      "preLab": [
+        {
+          "en": "State the ideal gas law and Dalton’s law of partial pressures. Define each term.",
+          "si": "පරිපූර්ණ වායු නියමය හා ඩෝල්ටන්ගේ ආංශික පීඩන නියමය සඳහන් කර සංකේත අර්ථ දක්වන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Does the copper wire affect the amount of hydrogen produced? Explain.",
+          "si": "තඹ කම්බිය නිපදවන හයිඩ්‍රජන් ප්‍රමාණයට බලපායි ද? පැහැදිලි කරන්න."
+        }
+      ],
+      "preLabPdfPage": 35,
+      "postLabPdfPage": 38
+    },
+    {
+      "experimentNumber": 7,
+      "preLab": [
+        {
+          "en": "Explain how to estimate a reaction enthalpy from the enthalpies of its reactants and products.",
+          "si": "ප්‍රතික්‍රියාකාරක හා ඵලවල එන්තැල්පි අගයන්ගෙන් ප්‍රතික්‍රියා එන්තැල්පිය ඇස්තමේන්තු කරන ආකාරය පැහැදිලි කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Discuss possible sources of error in this experiment. What does the negative sign in −Q represent?",
+          "si": "මෙම පරීක්ෂණයේ දෝෂ මූලාශ්‍ර සාකච්ඡා කරන්න. −Q හි ඍණ ලකුණෙන් අදහස් කරන්නේ කුමක් ද?"
+        }
+      ],
+      "preLabPdfPage": 39,
+      "postLabPdfPage": 42
+    },
+    {
+      "experimentNumber": 8,
+      "preLab": [
+        {
+          "en": "Define reaction enthalpy. Under what conditions does the heat exchanged equal the enthalpy change?",
+          "si": "ප්‍රතික්‍රියා එන්තැල්පිය අර්ථ දක්වන්න. හුවමාරු වන තාපය එන්තැල්පි වෙනසට සමාන වන්නේ කවර තත්ත්ව යටතේ ද?"
+        }
+      ],
+      "postLab": [
+        {
+          "en": "How would you minimize errors in this experiment? Compare your estimates with accepted reaction enthalpies and discuss any differences.",
+          "si": "මෙම පරීක්ෂණයේ දෝෂ අවම කරන්නේ කෙසේ ද? ඔබේ ඇස්තමේන්තු පිළිගත් ප්‍රතික්‍රියා එන්තැල්පි සමග සසඳා වෙනස්කම් සාකච්ඡා කරන්න."
+        }
+      ],
+      "preLabPdfPage": 43,
+      "postLabPdfPage": 49
+    },
+    {
+      "experimentNumber": 9,
+      "preLab": [
+        {
+          "en": "Write balanced equations for reactions of s-block elements with oxygen, water and dilute HCl.",
+          "si": "s ගොනුවේ මූලද්‍රව්‍ය ඔක්සිජන්, ජලය හා තනුක HCl සමග දක්වන ප්‍රතික්‍රියාවල තුලිත සමීකරණ ලියන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Compare the reactivity of Group I and Group II metals with air, water and acids.",
+          "si": "I හා II කාණ්ඩවල ලෝහ වාතය, ජලය හා අම්ල සමග දක්වන ප්‍රතික්‍රියාශීලීත්වය සසඳන්න."
+        }
+      ],
+      "preLabPdfPage": 50,
+      "postLabPdfPage": 51
+    },
+    {
+      "experimentNumber": 10,
+      "preLab": [
+        {
+          "en": "What is an atomic spectrum? Explain the origin of its lines using hydrogen as an example.",
+          "si": "පරමාණුක වර්ණාවලියක් යනු කුමක් ද? හයිඩ්‍රජන් උදාහරණයට ගෙන වර්ණාවලි රේඛා ඇතිවන ආකාරය පැහැදිලි කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Why is the wire cleaned with concentrated HCl? Which element did not give a flame colour?",
+          "si": "කම්බිය සාන්ද්‍ර HCl මගින් පිරිසිදු කරන්නේ ඇයි? දැල්ලට වර්ණයක් නොදුන් මූලද්‍රව්‍යය කුමක් ද?"
+        }
+      ],
+      "preLabPdfPage": 52,
+      "postLabPdfPage": 53
+    },
+    {
+      "experimentNumber": 11,
+      "preLab": [
+        {
+          "en": "Complete the ionic equations for thiosulphate, sulphite, sulphide, nitrite and carbonate ions reacting with H⁺.",
+          "si": "තයෝසල්ෆේට්, සල්ෆයිට්, සල්ෆයිඩ්, නයිට්‍රයිට් හා කාබනේට් අයන H⁺ සමග ප්‍රතික්‍රියා කරන අයනික සමීකරණ සම්පූර්ණ කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Can the brown-ring test alone distinguish nitrate and nitrite solutions? Give reasons.",
+          "si": "දුඹුරු වළලු පරීක්ෂාව පමණක් භාවිතයෙන් නයිට්‍රේට් හා නයිට්‍රයිට් ද්‍රාවණ වෙන්කර හඳුනාගත හැකි ද? හේතු දක්වන්න."
+        }
+      ],
+      "preLabPdfPage": 54,
+      "postLabPdfPage": 56
+    },
+    {
+      "experimentNumber": 12,
+      "preLab": [
+        {
+          "en": "Write balanced equations for magnesium exposed to air and magnesium burning in air.",
+          "si": "මැග්නීසියම් වාතයට නිරාවරණය කිරීමේදී හා වාතයේ දැවීමේදී සිදුවන ප්‍රතික්‍රියාවල තුලිත සමීකරණ ලියන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Why must the magnesium strip be cleaned first? Write the equation for Mg₃N₂ reacting with water and describe the wet red litmus test.",
+          "si": "මැග්නීසියම් පටිය මුලින් පිරිසිදු කළ යුත්තේ ඇයි? Mg₃N₂ ජලය සමග දක්වන ප්‍රතික්‍රියාවේ සමීකරණය ලියා තෙත් රතු ලිට්මස් පරීක්ෂාව විස්තර කරන්න."
+        }
+      ],
+      "preLabPdfPage": 57,
+      "postLabPdfPage": 58
+    },
+    {
+      "experimentNumber": 13,
+      "preLab": [
+        {
+          "en": "Write balanced equations for chloride, bromide and iodide ions reacting with chlorine water, silver nitrate and lead acetate.",
+          "si": "ක්ලෝරයිඩ්, බ්‍රෝමයිඩ් හා අයඩයිඩ් අයන ක්ලෝරීන් ජලය, සිල්වර් නයිට්‍රේට් හා ලෙඩ් ඇසිටේට් සමග දක්වන ප්‍රතික්‍රියාවල තුලිත සමීකරණ ලියන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Write balanced equations for heating solid NaCl, NaBr and NaI with concentrated H₂SO₄.",
+          "si": "ඝන NaCl, NaBr හා NaI සාන්ද්‍ර H₂SO₄ සමග රත් කිරීමේ තුලිත සමීකරණ ලියන්න."
+        }
+      ],
+      "preLabPdfPage": 59,
+      "postLabPdfPage": 61
+    },
+    {
+      "experimentNumber": 14,
+      "preLab": [
+        {
+          "en": "What properties must a primary standard have? Give examples of commonly used primary standards.",
+          "si": "ප්‍රාථමික ප්‍රමිතියකට තිබිය යුතු ගුණ මොනවාද? බහුලව භාවිත වන ප්‍රාථමික ප්‍රමිති සඳහා උදාහරණ දෙන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Why is starch added close to the endpoint? Which titration vessel should not be rinsed with the solution it will contain, and why?",
+          "si": "අන්ත ලක්ෂ්‍යයට ආසන්නයේ පිෂ්ඨය එකතු කරන්නේ ඇයි? අඩංගු කරන ද්‍රාවණයෙන් නොසේදිය යුතු අනුමාපන උපකරණය කුමක් ද? හේතු දක්වන්න."
+        }
+      ],
+      "preLabPdfPage": 62,
+      "postLabPdfPage": 64
+    },
+    {
+      "experimentNumber": 15,
+      "preLab": [
+        {
+          "en": "List chemical reactions that produce ammonia gas.",
+          "si": "ඇමෝනියා වායුව නිපදවන රසායනික ප්‍රතික්‍රියා ලැයිස්තුගත කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Why must litmus paper be wet to detect ammonia? Write balanced equations for NH₄Cl + NaOH and (NH₄)₂CO₃ + KOH.",
+          "si": "ඇමෝනියා හඳුනාගැනීමට ලිට්මස් කඩදාසිය තෙත් කළ යුත්තේ ඇයි? NH₄Cl + NaOH හා (NH₄)₂CO₃ + KOH ප්‍රතික්‍රියා සඳහා තුලිත සමීකරණ ලියන්න."
+        }
+      ],
+      "preLabPdfPage": 65,
+      "postLabPdfPage": 66
+    },
+    {
+      "experimentNumber": 16,
+      "preLab": [
+        {
+          "en": "Write formulae for s-block compounds containing the anions listed in this practical.",
+          "si": "මෙම පරීක්ෂණයේ ලැයිස්තුගත ඇනායන අඩංගු s ගොනුවේ සංයෝගවල සූත්‍ර ලියන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Explain the Group II hydroxide, carbonate and sulphate solubility trends using hydration and lattice enthalpies.",
+          "si": "II කාණ්ඩයේ හයිඩ්‍රොක්සයිඩ්, කාබනේට් හා සල්ෆේට් ද්‍රාව්‍යතා ප්‍රවණතා සජලන හා දැලිස් එන්තැල්පි ඇසුරින් පැහැදිලි කරන්න."
+        }
+      ],
+      "preLabPdfPage": 67,
+      "postLabPdfPage": 68
+    },
+    {
+      "experimentNumber": 17,
+      "preLab": [
+        {
+          "en": "Identify the compounds in baking powder and washing soda.",
+          "si": "බේකිං පවුඩර් හා රෙදි සෝඩාහි අඩංගු සංයෝග හඳුනාගන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Compare the thermal stability of Group I and Group II carbonates, bicarbonates and nitrates using your results and their structures.",
+          "si": "ලබාගත් ප්‍රතිඵල හා ව්‍යුහ ඇසුරින් I හා II කාණ්ඩවල කාබනේට්, බයිකාබනේට් හා නයිට්‍රේට්වල තාප ස්ථායීතාව සසඳන්න."
+        }
+      ],
+      "preLabPdfPage": 69,
+      "postLabPdfPage": 70
+    },
+    {
+      "experimentNumber": 18,
+      "preLab": [
+        {
+          "en": "State the colour of aqueous CuSO₄ and the formula of its complex cation.",
+          "si": "ජලීය CuSO₄ ද්‍රාවණයේ වර්ණය හා එහි සංකීර්ණ කැටායනයේ සූත්‍රය සඳහන් කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Identify ions giving colourless aqueous solutions. Explain using their electron configurations.",
+          "si": "අවර්ණ ජලීය ද්‍රාවණ ලබාදෙන අයන හඳුනාගෙන ඉලෙක්ට්‍රෝන වින්‍යාස ඇසුරින් හේතු පැහැදිලි කරන්න."
+        }
+      ],
+      "preLabPdfPage": 71,
+      "postLabPdfPage": 72
+    },
+    {
+      "experimentNumber": 19,
+      "preLab": [
+        {
+          "en": "State the colours of aqueous Fe³⁺ and Fe²⁺ ions.",
+          "si": "ජලීය Fe³⁺ හා Fe²⁺ අයනවල වර්ණ සඳහන් කරන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Explain the role of dilute H₂SO₄ and concentrated H₃PO₄ in this titration, and the meaning of a self-indicator.",
+          "si": "මෙම අනුමාපනයේ තනුක H₂SO₄ හා සාන්ද්‍ර H₃PO₄ හි කාර්යයන් සහ ස්වයං දර්ශකයක් යන්නෙහි අර්ථය පැහැදිලි කරන්න."
+        }
+      ],
+      "preLabPdfPage": 73,
+      "postLabPdfPage": 74
+    },
+    {
+      "experimentNumber": 20,
+      "preLab": [
+        {
+          "en": "List the properties of a primary standard and give examples.",
+          "si": "ප්‍රාථමික ප්‍රමිතියක ගුණ ලැයිස්තුගත කර උදාහරණ දෙන්න."
+        }
+      ],
+      "postLab": [
+        {
+          "en": "Discuss possible sources of error and suggest ways to improve accuracy.",
+          "si": "දෝෂ මූලාශ්‍ර සාකච්ඡා කර නිරවද්‍යතාව වැඩිදියුණු කිරීමට ක්‍රම යෝජනා කරන්න."
+        }
+      ],
+      "preLabPdfPage": 75,
+      "postLabPdfPage": 76
+    }
+  ]
+}

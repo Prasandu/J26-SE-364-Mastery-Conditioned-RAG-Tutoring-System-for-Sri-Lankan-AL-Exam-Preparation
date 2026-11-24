@@ -1,0 +1,712 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "sessionId": {
+      "type": "string"
+    },
+    "experimentId": {
+      "type": "string"
+    },
+    "definitionVersion": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "automatic",
+        "guided",
+        "manual"
+      ]
+    },
+    "guidanceLevel": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "resultLabel": {
+      "type": "string",
+      "const": "practical competency estimate"
+    },
+    "disclaimerKey": {
+      "type": "string"
+    },
+    "assessmentVersion": {
+      "type": "string"
+    },
+    "categories": {
+      "minItems": 5,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "safety",
+              "technique",
+              "measurement",
+              "completeness",
+              "independence"
+            ]
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "weightParameterId": {
+            "type": "string"
+          },
+          "deductions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "SAFETY_NOT_CONFIRMED",
+                        "SAFETY_CHECKLIST_INCOMPLETE",
+                        "CHEMICAL_SKIN_CONTACT",
+                        "DIRTY_FLASK_USED",
+                        "DIRTY_GLASSWARE_USED",
+                        "INCOMPLETE_TRANSFER",
+                        "WATCH_GLASS_NOT_RINSED",
+                        "FUNNEL_NOT_RINSED",
+                        "UNDISSOLVED_AT_MARK",
+                        "TAP_WATER_USED",
+                        "INSUFFICIENT_MIXING",
+                        "FLASK_HELD_BY_BODY",
+                        "SLIDER_SETTING_INCORRECT",
+                        "MASS_OUT_OF_TOLERANCE",
+                        "WRONG_FLASK_CAPACITY",
+                        "OVERSHOOT_MARK",
+                        "EYE_LEVEL_INCORRECT",
+                        "LABEL_MISSING",
+                        "LABEL_INCORRECT",
+                        "INCOMPLETE_PROCEDURE"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "hint_used",
+                        "guidance_support",
+                        "concentration_out_of_tolerance",
+                        "concentration_unavailable"
+                      ]
+                    }
+                  ]
+                },
+                "points": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "parameterIds": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "eventSeqs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "resolved": {
+                  "type": "boolean"
+                },
+                "sourceRefs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceId": {
+                        "type": "string",
+                        "enum": [
+                          "nie-handbook-2018",
+                          "nie-rb-g12-en",
+                          "nie-syllabus-2017",
+                          "proposal-c01"
+                        ]
+                      },
+                      "factId": {
+                        "type": "string",
+                        "pattern": "^[ESVP]\\d+$"
+                      },
+                      "pdfPage": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "printedPage": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "sourceId",
+                      "factId",
+                      "pdfPage",
+                      "printedPage"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "reason",
+                "points",
+                "parameterIds",
+                "eventSeqs",
+                "resolved",
+                "sourceRefs"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "category",
+          "score",
+          "weightParameterId",
+          "deductions"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "overall": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "measurements": {
+      "type": "object",
+      "properties": {
+        "targetConcentration": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kg",
+                "cm3",
+                "dm3",
+                "mol",
+                "mol dm-3",
+                "g mol-1"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        "weighedMass": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "kg",
+                    "cm3",
+                    "dm3",
+                    "mol",
+                    "mol dm-3",
+                    "g mol-1"
+                  ]
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transferredMass": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "g",
+                "kg",
+                "cm3",
+                "dm3",
+                "mol",
+                "mol dm-3",
+                "g mol-1"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        "finalVolume": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "kg",
+                    "cm3",
+                    "dm3",
+                    "mol",
+                    "mol dm-3",
+                    "g mol-1"
+                  ]
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "achievedConcentration": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "kg",
+                    "cm3",
+                    "dm3",
+                    "mol",
+                    "mol dm-3",
+                    "g mol-1"
+                  ]
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "concentrationUnavailableReason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "not_made_up",
+                "volume_invalid"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "absoluteError": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "kg",
+                    "cm3",
+                    "dm3",
+                    "mol",
+                    "mol dm-3",
+                    "g mol-1"
+                  ]
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relativeError": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "targetConcentration",
+        "weighedMass",
+        "transferredMass",
+        "finalVolume",
+        "achievedConcentration",
+        "concentrationUnavailableReason",
+        "absoluteError",
+        "relativeError"
+      ],
+      "additionalProperties": false
+    },
+    "validity": {
+      "type": "object",
+      "properties": {
+        "purityRisks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "SAFETY_NOT_CONFIRMED",
+              "SAFETY_CHECKLIST_INCOMPLETE",
+              "CHEMICAL_SKIN_CONTACT",
+              "DIRTY_FLASK_USED",
+              "DIRTY_GLASSWARE_USED",
+              "INCOMPLETE_TRANSFER",
+              "WATCH_GLASS_NOT_RINSED",
+              "FUNNEL_NOT_RINSED",
+              "UNDISSOLVED_AT_MARK",
+              "TAP_WATER_USED",
+              "INSUFFICIENT_MIXING",
+              "FLASK_HELD_BY_BODY",
+              "SLIDER_SETTING_INCORRECT",
+              "MASS_OUT_OF_TOLERANCE",
+              "WRONG_FLASK_CAPACITY",
+              "OVERSHOOT_MARK",
+              "EYE_LEVEL_INCORRECT",
+              "LABEL_MISSING",
+              "LABEL_INCORRECT",
+              "INCOMPLETE_PROCEDURE"
+            ]
+          }
+        },
+        "homogeneity": {
+          "type": "string"
+        },
+        "volumeValidity": {
+          "type": "string"
+        },
+        "restartRequired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "purityRisks",
+        "homogeneity",
+        "volumeValidity",
+        "restartRequired"
+      ],
+      "additionalProperties": false
+    },
+    "completion": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "incomplete"
+      ]
+    },
+    "hints": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "retries": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "elapsedMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "actionSequence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errorSummary": {
+      "type": "object",
+      "properties": {
+        "recovered": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "raisedSeq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "resolvedSeq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "code",
+              "raisedSeq",
+              "resolvedSeq"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SAFETY_NOT_CONFIRMED",
+                  "SAFETY_CHECKLIST_INCOMPLETE",
+                  "CHEMICAL_SKIN_CONTACT",
+                  "DIRTY_FLASK_USED",
+                  "DIRTY_GLASSWARE_USED",
+                  "INCOMPLETE_TRANSFER",
+                  "WATCH_GLASS_NOT_RINSED",
+                  "FUNNEL_NOT_RINSED",
+                  "UNDISSOLVED_AT_MARK",
+                  "TAP_WATER_USED",
+                  "INSUFFICIENT_MIXING",
+                  "FLASK_HELD_BY_BODY",
+                  "SLIDER_SETTING_INCORRECT",
+                  "MASS_OUT_OF_TOLERANCE",
+                  "WRONG_FLASK_CAPACITY",
+                  "OVERSHOOT_MARK",
+                  "EYE_LEVEL_INCORRECT",
+                  "LABEL_MISSING",
+                  "LABEL_INCORRECT",
+                  "INCOMPLETE_PROCEDURE"
+                ]
+              },
+              "seq": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "recoverability": {
+                "type": "string",
+                "enum": [
+                  "recoverable",
+                  "not_correctable",
+                  "numeric_consequence",
+                  "restart_required"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "seq",
+              "recoverability"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "recovered",
+        "unresolved"
+      ],
+      "additionalProperties": false
+    },
+    "provisionalParameterIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sourceRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "enum": [
+              "nie-handbook-2018",
+              "nie-rb-g12-en",
+              "nie-syllabus-2017",
+              "proposal-c01"
+            ]
+          },
+          "factId": {
+            "type": "string",
+            "pattern": "^[ESVP]\\d+$"
+          },
+          "pdfPage": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "printedPage": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sourceId",
+          "factId",
+          "pdfPage",
+          "printedPage"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "headFingerprint": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "sessionId",
+    "experimentId",
+    "definitionVersion",
+    "mode",
+    "guidanceLevel",
+    "attempt",
+    "resultLabel",
+    "disclaimerKey",
+    "assessmentVersion",
+    "categories",
+    "overall",
+    "measurements",
+    "validity",
+    "completion",
+    "hints",
+    "retries",
+    "elapsedMs",
+    "actionSequence",
+    "errorSummary",
+    "provisionalParameterIds",
+    "sourceRefs",
+    "headFingerprint"
+  ],
+  "additionalProperties": false
+}

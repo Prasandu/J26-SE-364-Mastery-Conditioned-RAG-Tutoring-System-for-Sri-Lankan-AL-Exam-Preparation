@@ -26,7 +26,7 @@ from app.services.achievability import (
 )
 from app.services.roadmap import build_and_store_roadmap, set_rolling_state
 from app.services.topic_lookup import preload_topics
-from app.services.weights import NEUTRAL_PRIOR_MASTERY
+from app.services.weights import COVERAGE_PRIORITY_FLOOR, NEUTRAL_PRIOR_MASTERY
 
 ADAPTIVE_NEEDS_RESULTS_MESSAGE = (
     "Adaptive plans pick your topics from your assessment results, and you don't have any yet. "
@@ -338,12 +338,10 @@ def _build_constraints(
 ) -> dict[str, Any]:
     selected_priorities = {item.topic_id: item.priority for item in data.priorities}
     if data.mode == "manual":
+        coverage = {item.topic_id: item for item in data.coverage}
+        _validate_coverage_consistency(session, coverage)
         priorities = [
-            {
-                "topic_id": topic_id,
-                "priority": selected_priorities.get(topic_id, 0.5),
-                "reason": "Manually prioritized by the student.",
-            }
+            _manual_priority(topic_id, selected_priorities.get(topic_id, 0.5), coverage.get(topic_id))
             for topic_id in data.topics
         ]
     else:
@@ -387,7 +385,53 @@ def _build_constraints(
 
     constraints = data.model_dump(mode="json")
     constraints["priorities"] = priorities
+    if data.coverage:
+        recorded_at = datetime.now(UTC).isoformat()
+        # Labelled at the source so no later step can mistake it for an exam result.
+        constraints["coverage"] = [
+            {**item.model_dump(mode="json"), "source": "self_reported", "updated_at": recorded_at}
+            for item in data.coverage
+        ]
     return constraints
+
+
+def _manual_priority(topic_id: str, base: float, coverage: Any | None) -> dict[str, Any]:
+    """The student's own priority, lowered for content they report as already covered."""
+    entry: dict[str, Any] = {
+        "topic_id": topic_id,
+        "priority": base,
+        "reason": "Manually prioritized by the student.",
+    }
+    if coverage is None:
+        return entry
+    percent = coverage.covered_percent
+    remaining = 1 - percent / 100
+    entry["priority"] = round(base * (COVERAGE_PRIORITY_FLOOR + (1 - COVERAGE_PRIORITY_FLOOR) * remaining), 4)
+    entry["coverage_percent"] = percent
+    entry["reason"] = (
+        f"Self-reported coverage {percent}%: {100 - percent}% of the topic still to cover."
+        if percent < 100
+        else "Self-reported as fully covered: kept for revision at a lower priority."
+    )
+    return entry
+
+
+def _validate_coverage_consistency(session: Session, coverage: dict[str, Any]) -> None:
+    """Reject a parent and its own sub-topic reported in contradiction."""
+    problems = []
+    for topic_id, item in coverage.items():
+        topic = session.get(Topic, topic_id)
+        parent = coverage.get(getattr(topic, "parent_id", None) or "")
+        if parent is None:
+            continue
+        if parent.covered_percent == 100 and item.covered_percent < 100:
+            problems.append(
+                f"{parent.topic_id} is 100% covered but its sub-topic {topic_id} is {item.covered_percent}%"
+            )
+        if parent.covered_percent == 0 and item.covered_percent > 0:
+            problems.append(f"{parent.topic_id} is 0% covered but its sub-topic {topic_id} is not")
+    if problems:
+        raise ConstraintViolation("Inconsistent syllabus coverage: " + "; ".join(problems) + ".")
 
 
 def _save_availability(session: Session, plan_id: UUID, data: PlanInput) -> None:

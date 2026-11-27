@@ -443,3 +443,21 @@ def test_new_student_manual_plan_shows_the_getting_started_card(client: TestClie
     assert coaching["headline"] == "Welcome! Let's build your starting point."
     assert all(item["reason"] == "start here" for item in coaching["focus_topics"])
     assert "0%" not in " ".join(item["reason"] for item in coaching["focus_topics"])
+
+@pytest.mark.parametrize("zone", ["Asia/Colombo", "Pacific/Kiritimati", "Pacific/Pago_Pago"])
+def test_exam_date_is_judged_on_the_plans_own_calendar_day(zone: str) -> None:
+    # Regression: the check used the UTC date, so between 00:00 and 05:30 in Sri Lanka an
+    # exam on that same day was accepted. Same result whatever the test machine's timezone.
+    from zoneinfo import ZoneInfo
+
+    from pydantic import ValidationError
+
+    from app.schemas.plans import PlanInput
+
+    today = datetime.now(UTC).astimezone(ZoneInfo(zone)).date()
+    plan = {**valid_plan(), "timezone": zone, "fixed_commitments": []}
+
+    with pytest.raises(ValidationError, match="future"):
+        PlanInput.model_validate({**plan, "exam_date": today.isoformat()})
+    accepted = PlanInput.model_validate({**plan, "exam_date": (today + timedelta(days=1)).isoformat()})
+    assert accepted.exam_date == today + timedelta(days=1)

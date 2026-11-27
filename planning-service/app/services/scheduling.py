@@ -26,7 +26,7 @@ from app.services.achievability import (
     expected_gain_per_hour,
 )
 from app.services.decline import detect_decline
-from app.services.priority import LearningProfile, choose_activity
+from app.services.priority import LearningProfile, choose_activity, coverage_activity
 from app.services.roadmap import (
     build_and_store_roadmap,
     committed_window_days,
@@ -461,6 +461,10 @@ def _ranked_topics(
     priorities = constraints.get("priorities", [])
     if not priorities:
         raise ConstraintViolation("Plan has no topics to schedule.")
+    # PL-008: self-reported coverage (manual plans). It shapes the activity only while a
+    # topic has no results, and is never turned into a mastery value.
+    coverage_by_topic = {entry["topic_id"]: entry for entry in constraints.get("coverage") or []}
+    manual_plan = constraints.get("mode") == "manual"
     preload_topics(session)
     state_by_topic = {
         state.topic_id: state
@@ -547,6 +551,15 @@ def _ranked_topics(
             ),
         )
         activity = "recovery_revision" if decline is not None else choose_activity(profile)
+        coverage_entry = coverage_by_topic.get(topic_id)
+        if decline is None and not has_evidence and coverage_entry is not None:
+            activity = coverage_activity(int(coverage_entry["covered_percent"]), coverage_entry.get("need"))
+        if has_evidence:
+            evidence_source = "results"
+        elif coverage_entry is not None:
+            evidence_source = "self_reported_coverage"
+        else:
+            evidence_source = "student_choice" if manual_plan else "no_evidence"
         days_to_exam = max(((exam_date or today) - today).days, 0)
         urgency = 1 / (1 + days_to_exam / 14)
         days_since_revision = (
@@ -587,6 +600,8 @@ def _ranked_topics(
                 "priority": effective_priority,
             },
             activity=activity,
+            evidence_source=evidence_source,
+            coverage=coverage_entry,
         )
         question_ids = question_ids_by_topic.get(topic_id, ())
         ranked.append(

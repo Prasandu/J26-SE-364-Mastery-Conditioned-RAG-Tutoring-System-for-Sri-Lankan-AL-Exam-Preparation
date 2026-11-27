@@ -2,6 +2,7 @@
 
 from app.models.analytics import Prediction, ProfileEmbedding
 from app.models.events import LearnerTopicState, RawEvent, TopicEvidence
+from app.models.integration import AssessmentDecision, IntegrationCursor, IntegrationRejection
 from app.models.motivation import MotivationState
 from app.models.notifications import Notification, NotificationPreferences
 from app.models.plans import AvailabilitySlot, StudyPlan
@@ -11,12 +12,15 @@ from app.models.tasks import ReplanLog, StudyTask
 from app.models.topics import Topic
 
 __all__ = [
+    "AssessmentDecision",
     "AvailabilitySlot",
     "Attempt",
     "LearnerTopicState",
     "MotivationState",
     "Notification",
     "NotificationPreferences",
+    "IntegrationCursor",
+    "IntegrationRejection",
     "Paper",
     "Prediction",
     "ProfileEmbedding",

@@ -48,6 +48,10 @@ class TaskReason(BaseModel):
     mastery: float
     has_evidence: bool = True
     reason: str = ""
+    # PL-009: what drove this task. Self-reported coverage is never a mark.
+    evidence_source: Literal["results", "self_reported_coverage", "student_choice", "no_evidence"] = "results"
+    self_reported_coverage: Annotated[int, Field(ge=0, le=100)] | None = None
+    coverage_need: str | None = None
     trend: float
     decline_alert: DeclineAlertDetails | None = None
     exam_weight: float

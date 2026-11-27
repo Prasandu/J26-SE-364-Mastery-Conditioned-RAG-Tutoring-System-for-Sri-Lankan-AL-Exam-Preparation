@@ -31,7 +31,12 @@ def build_task_reason(
     days_to_exam: int,
     main_factors: dict[str, float],
     activity: str,
+    evidence_source: str | None = None,
+    coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Why this task (PL-009): evidence_source says what drove it - "results" (marks),
+    "self_reported_coverage", "student_choice" or "no_evidence". Without results the
+    mastery value is only the planner's neutral prior, so has_evidence is False."""
     decline_alert = (
         {
             "baseline": decline.baseline,
@@ -48,10 +53,18 @@ def build_task_reason(
         "mastery": mastery,
         "has_evidence": has_evidence,
         "reason": (
-            "No results yet for this topic."
-            if not has_evidence
-            else "Based on your recent results and topic priorities."
+            "Based on your recent results and topic priorities."
+            if has_evidence
+            else (
+                f"No marks yet. You reported {coverage['covered_percent']}% of this topic covered "
+                "(self-reported, not a mark)."
+                if coverage is not None
+                else "No results yet for this topic."
+            )
         ),
+        "evidence_source": evidence_source or ("results" if has_evidence else "no_evidence"),
+        "self_reported_coverage": coverage["covered_percent"] if coverage is not None else None,
+        "coverage_need": coverage.get("need") if coverage is not None else None,
         "trend": trend,
         "decline_alert": decline_alert,
         "exam_weight": exam_weight,

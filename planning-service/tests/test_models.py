@@ -4,8 +4,11 @@ from app.db import Base
 
 def test_all_p1_models_use_planning_schema() -> None:
     expected_tables = {
+        "assessment_decisions",
         "availability_slots",
         "attempts",
+        "integration_cursors",
+        "integration_rejections",
         "learner_topic_state",
         "motivation_state",
         "notification_preferences",

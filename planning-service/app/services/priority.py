@@ -104,6 +104,20 @@ def compute_priority(
     )
 
 
+def coverage_activity(covered_percent: int, need: str | None) -> Activity:
+    """Activity for a topic with self-reported coverage and no marks yet (PL-008).
+
+    The student's stated need wins; otherwise unfinished content means theory and fully
+    covered content means a first round of guided practice. Never a mark-based choice."""
+    if need in ("learn_new", "repeat_theory"):
+        return "theory"
+    if need in ("past_papers", "exam_sprint"):
+        return "past_paper"
+    if need == "laboratory":
+        return "guided_practice"
+    return "theory" if covered_percent < 100 else "guided_practice"
+
+
 def choose_activity(profile: LearningProfile) -> Activity:
     """Choose a study activity from a learner's current topic state."""
     if not 0 <= profile.mastery <= 1:

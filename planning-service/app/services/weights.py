@@ -76,6 +76,12 @@ COMPRESSED_SESSION_FACTOR = 0.75  # compressed plans shorten sessions by this fa
 MIN_COMPRESSED_SESSION_MINUTES = 25
 RANGE_CHANGE_EPSILON = 0.01  # projected-score change treated as "moved" at a checkpoint
 EVIDENCE_CHECKPOINT_MIN_DAYS = 3  # a new full paper re-plans early only this long after the last checkpoint
+# Finalized assessment marks (DAT-010) flag a predicted plan for an early checkpoint only when a
+# plan topic's mastery moved at least this much (or gained / lost its only evidence).
+FINALIZED_MARK_REPLAN_EPSILON = 0.05
+# Manual plans (PL-008): a topic's priority keeps at least this share of the student's own
+# priority when it is self-reported as fully covered (it still needs revision).
+COVERAGE_PRIORITY_FLOOR = 0.25
 
 # Study timer
 TIMER_CONFIRM_MULTIPLIER = 3  # sessions longer than this x planned duration need confirmation

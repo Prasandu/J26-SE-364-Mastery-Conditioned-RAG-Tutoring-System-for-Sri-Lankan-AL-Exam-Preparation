@@ -30,6 +30,9 @@ from app.services.scheduling import generate_plan_schedule
 from app.services.task_outcomes import measure_adherence, refresh_predicted_priorities
 from app.services.weights import EVIDENCE_CHECKPOINT_MIN_DAYS, RANGE_CHANGE_EPSILON
 
+# Set by app.services.finalized_marks; cleared when a checkpoint runs.
+PENDING_ASSESSMENT_EVIDENCE = "pending_assessment_evidence"
+
 
 def checkpoint_status(
     session: Session,
@@ -73,6 +76,9 @@ def checkpoint_status(
             .limit(1)
         ).first()
         if newer_paper is not None:
+            return True, "new_evidence"
+        # Finalized assessment marks (DAT-010) that moved a plan topic's mastery.
+        if state.get(PENDING_ASSESSMENT_EVIDENCE):
             return True, "new_evidence"
     return False, None
 
@@ -170,6 +176,7 @@ def run_checkpoint(
         plan,
         last_expected_score=expected,
         checkpoint_count=int(state.get("checkpoint_count") or 0) + 1,
+        **{PENDING_ASSESSMENT_EVIDENCE: None},
     )
     build_and_store_roadmap(session, student_id, plan, now=current)
     session.add(
@@ -190,6 +197,7 @@ def run_checkpoint(
                     "expected_score": expected,
                     "window_days": window_days,
                     "tasks_created": len(schedule.tasks),
+                    "assessment_topics": (state.get(PENDING_ASSESSMENT_EVIDENCE) or {}).get("topic_ids", []),
                 }
             ],
         )

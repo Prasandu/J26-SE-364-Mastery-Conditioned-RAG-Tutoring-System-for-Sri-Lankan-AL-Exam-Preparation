@@ -49,6 +49,21 @@ class TopicPriorityInput(BaseModel):
     priority: Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)] = 0.5
 
 
+# What a student says they still need from a topic (PL-008). Self-reported - never a mark.
+CoverageNeed = Literal["learn_new", "repeat_theory", "past_papers", "laboratory", "exam_sprint"]
+
+
+class TopicCoverageInput(BaseModel):
+    """Self-reported syllabus coverage of one topic: how much of its content the student
+    has been taught or studied. Kept apart from mastery, which only marks can show."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    topic_id: TopicId
+    covered_percent: Annotated[int, Field(ge=0, le=100)]
+    need: CoverageNeed | None = None
+
+
 class PlanInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -63,14 +78,17 @@ class PlanInput(BaseModel):
     preferred_times: Annotated[list[time], Field(max_length=10)] = Field(default_factory=list)
     fixed_commitments: Annotated[list[FixedCommitment], Field(max_length=100)] = Field(default_factory=list)
     priorities: Annotated[list[TopicPriorityInput], Field(max_length=100)] = Field(default_factory=list)
+    coverage: Annotated[list[TopicCoverageInput], Field(max_length=200)] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_plan(self) -> "PlanInput":
         try:
-            ZoneInfo(self.timezone)
+            zone = ZoneInfo(self.timezone)
         except ZoneInfoNotFoundError as exc:
             raise ValueError(f"unknown timezone: {self.timezone}") from exc
-        if self.exam_date <= datetime.now(UTC).date():
+        # The student's own calendar day: in Sri Lanka (UTC+5:30) the UTC date lags until
+        # 05:30, which used to accept an exam on the same day.
+        if self.exam_date <= datetime.now(UTC).astimezone(zone).date():
             raise ValueError("exam_date must be in the future")
         if len(set(self.topics)) != len(self.topics):
             raise ValueError("topics must not contain duplicates")
@@ -84,6 +102,13 @@ class PlanInput(BaseModel):
                 raise ValueError("manual mode requires at least one selected topic")
             if any(topic_id not in self.topics for topic_id in priority_topic_ids):
                 raise ValueError("manual priorities must only refer to selected topics")
+        coverage_topic_ids = [item.topic_id for item in self.coverage]
+        if len(set(coverage_topic_ids)) != len(coverage_topic_ids):
+            raise ValueError("coverage must not contain duplicate topic IDs")
+        if self.coverage and self.mode != "manual":
+            raise ValueError("syllabus coverage is entered for manual plans; adaptive plans use results")
+        if any(topic_id not in self.topics for topic_id in coverage_topic_ids):
+            raise ValueError("coverage must only refer to selected topics")
 
         by_weekday: dict[int, list[AvailabilityWindow]] = {}
         for window in self.availability_windows:

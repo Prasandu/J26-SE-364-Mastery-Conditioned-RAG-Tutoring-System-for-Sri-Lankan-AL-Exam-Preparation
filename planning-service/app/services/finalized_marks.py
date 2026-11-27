@@ -39,6 +39,7 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     AssessmentDecision,
+    IntegrationCursor,
     IntegrationRejection,
     LearnerTopicState,
     RawEvent,
@@ -48,6 +49,7 @@ from app.models import (
 )
 from app.schemas.finalized_marks import (
     TRUSTED_EVIDENCE_CLASSES,
+    FeedStatus,
     FinalizedMarkEvent,
     PullReport,
     QuarantinedCode,
@@ -168,6 +170,25 @@ def quarantine_summary(session: Session, registry: TopicRegistry) -> QuarantineS
             QuarantinedCode(code=code, events=events[code], students=len(students[code]))
             for code in sorted(events)
         ],
+    )
+
+
+def feed_status(session: Session, config: Any) -> FeedStatus:
+    cursor = session.get(IntegrationCursor, SOURCE)
+    quarantined = session.scalar(
+        select(func.count()).select_from(AssessmentDecision).where(AssessmentDecision.status == "quarantined")
+    )
+    last_success = cursor.last_success_at if cursor else None
+    return FeedStatus(
+        configured=bool(config.assessment_service_url and config.assessment_service_api_key),
+        high_water=cursor.high_water if cursor else None,
+        last_run_at=cursor.last_run_at if cursor else None,
+        last_success_at=last_success,
+        last_error=cursor.last_error if cursor else None,
+        seconds_since_success=(
+            (datetime.now(UTC) - last_success).total_seconds() if last_success is not None else None
+        ),
+        quarantined_events=int(quarantined or 0),
     )
 
 

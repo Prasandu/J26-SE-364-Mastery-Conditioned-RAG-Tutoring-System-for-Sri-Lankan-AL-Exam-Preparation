@@ -132,6 +132,18 @@ class PullReport(BaseModel):
     high_water: datetime | None = None
 
 
+class FeedStatus(BaseModel):
+    """For monitoring the C2 -> C3 synchronisation (no keys, no student data)."""
+
+    configured: bool  # ASSESSMENT_SERVICE_URL and ASSESSMENT_SERVICE_API_KEY both set
+    high_water: datetime | None
+    last_run_at: datetime | None
+    last_success_at: datetime | None
+    last_error: str | None
+    seconds_since_success: float | None
+    quarantined_events: int
+
+
 class QuarantinedCode(BaseModel):
     code: str
     events: int

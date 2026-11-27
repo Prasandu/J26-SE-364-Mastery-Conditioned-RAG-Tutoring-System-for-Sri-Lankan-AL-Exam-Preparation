@@ -1,0 +1,48 @@
+# Choose ONE of the two objects below. Image name and secret are placeholders.
+# The Secret "planning-service" must hold DATABASE_URL, ASSESSMENT_SERVICE_URL,
+# ASSESSMENT_SERVICE_API_KEY (create it from your secret store, never from git).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assessment-feed-worker
+spec:
+  replicas: 1            # more replicas are safe (advisory lock) but not needed
+  selector:
+    matchLabels: {app: assessment-feed-worker}
+  template:
+    metadata:
+      labels: {app: assessment-feed-worker}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: worker
+          image: REGISTRY/planning-service:TAG
+          command: ["python", "-m", "scripts.pull_assessment_marks", "--loop"]
+          envFrom:
+            - secretRef: {name: planning-service}
+          env:
+            - {name: ASSESSMENT_FEED_INTERVAL_SECONDS, value: "300"}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: assessment-feed-pull
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 120
+  jobTemplate:
+    spec:
+      backoffLimit: 0      # the next scheduled run re-reads anything a failed run rolled back
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pull
+              image: REGISTRY/planning-service:TAG
+              command: ["python", "-m", "scripts.pull_assessment_marks"]
+              envFrom:
+                - secretRef: {name: planning-service}

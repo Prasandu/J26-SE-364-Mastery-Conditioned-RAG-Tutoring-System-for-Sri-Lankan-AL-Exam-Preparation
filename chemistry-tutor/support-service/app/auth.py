@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 import jwt
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 from jwt import PyJWKClient
 
 from app.config import settings
@@ -17,7 +17,7 @@ def _get_jwks_client() -> PyJWKClient:
     return PyJWKClient(jwks_url)
 
 
-def get_current_user_id(authorization: str | None = Header(default=None)) -> str:
+def get_current_user_id(request: Request, authorization: str | None = Header(default=None)) -> str:
     """FastAPI dependency: verify a Supabase Auth JWT from the
     Authorization header and return the authenticated user's id (the
     `sub` claim — a UUID string).
@@ -38,7 +38,16 @@ def get_current_user_id(authorization: str | None = Header(default=None)) -> str
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=401, detail="Invalid or expired token") from exc
 
+    # Rate limits are per signed-in user, not per IP (app/rate_limit.py principal_key).
+    request.state.user_id = payload["sub"]
     return payload["sub"]
+
+
+def require_owner_or_404(owner_id: str, current_user_id: str, what: str) -> None:
+    """For records with guessable ids: another student's record answers 404, so a
+    response never confirms that the id exists."""
+    if owner_id != current_user_id:
+        raise HTTPException(status_code=404, detail=f"{what} not found")
 
 
 def require_self(student_id: str, current_user_id: str) -> None:

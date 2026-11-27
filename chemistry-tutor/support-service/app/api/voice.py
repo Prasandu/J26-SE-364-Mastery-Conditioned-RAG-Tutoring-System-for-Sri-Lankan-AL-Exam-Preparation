@@ -3,7 +3,7 @@ import io
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 
 from app.auth import get_current_user_id
-from app.rate_limit import limiter
+from app.rate_limit import PAID_VOICE_LIMIT, limiter
 from app.schemas.voice import SynthesizeRequest, TranscribeResponse
 from app.services.speech.synthesis import synthesize_sinhala_speech
 from app.services.speech.transcription import transcribe_audio
@@ -22,7 +22,7 @@ MAX_AUDIO_BYTES = 15 * 1024 * 1024
 @router.post(
     "/voice/transcribe", response_model=TranscribeResponse, dependencies=[Depends(get_current_user_id)]
 )
-@limiter.limit("10/minute")
+@limiter.limit(PAID_VOICE_LIMIT)
 async def transcribe(
     request: Request, audio: UploadFile = File(...), language: str | None = Form(None)
 ) -> TranscribeResponse:
@@ -37,7 +37,7 @@ async def transcribe(
 
 
 @router.post("/voice/synthesize", dependencies=[Depends(get_current_user_id)])
-@limiter.limit("10/minute")
+@limiter.limit(PAID_VOICE_LIMIT)
 def synthesize(request: Request, body: SynthesizeRequest) -> Response:
     """Synthesize Sinhala text to speech (WAV). English is handled entirely
     client-side via the browser's Web Speech API, which already has usable

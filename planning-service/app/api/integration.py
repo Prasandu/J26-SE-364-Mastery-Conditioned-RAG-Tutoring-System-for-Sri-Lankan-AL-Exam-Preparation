@@ -11,9 +11,9 @@ from app.adapters.assessment_feed import AssessmentFeedClient, pull_finalized_ma
 from app.config import settings
 from app.db import get_db
 from app.errors import ServiceUnavailable
-from app.schemas.finalized_marks import PullReport, QuarantineSummary
+from app.schemas.finalized_marks import FeedStatus, PullReport, QuarantineSummary
 from app.security import require_api_key
-from app.services.finalized_marks import quarantine_summary, release_quarantined
+from app.services.finalized_marks import feed_status, quarantine_summary, release_quarantined
 from app.services.topic_registry import RegistryError, TopicRegistry, load_registry
 
 router = APIRouter(
@@ -45,6 +45,12 @@ def pull(session: DbSession, registry: Registry) -> PullReport:
         max_pages=settings.assessment_feed_max_pages,
         page_size=settings.assessment_feed_page_size,
     )
+
+
+@router.get("/status", response_model=FeedStatus)
+def status(session: DbSession) -> FeedStatus:
+    """When the pull last ran and succeeded, its last error and the quarantine size."""
+    return feed_status(session, settings)
 
 
 @router.get("/quarantine", response_model=QuarantineSummary)

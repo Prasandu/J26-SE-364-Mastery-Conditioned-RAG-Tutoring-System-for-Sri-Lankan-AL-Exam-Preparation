@@ -446,6 +446,43 @@ Not applied to real data (Supabase is unreachable).
 
 **Rollout note:** after migrating, an admin must create classes before teachers see any scripts.
 
+### S17 - legacy AI-marks policy corrected (operator, 2026-11-27) - DONE (local) `[TESTED]`
+
+- No AI-only decision is an official mark at any confidence. Every one goes to teacher review, and confidence only sets `review_priority` (migration 0026).
+- Original results are kept in the audit row and on the point.
+- Attempts still counting an AI-only mark are reported provisional even before a run.
+- Results: C2 **97 passed** (Postgres); smoke **56/56**; frontend **102/102**. Pushed `7578873`.
+- Not run on real data.
+
+### S18 - C4 authorization hardening + SEC-008 service keys - DONE (local) `[TESTED]`
+
+**C4**
+
+- Rate limits are keyed by the signed-in user (`principal_key`), not by the shared IP.
+- Daily caps on every paid-provider route: tutor 200/day, voice 100/day, consultation/report 50/day.
+- Another student's flagged question → **404**, not 403 (the ids are sequential).
+- Tests: `tests/test_quotas_and_ownership.py`. Teaching, route-auth and quota tests: **65 passed**.
+
+**C3 (SEC-008)**
+
+- Per-component keys `INTEGRATION_KEY_COMPONENT1/2/4` on `X-Integration-Key` for `/api/v1/events/*`. The operator `INGEST_API_KEY` is still accepted, also on the old `X-API-Key` for one release.
+- Operator routes reject component keys. Short keys are refused at startup.
+- Tests: `tests/test_service_auth.py`. The events test fixture now overrides the guard the router actually uses.
+- The matrix is in `INTEGRATION_CONTRACTS.md`.
+
+### S19 - deployment-managed C2 → C3 synchronisation - DONE (local) `[TESTED]`; not deployed
+
+- Worker: `app/services/feed_worker.py`, run as `python -m scripts.pull_assessment_marks --loop`.
+  - Postgres session advisory lock: one run at a time across replicas.
+  - Interval with jitter; capped exponential backoff.
+  - Stops on SIGTERM. JSON logs carry counts and error types only.
+- `GET /api/v1/integration/assessment/status` (operator) for monitoring.
+- Examples in `deploy/assessment-feed/`: Compose worker, Kubernetes Deployment/CronJob, systemd timer.
+- Tests:
+  - `tests/test_feed_worker.py`: backoff, no secrets in logs, prompt stop.
+  - `tests/test_feed_worker_db.py`: lock contention, lock released after a failure, status route and its auth.
+- Planner: **446 passed** with Postgres.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

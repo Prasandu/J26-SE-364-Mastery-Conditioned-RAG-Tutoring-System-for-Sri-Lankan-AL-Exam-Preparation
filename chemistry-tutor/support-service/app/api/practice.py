@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user_id, require_self
+from app.auth import get_current_user_id, require_owner_or_404
 from app.db import get_db
-from app.rate_limit import limiter
+from app.rate_limit import PAID_TUTOR_LIMIT, limiter
 from app.schemas.practice import (
     CheckFlaggedAnswerRequest,
     CheckFlaggedAnswerResponse,
@@ -84,7 +84,7 @@ def flag_question(
 
 
 @router.post("/practice/flagged-questions/{flagged_question_id}/explain", response_model=ExplainResponse)
-@limiter.limit("20/minute")
+@limiter.limit(PAID_TUTOR_LIMIT)
 def explain(
     request: Request,
     flagged_question_id: int,
@@ -97,7 +97,7 @@ def explain(
     flagged = get_flagged_question(db, flagged_question_id)
     if flagged is None:
         raise HTTPException(status_code=404, detail="Flagged question not found")
-    require_self(flagged.student_id, current_user_id)
+    require_owner_or_404(flagged.student_id, current_user_id, "Flagged question")
 
     result = explain_flagged_question(db, flagged)
     if result.grounded:
@@ -132,7 +132,7 @@ def check(
     flagged = get_flagged_question(db, flagged_question_id)
     if flagged is None:
         raise HTTPException(status_code=404, detail="Flagged question not found")
-    require_self(flagged.student_id, current_user_id)
+    require_owner_or_404(flagged.student_id, current_user_id, "Flagged question")
 
     correct = check_answer(flagged, body.submitted_answer)
     if correct:
@@ -158,7 +158,7 @@ def hint(
     flagged = get_flagged_question(db, flagged_question_id)
     if flagged is None:
         raise HTTPException(status_code=404, detail="Flagged question not found")
-    require_self(flagged.student_id, current_user_id)
+    require_owner_or_404(flagged.student_id, current_user_id, "Flagged question")
 
     level = choose_hint_level(body.attempts, body.hints_used, body.requested_full_solution)
     content = generate_flagged_question_hint(db, flagged, level)

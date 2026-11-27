@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user_id, require_self
 from app.db import get_db
-from app.rate_limit import limiter
+from app.rate_limit import PAID_REPORT_LIMIT, limiter
 from app.schemas.consultation import ConsultationResponse, WeakTopicResponse
+from app.schemas.practice import FlaggedQuestionResponse
 from app.schemas.reports import (
     CorrectedAnswerResponse,
     QuestionEvidenceResponse,
@@ -16,7 +17,6 @@ from app.schemas.students import (
     InterventionResponse,
     QuestionProgressResponse,
 )
-from app.schemas.practice import FlaggedQuestionResponse
 from app.services.consultation.recommendation import generate_consultation
 from app.services.learning_state.intervention_history import (
     get_intervention_history,
@@ -124,7 +124,7 @@ def student_review_queue(
 
 
 @router.get("/students/{student_id}/consultation", response_model=ConsultationResponse)
-@limiter.limit("10/minute")
+@limiter.limit(PAID_REPORT_LIMIT)
 def student_consultation(
     request: Request,
     student_id: str,
@@ -151,7 +151,7 @@ def student_consultation(
 
 
 @router.get("/students/{student_id}/wivarana-report", response_model=WivaranaReportResponse)
-@limiter.limit("10/minute")
+@limiter.limit(PAID_REPORT_LIMIT)
 def student_wivarana_report(
     request: Request,
     student_id: str,

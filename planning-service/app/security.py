@@ -132,17 +132,58 @@ def _student_identity_from_credentials(
     return StudentIdentity(student_id=student_id, first_name=first_name)
 
 
-def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
+def _presented_keys(*keys: str | None) -> list[str]:
+    return [key for key in keys if key]
+
+
+def _matches(presented: list[str], expected: str) -> bool:
+    return bool(expected) and any(hmac.compare_digest(key.encode(), expected.encode()) for key in presented)
+
+
+def require_api_key(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    x_integration_key: str | None = Header(default=None, alias="X-Integration-Key"),
+) -> None:
+    """Operator-only routes (the finalized-mark pull, quarantine, demo): INGEST_API_KEY, on
+    X-Integration-Key or the older X-API-Key. A component's own key is not enough."""
     if not settings.ingest_api_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Ingestion API key is not configured.",
         )
-    if x_api_key is None or not hmac.compare_digest(x_api_key, settings.ingest_api_key):
+    if not _matches(_presented_keys(x_integration_key, x_api_key), settings.ingest_api_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key.",
         )
+
+
+def require_service_caller(
+    x_integration_key: str | None = Header(default=None, alias="X-Integration-Key"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> str:
+    """SEC-008: which machine caller this is - "component1" (lab), "component2"
+    (assessment), "component4" (tutor) by their own keys, or "operator" by INGEST_API_KEY.
+    Wrong or missing key 401; nothing configured 503. Never a student's token."""
+    configured = {
+        "component1": settings.integration_key_component1,
+        "component2": settings.integration_key_component2,
+        "component4": settings.integration_key_component4,
+        "operator": settings.ingest_api_key,
+    }
+    if not any(configured.values()):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No integration key is configured.",
+        )
+    presented = _presented_keys(x_integration_key, x_api_key)
+    for caller, expected in configured.items():
+        if _matches(presented, expected):
+            return caller
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing integration key.",
+    )
 
 
 def require_demo_mode() -> None:

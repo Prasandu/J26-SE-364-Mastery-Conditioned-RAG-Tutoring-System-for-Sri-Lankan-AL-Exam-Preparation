@@ -1,0 +1,14 @@
+# Single VM: one pull per timer tick (see assessment-feed.timer).
+# EnvironmentFile holds the variable names from README.md; keep it root-readable only.
+[Unit]
+Description=Pull finalized assessment marks into the planner (DAT-010)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/j26/planning-service
+EnvironmentFile=/etc/j26/planning-service.env
+ExecStart=/opt/j26/planning-service/.venv/bin/python -m scripts.pull_assessment_marks
+User=j26
+NoNewPrivileges=true
+PrivateTmp=true

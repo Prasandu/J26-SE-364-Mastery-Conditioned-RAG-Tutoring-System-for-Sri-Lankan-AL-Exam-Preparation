@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user_id
 from app.db import get_db
-from app.rate_limit import limiter
+from app.rate_limit import PAID_TUTOR_LIMIT, limiter
 from app.schemas.tutor import AskRawRequest, AskRawResponse, AskRequest, AskResponse, Citation
 from app.security import require_raw_tutor_enabled
 from app.services.tutoring.grounded_answer import answer_question
@@ -22,7 +22,7 @@ SYSTEM_PROMPT = (
     response_model=AskRawResponse,
     dependencies=[Depends(require_raw_tutor_enabled), Depends(get_current_user_id)],
 )
-@limiter.limit("20/minute")
+@limiter.limit(PAID_TUTOR_LIMIT)
 def ask_raw(request: Request, body: AskRawRequest) -> AskRawResponse:
     """Ungrounded development-only comparison against /tutor/ask: 404 unless
     ENABLE_RAW_TUTOR=true (refused in production), and signed-in callers only."""
@@ -35,7 +35,7 @@ def ask_raw(request: Request, body: AskRawRequest) -> AskRawResponse:
 
 
 @router.post("/tutor/ask", response_model=AskResponse, dependencies=[Depends(get_current_user_id)])
-@limiter.limit("20/minute")
+@limiter.limit(PAID_TUTOR_LIMIT)
 def ask(request: Request, body: AskRequest, db: Session = Depends(get_db)) -> AskResponse:
     """Curriculum-grounded answer: retrieves relevant NIE passages, answers from
     them only, and returns citations. Abstains if no relevant evidence is found.

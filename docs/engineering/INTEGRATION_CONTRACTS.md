@@ -116,6 +116,21 @@ Remaining:
 | C3 planner | done (consumer above); still needed: a scheduler that calls the pull |
 | Tests | contract tests on both sides against the shared schema; replay/duplicate/supersede cases; unknown-topic quarantine |
 
+## Service-to-service authentication (SEC-008) `[TESTED]`
+
+One header everywhere: `X-Integration-Key`, carrying one key per calling component. A student's browser token is never a service credential. A wrong or missing key gets 401; no key configured gets 503. Keys must be at least 16 characters and are compared in constant time.
+
+| Receiver | Route(s) | Accepted callers (env name at the receiver) |
+|---|---|---|
+| C2 assessment | `GET /integration/*` | `INTEGRATION_KEY_COMPONENT1/3/4` (the planner pulls with its key as `ASSESSMENT_SERVICE_API_KEY`) |
+| C3 planner | `POST /api/v1/events/*` | `INTEGRATION_KEY_COMPONENT1/2/4`, or the operator's `INGEST_API_KEY` |
+| C3 planner | `/api/v1/integration/assessment/*`, demo | operator only: `INGEST_API_KEY` (a component key gets 401) |
+| C4 support | `POST /api/v1/practice/flagged-questions` | `INTEGRATION_KEY_COMPONENT2` (assessment) |
+
+Transition: the planner still accepts the old `X-API-Key` header for one release. Tests: `planning-service/tests/test_service_auth.py`, `assessment-service/tests/test_route_guards.py`, `chemistry-tutor/support-service/tests/test_route_auth.py`.
+
+Still open: short-lived, audience-scoped service tokens and request ids (next step after per-component keys). Recording the calling component on each planner `RawEvent`.
+
 ## C4 support ← other components: flagged questions
 
 `POST /api/v1/practice/flagged-questions` accepts **any signed-in user's token** and does not

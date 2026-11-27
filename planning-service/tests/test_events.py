@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.db import get_db
 from app.main import app
 from app.models import Paper, Question, RawEvent, Topic, TopicEvidence
-from app.security import get_student_id, require_api_key
+from app.security import get_student_id, require_service_caller
 
 
 class FakeSession:
@@ -80,7 +80,8 @@ def session() -> FakeSession:
 
 @pytest.fixture
 def client(session: FakeSession) -> Generator[TestClient]:
-    app.dependency_overrides[require_api_key] = lambda: None
+    # Auth itself is covered below and in test_service_auth.py; here a caller is assumed.
+    app.dependency_overrides[require_service_caller] = lambda: "operator"
     app.dependency_overrides[get_db] = lambda: session
     app.dependency_overrides[get_student_id] = lambda: "mock-student-01"
     try:

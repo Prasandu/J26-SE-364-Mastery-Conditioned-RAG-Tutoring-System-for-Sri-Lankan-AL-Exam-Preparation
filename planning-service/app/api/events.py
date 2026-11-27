@@ -6,12 +6,12 @@ from sqlalchemy.orm import Session
 from app.adapters.evidence_sources import push_evidence_source
 from app.db import get_db
 from app.schemas.events import AssessmentEvent, IngestionResult, ModuleCompletionEvent
-from app.security import require_api_key
+from app.security import require_service_caller
 
 router = APIRouter(
     prefix="/api/v1/events",
     tags=["events"],
-    dependencies=[Depends(require_api_key)],
+    dependencies=[Depends(require_service_caller)],
 )
 DbSession = Annotated[Session, Depends(get_db)]
 

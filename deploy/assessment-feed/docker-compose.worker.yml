@@ -1,0 +1,12 @@
+# Long-lived worker next to the planner API. Secrets come from an env file kept outside git.
+services:
+  assessment-feed:
+    build: ../../planning-service
+    command: ["python", "-m", "scripts.pull_assessment_marks", "--loop"]
+    env_file: ../../planning-service/.env   # git-ignored; see .env.example for names
+    environment:
+      ASSESSMENT_FEED_INTERVAL_SECONDS: "300"
+      ASSESSMENT_FEED_JITTER_SECONDS: "30"
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s

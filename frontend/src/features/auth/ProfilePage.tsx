@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { changePassword, updateProfile } from "@/api/auth";
+import { updateProfile } from "@/api/auth";
+import { getSupabaseClient } from "@/auth/supabase";
 import { ApiError } from "@/api/client";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -96,6 +97,27 @@ function NameCard({ name, email, role }: { readonly name: string; readonly email
   );
 }
 
+/** The password belongs to the shared Supabase sign-in. The current password is
+ * still required (re-checked by signing in with it) even though the caller is
+ * already signed in: the session alone is not proof the person at the keyboard is
+ * the account owner (a shared computer, a left-open tab). */
+async function changeSupabasePassword(current: string, next: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase.auth.getSession();
+  const email = data.session?.user.email;
+  if (!email) {
+    throw new ApiError(401, "Sign in again to change your password");
+  }
+  const check = await supabase.auth.signInWithPassword({ email, password: current });
+  if (check.error) {
+    throw new ApiError(401, "Current password is wrong");
+  }
+  const { error } = await supabase.auth.updateUser({ password: next });
+  if (error) {
+    throw new ApiError(error.status ?? 0, error.message);
+  }
+}
+
 function PasswordCard() {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -109,7 +131,7 @@ function PasswordCard() {
     setProblem(null);
     setSaved(false);
     try {
-      await changePassword(current, next);
+      await changeSupabasePassword(current, next);
       setCurrent("");
       setNext("");
       setSaved(true);

@@ -8,6 +8,7 @@ import {
   getPlans,
   replacePlan,
   type AvailabilityWindow,
+  type CoverageNeed,
   type PlanInput,
   type PlanResponse,
 } from "../../api/planning";
@@ -73,6 +74,35 @@ function getTopicUnits(value: unknown): TopicNode[] {
 
 const topicUnits = getTopicUnits(catalogue);
 
+function collectTopicNames(nodes: TopicNode[], names = new Map<string, string>()): Map<string, string> {
+  for (const node of nodes) {
+    names.set(node.id, node.name);
+    collectTopicNames(node.topics ?? [], names);
+  }
+  return names;
+}
+
+const topicNameById = collectTopicNames(topicUnits);
+
+// PL-008: self-reported syllabus coverage per selected topic (manual plans only).
+const coverageNeeds: [CoverageNeed, string][] = [
+  ["learn_new", "Learn it for the first time"],
+  ["repeat_theory", "Go over the theory again"],
+  ["past_papers", "Practise past-paper questions"],
+  ["laboratory", "Practical / lab work"],
+  ["exam_sprint", "Final exam sprint"],
+];
+
+interface CoverageEntry {
+  percent: string;
+  need: CoverageNeed | "";
+}
+
+function isWholePercent(value: string): boolean {
+  const number = Number(value);
+  return value.trim() !== "" && Number.isInteger(number) && number >= 0 && number <= 100;
+}
+
 function defaultAvailability(): AvailabilityEntry[] {
   return weekdays.map((_, day) => ({
     enabled: day === 0 || day === 2 || day === 5,
@@ -116,6 +146,7 @@ export default function PlanningSetupPage() {
   const [examDate, setExamDate] = useState(futureDate(90));
   const [targetGrade, setTargetGrade] = useState("A");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [coverage, setCoverage] = useState<Record<string, CoverageEntry>>({});
   const [maxSession, setMaxSession] = useState(60);
   const [maxDaily, setMaxDaily] = useState(180);
   const [availability, setAvailability] = useState<AvailabilityEntry[]>(defaultAvailability);
@@ -186,6 +217,18 @@ export default function PlanningSetupPage() {
     if (Array.isArray(topics) && topics.every((item) => typeof item === "string")) {
       setSelectedTopics(topics);
     }
+    if (Array.isArray(constraints.coverage)) {
+      const saved: Record<string, CoverageEntry> = {};
+      for (const item of constraints.coverage as Array<Record<string, unknown>>) {
+        if (typeof item?.topic_id === "string" && typeof item.covered_percent === "number") {
+          saved[item.topic_id] = {
+            percent: String(item.covered_percent),
+            need: typeof item.need === "string" ? (item.need as CoverageNeed) : "",
+          };
+        }
+      }
+      setCoverage(saved);
+    }
     if (typeof constraints.max_session_minutes === "number") setMaxSession(constraints.max_session_minutes);
     if (typeof constraints.max_daily_minutes === "number") setMaxDaily(constraints.max_daily_minutes);
     const saved = availabilityFromWindows(constraints.availability_windows);
@@ -225,15 +268,24 @@ export default function PlanningSetupPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    const errors = validatePlanForm({
-      mode,
-      examDate,
-      targetGrade,
-      topics: selectedTopics,
-      availability: windows,
-      maxSessionMinutes: maxSession,
-      maxDailyMinutes: maxDaily,
-    });
+    const coverageErrors =
+      mode === "manual"
+        ? selectedTopics
+            .filter((id) => (coverage[id]?.percent ?? "") !== "" && !isWholePercent(coverage[id].percent))
+            .map((id) => `Coverage for ${topicNameById.get(id) ?? id} must be a whole number from 0 to 100.`)
+        : [];
+    const errors = [
+      ...validatePlanForm({
+        mode,
+        examDate,
+        targetGrade,
+        topics: selectedTopics,
+        availability: windows,
+        maxSessionMinutes: maxSession,
+        maxDailyMinutes: maxDaily,
+      }),
+      ...coverageErrors,
+    ];
     setValidationErrors(errors);
     if (errors.length > 0) return;
 
@@ -250,6 +302,16 @@ export default function PlanningSetupPage() {
       preferred_times: [],
       fixed_commitments: [],
       priorities: [],
+      coverage:
+        mode === "manual"
+          ? selectedTopics
+              .filter((id) => isWholePercent(coverage[id]?.percent ?? ""))
+              .map((id) => ({
+                topic_id: id,
+                covered_percent: Number(coverage[id].percent),
+                need: coverage[id].need || null,
+              }))
+          : [],
     };
 
     try {
@@ -400,6 +462,56 @@ export default function PlanningSetupPage() {
             <p className="mt-3 text-sm text-slate-600">
               {selectedTopics.length} topic IDs selected
             </p>
+            {selectedTopics.length > 0 ? (
+              <div className="mt-5 space-y-3">
+                <h3 className="font-semibold text-ink">Syllabus coverage (self-reported)</h3>
+                <p className="text-sm text-slate-600">
+                  How much of each topic have you already been taught or studied? Leave it blank if
+                  you are not sure. This is your own estimate, not a mark, and it is never shown as
+                  mastery.
+                </p>
+                <ul className="space-y-2">
+                  {selectedTopics.map((id) => {
+                    const name = topicNameById.get(id) ?? id;
+                    const entry = coverage[id] ?? { percent: "", need: "" };
+                    const update = (change: Partial<CoverageEntry>) =>
+                      setCoverage((current) => ({ ...current, [id]: { ...entry, ...change } }));
+                    return (
+                      <li className="flex flex-wrap items-center gap-3 text-sm" key={id}>
+                        <span className="min-w-40 flex-1 text-slate-800">{name}</span>
+                        <span className="flex items-center gap-1">
+                          <input
+                            aria-label={`Coverage of ${name} (%)`}
+                            className="w-20 rounded-lg border border-slate-300 px-2 py-1"
+                            inputMode="numeric"
+                            max={100}
+                            min={0}
+                            onChange={(event) => update({ percent: event.target.value })}
+                            step={5}
+                            type="number"
+                            value={entry.percent}
+                          />
+                          <span aria-hidden="true">%</span>
+                        </span>
+                        <select
+                          aria-label={`What you need for ${name}`}
+                          className="rounded-lg border border-slate-300 px-2 py-1"
+                          onChange={(event) => update({ need: event.target.value as CoverageNeed | "" })}
+                          value={entry.need}
+                        >
+                          <option value="">No preference</option>
+                          {coverageNeeds.map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
           </fieldset>
         ) : (
           <p className="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">

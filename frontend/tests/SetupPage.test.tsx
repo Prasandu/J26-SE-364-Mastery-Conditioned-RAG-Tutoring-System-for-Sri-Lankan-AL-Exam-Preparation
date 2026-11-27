@@ -22,6 +22,15 @@ const existingPlan = {
   exam_date: "2027-06-01",
   target_grade: "A",
   constraints: {},
+  student_name: "Student",
+  coaching_message: {
+    greeting: "Hi",
+    headline: "",
+    body: "",
+    focus_topics: [],
+    daily_suggestion: "",
+    tone: "getting_started" as const,
+  },
 };
 
 function renderSetupPage() {
@@ -106,6 +115,65 @@ describe("PlanningSetupPage", () => {
       );
     });
     expect(replacePlan).not.toHaveBeenCalled();
+  });
+});
+
+describe("self-reported syllabus coverage (PL-008)", () => {
+  beforeEach(() => {
+    vi.mocked(createPlan).mockReset().mockResolvedValue(existingPlan);
+    vi.mocked(getPlans).mockReset().mockResolvedValue({ plans: [] });
+  });
+
+  function chooseMoleConcept() {
+    fireEvent.click(screen.getByRole("button", { name: "Manual" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand Chemical Calculations" }));
+    fireEvent.click(screen.getByLabelText("Select Mole concept"));
+  }
+
+  it("sends coverage only for topics the student filled in, labelled by need", async () => {
+    renderSetupPage();
+    chooseMoleConcept();
+
+    fireEvent.change(screen.getByLabelText("Coverage of Amount of substance (%)"), {
+      target: { value: "40" },
+    });
+    fireEvent.change(screen.getByLabelText("What you need for Amount of substance"), {
+      target: { value: "past_papers" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    await waitFor(() => expect(createPlan).toHaveBeenCalled());
+    const sent = vi.mocked(createPlan).mock.calls[0][0];
+    expect(sent.mode).toBe("manual");
+    expect(sent.topics).toEqual(["chem-u3-amount-of-substance", "chem-u3-molar-mass"]);
+    expect(sent.coverage).toEqual([
+      { topic_id: "chem-u3-amount-of-substance", covered_percent: 40, need: "past_papers" },
+    ]);
+  });
+
+  it("blocks a coverage value outside 0-100", async () => {
+    renderSetupPage();
+    chooseMoleConcept();
+
+    fireEvent.change(screen.getByLabelText("Coverage of Molar mass and particle number (%)"), {
+      target: { value: "150" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save my plan" }));
+
+    expect(
+      await screen.findByText(
+        "Coverage for Molar mass and particle number must be a whole number from 0 to 100.",
+      ),
+    ).toBeInTheDocument();
+    expect(createPlan).not.toHaveBeenCalled();
+  });
+
+  it("explains that coverage is an estimate, not a mark", () => {
+    renderSetupPage();
+    chooseMoleConcept();
+
+    expect(screen.getByText("Syllabus coverage (self-reported)")).toBeInTheDocument();
+    expect(screen.getByText(/not a mark, and it is never shown as/)).toBeInTheDocument();
   });
 });
 

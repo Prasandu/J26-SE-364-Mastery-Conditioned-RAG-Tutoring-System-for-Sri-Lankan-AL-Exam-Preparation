@@ -647,6 +647,26 @@ describe("PlanPage formatting helpers", () => {
       "You haven't tried questions in Ketones yet, and it carries moderate weight in the exam.",
     );
 
+    // 2b. No marks, self-reported coverage (PL-009): never phrased as mastery
+    expect(
+      getWhyNowText({
+        topic: "Ketones",
+        sub_topic: null,
+        mastery: 0.3,
+        has_evidence: false,
+        evidence_source: "self_reported_coverage",
+        self_reported_coverage: 40,
+        trend: 0,
+        exam_weight: 0.5,
+        days_to_exam: 32,
+        main_factors: {},
+        activity_recommendation: "",
+        decline_alert: null,
+      }),
+    ).toBe(
+      "No marks yet in Ketones. You reported 40% of it covered (self-reported, not a mark), and it carries moderate weight in the exam.",
+    );
+
     // 3. Evidence with mastery and trend
     expect(
       getWhyNowText({

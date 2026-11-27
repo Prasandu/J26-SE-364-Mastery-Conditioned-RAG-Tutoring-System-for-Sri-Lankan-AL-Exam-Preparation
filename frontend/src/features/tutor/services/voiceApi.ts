@@ -1,0 +1,26 @@
+import { authFetch } from "./apiClient";
+import { API_BASE_URL } from "./config";
+
+export async function transcribeAudio(audioBlob: Blob, language: "en" | "si"): Promise<string> {
+  const formData = new FormData();
+  formData.append("audio", audioBlob, "recording.webm");
+  formData.append("language", language);
+
+  const res = await authFetch(`${API_BASE_URL}/api/v1/voice/transcribe`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  const data = await res.json();
+  return data.text;
+}
+
+export async function synthesizeSinhalaSpeech(text: string): Promise<Blob> {
+  const res = await authFetch(`${API_BASE_URL}/api/v1/voice/synthesize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  return res.blob();
+}

@@ -134,6 +134,13 @@ export function getWhyNowText(reasonDetails: TaskReason): string {
   if (reasonDetails.decline_alert?.message) {
     return reasonDetails.decline_alert.message;
   }
+  if (
+    reasonDetails.has_evidence === false &&
+    reasonDetails.evidence_source === "self_reported_coverage" &&
+    typeof reasonDetails.self_reported_coverage === "number"
+  ) {
+    return `No marks yet in ${focusTopic}. You reported ${reasonDetails.self_reported_coverage}% of it covered (self-reported, not a mark), and it carries ${weight} weight in the exam.`;
+  }
   if (reasonDetails.has_evidence === false) {
     return `You haven't tried questions in ${focusTopic} yet, and it carries ${weight} weight in the exam.`;
   }

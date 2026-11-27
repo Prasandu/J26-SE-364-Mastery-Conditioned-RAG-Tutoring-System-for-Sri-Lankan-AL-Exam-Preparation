@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 
 import { Button } from "@/components/Button";
 import { GlassOrb } from "@/components/GlassOrb";
-import { Hero } from "@/components/Hero";
+import { Hero, SectionTitle } from "@/components/Hero";
 import { useAuth } from "@/hooks/useAuth";
 
 import { HowItWorks } from "./papers/HowItWorks";
@@ -45,8 +45,57 @@ export function HomePage() {
         </p>
       </Hero>
 
+      <Components />
+
       <HowItWorks />
     </div>
+  );
+}
+
+// The four components of J26-SE-364, one sign-in for all of them.
+const COMPONENTS = [
+  {
+    to: "/lab",
+    title: "Virtual Chemistry Lab",
+    text: "Practise NIE handbook practicals step by step in a 3D lab, in English or Sinhala.",
+  },
+  {
+    to: "/papers",
+    title: "Past papers & marking",
+    text: "Answer real past papers and get every mark explained, point by point.",
+  },
+  {
+    to: "/planning",
+    title: "Study plan",
+    text: "A weekly plan built from what you have mastered and what the exam weighs most.",
+  },
+  {
+    to: "/tutor",
+    title: "AI tutor",
+    text: "Ask questions, get hints and review your mistakes with a bilingual Chemistry tutor.",
+  },
+];
+
+function Components() {
+  return (
+    <section aria-labelledby="components-title">
+      <SectionTitle lead="One account works across all four parts.">
+        <span id="components-title">Everything in one place</span>
+      </SectionTitle>
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {COMPONENTS.map((item) => (
+          <li key={item.to}>
+            <Link
+              to={item.to}
+              className="block h-full rounded-3xl border border-white/70 bg-white/80 p-5 shadow-lg shadow-brand-900/5 transition hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              <h3 className="font-semibold text-slate-900">{item.title}</h3>
+              <p className="mt-1.5 text-sm text-slate-600">{item.text}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

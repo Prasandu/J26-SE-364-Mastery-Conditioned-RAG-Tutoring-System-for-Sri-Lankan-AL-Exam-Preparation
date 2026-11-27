@@ -1,21 +1,25 @@
-import { request } from "./client";
+import { requestService } from "./client";
 import { getAccessToken } from "../auth/supabase";
 
-const planningApiBaseUrl =
-  import.meta.env.VITE_PLANNING_API_URL || import.meta.env.VITE_API_URL;
+// Planning service (component 3). Not VITE_API_URL: in the integrated app that is
+// the assessment service.
+const planningApiBaseUrl = import.meta.env.VITE_PLANNING_API_URL || "http://127.0.0.1:8083";
 
 function planningRequest<T>(path: string, init?: RequestInit) {
+  // getAccessToken (not the optional token): planning has no anonymous routes, so
+  // a signed-out caller gets "Sign in to use planning." instead of a bare 401.
   return getAccessToken().then((accessToken) =>
-    request<T>(
+    requestService<T>(
+      planningApiBaseUrl,
       path,
       {
         ...init,
         headers: {
-          ...init?.headers,
+          ...(init?.headers as Record<string, string> | undefined),
           Authorization: `Bearer ${accessToken}`,
         },
       },
-      planningApiBaseUrl,
+      "the planning service",
     ),
   );
 }
@@ -37,6 +41,15 @@ export interface TopicPriorityInput {
   priority: number;
 }
 
+// PL-008: what a student says they still need from a topic. Self-reported, never a mark.
+export type CoverageNeed = "learn_new" | "repeat_theory" | "past_papers" | "laboratory" | "exam_sprint";
+
+export interface TopicCoverageInput {
+  topic_id: string;
+  covered_percent: number;
+  need?: CoverageNeed | null;
+}
+
 export interface PlanInput {
   mode: "manual" | "predicted";
   exam_date: string;
@@ -49,6 +62,7 @@ export interface PlanInput {
   preferred_times: string[];
   fixed_commitments: FixedCommitment[];
   priorities: TopicPriorityInput[];
+  coverage?: TopicCoverageInput[];
 }
 
 export interface PlanResponse {
@@ -143,6 +157,10 @@ export interface TaskReason {
   mastery: number;
   has_evidence?: boolean;
   reason?: string;
+  // PL-009: what drove the task. Self-reported coverage is never shown as mastery.
+  evidence_source?: "results" | "self_reported_coverage" | "student_choice" | "no_evidence";
+  self_reported_coverage?: number | null;
+  coverage_need?: string | null;
   trend: number;
   decline_alert: {
     baseline: number;

@@ -1,5 +1,3 @@
-export interface ApiMessage {
-  detail: string;
 // These match the Pydantic schemas in assessment-service/app/schemas/content.py.
 // If the backend changes, change this file first.
 

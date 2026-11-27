@@ -29,3 +29,21 @@ export async function getAccessToken(): Promise<string> {
   }
   return data.session.access_token;
 }
+
+export function isSupabaseConfigured(): boolean {
+  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+}
+
+/** The signed-in user's access token, or "" when nobody is signed in (or Supabase
+ * is not configured) - for requests that also work anonymously. */
+export async function readAccessToken(): Promise<string> {
+  if (!isSupabaseConfigured()) {
+    return "";
+  }
+  try {
+    const { data } = await getSupabaseClient().auth.getSession();
+    return data.session?.access_token ?? "";
+  } catch {
+    return "";
+  }
+}

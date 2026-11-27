@@ -1,64 +1,66 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
-import AttemptPage from "./features/attempt/AttemptPage";
-import NotFoundPage from "./features/NotFoundPage";
-import PapersPage from "./features/papers/PapersPage";
-import PlanningLayout from "./features/planning/PlanningLayout";
-import PlanningPage from "./features/planning/PlanPage";
-import PlanningSetupPage from "./features/planning/SetupPage";
-import ReviewPage from "./features/review/ReviewPage";
-import LoadingState from "./components/LoadingState";
-
-const PlanningDashboardPage = lazy(
-  () => import("./features/planning/DashboardPage"),
-);
-
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<PapersPage />} />
-      <Route path="/papers" element={<PapersPage />} />
-      <Route path="/attempt" element={<AttemptPage />} />
-      <Route path="/review" element={<ReviewPage />} />
-      <Route path="/planning" element={<PlanningLayout />}>
-        <Route
-          index
-          element={
-            <Suspense fallback={<LoadingState label="Loading dashboard..." />}>
-              <PlanningDashboardPage />
-            </Suspense>
-          }
-        />
-        <Route path="setup" element={<PlanningSetupPage />} />
-        <Route path="plan" element={<PlanningPage />} />
-        <Route
-          path="dashboard"
-          element={
-            <Suspense fallback={<LoadingState label="Loading dashboard..." />}>
-              <PlanningDashboardPage />
-            </Suspense>
-          }
-        />
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { AuthProvider as SupabaseSessionProvider } from "@/auth/AuthProvider";
 import { Layout } from "@/components/Layout";
+import LoadingState from "@/components/LoadingState";
 import { RequireAuth } from "@/components/RequireAuth";
 import { About } from "@/features/About";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { AttemptPage } from "@/features/attempt/AttemptPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ProfilePage } from "@/features/auth/ProfilePage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { HistoryPage } from "@/features/history/HistoryPage";
 import { HomePage } from "@/features/HomePage";
-import { PracticePage } from "@/features/practice/PracticePage";
-import { AttemptPage } from "@/features/attempt/AttemptPage";
+import { LabPage } from "@/features/lab/LabPage";
+import NotFoundPage from "@/features/NotFoundPage";
 import { PaperDetail } from "@/features/papers/PaperDetail";
 import { PaperList } from "@/features/papers/PaperList";
+import PlanningLayout from "@/features/planning/PlanningLayout";
+import PlanningPage from "@/features/planning/PlanPage";
+import PlanningSetupPage from "@/features/planning/SetupPage";
+import { PracticePage } from "@/features/practice/PracticePage";
 import { ReviewPage } from "@/features/review/ReviewPage";
+import { ConsultationPage } from "@/features/tutor/pages/ConsultationPage";
+import { DashboardPage as TutorDashboardPage } from "@/features/tutor/pages/DashboardPage";
+import { ProblemSolvingPage } from "@/features/tutor/pages/ProblemSolvingPage";
+import { ProfilePage as TutorProfilePage } from "@/features/tutor/pages/ProfilePage";
+import { ReportPage } from "@/features/tutor/pages/ReportPage";
+import { TutorPage } from "@/features/tutor/pages/TutorPage";
+import { WorkedExamplePage } from "@/features/tutor/pages/WorkedExamplePage";
+import { TutorHome, TutorLayout } from "@/features/tutor/TutorLayout";
+import { AuthProvider } from "@/hooks/useAuth";
 
+const PlanningDashboardPage = lazy(() => import("@/features/planning/DashboardPage"));
+
+function planningDashboard() {
+  return (
+    <Suspense fallback={<LoadingState label="Loading dashboard..." />}>
+      <PlanningDashboardPage />
+    </Suspense>
+  );
+}
+
+/**
+ * The integrated web app for all four components of J26-SE-364:
+ *   /lab       - Virtual Chemistry Lab (component 1, apps/web)
+ *   /papers... - Intelligent Assessment & Automated Evaluation (component 2)
+ *   /planning  - Adaptive Study Planning (component 3)
+ *   /tutor     - Cognitive Support & Tutoring (component 4)
+ * One Supabase Auth sign-in is shared by all of them.
+ */
 export function App() {
+  return (
+    <SupabaseSessionProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </SupabaseSessionProvider>
+  );
+}
+
+function AppRoutes() {
   return (
     <Routes>
       {/* The admin workspace is its own shell (see AdminLayout), not a page inside
@@ -75,8 +77,6 @@ export function App() {
 
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route path="papers" element={<PaperList />} />
-        <Route path="papers/:paperId" element={<PaperDetail />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route
@@ -87,6 +87,14 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route path="about" element={<About />} />
+
+        {/* Component 1 - Virtual Chemistry Lab */}
+        <Route path="lab" element={<LabPage />} />
+
+        {/* Component 2 - Assessment */}
+        <Route path="papers" element={<PaperList />} />
+        <Route path="papers/:paperId" element={<PaperDetail />} />
         <Route
           path="attempts/:attemptId"
           element={
@@ -119,9 +127,31 @@ export function App() {
             </RequireAuth>
           }
         />
-        <Route path="about" element={<About />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+
+        {/* Component 3 - Study planning */}
+        <Route path="planning" element={<PlanningLayout />}>
+          <Route index element={planningDashboard()} />
+          <Route path="dashboard" element={planningDashboard()} />
+          <Route path="setup" element={<PlanningSetupPage />} />
+          <Route path="plan" element={<PlanningPage />} />
+        </Route>
+
+        {/* Component 4 - AI tutor */}
+        <Route path="tutor" element={<TutorLayout />}>
+          <Route index element={<TutorHome />} />
+          <Route path="chat" element={<TutorPage />} />
+          <Route path="practice" element={<ProblemSolvingPage />} />
+          <Route path="worked-example" element={<WorkedExamplePage />} />
+          <Route path="consultation" element={<ConsultationPage />} />
+          <Route path="report" element={<ReportPage />} />
+          <Route path="profile" element={<TutorProfilePage />} />
+          <Route path="dashboard" element={<TutorDashboardPage />} />
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
 }
+
+export default App;

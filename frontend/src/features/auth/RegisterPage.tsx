@@ -15,18 +15,40 @@ export function RegisterPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [confirmSent, setConfirmSent] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
     setProblem(null);
     try {
-      await register(email, name, password);
+      if ((await register(email, name, password)) === "confirm-email") {
+        setConfirmSent(true);
+        setBusy(false);
+        return;
+      }
       navigate("/", { replace: true });
     } catch (cause) {
       setProblem(cause instanceof ApiError ? cause.message : String(cause));
       setBusy(false);
     }
+  }
+
+  if (confirmSent) {
+    return (
+      <Card className="mx-auto max-w-md">
+        <h1 className="text-lg font-medium">Check your email</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          We sent a confirmation link to <span className="font-medium">{email}</span>. Open it, then sign in
+          - the same account works for the lab, papers, study plan and tutor.
+        </p>
+        <p className="mt-5 text-center text-sm">
+          <Link to="/login" className="font-medium text-brand-600 hover:underline">
+            Go to sign in
+          </Link>
+        </p>
+      </Card>
+    );
   }
 
   return (

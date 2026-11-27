@@ -1,23 +1,13 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"],
+    // shared/contracts/topics.json is imported by the planning feature.
+    "resolveJsonModule": true,
     // No baseUrl: since TypeScript 5 these resolve against this file, and
     // baseUrl is deprecated in 7.
     "paths": { "@/*": ["./src/*"] },
@@ -25,9 +15,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
-  },
-  "include": ["src"]
     "noUncheckedSideEffectImports": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,

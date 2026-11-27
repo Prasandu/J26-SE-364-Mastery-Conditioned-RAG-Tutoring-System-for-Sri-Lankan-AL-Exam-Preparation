@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -17,18 +17,22 @@ export function NavBar() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
 
-  // Role-appropriate navigation:
-  // - Students: Home, Papers, Practice, My results, About (Teacher review hidden)
-  // - Teachers: Home, Papers, Practice, Teacher review, About
-  // - Admins: Home, Papers, Practice, Teacher review, Admin dashboard, About
+  // Role-appropriate navigation across all four components:
+  // - Everyone: Home, Virtual Lab (component 1), Papers (component 2), About
+  // - Students: + Practice, My results (component 2), Study plan (component 3),
+  //   AI tutor (component 4)
+  // - Teachers: + Teacher review; Admins: + Admin dashboard
   //   (Admin dashboard is its own shell with its own sidebar - see AdminLayout -
   //   so Generate and the other admin tools live inside it, not as top-nav pills.)
-  // - Unauthenticated: standard links
+  const isStudentView = !user || user.role === "student";
   const links: NavItem[] = [
     { to: "/", label: "Home", end: true },
+    { to: "/lab", label: "Virtual Lab", end: false },
     { to: "/papers", label: "Papers", end: false },
-    ...(!user || user.role === "student" ? [{ to: "/practice", label: "Practice", end: false }] : []),
-    ...(!user || user.role === "student" ? [{ to: "/my-results", label: "My results", end: false }] : []),
+    ...(isStudentView ? [{ to: "/practice", label: "Practice", end: false }] : []),
+    ...(isStudentView ? [{ to: "/my-results", label: "My results", end: false }] : []),
+    ...(isStudentView ? [{ to: "/planning", label: "Study plan", end: false }] : []),
+    ...(isStudentView ? [{ to: "/tutor", label: "AI tutor", end: false }] : []),
     ...(!user || hasRole(user.role, "teacher") ? [{ to: "/review", label: "Teacher review", end: false }] : []),
     ...(user && hasRole(user.role, "admin") ? [{ to: "/admin", label: "Admin dashboard", end: false }] : []),
     { to: "/about", label: "About", end: false },
@@ -49,8 +53,8 @@ export function NavBar() {
               <span className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
                 A/L Chemistry
               </span>
-              <span className="hidden text-xs font-medium text-slate-400 lg:inline">
-                Assessment
+              <span className="hidden text-xs font-medium text-slate-400 xl:inline">
+                Study Hub
               </span>
             </div>
           </NavLink>

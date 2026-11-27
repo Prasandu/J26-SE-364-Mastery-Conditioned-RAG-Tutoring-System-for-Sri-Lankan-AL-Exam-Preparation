@@ -90,8 +90,19 @@ persisted owner-scoped sessions; CI jobs per app plus `scripts/db/shared_db_smok
 
 ## Next safe implementation step
 
-Run the CI workflow once (needs push authorization) → **SEC-008** → **LAB-018** browser
-token + persisted lab sessions → **TUT-014 Mode A/C** (generator emits validated
-`TeachingResponse`) → **LAB-011** capability registry → **PL-010** scheduler benchmark.
-Blocked on people/permissions: topic aliases, legacy AI marks decision, GRD-007/LAB-012
-teacher content, licensing, pilots.
+Done since the last checkpoint (each tested; see `EXECUTION_STATE.md` S17-S21):
+
+- legacy AI-marks policy corrected (every AI-only decision is reviewed);
+- C4 per-user quotas and 404 ownership;
+- SEC-008 per-component keys;
+- deployment-managed C2→C3 worker;
+- read-only live verifier and go-live runbook;
+- durable lab sessions in PostgreSQL.
+
+Next, in order:
+
+1. **LAB-018 browser side.** `apps/web` signs in with the shared Supabase project and sends the token, or the lab is served under the frontend's origin so the session is shared. Then turn on `LAB_REPOSITORY=postgres` plus `supabase_jwt` in staging.
+2. **TUT-014 Mode A/C.** The tutor's generator returns `TeachingResponse`, validated with the retrieved source ids. Tests use a fake provider.
+3. **LAB-011.** A per-practical capability registry; hide unsupported modes.
+4. **PL-010.** Scheduler benchmark fixtures, before any OR-Tools work.
+5. **Staging.** After the operator restores Supabase, run `SUPABASE_GO_LIVE.md` steps 1-8.

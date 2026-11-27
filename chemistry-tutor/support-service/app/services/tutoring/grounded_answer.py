@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from app.services.rag.retrieval import RetrievedChunk, search_chunks
+from app.services.teaching.actions import ValidatedTeaching
 from app.services.tutoring.llm_adapter import get_llm_provider
+from app.services.tutoring.whiteboard import learner_level_line, structured_answer
 
 # Starting value, calibrated against two real observations: genuinely
 # relevant Chemistry questions scored 0.46-0.62, while an unrelated
@@ -58,6 +60,8 @@ class GroundedAnswer:
     answer: str
     citations: list[RetrievedChunk]
     grounded: bool
+    # TUT-014: a validated whiteboard when one was requested (status says if it can be shown).
+    whiteboard: ValidatedTeaching | None = None
 
 
 def _format_context(chunks: list[RetrievedChunk]) -> str:
@@ -67,7 +71,15 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
     return "\n\n".join(parts)
 
 
-def answer_question(db: Session, question: str, language: str = "en", concise: bool = False) -> GroundedAnswer:
+def answer_question(
+    db: Session,
+    question: str,
+    language: str = "en",
+    concise: bool = False,
+    *,
+    whiteboard: bool = False,
+    learner_level: str | None = None,
+) -> GroundedAnswer:
     results = search_chunks(db, question, top_k=TOP_K)
     relevant = [r for r in results if r.similarity >= MIN_SIMILARITY]
 
@@ -86,9 +98,34 @@ def answer_question(db: Session, question: str, language: str = "en", concise: b
         language_name=language_name,
         concise_instruction=CONCISE_INSTRUCTION if concise else "",
         context=_format_context(relevant),
-    )
+    ) + learner_level_line(learner_level)
 
     provider = get_llm_provider()
+    board: ValidatedTeaching | None = None
+    if whiteboard and not concise:
+        try:
+            board = structured_answer(
+                system_prompt=system_prompt,
+                question=question,
+                language=language,
+                passage_count=len(relevant),
+                provider=provider,
+            )
+        except Exception:
+            board = ValidatedTeaching(status="rejected", response=None, problems=["generation failed"])
+        if board.status != "rejected" and board.response is not None:
+            cited = [
+                relevant[int(c.source_id) - 1]
+                for c in board.response.citations
+                if c.source_id.isdigit() and 1 <= int(c.source_id) <= len(relevant)
+            ]
+            return GroundedAnswer(
+                answer=board.response.spoken_text,
+                citations=cited or relevant,
+                grounded=True,
+                whiteboard=board,
+            )
+        # Not verifiable: fall back to the plain grounded answer below (never an unverified board).
     try:
         answer = provider.generate_response(system_prompt, question, max_tokens=350 if concise else 1500)
     except Exception:
@@ -98,4 +135,4 @@ def answer_question(db: Session, question: str, language: str = "en", concise: b
         # to the client.
         return GroundedAnswer(answer=LLM_UNAVAILABLE_MESSAGE, citations=[], grounded=False)
 
-    return GroundedAnswer(answer=answer, citations=relevant, grounded=True)
+    return GroundedAnswer(answer=answer, citations=relevant, grounded=True, whiteboard=board)

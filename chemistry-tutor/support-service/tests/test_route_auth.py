@@ -44,9 +44,9 @@ def providers(monkeypatch):
     """Recording fakes for every paid call these routes can make."""
     calls: list[str] = []
 
-    def answer_question(db, question, language, concise=False):
+    def answer_question(db, question, language, concise=False, **_options):
         calls.append("answer_question")
-        return SimpleNamespace(answer="a", citations=[], grounded=True)
+        return SimpleNamespace(answer="a", citations=[], grounded=True, whiteboard=None)
 
     class Provider:
         def generate_response(self, system_prompt, user_message):

@@ -1,4 +1,5 @@
 import { SpeakButton } from "../voice/SpeakButton";
+import { Whiteboard } from "../whiteboard/Whiteboard";
 import { FormattedText } from "./FormattedText";
 import type { ChatMessage, Language } from "../../types/tutor";
 
@@ -21,6 +22,20 @@ export function ChatMessageItem({
         <p className="whitespace-pre-wrap">
           <FormattedText text={message.text} />
         </p>
+
+        {!isUser && message.whiteboard && message.whiteboard.status !== "rejected" ? (
+          <div className="mt-3">
+            <Whiteboard result={message.whiteboard} language={language} />
+          </div>
+        ) : null}
+
+        {!isUser && message.whiteboard?.status === "rejected" ? (
+          <p className="mt-2 text-xs text-slate-500" role="note">
+            {language === "si"
+              ? "මෙම පිළිතුර සඳහා පුවරුව පරීක්ෂා කළ නොහැකි විය; පෙළ පිළිතුර පමණක් පෙන්වයි."
+              : "The whiteboard for this answer could not be verified, so only the text answer is shown."}
+          </p>
+        ) : null}
 
         {!isUser && (
           <div className="mt-2">

@@ -101,8 +101,8 @@ Done since the last checkpoint (each tested; see `EXECUTION_STATE.md` S17-S21):
 
 Next, in order:
 
-1. **LAB-018 browser side.** `apps/web` signs in with the shared Supabase project and sends the token, or the lab is served under the frontend's origin so the session is shared. Then turn on `LAB_REPOSITORY=postgres` plus `supabase_jwt` in staging.
-2. **TUT-014 Mode A/C.** The tutor's generator returns `TeachingResponse`, validated with the retrieved source ids. Tests use a fake provider.
+1. ~~LAB-018 browser side~~ (S22). Remaining: in staging, turn on `LAB_REPOSITORY=postgres` plus `supabase_jwt` once Supabase is restored.
+2. ~~TUT-014 Mode A/C~~ (S23). Remaining: measure, against the real model, how often its boards pass validation.
 3. **LAB-011.** A per-practical capability registry; hide unsupported modes.
 4. **PL-010.** Scheduler benchmark fixtures, before any OR-Tools work.
 5. **Staging.** After the operator restores Supabase, run `SUPABASE_GO_LIVE.md` steps 1-8.

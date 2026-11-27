@@ -115,6 +115,16 @@ export function masteryLabel(mastery: number): string {
   return "strong";
 }
 
+/** PL-009: the tutor gets a mastery band only when it was measured from results. */
+export function tutorLink(reason: TaskReason): string {
+  const params = new URLSearchParams({
+    topic: reason.sub_topic ? `${reason.topic}, ${reason.sub_topic}` : reason.topic,
+  });
+  const measured = reason.has_evidence !== false && (reason.evidence_source ?? "results") === "results";
+  if (measured) params.set("level", masteryLabel(reason.mastery));
+  return `/tutor?${params.toString()}`;
+}
+
 export function trendLabel(trend: number): string {
   if (trend < -0.01) return `declining (${Math.round(Math.abs(trend) * 100)}%)`;
   if (trend > 0.01) return `improving (${Math.round(trend * 100)}%)`;
@@ -300,6 +310,12 @@ function TaskCard({
                     ))}
                   </ol>
                 </div>
+                <Link
+                  className="inline-block text-sm font-medium text-brand underline"
+                  to={tutorLink(task.reason_details)}
+                >
+                  Ask the AI tutor about this topic
+                </Link>
                 {task.reason_details.main_factors &&
                 Object.keys(task.reason_details.main_factors).length > 0 ? (
                   <div className="pt-1">

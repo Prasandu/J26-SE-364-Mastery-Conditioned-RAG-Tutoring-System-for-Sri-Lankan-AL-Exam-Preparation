@@ -573,6 +573,69 @@ A real bug found and fixed by the tests: the disabled auth returned a new state 
 
 **Not done:** a browser (Playwright) run against a real Supabase project. It is `[BLOCKED]` on the project being restored, and the CI e2e still uses the local engine.
 
+### S23 - TUT-014 Mode A/C: verified tutor whiteboard - DONE (local) `[TESTED]`
+
+**Schema 1.1.** `TeachingResponse` gains `schema_version` (`1.0` still accepted) and `ai_generated: true` (it is always an explanation, never a mark). It also gains `blocks`:
+
+- `text`: plain explanation;
+- `table`: up to 6 headers and 12 rows, with one cell per header;
+- `chem_equation`: coefficients and formulas, `->` or `<=>`.
+
+**Equation check.** `app/services/teaching/chemistry.py`, with no model involved:
+
+- every formula must parse into real element symbols (brackets, hydrates, caret charges such as `SO4^2-`, and states);
+- both sides must balance in atoms and in charge.
+
+It checks bookkeeping, not whether the reaction happens; citations cover that.
+
+**`/tutor/ask` whiteboard mode.** It is opt-in: `whiteboard: true`, plus an optional `learner_level` of `weak`, `developing` or `strong`. It is ignored for voice (`concise`) answers.
+
+- The model gets the same NIE passages and anti-injection rules, and is asked for TeachingResponse JSON (`app/services/tutoring/whiteboard.py`).
+- The server checks the whole response before returning it:
+  - the shape, markup, URLs and the language;
+  - every calculation is recomputed;
+  - every equation is balanced;
+  - citations must be passage numbers that retrieval actually returned for this question. They are mapped back to those passages' titles and pages.
+- Anything that fails falls back to the plain grounded answer, with `whiteboard.status = "rejected"` and no content. An unverified board is never returned.
+
+**C3 mastery.** On a study-plan task, "Why this task?" links to `/tutor?topic=...&level=...`.
+
+- The level is sent only when mastery was measured from results. Under PL-009, self-reported coverage, student choice and no-evidence tasks never send one.
+- The level only changes the depth of the explanation; unknown values are refused (422 on the API, ignored on the page).
+
+**Frontend.** `Whiteboard.tsx` draws text, tables and equations from plain strings with React: real `<sub>`/`<sup>` elements via `whiteboard/formula.ts`, and no HTML path. Unknown block types are ignored.
+
+- It has English and Sinhala labels; the Sinhala is a draft pending teacher review.
+- The tutor page has a "Whiteboard" toggle.
+- A rejected board shows a note that only the text answer is shown.
+
+**Tests**
+
+- `support-service/tests/test_tutor_whiteboard.py` (44):
+  - formulas: parsing, and refusing what is not real chemistry;
+  - balance: atoms and ionic charge;
+  - blocks: each block type, Sinhala, and the 1.0 shape still accepted;
+  - 11 rejection paths: markup, URL, table shape, unbalanced equation, unknown element, invented citation, wrong number, bad version, `ai_generated` false, unknown block;
+  - the route with a fake provider: a verified board and cited pages; 5 fallback paths (prose, wrong language, invented passage, markup, provider error); opt-in only; voice; learner level; no evidence means no generation.
+- `test_route_auth.py`: the recording fake was updated to the new result shape.
+- `frontend/tests/Whiteboard.test.tsx` (+9): blocks; markup and script shown as text with no elements created; Sinhala labels; formula formatting.
+- `frontend/tests/TutorWhiteboard.test.tsx` (9, new): opt-in, the rejected board not drawn, the planner level used, a forged level ignored, link levels for measured mastery only.
+
+**Results**
+
+| Check | Result |
+|---|---|
+| Support | **197 passed**, 6 asset-blocked deselected as in CI (disposable Postgres, migrated and seeded); ruff clean except the pre-existing `hints.py` import order |
+| Frontend | **120/120**; eslint 0 errors; `tsc -b` clean; build OK |
+| CI on `7ce8fbf` (S22) | all 6 jobs green |
+
+**Not done:**
+
+- no run against a real LLM; the prompt's yield of valid boards is unmeasured;
+- Sinhala whiteboard strings are drafts.
+
+**Note.** Running the support tests without `DATABASE_URL` picks up the local `.env` (the real pooler). The project is unreachable, so nothing was read or written. Always set `DATABASE_URL` to a disposable database.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |
@@ -586,13 +649,7 @@ A real bug found and fixed by the tests: the disabled auth returned a new state 
 
 ## Next safe actions
 
-0. **Push a branch and run `.github/workflows/ci.yml` once.** This needs operator authorization. Fix whatever only the clean runner reveals.
-1. **SEC-008: one inter-service scheme.**
-   - Inventory every service-to-service call: C3 → C2 pull, push into the C3 events API, C2 → C4 flagged questions.
-   - Settle on per-caller keys with one header name, or short-lived audience-scoped tokens.
-   - Tests: wrong key 401, another component's key 403, missing key 401.
-   - Keep the old header for one release.
-2. **LAB-018 browser side.** The lab web app (`apps/web`) sends the shared Supabase token, the lab API switches to `supabase_jwt`, and session ownership is persisted in Postgres.
-3. **TUT-014 Mode A/C.** The RAG generator emits `TeachingResponse` and the server runs `validate_teaching_response` with the retrieved source ids before returning it. Tests use a fake provider.
+Done since this list was written: CI runs on every push (S16 onwards); SEC-008 per-component keys (S18); LAB-018 server and browser sides (S21, S22); TUT-014 Mode A/C (S23).
+
 4. **LAB-011.** A per-practical capability registry (full engine vs bounded guided). Hide unsupported modes.
 5. **PL-010.** A scheduler benchmark fixture set, before any OR-Tools work.

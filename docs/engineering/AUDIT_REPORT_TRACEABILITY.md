@@ -17,7 +17,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | P0 C2 generative judge allocates marks | Fixed `[TESTED]` | GRD-011: AI verdicts are suggestions (`needs_review`, 0 marks); mastery and feeds use rule/checker/teacher only |
 | P0 divergent identity formats | Fixed for C2→C3 `[TESTED]` | Supabase user id end to end. Assessment links accounts by `supabase_user_id`, never by email. The C1 browser side is still open |
 | P1 multiple KB stores | Open | KB-013 not started |
-| P1 C4 grounding validated weakly | Partly addressed `[TESTED]` | The TUT-014 validator rejects invented citations, wrong numbers and unsafe text for structured responses. The free-text `/tutor/ask` path is unchanged |
+| P1 C4 grounding validated weakly | Partly addressed `[TESTED]` | The TUT-014 validator rejects invented citations, wrong numbers, unbalanced equations and unsafe text. `/tutor/ask` whiteboard mode (S23) is validated against the passages retrieved for that question, or falls back to the plain answer. The plain free-text answer itself is still not claim-checked |
 | P1 voice/upload privacy | Open `[BLOCKED]` | Needs provider agreements and a consent policy (operator/legal) |
 | P1 push/pull adapters not one proven E2E | Fixed for C2→C3 `[TESTED]` | Finalized-mark feed, consumer and ledger: idempotent, with corrections, quarantine and per-page transactions (S9, S10) |
 
@@ -38,7 +38,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | LAB-011 per-practical capability registry | Open | Next lab slice |
 | LAB-012 science-family expansion | `[BLOCKED]` | Needs teacher-validated chemistry |
 | KB-013 unified source metadata | Open | |
-| TUT-014 teaching-action validator + whiteboard | Done for Mode B `[TESTED]` | `support-service/app/services/teaching/`, `POST /api/v1/teaching/worked-examples/solution-concentration`, `frontend/.../whiteboard/Whiteboard.tsx` (S13). Still open: the RAG generator emitting this structure (Mode A/C) |
+| TUT-014 teaching-action validator + whiteboard | Done for Modes A/B/C `[TESTED]` | Mode B: worked examples (S13). Modes A/C: `/tutor/ask` `whiteboard: true`, with schema 1.1 text, table and equation blocks; atom and charge balance in `teaching/chemistry.py`; fallback to the plain answer (S23). Open: the real-model pass rate |
 | TUT-015 original wireframe avatar, lip sync | Open | After the TUT-014 Mode A/C integration |
 | OPS-016 CI/CD + telemetry | CI written `[NOT VERIFIED]`; CD/telemetry open | `.github/workflows/ci.yml`: YAML parses and each step mirrors a locally passing command, but it has not run on GitHub (no push authorized) |
 | BIZ-017 licensing, pilots, pricing | `[BLOCKED]` | Product/operator |

@@ -29,6 +29,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from app.services.teaching.chemistry import FormulaError, check_balanced
+
 MAX_STEPS = 20
 MAX_ACTIONS = 40
 MAX_FORMULA_CHARS = 120
@@ -99,9 +101,51 @@ ALLOWED_ACTION_TYPES = {
 }
 
 
+class TextBlock(BaseModel):
+    """A short explanation paragraph - plain text only (rendered as text, never HTML)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["text"]
+    text: Annotated[str, Field(min_length=1, max_length=800)]
+
+
+class TableBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["table"]
+    caption: Annotated[str, Field(max_length=120)] = ""
+    headers: Annotated[list[Annotated[str, Field(max_length=60)]], Field(min_length=1, max_length=6)]
+    rows: Annotated[list[list[Annotated[str, Field(max_length=80)]]], Field(min_length=1, max_length=12)]
+
+
+class EquationTerm(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    coefficient: Annotated[int, Field(ge=1, le=99)] = 1
+    formula: Annotated[str, Field(min_length=1, max_length=40)]  # "Na2CO3", "SO4^2-", "H2O(l)"
+
+
+class ChemEquationBlock(BaseModel):
+    """Shown only if both sides balance in atoms and charge (app/services/teaching/chemistry.py)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["chem_equation"]
+    reactants: Annotated[list[EquationTerm], Field(min_length=1, max_length=8)]
+    products: Annotated[list[EquationTerm], Field(min_length=1, max_length=8)]
+    arrow: Literal["->", "<=>"] = "->"
+
+
+Block = Annotated[TextBlock | TableBlock | ChemEquationBlock, Field(discriminator="type")]
+SCHEMA_VERSIONS = ("1.0", "1.1")
+
+
 class TeachingResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # 1.0: steps + actions; 1.1 adds text, table and chemical-equation blocks.
+    schema_version: Literal["1.0", "1.1"] = "1.1"
     response_id: Annotated[str, Field(min_length=1, max_length=64)]
     language: Literal["en", "si"]
     spoken_text: Annotated[str, Field(max_length=1500)]
@@ -109,6 +153,9 @@ class TeachingResponse(BaseModel):
     verified_steps: Annotated[list[VerifiedStep], Field(max_length=MAX_STEPS)] = Field(default_factory=list)
     visual_actions: Annotated[list[VisualAction], Field(max_length=MAX_ACTIONS)] = Field(default_factory=list)
     learning_mode: Literal["worked_example", "socratic", "quick_explanation"]
+    blocks: Annotated[list[Block], Field(max_length=12)] = Field(default_factory=list)
+    # Always true: an explanation, never a mark (the tutor cannot touch assessment records).
+    ai_generated: Literal[True] = True
 
 
 class StepCheck(BaseModel):
@@ -160,6 +207,7 @@ def validate_teaching_response(
         _check_text(response)
         _check_citations(response, allowed_source_ids)
         checks = _check_steps(response.verified_steps)
+        _check_blocks(response.blocks)
     except TeachingRejected as exc:
         return _rejected([*problems, str(exc)])
 
@@ -190,6 +238,13 @@ def _check_text(response: TeachingResponse) -> None:
     texts = [response.spoken_text]
     for step in response.verified_steps:
         texts += [step.label, step.formula, step.result]
+    for block in response.blocks:
+        if isinstance(block, TextBlock):
+            texts.append(block.text)
+        elif isinstance(block, TableBlock):
+            texts += [block.caption, *block.headers, *(cell for row in block.rows for cell in row)]
+        else:
+            texts += [term.formula for term in (*block.reactants, *block.products)]
     for action in response.visual_actions:
         if isinstance(action, PlotPoints):
             texts += [action.x_label, action.y_label]
@@ -198,6 +253,21 @@ def _check_text(response: TeachingResponse) -> None:
     for text in texts:
         if UNSAFE_TEXT.search(text):
             raise TeachingRejected("text contains a URL, markup or script")
+
+
+def _check_blocks(blocks: list) -> None:
+    for index, block in enumerate(blocks):
+        if isinstance(block, TableBlock):
+            if any(len(row) != len(block.headers) for row in block.rows):
+                raise TeachingRejected(f"table #{index}: every row needs one cell per header")
+        elif isinstance(block, ChemEquationBlock):
+            try:
+                check_balanced(
+                    [(t.coefficient, t.formula) for t in block.reactants],
+                    [(t.coefficient, t.formula) for t in block.products],
+                )
+            except FormulaError as exc:
+                raise TeachingRejected(f"equation #{index}: {exc}") from exc
 
 
 def _check_citations(response: TeachingResponse, allowed: set[str]) -> None:

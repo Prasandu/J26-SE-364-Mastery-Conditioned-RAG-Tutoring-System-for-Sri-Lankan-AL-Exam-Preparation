@@ -1,13 +1,25 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Avatar } from "../components/tutor/Avatar";
 import { ChatMessageItem } from "../components/tutor/ChatMessageItem";
 import { MicButton } from "../components/voice/MicButton";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { useVoiceConversation } from "../hooks/useVoiceConversation";
 import { askTutor } from "../services/tutorApi";
-import type { ChatMessage, Language } from "../types/tutor";
+import type { ChatMessage, Language, LearnerLevel } from "../types/tutor";
+
+const LEVELS: readonly string[] = ["weak", "developing", "strong"];
+const isLearnerLevel = (value: string | null): value is LearnerLevel =>
+  value !== null && LEVELS.includes(value);
 
 export function TutorPage() {
+  // Opened from a study-plan task (C3): the topic is shown as context, and a measured
+  // mastery band (never self-reported coverage) only changes how deep explanations go.
+  const [params] = useSearchParams();
+  const planTopic = params.get("topic")?.slice(0, 120) || null;
+  const levelParam = params.get("level");
+  const learnerLevel = isLearnerLevel(levelParam) ? levelParam : undefined;
+  const [whiteboard, setWhiteboard] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [language, setLanguage] = useState<Language>("en");
@@ -27,13 +39,18 @@ export function TutorPage() {
     setError(null);
 
     try {
-      const response = await askTutor(question, language, concise);
+      const response = await askTutor(question, language, {
+        concise,
+        whiteboard: whiteboard && !concise,
+        learnerLevel,
+      });
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         text: response.answer,
         citations: response.citations,
         grounded: response.grounded,
+        whiteboard: response.whiteboard ?? null,
       };
       setMessages((prev) => [...prev, assistantMessage]);
       return response.answer;
@@ -71,7 +88,16 @@ export function TutorPage() {
     <div className="flex h-full flex-col bg-slate-50">
       <header className="flex items-center justify-between border-b bg-white px-4 py-3">
         <h1 className="text-lg font-semibold">Chemistry Tutor</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1 text-sm text-slate-700">
+            <input
+              checked={whiteboard}
+              disabled={voiceConversation.active}
+              onChange={(e) => setWhiteboard(e.target.checked)}
+              type="checkbox"
+            />
+            {language === "si" ? "පුවරුව" : "Whiteboard"}
+          </label>
           <button
             onClick={() => setLanguage("en")}
             className={`rounded px-3 py-1 text-sm ${
@@ -130,6 +156,18 @@ export function TutorPage() {
           )}
         </div>
       )}
+
+      {planTopic ? (
+        <p className="border-b bg-blue-50 px-4 py-2 text-sm text-blue-900" role="note">
+          {language === "si" ? "ඔබේ අධ්‍යයන සැලැස්මෙන්: " : "From your study plan: "}
+          <span className="font-semibold">{planTopic}</span>
+          {learnerLevel
+            ? language === "si"
+              ? ` · පැහැදිලි කිරීම් ඔබේ මනින ලද ප්‍රවීණතාවයට (${learnerLevel}) ගැලපේ.`
+              : ` · Explanations are pitched for your measured mastery (${learnerLevel}).`
+            : null}
+        </p>
+      ) : null}
 
       <main className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (

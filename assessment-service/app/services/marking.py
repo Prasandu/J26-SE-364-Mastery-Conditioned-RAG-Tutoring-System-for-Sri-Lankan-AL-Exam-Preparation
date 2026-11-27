@@ -79,7 +79,11 @@ def judge_answer(
     drawing_min_confidence: float = 1.0,
     store: FileStore | None = None,
 ) -> None:
-    """Ask the AI judge about this answer's pending points, and apply its verdicts with checks.
+    """Ask the AI judge about this answer's pending points for teacher-facing suggestions.
+
+    GRD-011: no verdict becomes a mark. A point the deterministic checker decided keeps
+    the checker's decision (or goes to a teacher if the model disagrees); every other
+    point goes to teacher review with the model's view attached as a suggestion.
 
     A drawing point (diagram, or a photographed graph) is judged separately, from its
     photo, by drawing_judge - never by the text judge, which only ever sees answer.text.
@@ -93,9 +97,7 @@ def judge_answer(
     drawing_pending = [r for r in pending if _is_drawing_point(r.point, answer)]
 
     if text_pending and judge is not None:
-        verdicts = {
-            v.code: v for v in judge.judge(_judge_request(answer, [r.point for r in text_pending]))
-        }
+        verdicts = {v.code: v for v in judge.judge(_judge_request(answer, [r.point for r in text_pending]))}
         for result in text_pending:
             _apply_verdict(
                 result, verdicts.get(result.point.code), answer.text or "", judge.name, min_confidence
@@ -297,6 +299,13 @@ def _trust(verdict: PointVerdict | None, answer_text: str, min_confidence: float
     return _Judgement(verdict.awarded, verdict.reason)
 
 
+# GRD-011: a generative model never decides an official mark. Its verdict is kept
+# as a non-binding suggestion (ai_awarded, confidence, evidence, reason) for the
+# teacher, and the point goes to review; only a rule, the deterministic chemistry
+# checker or a teacher (app/services/review.py) can set awarded / not_awarded.
+AI_SUGGESTION_PREFIX = "AI suggestion for the teacher, not a mark"
+
+
 def _apply_verdict(
     result: PointResult, verdict: PointVerdict | None, answer_text: str, marker: str, min_confidence: float
 ) -> None:
@@ -304,21 +313,23 @@ def _apply_verdict(
     judgement = _trust(verdict, answer_text, min_confidence)
 
     if result.checker_awarded is not None:
+        # The deterministic checker decides; the model can only send it to a teacher.
         _combine(result, judgement, marker)
         return
 
-    result.method = MarkingMethod.LLM
+    result.method = MarkingMethod.LLM  # who made the suggestion, not who marked it
     result.marker = marker
-    result.reason = judgement.reason
     if verdict is not None:
         result.confidence = min(max(verdict.confidence, 0.0), 1.0)
         result.evidence = verdict.evidence_quote
-    if judgement.awarded is None:
-        result.status = PointStatus.NEEDS_REVIEW
-        result.awarded = 0.0
-        return
-    result.status = PointStatus.AWARDED if judgement.awarded else PointStatus.NOT_AWARDED
-    result.awarded = result.point.marks if judgement.awarded else 0.0
+    suggestion = "" if judgement.awarded is None else ("earns" if judgement.awarded else "does not earn")
+    result.reason = (
+        f"{AI_SUGGESTION_PREFIX}: {judgement.reason}"
+        if not suggestion
+        else f"{AI_SUGGESTION_PREFIX} (suggests it {suggestion} the mark): {judgement.reason}"
+    )
+    result.status = PointStatus.NEEDS_REVIEW
+    result.awarded = 0.0
 
 
 # Drawing judge
@@ -352,23 +363,19 @@ def _judge_drawings(
 def _apply_drawing_verdict(
     result: PointResult, verdict: DrawingVerdict | None, marker: str, min_confidence: float
 ) -> None:
+    """A drawing is always marked by a teacher (GRD-011); the vision model's view,
+    confident or not, is only a suggestion shown alongside the photo."""
     result.ai_awarded = verdict.awarded if verdict else None
-    result.method = MarkingMethod.LLM
+    result.method = MarkingMethod.LLM  # who made the suggestion, not who marked it
     result.marker = marker
+    result.status = PointStatus.NEEDS_REVIEW
+    result.awarded = 0.0
     if verdict is None:
-        result.status = PointStatus.NEEDS_REVIEW
-        result.awarded = 0.0
         result.reason = "The AI judge could not evaluate this drawing"
         return
-
     result.confidence = min(max(verdict.confidence, 0.0), 1.0)
-    result.reason = verdict.reason
-    if verdict.confidence < min_confidence:
-        result.status = PointStatus.NEEDS_REVIEW
-        result.awarded = 0.0
-        return
-    result.status = PointStatus.AWARDED if verdict.awarded else PointStatus.NOT_AWARDED
-    result.awarded = result.point.marks if verdict.awarded else 0.0
+    suggestion = "earns" if verdict.awarded else "does not earn"
+    result.reason = f"{AI_SUGGESTION_PREFIX} (suggests it {suggestion} the mark): {verdict.reason}"
 
 
 def _combine(result: PointResult, judgement: _Judgement, marker: str) -> None:

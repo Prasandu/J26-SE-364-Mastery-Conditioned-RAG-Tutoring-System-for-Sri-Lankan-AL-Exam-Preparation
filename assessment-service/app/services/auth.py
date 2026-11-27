@@ -110,7 +110,14 @@ def create_admin_user(db: Session, data: AdminUserCreateIn) -> User:
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = db.scalar(select(User).where(User.email == normalize_email(email)))
-    if user is None or not user.is_active or not verify_password(password, user.password_hash):
+    # An empty hash is a Supabase-only account (app/services/supabase_auth.py): it has
+    # no password here to check, and bcrypt would reject the empty hash as malformed.
+    if (
+        user is None
+        or not user.is_active
+        or not user.password_hash
+        or not verify_password(password, user.password_hash)
+    ):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CREDENTIALS)
     return user
 
@@ -126,6 +133,11 @@ def change_password(db: Session, user: User, data: ChangePasswordIn) -> None:
     """The current password is required even though the caller is already signed
     in: the token alone is not proof the person at the keyboard is still the
     account owner (a shared computer, a left-open tab)."""
+    if not user.password_hash:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "This account signs in with the shared Supabase login; change the password there",
+        )
     if not verify_password(data.current_password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Current password is wrong")
     user.password_hash = hash_password(data.new_password)

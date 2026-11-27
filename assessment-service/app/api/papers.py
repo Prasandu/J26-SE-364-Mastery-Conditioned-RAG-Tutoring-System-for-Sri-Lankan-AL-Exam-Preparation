@@ -102,9 +102,15 @@ def make_practice(
 
 
 @router.get("/{paper_id}", response_model=PaperDetail)
-def get_paper(paper_id: int, db: Session = Depends(get_db)):
-    """One published paper with its sections and question tree."""
-    return papers.to_paper_detail(papers.get_paper(db, paper_id, published_only=True))
+def get_paper(
+    paper_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(optional_user),
+):
+    """One published paper with its sections and question tree: a shared paper, or
+    the signed-in student's own practice paper (the same rule as GET /papers)."""
+    viewer = user.email if user else None
+    return papers.to_paper_detail(papers.get_visible_paper(db, paper_id, viewer))
 
 
 def get_paper_store(settings: Settings = Depends(get_settings)) -> FileStore:
@@ -113,12 +119,16 @@ def get_paper_store(settings: Settings = Depends(get_settings)) -> FileStore:
 
 @router.get("/{paper_id}/file")
 def get_paper_file(
-    paper_id: int, db: Session = Depends(get_db), store: FileStore = Depends(get_paper_store)
+    paper_id: int,
+    db: Session = Depends(get_db),
+    store: FileStore = Depends(get_paper_store),
+    user: User | None = Depends(optional_user),
 ):
     """The original PDF for a past paper, shown to the student directly instead of
     a transcription. 404 if this paper has none (a model paper, or a past paper
     imported before this existed)."""
-    paper = papers.get_paper(db, paper_id, published_only=True)
+    # Visibility first: the stored bytes are never read for a paper this caller may not see.
+    paper = papers.get_visible_paper(db, paper_id, user.email if user else None)
     if paper.file_key is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "This paper has no stored PDF")
     return Response(content=store.load(paper.file_key), media_type="application/pdf")

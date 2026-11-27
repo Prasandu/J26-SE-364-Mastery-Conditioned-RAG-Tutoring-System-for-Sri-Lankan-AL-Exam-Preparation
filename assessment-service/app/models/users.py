@@ -36,7 +36,12 @@ class User(Base):
     # stored lowercase so the uniqueness constraint actually catches a repeat signup.
     email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(100))
+    # Empty for an account that only ever signs in through Supabase Auth (see
+    # supabase_user_id) - authenticate_user refuses a password login for it.
     password_hash: Mapped[str] = mapped_column(String(100))
+    # The Supabase Auth user id (the token's `sub`, a UUID) this account belongs to:
+    # the one identity shared by all four components. None = a local-only account.
+    supabase_user_id: Mapped[str | None] = mapped_column(String(36), unique=True, index=True, default=None)
     role: Mapped[UserRole] = mapped_column(text_enum(UserRole), default=UserRole.STUDENT)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -11,6 +11,7 @@ account here to log in with, so it is the one place a static shared key is still
 the right tool.
 """
 
+import uuid
 from secrets import compare_digest
 
 from fastapi import Depends, HTTPException, Security, status
@@ -19,8 +20,9 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import get_db
-from app.models import User, UserRole
+from app.models import Attempt, User, UserRole
 from app.services.auth import ROLE_RANK, decode_token
+from app.services.supabase_auth import decode_supabase_token, is_supabase_token, user_for_supabase_identity
 
 _bearer = HTTPBearer(auto_error=False, description="Access token from POST /auth/login")
 _integration_key_header = APIKeyHeader(
@@ -40,7 +42,16 @@ def current_user(
     or it is invalid/expired - the same response either way (see decode_token)."""
     if credentials is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in to continue")
-    payload = decode_token(credentials.credentials, settings)
+    token = credentials.credentials
+    if is_supabase_token(token, settings):
+        # The shared Supabase Auth sign-in (see app/services/supabase_auth.py).
+        user = user_for_supabase_identity(db, decode_supabase_token(token, settings))
+        if not user.is_active:
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "Session expired or invalid, please log in again"
+            )
+        return user
+    payload = decode_token(token, settings)
     user = db.get(User, payload.user_id)
     if user is None or not user.is_active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session expired or invalid, please log in again")
@@ -71,6 +82,25 @@ def require_role(minimum: UserRole):
         return user
 
     return check
+
+
+def require_owned_attempt(
+    attempt_id: uuid.UUID,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> uuid.UUID:
+    """The attempt in the path, if it belongs to the signed-in user - for every
+    /attempts/{attempt_id}/... route. An attempt is a student's own work: reading,
+    answering, uploading photos for, or submitting someone else's is never allowed,
+    whatever the caller's role (teachers see attempts through /review instead).
+
+    404 rather than 403 for someone else's attempt, so a guessed id does not even
+    reveal that the attempt exists.
+    """
+    attempt = db.get(Attempt, attempt_id)
+    if attempt is None or attempt.student_ref != user.email:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Attempt not found")
+    return attempt_id
 
 
 # The staff routes - a real account of the right role, nothing else.

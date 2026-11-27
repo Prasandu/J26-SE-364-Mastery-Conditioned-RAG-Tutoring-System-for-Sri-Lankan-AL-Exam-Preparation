@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas.integration import StudentEventsOut, StudentProfileOut
+from app.schemas.integration import FinalizedEventsOut, StudentEventsOut, StudentProfileOut
 from app.security import require_integration_caller
 from app.services import integration
 
@@ -39,3 +39,16 @@ def student_events(
     """Every decided point of an attempt marked since `since` - for polling what
     changed, rather than re-reading the whole profile each time."""
     return integration.student_events(db, student_ref, since)
+
+
+@router.get("/events", response_model=FinalizedEventsOut)
+def finalized_events(
+    since: datetime | None = Query(default=None, description="Default: the last 24 hours"),
+    limit: int = Query(default=500, ge=1, le=2000),
+    after: str | None = Query(default=None, max_length=200, description="next_cursor of the previous page"),
+    db: Session = Depends(get_db),
+):
+    """assessment.criterion.finalized v1: every finalized official mark (rule, checker or
+    teacher - never a generative model) since `since`, for students with a linked
+    Supabase identity. For the planner's pull; see docs/engineering/INTEGRATION_CONTRACTS.md."""
+    return integration.finalized_events(db, since, limit, after)

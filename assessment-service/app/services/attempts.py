@@ -51,7 +51,7 @@ from app.services.marking import (
     paper_max_score,
     refresh_scores,
 )
-from app.services.papers import get_paper
+from app.services.papers import get_visible_paper
 from app.services.reader import AnswerReader, ReadRequest
 from app.services.schemes import latest_published_scheme
 from app.services.storage import CONTENT_TYPES, FileStore
@@ -69,7 +69,9 @@ SYLLABUS_LINES = 8
 
 
 def start_attempt(db: Session, data: AttemptCreate) -> Attempt:
-    paper = get_paper(db, data.paper_id, published_only=True)
+    # The same visibility rule as GET /papers/{id}: a shared paper or the student's own
+    # practice paper - starting an attempt returns the whole question tree.
+    paper = get_visible_paper(db, data.paper_id, data.student_ref)
     scheme = latest_published_scheme(paper)
     if scheme is None:  # cannot happen for a published paper, but never mark without a scheme
         raise ConflictError("This paper has no published marking scheme")

@@ -19,9 +19,13 @@ from datetime import datetime
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Answer, Attempt, PointResult, PointStatus, Question, Topic
+from app.models import Answer, Attempt, MarkingMethod, PointResult, PointStatus, Question, Topic
 
 DECIDED = (PointStatus.AWARDED, PointStatus.NOT_AWARDED)
+# GRD-011: only these may produce official evidence (mastery, /integration). Points
+# an AI judge decided before that rule existed (method = llm) are left out until a
+# teacher reviews them - a teacher decision sets method = teacher (review.py).
+TRUSTED_METHODS = (MarkingMethod.RULE, MarkingMethod.CHECKER, MarkingMethod.TEACHER)
 
 
 @dataclass(frozen=True)
@@ -36,17 +40,20 @@ class TopicMastery:
 
 def decided_points(student_ref: str) -> Select[tuple[PointResult]]:
     """Every point of this student's that has an actual decision (not still pending
-    or waiting on a teacher)."""
+    or waiting on a teacher) made by a rule, the chemistry checker or a teacher -
+    never by a generative model (see TRUSTED_METHODS)."""
     return (
         select(PointResult)
         .join(PointResult.answer)
         .join(Answer.attempt)
-        .where(Attempt.student_ref == student_ref, PointResult.status.in_(DECIDED))
+        .where(
+            Attempt.student_ref == student_ref,
+            PointResult.status.in_(DECIDED),
+            PointResult.method.in_(TRUSTED_METHODS),
+        )
         .options(
             selectinload(PointResult.answer).selectinload(Answer.attempt),
-            selectinload(PointResult.answer)
-            .selectinload(Answer.question)
-            .selectinload(Question.section),
+            selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.section),
             selectinload(PointResult.answer).selectinload(Answer.question).selectinload(Question.topics),
             selectinload(PointResult.point),
         )

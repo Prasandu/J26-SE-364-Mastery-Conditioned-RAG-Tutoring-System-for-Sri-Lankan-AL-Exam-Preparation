@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     jwt_secret: str | None = Field(default=None, min_length=32)
     jwt_expires_minutes: int = Field(default=60 * 24, ge=1)  # a day, so a student is not logged out mid-paper
 
+    # One sign-in for all four components of J26-SE-364: the integrated web app signs
+    # people in with Supabase Auth, and this service accepts those access tokens too
+    # (see app/services/supabase_auth.py). Empty = only this service's own tokens.
+    # SUPABASE_JWKS_URL defaults to <SUPABASE_URL>/auth/v1/.well-known/jwks.json.
+    supabase_url: str | None = None
+    supabase_jwks_url: str | None = None
+
     # The /integration routes: read-only endpoints the other three components of
     # this group project (J26-SE-364) call to get a student's marks, topic
     # performance and error categories from this one. Not a human login - each

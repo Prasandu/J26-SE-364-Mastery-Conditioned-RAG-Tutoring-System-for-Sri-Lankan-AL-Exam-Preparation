@@ -109,8 +109,29 @@ def _paper_query(*, kind: PaperKind | None, year: int | None, student_ref: str |
 
 
 def get_paper(db: Session, paper_id: int, *, published_only: bool = False) -> Paper:
+    """Any paper by id - for staff routes only. Student-facing routes use
+    get_visible_paper, which also applies the owner rule."""
     paper = db.get(Paper, paper_id)
     if paper is None or (published_only and paper.status != ContentStatus.PUBLISHED):
+        raise NotFoundError("Paper not found")
+    return paper
+
+
+def get_visible_paper(db: Session, paper_id: int, viewer_ref: str | None) -> Paper:
+    """One published paper as a student-facing route may show it: the same rule as
+    list_papers (_paper_query) - a shared paper (created_by is None), or a practice
+    paper the signed-in viewer made themselves. viewer_ref is the signed-in account's
+    student_ref (its email), or None for an anonymous visitor.
+
+    Someone else's practice paper raises exactly the same NotFoundError as a missing
+    or unpublished one, so a guessed id never reveals that the paper exists.
+    """
+    paper = db.get(Paper, paper_id)
+    if (
+        paper is None
+        or paper.status != ContentStatus.PUBLISHED
+        or (paper.created_by is not None and paper.created_by != viewer_ref)
+    ):
         raise NotFoundError("Paper not found")
     return paper
 

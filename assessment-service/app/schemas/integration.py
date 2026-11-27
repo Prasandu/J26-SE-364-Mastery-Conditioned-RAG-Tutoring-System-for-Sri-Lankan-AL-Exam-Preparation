@@ -70,3 +70,42 @@ class StudentEventsOut(BaseModel):
     student_ref: str
     as_of: datetime
     events: list[MasteryEventOut]
+
+
+class FinalizedScoreOut(BaseModel):
+    awarded: float
+    maximum: float
+
+
+class FinalizedEventOut(BaseModel):
+    """assessment.criterion.finalized v1 (docs/engineering/INTEGRATION_CONTRACTS.md).
+
+    One finalized official decision on one marking point. Consumers dedupe on
+    event_id and, per source_entity_id, keep the highest source_version (a teacher
+    correction is a new version of the same point)."""
+
+    schema_version: str = "1.0.0"
+    event_id: uuid.UUID
+    event_type: str = "assessment.criterion.finalized"
+    producer: str = "assessment-service"
+    subject_user_id: str  # the student's Supabase user id - never a client-supplied value
+    source_entity_id: str  # attempt/<attempt id>/point/<point code>
+    source_version: int  # 0 = machine rule/checker; n = the n-th teacher decision
+    source_topic_codes: list[str]  # assessment codes; mapped by the consumer's reviewed registry
+    status: str = "final"
+    evidence_class: str  # "deterministic" (rule/checker) | "teacher_verified"
+    score: FinalizedScoreOut
+    paper_id: int
+    assessed_at: datetime  # when the student answered (submitted, else marked) - for recency
+    occurred_at: datetime  # when this decision became final (marking or the latest teacher review)
+
+
+class FinalizedEventsOut(BaseModel):
+    """One page, oldest decision first. Pass next_cursor back as `after` for the next page;
+    has_more says whether one exists. The cursor is opaque."""
+
+    schema_version: str = "1.0.0"
+    as_of: datetime
+    events: list[FinalizedEventOut]
+    next_cursor: str | None = None
+    has_more: bool = False

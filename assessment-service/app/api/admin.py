@@ -488,7 +488,9 @@ def judge_attempt(
     store: FileStore = Depends(get_file_store),
     settings: Settings = Depends(get_settings),
 ):
-    """Run the AI judge now for every still-pending point (e.g. after a network or quota failure)."""
+    """Ask the AI judge again for every still-pending point (e.g. after a network or
+    quota failure). Its verdicts are suggestions for the teacher only: every such
+    point ends in teacher review, never as a mark (GRD-011, app/services/marking.py)."""
     if judge is None and drawing_judge is None:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "AI judge is switched off. Set GEMINI_API_KEY."

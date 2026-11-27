@@ -27,7 +27,7 @@ from app.schemas.attempts import (
     BulkAnswersIn,
     SheetReadOut,
 )
-from app.security import require_role
+from app.security import require_owned_attempt, require_role
 from app.services import attempts, sheets
 from app.services.attempts import SessionFactory
 from app.services.drawing_judge import DrawingJudge
@@ -37,6 +37,9 @@ from app.services.reader import AnswerReader
 from app.services.storage import FileStore
 
 router = APIRouter(prefix="/attempts", tags=["attempts"])
+
+# Every route on one attempt: only its owner (see app/security.py's require_owned_attempt).
+OWNER_ONLY = [Depends(require_owned_attempt)]
 
 
 @router.post("", response_model=AttemptOut, status_code=status.HTTP_201_CREATED)
@@ -54,25 +57,27 @@ def start_attempt(
     return attempts.to_attempt_out(attempts.start_attempt(db, data))
 
 
-@router.get("/{attempt_id}", response_model=AttemptOut)
+@router.get("/{attempt_id}", response_model=AttemptOut, dependencies=OWNER_ONLY)
 def get_attempt(attempt_id: uuid.UUID, db: Session = Depends(get_db)):
     """Answers so far, or results after submitting."""
     return attempts.to_attempt_out(attempts.get_attempt(db, attempt_id))
 
 
-@router.put("/{attempt_id}/answers/{question_id}", response_model=AnswerOut)
+@router.put("/{attempt_id}/answers/{question_id}", response_model=AnswerOut, dependencies=OWNER_ONLY)
 def save_answer(attempt_id: uuid.UUID, question_id: int, data: AnswerIn, db: Session = Depends(get_db)):
     """Save (or change) the answer to one question while the attempt is in progress."""
     return attempts.save_answer(db, attempt_id, question_id, data)
 
 
-@router.delete("/{attempt_id}/answers/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{attempt_id}/answers/{question_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=OWNER_ONLY
+)
 def clear_answer(attempt_id: uuid.UUID, question_id: int, db: Session = Depends(get_db)):
     """Back to unanswered - e.g. clicking a chosen mcq option again to deselect it."""
     attempts.clear_answer(db, attempt_id, question_id)
 
 
-@router.post("/{attempt_id}/answers/{question_id}/images", response_model=AnswerOut)
+@router.post("/{attempt_id}/answers/{question_id}/images", response_model=AnswerOut, dependencies=OWNER_ONLY)
 async def add_answer_image(
     attempt_id: uuid.UUID,
     question_id: int,
@@ -124,7 +129,7 @@ def list_attempts(
     return [attempts.to_attempt_out(a) for a in attempts.list_attempts(db, user.email, limit)]
 
 
-@router.post("/{attempt_id}/answer-sheet", response_model=SheetReadOut)
+@router.post("/{attempt_id}/answer-sheet", response_model=SheetReadOut, dependencies=OWNER_ONLY)
 async def read_answer_sheet(
     attempt_id: uuid.UUID,
     file: UploadFile = File(description="A photo of the filled MCQ answer sheet"),
@@ -143,14 +148,14 @@ async def read_answer_sheet(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from error
 
 
-@router.put("/{attempt_id}/answers", response_model=AttemptOut)
+@router.put("/{attempt_id}/answers", response_model=AttemptOut, dependencies=OWNER_ONLY)
 def save_answers(attempt_id: uuid.UUID, body: BulkAnswersIn, db: Session = Depends(get_db)):
     """Save several MCQ answers at once, as confirmed from an answer sheet."""
     sheets.save_sheet_answers(db, attempt_id, body)
     return attempts.to_attempt_out(attempts.get_attempt(db, attempt_id))
 
 
-@router.post("/{attempt_id}/submit", response_model=AttemptOut)
+@router.post("/{attempt_id}/submit", response_model=AttemptOut, dependencies=OWNER_ONLY)
 def submit_attempt(
     attempt_id: uuid.UUID,
     background_tasks: BackgroundTasks,
@@ -163,8 +168,10 @@ def submit_attempt(
 ):
     """Lock the answers and mark them.
 
-    MCQs and points the chemistry checker can decide are marked at once. The rest are
-    marked by the AI judge in the background: call GET /attempts/{id} again to see them.
+    MCQs and points the deterministic chemistry checker can decide are marked at once.
+    Every other point goes to teacher review; if an AI judge is configured it runs in
+    the background only to attach a non-binding suggestion for the teacher - it never
+    awards or withholds a mark (GRD-011, app/services/marking.py).
     """
     cross_check = judge is not None and settings.ai_cross_check
     attempt = attempts.submit_attempt(

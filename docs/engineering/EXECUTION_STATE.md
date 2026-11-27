@@ -700,6 +700,95 @@ A registry build takes about 1.3 ms.
 - practicals 31-45 have no simulation, so no entries (Experiment 36 stays reserved);
 - the tutor (C4) and planner (C3) do not read the registry yet.
 
+### S25 - Phase 5: cross-component journey on real processes - DONE (local) `[TESTED]`
+
+`scripts/e2e/platform_journey.py` starts its own test environment, then runs the journey:
+
+- a throwaway pgvector container with all four migration chains (it reuses `shared_db_smoke.py`);
+- a local JWKS endpoint that signs ES256 tokens for students A and B and a teacher;
+- C2, C3, C4 and the lab API as separate processes, with every AI key empty. C2-C4 run from an empty working directory, so no `.env` is read, and every `LAB_*` setting is pinned.
+
+Two fixture helpers support it:
+
+- `seed_assessment.py`: the teacher, A on the teacher's roster, one published paper with a two-point scheme, and one historical AI-only decision.
+- `run_planner.py`: points the planner at a **test** topic registry in a temp directory. The real DAT-009 registry is unchanged and still has no approved alias.
+
+**Result: 62/62 checks.**
+
+1. Sign-in: no token and expired tokens get 401 on all four services.
+2. Assessment: A submits; B gets 404 on A's attempt; a student cannot mark.
+3. Feed before marking: empty, and a wrong integration key gets 401.
+4. Teacher decision: the feed has exactly the two teacher-verified points; the AI-only decision never appears.
+5. Planner pull:
+   - an unreviewed alias quarantines both marks, with no mastery;
+   - an approved alias then releases and applies them;
+   - a repeated pull changes nothing, and a wrong service key is refused.
+6. Correction: it supersedes the old decision, and mastery goes up.
+7. Reassessment: it applies, and mastery goes down.
+8. Planner, tutor and lab answer for A only:
+   - C4's self-only routes give 403 for another student's id;
+   - the worked example is verified and labelled AI-generated;
+   - A's practical is 404 to B.
+9. Evidence: A's planner evidence is exactly the 4 teacher decisions in force.
+
+**Fixed along the way (harness only):**
+
+- the planner needs its topic taxonomy, so the journey now runs the real `python -m scripts.seed_topics` deployment step;
+- C4 self-only routes answer 403 by design (`require_self`), not 404.
+
+**CI.** It is a new `journey` job.
+
+### S26 - Phase 6: secret scan, dependency audit, production-readiness runbook - DONE (local) `[TESTED]`
+
+**Secret scan.** `scripts/security/scan_secrets.py` checks tracked files and reports file, line and kind only, never the value. It has a self-test. The tip is clean.
+
+A scan of all git history **corrected `BASELINE_AUDIT.md` §4.3**:
+
+- the support `.env.example` only ever had the `[YOUR-PASSWORD]` template, so no password was committed;
+- the one other hit (`2f7f981`) is a documentation example.
+
+Rotation is still needed for the credentials pasted into a chat.
+
+**Dependency audit.** `scripts/security/audit_dependencies.py` covers pnpm, npm, and pip-audit on each Python service resolved as CI installs it. It fails on anything not in `accepted-advisories.json`, where every entry has a reason and a review date.
+
+**Fixed:**
+
+- `zod` raised to ^4.6.7: runtime in contracts, plus a lint-only copy via override;
+- `minimatch` override (eslint);
+- lab API `pypdf` 6.20.0 → 6.21.4 (it parses uploaded PDFs; capped below 7) and `opentelemetry-api` 1.45.2;
+- C4: `fastapi` 0.115 → 0.165 (Starlette 1.10), `python-multipart` 0.0.17 → 0.0.34, `uvicorn` 0.54, `python-dotenv` 1.2.4 and `pytest` 9.0.3, aligned with assessment-service;
+- C3: the CI install now uses `UV_INDEX_STRATEGY=unsafe-best-match`. The PyTorch index had been supplying years-old `certifi`, `idna` and `setuptools` with known CVEs. Also `pytest` 9.
+
+**Accepted until 2027-01-31:**
+
+- `undici` via jsdom, tests only: every patched release needs Node ≥ 22.19, above the declared engines;
+- C4 `transformers` / `sentence-transformers`: the fixes are major versions that need a retrieval re-evaluation first.
+
+**Runbook.** `docs/engineering/PRODUCTION_READINESS.md` covers credential rotation (names only), RLS and ownership evidence, rate-limit inventory, health, recovery and open items. CI gains a `security` job.
+
+**Results**
+
+| Check | Result |
+|---|---|
+| Lab web | 407/407 (`--maxWorkers=3`) |
+| contracts | 95/95 |
+| simulation-core | 242/242 |
+| Lab API | 408 passed, 9 skipped |
+| C4 | 197 passed, 6 deselected |
+| C3 | 446 passed; ruff clean |
+| Audit | 0 new in all six sources |
+| Lab-scope eslint | clean |
+
+The root `eslint .` reports 5 pre-existing errors in `chemistry-tutor/frontend`: disable comments for a plugin the root config only loads for `apps/web`. A gitignored local folder (`apps/web/final-screens/`) is unreadable to eslint on this machine.
+
+**Not done:**
+
+- per-user rate limits on C2, C3 and the lab;
+- a load test;
+- monitoring and alerts;
+- a backup plan (owner cost decision);
+- live verification.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

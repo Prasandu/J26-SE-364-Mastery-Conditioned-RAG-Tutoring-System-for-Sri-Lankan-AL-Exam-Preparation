@@ -1,3 +1,11 @@
 packages:
   - apps/*
   - packages/*
+
+# SEC-011 (dependency audit 2026-11-27): patched transitive versions. minimatch comes only
+# through eslint (lint); zod is also a runtime dependency of packages/contracts (^4.6.7).
+# undici (via jsdom, tests only) is NOT overridden: every patched undici needs Node >=22.19,
+# above this repo's declared engines (>=22.12). See docs/engineering/PRODUCTION_READINESS.md.
+overrides:
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
+  zod@>=4.0.0 <4.6.6: ^4.6.7

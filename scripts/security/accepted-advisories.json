@@ -1,0 +1,40 @@
+{
+  "description": "SEC-011: advisories knowingly accepted for now. Every entry needs a reason and a review date; anything not listed here fails scripts/security/audit_dependencies.py. Review on or before the date, or when the blocking condition changes.",
+  "accepted": [
+    {
+      "ecosystem": "npm",
+      "package": "undici",
+      "where": "lab workspace, only through jsdom (apps/web tests)",
+      "ids": [
+        "GHSA-2m5v-pch6-74hx",
+        "GHSA-4qv8-2p9j-2685",
+        "GHSA-4w7w-5xrc-9h26",
+        "GHSA-55wc-3pg8-jfw6",
+        "GHSA-9fm3-97px-rjf6",
+        "GHSA-f72v-6w45-q472",
+        "GHSA-qrxm-fqhp-jwvm",
+        "GHSA-xjj6-f33q-929c"
+      ],
+      "reason": "Test-only HTTP client inside jsdom; the tests make no requests to untrusted servers. Every patched undici (>=8.12.2) requires Node >=22.19, above the repository's declared engines (>=22.12), and refuses to load on older Node 22.",
+      "unblock": "Raise package.json engines to node >=22.19 (team decision), then add an override undici@<8.12.2 -> ^8.12.2.",
+      "reviewBy": "2027-01-31"
+    },
+    {
+      "ecosystem": "PyPI",
+      "package": "transformers, sentence-transformers",
+      "where": "chemistry-tutor/support-service (local embedding model for retrieval)",
+      "ids": [
+        "PYSEC-2025-217",
+        "PYSEC-2026-2288",
+        "PYSEC-2026-2289",
+        "PYSEC-2026-2290",
+        "PYSEC-2026-3929",
+        "PYSEC-2026-4174",
+        "PYSEC-2026-4164"
+      ],
+      "reason": "Fixes are new major versions (transformers 5, sentence-transformers 5) that can change embedding output, and retrieval quality must be re-measured on the gold set before that (CLAUDE.md RAG policy). The service loads one fixed public model and never loads user-supplied model files.",
+      "unblock": "Upgrade both, re-embed the corpus and re-run the retrieval gold set; accept only if recall does not regress.",
+      "reviewBy": "2027-01-31"
+    }
+  ]
+}

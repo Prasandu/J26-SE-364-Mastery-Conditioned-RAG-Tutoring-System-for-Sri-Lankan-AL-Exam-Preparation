@@ -129,6 +129,9 @@ jobs:
     env:
       PLANNING_TEST_PG_URL: postgresql+psycopg://test:test@127.0.0.1:5432/planning_test
       UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+      # SEC-011: with uv's default first-index rule the PyTorch index also supplied years-old
+      # certifi/idna/setuptools (known CVEs). Pick the best version across both trusted indexes.
+      UV_INDEX_STRATEGY: unsafe-best-match
     defaults:
       run:
         working-directory: planning-service
@@ -196,3 +199,40 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/db/shared_db_smoke.py
+
+  security:
+    name: Secret scan and dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: No credentials in tracked files (prints file, line and kind only)
+        run: python scripts/security/scan_secrets.py --self-test && python scripts/security/scan_secrets.py
+      - name: Known vulnerabilities (fails on anything not in scripts/security/accepted-advisories.json)
+        run: python scripts/security/audit_dependencies.py
+
+  journey:
+    name: Platform journey (four services, one disposable database)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - name: Build the lab verifier that the lab API runs
+        run: pnpm --filter @vlab/simulation-core build
+      - name: Sign-in, marks, feed, mastery, tutor and lab across the real services
+        run: uv run --no-project --python 3.12 --with "pyjwt[crypto]" --with httpx python scripts/e2e/platform_journey.py

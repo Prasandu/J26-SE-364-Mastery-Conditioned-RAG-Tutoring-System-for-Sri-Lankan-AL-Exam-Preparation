@@ -1,9 +1,9 @@
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
+fastapi==0.165.0  # SEC-011: Starlette 1.10 (0.38 had request-handling CVEs); same as assessment-service
+uvicorn[standard]==0.54.0
 pydantic==2.14.4  # google-genai 2.32.0 needs >=2.12.5
 pydantic-settings==2.6.0
-python-dotenv==1.0.1
-pytest==8.3.3
+python-dotenv==1.2.4  # SEC-011
+pytest==9.0.3  # SEC-011
 httpx==0.29.0  # google-genai 2.32.0 needs >=0.28.1
 sqlalchemy==2.0.36
 psycopg[binary]==3.2.3
@@ -13,7 +13,7 @@ PyMuPDF==1.24.13
 sentence-transformers==3.3.1
 groq==0.13.1
 hf_xet==1.7.0
-python-multipart==0.0.17
+python-multipart==0.0.34  # SEC-011: form/upload parsing CVEs before 0.0.31
 sympy==1.13.3
 slowapi==0.1.10
 scipy==1.14.1  # WAV encoding for Sinhala TTS output (transformers/torch already pulled in by sentence-transformers)

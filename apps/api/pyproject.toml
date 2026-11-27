@@ -12,7 +12,7 @@ dependencies = [
     "pydantic>=2.14.0",
     "pydantic-settings>=2.15.0",
     "pyjwt[crypto]>=2.10",
-    "pypdf>=6.20.0",
+    "pypdf>=6.21.4,<7",  # SEC-011: parses uploaded PDFs; earlier 6.2x releases have parser CVEs
     "uvicorn[standard]>=0.54.0",
 ]
 

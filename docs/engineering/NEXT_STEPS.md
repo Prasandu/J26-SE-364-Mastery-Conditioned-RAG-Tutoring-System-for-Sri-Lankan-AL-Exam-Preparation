@@ -103,6 +103,7 @@ Next, in order:
 
 1. ~~LAB-018 browser side~~ (S22). Remaining: in staging, turn on `LAB_REPOSITORY=postgres` plus `supabase_jwt` once Supabase is restored.
 2. ~~TUT-014 Mode A/C~~ (S23). Remaining: measure, against the real model, how often its boards pass validation.
-3. ~~LAB-011~~ (S24). Remaining: C4/C3 to read `content/experiments/capabilities.v1.json` when they describe a practical.
+3. ~~Phase 5 journey~~ (S25) and ~~Phase 6 security gates~~ (S26). Remaining Phase 6 items: `PRODUCTION_READINESS.md` §6.
+4. ~~LAB-011~~ (S24). Remaining: C4/C3 to read `content/experiments/capabilities.v1.json` when they describe a practical.
 4. **PL-010.** Scheduler benchmark fixtures, before any OR-Tools work.
 5. **Staging.** After the operator restores Supabase, run `SUPABASE_GO_LIVE.md` steps 1-8.

@@ -1,0 +1,182 @@
+# QA-004 / OPS-016: one CI matrix for all four components.
+#
+# Rules (docs/engineering/EXECUTION_STATE.md):
+# - No secrets: every provider key is blank, models are offline, and each job that needs a
+#   database gets its own throwaway PostgreSQL service. Nothing reaches Supabase or an AI provider.
+# - A failing build or test is a hard stop. The only deselected tests are the six C4 tests that
+#   need assets this repository may not ship (a licensed NIE PDF and the 2 GB BAAI/bge-m3
+#   model) - listed by exact id below, recorded in docs/engineering/BASELINE_AUDIT.md.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main, development, all-features]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GROQ_API_KEY: ""
+  OPENAI_API_KEY: ""
+  GEMINI_API_KEY: ""
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+jobs:
+  lab:
+    name: C1 virtual lab (web, core, contracts, API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      LAB_LLM_PROVIDER: disabled
+      LAB_EMBEDDING_PROVIDER: disabled
+      LAB_ADMIN_EXTRACTION_ASSIST: disabled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - run: pnpm build
+      - name: API tests (providers disabled)
+        working-directory: apps/api
+        run: uv run pytest -q
+      - name: Lab SQL migrations against a throwaway database
+        run: uv run --project apps/api python scripts/db/migration_smoke.py
+
+  frontend:
+    name: Integrated frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx eslint .
+      - run: npx vitest run
+      - run: npm run build
+
+  assessment:
+    name: C2 assessment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: assessment_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      ASSESSMENT_TEST_PG_URL: postgresql+psycopg://test:test@127.0.0.1:5432/assessment_test
+    defaults:
+      run:
+        working-directory: assessment-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Requirements without the torch-based embedder (tests never load it)
+        run: grep -v '^sentence-transformers' requirements.txt > "$RUNNER_TEMP/requirements-ci.txt"
+      - run: uv run --no-project --python 3.13 --with-requirements "$RUNNER_TEMP/requirements-ci.txt" --with pytest --with httpx --with "ruff>=0.11,<1" ruff check app tests
+      - run: uv run --no-project --python 3.13 --with-requirements "$RUNNER_TEMP/requirements-ci.txt" --with pytest --with httpx python -m pytest -q tests
+
+  planning:
+    name: C3 planner
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: planning_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PLANNING_TEST_PG_URL: postgresql+psycopg://test:test@127.0.0.1:5432/planning_test
+      UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+    defaults:
+      run:
+        working-directory: planning-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run --no-project --python 3.12 --with-requirements requirements-dev.txt ruff check app tests
+      - run: uv run --no-project --python 3.12 --with-requirements requirements-dev.txt python -m pytest -q
+
+  support:
+    name: C4 tutor and support
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: support_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/support_test
+      SUPABASE_URL: http://127.0.0.1:9
+      UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+    defaults:
+      run:
+        working-directory: chemistry-tutor/support-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Migrate and seed the throwaway database
+        run: |
+          R="uv run --no-project --python 3.12 --with-requirements requirements.txt --with pytest"
+          $R alembic upgrade head
+          $R python scripts/seed_questions.py
+          $R python scripts/seed_concepts.py
+      - name: Tests (six asset-blocked tests deselected by exact id)
+        run: >-
+          uv run --no-project --python 3.12 --with-requirements requirements.txt --with pytest
+          python -m pytest -q
+          --deselect tests/test_rag_extraction.py::test_extract_pages_detects_unit_and_section
+          --deselect tests/test_retrieval.py::test_search_returns_relevant_chunks_for_mole_question
+          --deselect tests/test_consultation.py::test_weak_topic_identified_after_incorrect_attempt
+          --deselect tests/test_consultation.py::test_weak_topic_includes_prerequisite_from_concept_graph
+          --deselect tests/test_consultation.py::test_assisted_only_success_is_a_weak_topic
+          --deselect tests/test_consultation.py::test_consultation_generates_revision_plan_with_fake_llm
+
+  shared-database:
+    name: All four migration chains in one database
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/db/shared_db_smoke.py

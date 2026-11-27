@@ -35,7 +35,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | PL-008 coverage-percentage planner | Done `[TESTED]` | `PlanInput.coverage`, parent/child consistency, coverage-scaled priority, coverage-driven activity, Setup UI (S12) |
 | PL-009 evidence-source labels | Done `[TESTED]` | `reason_details.evidence_source` (results / self_reported_coverage / student_choice / no_evidence); UI "why now" text (S12) |
 | PL-010 scheduler benchmarks + model registry | Open | Greedy scheduler kept. Add OR-Tools only after a measured improvement (report §6.3) |
-| LAB-011 per-practical capability registry | Open | Next lab slice |
+| LAB-011 per-practical capability registry | Done `[TESTED]` | `simulation-core/src/capabilities.ts`, derived from each engine. Published as `content/experiments/capabilities.v1.json` with a drift test. Used by the lab app (modes, levels, library notes) and the lab API (`GET /experiments` modes, `POST /sessions` refuses other modes) (S24) |
 | LAB-012 science-family expansion | `[BLOCKED]` | Needs teacher-validated chemistry |
 | KB-013 unified source metadata | Open | |
 | TUT-014 teaching-action validator + whiteboard | Done for Modes A/B/C `[TESTED]` | Mode B: worked examples (S13). Modes A/C: `/tutor/ask` `whiteboard: true`, with schema 1.1 text, table and equation blocks; atom and charge balance in `teaching/chemistry.py`; fallback to the plain answer (S23). Open: the real-model pass rate |

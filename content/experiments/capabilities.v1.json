@@ -1,0 +1,2168 @@
+{
+  "registryVersion": "1.0.0",
+  "generatedBy": "pnpm --filter @vlab/simulation-core fixtures:write",
+  "note": "Derived from the engines; do not edit by hand. Results always come from the deterministic engine.",
+  "practicals": [
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 1,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-1@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp01.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "connect",
+        "energize",
+        "observe",
+        "switch_off",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "tube",
+        "polarity"
+      ],
+      "safety": [
+        "labs.precaution.1",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.rays_down",
+        "labs.observation.rays_magnetic",
+        "labs.observation.rays_paddle",
+        "labs.observation.rays_shadow",
+        "labs.observation.rays_straight",
+        "labs.observation.rays_up"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.rays"
+      },
+      "handbookPages": [
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 2,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-2@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp02.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "choose_centre",
+        "assemble",
+        "inspect",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "molecule"
+      ],
+      "safety": [
+        "labs.precaution.2",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.molecule_model"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.geometry"
+      },
+      "handbookPages": [
+        23,
+        24
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 3,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-3@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp03.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "inspect_glassware",
+        "zero_balance",
+        "load_pan",
+        "read_balance",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "glassware",
+        "known_mass",
+        "sliders"
+      ],
+      "safety": [
+        "labs.precaution.3",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.difference",
+        "labs.reading.mass",
+        "labs.reading.sliders"
+      ],
+      "observations": [
+        "labs.observation.balance_heavy"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.balance"
+      },
+      "handbookPages": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 4,
+      "engine": "full_engine",
+      "engineVersion": "exp04_standard_solution@1.1.0+exp04_assessment@1.0.0",
+      "modes": [
+        "automatic",
+        "guided",
+        "manual"
+      ],
+      "guidanceLevels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "objectives": [
+        "aim_glassware_balance",
+        "aim_measure_volumes",
+        "aim_prepare_solutions",
+        "outcome_explain_methods",
+        "outcome_prepare_na2co3"
+      ],
+      "apparatus": [
+        "volumetric_flask_250",
+        "volumetric_flask_100",
+        "volumetric_flask_500",
+        "beaker",
+        "funnel",
+        "watch_glass",
+        "four_beam_balance",
+        "wash_bottle",
+        "dropper_or_glass_tube"
+      ],
+      "chemicals": [
+        "na2co3_anhydrous",
+        "distilled_water",
+        "tap_water"
+      ],
+      "actions": [
+        "confirm_safety",
+        "select_apparatus",
+        "clean_glassware",
+        "weigh_watch_glass",
+        "set_balance_sliders",
+        "add_solid",
+        "remove_solid",
+        "place_funnel",
+        "transfer_solid",
+        "rinse_watch_glass",
+        "rinse_funnel",
+        "remove_funnel",
+        "add_water",
+        "stopper_flask",
+        "dissolve_solute",
+        "adjust_to_mark",
+        "mix_solution",
+        "apply_label",
+        "request_hint",
+        "submit_experiment",
+        "restart_experiment"
+      ],
+      "inputs": [],
+      "safety": [
+        "read_procedure",
+        "goggles",
+        "no_food_drink",
+        "closed_shoes",
+        "hair_restrained",
+        "report_incidents",
+        "prepare_before_work",
+        "avoid_touching_chemicals"
+      ],
+      "calculations": [
+        "watch_glass_mass",
+        "balance_slider_setting",
+        "weighed_solute_mass",
+        "transferred_solute_mass",
+        "final_volume",
+        "achieved_concentration"
+      ],
+      "observations": [
+        "pointer_below_zero",
+        "pointer_at_zero",
+        "pointer_above_zero",
+        "solid_in_flask_undissolved",
+        "solid_dissolved",
+        "liquid_below_mark",
+        "meniscus_at_mark",
+        "liquid_above_mark",
+        "solution_homogeneous",
+        "solid_spilled"
+      ],
+      "assessment": {
+        "competencyEstimate": true,
+        "writtenAnswers": "guide_check",
+        "report": true,
+        "preLabQuestions": 3,
+        "postLabQuestions": 4
+      },
+      "unsupported": [],
+      "limitation": null,
+      "handbookPages": [
+        9,
+        10,
+        16,
+        29,
+        30
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 5,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-5@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp05.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "assemble",
+        "weigh_before",
+        "heat",
+        "cool",
+        "equalize",
+        "read_gas",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "mass_before",
+        "mass_after",
+        "gas_volume",
+        "temperature",
+        "pressure"
+      ],
+      "safety": [
+        "labs.precaution.5",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.amount",
+        "labs.reading.dry_pressure",
+        "labs.reading.molar_volume",
+        "labs.reading.stp_volume"
+      ],
+      "observations": [
+        "labs.observation.oxygen_collected"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.gas_readings"
+      },
+      "handbookPages": [
+        31,
+        32,
+        33,
+        34,
+        36
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 6,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-6@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp06.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "assemble",
+        "add_acid",
+        "invert",
+        "react",
+        "equalize",
+        "read_gas",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "magnesium_mass",
+        "gas_volume",
+        "temperature",
+        "pressure"
+      ],
+      "safety": [
+        "labs.precaution.6",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.amount",
+        "labs.reading.dry_pressure",
+        "labs.reading.molar_mass",
+        "labs.reading.stp_volume"
+      ],
+      "observations": [
+        "labs.observation.hydrogen_collected"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.gas_readings"
+      },
+      "handbookPages": [
+        35,
+        36,
+        37,
+        38
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 7,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-7@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp07.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "insulate",
+        "measure_initial",
+        "mix",
+        "stir",
+        "read_maximum",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "pair",
+        "data_mode",
+        "initial_acid",
+        "initial_base",
+        "final_temperature"
+      ],
+      "safety": [
+        "labs.precaution.7",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.enthalpy",
+        "labs.reading.final_temperature",
+        "labs.reading.heat",
+        "labs.reading.initial_temperature",
+        "labs.reading.temperature_rise"
+      ],
+      "observations": [
+        "labs.observation.calorimetry_readings"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.calorimetry"
+      },
+      "handbookPages": [
+        39,
+        40,
+        41,
+        42
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 8,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-8@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp08.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "insulate",
+        "path_a",
+        "path_b",
+        "rinse",
+        "path_c",
+        "path_d",
+        "compare_paths",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "data_mode",
+        "rise_a",
+        "rise_b",
+        "rise_c",
+        "rise_d"
+      ],
+      "safety": [
+        "labs.precaution.8",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.hess_1",
+        "labs.reading.hess_2",
+        "labs.reading.hess_3",
+        "labs.reading.hess_4",
+        "labs.reading.path_difference",
+        "labs.reading.rise_1",
+        "labs.reading.rise_2",
+        "labs.reading.rise_3",
+        "labs.reading.rise_4"
+      ],
+      "observations": [
+        "labs.observation.hess_comparison"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.hess"
+      },
+      "handbookPages": [
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 9,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-9@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp09.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "expose",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "metal",
+        "medium"
+      ],
+      "safety": [
+        "labs.precaution.9",
+        "labs.safety_ack",
+        "engine.refuses_dangerous_combinations"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.magnesium_cold",
+        "labs.observation.magnesium_hot",
+        "labs.observation.metal_hydrogen",
+        "labs.observation.metal_oxidation",
+        "labs.observation.sodium_water"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.qualitative"
+      },
+      "handbookPages": [
+        50,
+        51
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 10,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-10@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp10.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "clean_wire",
+        "wet_wire",
+        "blue_flame",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "salt"
+      ],
+      "safety": [
+        "labs.precaution.10",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.flame_crimson",
+        "labs.observation.flame_green",
+        "labs.observation.flame_lilac",
+        "labs.observation.flame_none",
+        "labs.observation.flame_orange",
+        "labs.observation.flame_red",
+        "labs.observation.flame_yellow"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.flame"
+      },
+      "handbookPages": [
+        52,
+        53
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 11,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-11@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp11.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "add_reagent",
+        "confirm",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "anion"
+      ],
+      "safety": [
+        "labs.precaution.11",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.carbonate",
+        "labs.observation.nitrate",
+        "labs.observation.nitrite",
+        "labs.observation.sulfate",
+        "labs.observation.sulfide",
+        "labs.observation.sulfite",
+        "labs.observation.thiosulfate"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.anions"
+      },
+      "handbookPages": [
+        54,
+        55,
+        56
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 12,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-12@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp12.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "clean_magnesium",
+        "close_lid",
+        "heat",
+        "cool",
+        "add_water",
+        "test_gas",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "detector"
+      ],
+      "safety": [
+        "labs.precaution.12",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.litmus_blue",
+        "labs.observation.nessler_brown"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.nitrogen"
+      },
+      "handbookPages": [
+        57,
+        58,
+        65
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 13,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-13@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp13.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "add_reagent",
+        "confirm",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "halide",
+        "halide_test"
+      ],
+      "safety": [
+        "labs.precaution.13",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.bromine_layer",
+        "labs.observation.halide_no_displacement",
+        "labs.observation.iodine_layer",
+        "labs.observation.silver_bromide",
+        "labs.observation.silver_dissolves",
+        "labs.observation.silver_iodide"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.halides"
+      },
+      "handbookPages": [
+        59,
+        60,
+        61
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 14,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-14@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp14.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "rinse_pipette",
+        "transfer_iodate",
+        "acid_and_iodide",
+        "rinse_burette",
+        "titrate_pale",
+        "add_starch",
+        "titrate_endpoint",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "iodate_concentration",
+        "initial_burette",
+        "final_burette"
+      ],
+      "safety": [
+        "labs.precaution.14",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.concentration",
+        "labs.reading.titre"
+      ],
+      "observations": [
+        "labs.observation.starch_colourless"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.titration_readings"
+      },
+      "handbookPages": [
+        62,
+        63,
+        64
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 15,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-15@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp15.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "warm_if_needed",
+        "test_gas",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "ammonia_sample",
+        "detector"
+      ],
+      "safety": [
+        "labs.precaution.15",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.ammonia_fumes",
+        "labs.observation.ammonium_acidic",
+        "labs.observation.ammonium_no_gas",
+        "labs.observation.litmus_blue",
+        "labs.observation.nessler_brown"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.qualitative"
+      },
+      "handbookPages": [
+        65,
+        66
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 16,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-16@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp16.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "add_dropwise",
+        "swirl",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "cation",
+        "anion_salt"
+      ],
+      "safety": [
+        "labs.precaution.16",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.solubility_IS",
+        "labs.observation.solubility_SS",
+        "labs.observation.solubility_aq"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.solubility"
+      },
+      "handbookPages": [
+        67,
+        68
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 17,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-17@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp17.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_sample",
+        "connect_delivery",
+        "heat",
+        "test_gas",
+        "disconnect_delivery",
+        "remove_heat",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "thermal_sample"
+      ],
+      "safety": [
+        "labs.precaution.17",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.carbonate_carbon_dioxide",
+        "labs.observation.carbonate_stable",
+        "labs.observation.nitrate_nitrogen_dioxide",
+        "labs.observation.nitrate_oxygen"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.thermal"
+      },
+      "handbookPages": [
+        69,
+        70
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 18,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-18@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp18.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "weigh_salt",
+        "add_distilled_water",
+        "stir",
+        "observe",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "aqueous_ion"
+      ],
+      "safety": [
+        "labs.precaution.18",
+        "labs.safety_ack"
+      ],
+      "calculations": [],
+      "observations": [
+        "labs.observation.aqua_colourless",
+        "labs.observation.aqua_green",
+        "labs.observation.aqua_pale_blue",
+        "labs.observation.aqua_pale_green",
+        "labs.observation.aqua_pale_pink",
+        "labs.observation.aqua_pink",
+        "labs.observation.aqua_violet",
+        "labs.observation.aqua_yellow_brown"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.aqueous"
+      },
+      "handbookPages": [
+        71,
+        72
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 19,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-19@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp19.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_ferrous",
+        "pipette_sample",
+        "add_acids",
+        "rinse_burette",
+        "titrate_endpoint",
+        "wait_30_seconds",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "permanganate_concentration",
+        "initial_burette",
+        "final_burette"
+      ],
+      "safety": [
+        "labs.precaution.19",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.concentration",
+        "labs.reading.titre"
+      ],
+      "observations": [
+        "labs.observation.permanent_pink"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.titration_readings"
+      },
+      "handbookPages": [
+        73,
+        74
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 20,
+      "engine": "bounded_model",
+      "engineVersion": "handbook-model-20@1.0.0",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "ui.handbook.exp20.aim"
+      ],
+      "apparatus": [],
+      "chemicals": [],
+      "actions": [
+        "safety",
+        "prepare_oxalate",
+        "pipette_sample",
+        "add_acid",
+        "warm",
+        "rinse_burette",
+        "titrate_endpoint",
+        "wait_30_seconds",
+        "record",
+        "finish"
+      ],
+      "inputs": [
+        "oxalate_concentration",
+        "initial_burette",
+        "final_burette"
+      ],
+      "safety": [
+        "labs.precaution.20",
+        "labs.safety_ack"
+      ],
+      "calculations": [
+        "labs.reading.concentration",
+        "labs.reading.titre"
+      ],
+      "observations": [
+        "labs.observation.permanent_pink"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements",
+        "itemised_apparatus"
+      ],
+      "limitation": {
+        "key": "labs.scope.titration_readings"
+      },
+      "handbookPages": [
+        75,
+        76
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 21,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-21@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-21.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-21.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-21.safety.0",
+        "handbook-21.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "copper+chloride",
+        "copper+limited_ammonia",
+        "copper+excess_ammonia",
+        "nickel+chloride",
+        "nickel+limited_ammonia",
+        "nickel+excess_ammonia",
+        "cobalt+chloride",
+        "cobalt+limited_ammonia",
+        "cobalt+excess_ammonia"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Guided qualitative model for the displayed tests only. Colours are illustrative. Reaction rates, yields, spectra and mixture separation are not predicted. Source and Sinhala content require teacher review.",
+          "si": "පෙන්වා ඇති පරීක්ෂණ සඳහා මඟපෙන්වන ගුණාත්මක ආකෘතියකි. වර්ණ නිදර්ශන වේ. වේග, ඵලදා, වර්ණාවලි හෝ මිශ්‍රණ වෙන් කිරීම පුරෝකථනය නොවේ. මූලාශ්‍ර සහ සිංහල පෙළ ගුරු සමාලෝචනයට යටත්ය."
+        }
+      },
+      "handbookPages": [
+        77,
+        78
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 22,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-22@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-22.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-22.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "alkaline_stage",
+        "peroxide_stage",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-22.safety.0",
+        "handbook-22.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "permanganate+vii",
+        "permanganate+vi",
+        "permanganate+iv",
+        "permanganate+ii"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Qualitative comparison of the handbook's oxidation-state stages. Its printed alkaline equation is unbalanced and is not used as an engine equation. Conditions, reaction rates and reagent quantities are not predicted.",
+          "si": "අත්පොතේ ඔක්සිකරණ අවස්ථා ගුණාත්මකව සසඳයි. මුද්‍රිත භාෂ්මික සමීකරණය අතුලිත බැවින් එන්ජිමේ භාවිත නොවේ. තත්ත්ව, වේග හෝ ප්‍රතික්‍රියක ප්‍රමාණ පුරෝකථනය නොකෙරේ."
+        }
+      },
+      "handbookPages": [
+        79,
+        80
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 23,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-23@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-23.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-23.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-23.safety.0"
+      ],
+      "calculations": [],
+      "observations": [
+        "nickel+hydroxide",
+        "nickel+excess_hydroxide",
+        "nickel+ammonia",
+        "nickel+excess_ammonia",
+        "iron_ii+hydroxide",
+        "iron_ii+excess_hydroxide",
+        "iron_ii+ammonia",
+        "iron_ii+excess_ammonia",
+        "iron_iii+hydroxide",
+        "iron_iii+excess_hydroxide",
+        "iron_iii+ammonia",
+        "iron_iii+excess_ammonia",
+        "copper+hydroxide",
+        "copper+excess_hydroxide",
+        "copper+ammonia",
+        "copper+excess_ammonia",
+        "chromium+hydroxide",
+        "chromium+excess_hydroxide",
+        "chromium+ammonia",
+        "chromium+excess_ammonia"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Selected NaOH/ammonia tests only. Ferri/ferrocyanide, thiocyanate, peroxide and DMG confirmation branches from the guide are not simulated here. Air oxidation and complex formation are qualitative, not kinetic models.",
+          "si": "NaOH/ඇමෝනියා පරීක්ෂණ පමණි. අත්පොතේ ෆෙරි/ෆෙරෝසයනයිඩ්, තයෝසයනේට්, පෙරොක්සයිඩ් හා DMG තහවුරු කිරීම් මෙහි අනුකරණය නොවේ. වායු ඔක්සිකරණය හා සංකීර්ණ සෑදීම ගුණාත්මකයි."
+        }
+      },
+      "handbookPages": [
+        81,
+        82
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 24,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-24@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-24.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "boiling_tube",
+        "retort_stand",
+        "delivery_tube",
+        "gas_collector",
+        "burner",
+        "water_bath"
+      ],
+      "chemicals": [
+        "handbook-24.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-24.safety.0",
+        "handbook-24.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "ethene+bromine",
+        "ethene+acid_permanganate",
+        "ethene+alkaline_permanganate",
+        "ethyne+bromine",
+        "ethyne+acid_permanganate",
+        "ethyne+alkaline_permanganate"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Selected qualitative tests on separately collected gases; no flame/acetylide tests, gas-generation yield or organic product distribution is predicted. The preparation apparatus is a schematic, not a real-world construction guide.",
+          "si": "වෙන්ව රැස් කළ වායුවල තෝරාගත් ගුණාත්මක පරීක්ෂණයි; දැල්ල/ඇසිටිලයිඩ් පරීක්ෂණ, වායු ඵලදා හෝ කාබනික ඵල ව්‍යාප්තිය පුරෝකථනය නොවේ. උපකරණ සැකැස්ම සැබෑ ඉදිකිරීම් උපදෙසක් නොවන රූපසටහනකි."
+        }
+      },
+      "handbookPages": [
+        83,
+        84,
+        85
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 25,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-25@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-25.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "water_bath",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-25.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "warm",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-25.safety.0",
+        "handbook-25.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "ethanol+litmus",
+        "ethanol+carbonate",
+        "ethanol+dichromate",
+        "ethanol+permanganate",
+        "isopropanol+litmus",
+        "isopropanol+carbonate",
+        "isopropanol+dichromate",
+        "isopropanol+permanganate"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Selected ethanol/propan-2-ol tests only; esterification, odour identification and unspecified butyl-alcohol isomers are not modelled. Oxidation extent and distillation products depend on conditions.",
+          "si": "එතනෝල්/ප්‍රොපෑන්-2-ඔල් පරීක්ෂණ පමණි; එස්ටරීකරණය, සුවඳ හඳුනාගැනීම හා නිශ්චිත නොකළ බියුටිල් ඇල්කොහොල් සමාවයවික නිරූපණය නොවේ. ඔක්සිකරණ ප්‍රමාණය හා ආසවන ඵල තත්ත්ව මත රඳා පවතී."
+        }
+      },
+      "handbookPages": [
+        86,
+        87,
+        88
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 26,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-26@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-26.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-26.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-26.safety.0",
+        "handbook-26.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "phenol+bromine",
+        "phenol+carbonate",
+        "phenol+ferric"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Guided qualitative model for the displayed tests only. Colours are illustrative. Reaction rates, yields, spectra and mixture separation are not predicted. Source and Sinhala content require teacher review.",
+          "si": "පෙන්වා ඇති පරීක්ෂණ සඳහා මඟපෙන්වන ගුණාත්මක ආකෘතියකි. වර්ණ නිදර්ශන වේ. වේග, ඵලදා, වර්ණාවලි හෝ මිශ්‍රණ වෙන් කිරීම පුරෝකථනය නොවේ. මූලාශ්‍ර සහ සිංහල පෙළ ගුරු සමාලෝචනයට යටත්ය."
+        }
+      },
+      "handbookPages": [
+        89,
+        90
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 27,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-27@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-27.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "water_bath",
+        "reagent_bottle"
+      ],
+      "chemicals": [
+        "handbook-27.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "warm",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-27.safety.0",
+        "handbook-27.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "ethanal+dnph",
+        "ethanal+dichromate",
+        "ethanal+tollens",
+        "benzaldehyde+dnph",
+        "benzaldehyde+dichromate",
+        "benzaldehyde+tollens",
+        "propanone+dnph",
+        "propanone+dichromate",
+        "propanone+tollens",
+        "acetophenone+dnph",
+        "acetophenone+dichromate",
+        "acetophenone+tollens"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 1
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Selected carbonyl and oxidation tests. Water-solubility and Fehling branches are not modelled. No smell, reaction speed or quantitative yield is simulated.",
+          "si": "තෝරාගත් කාබොනයිල් හා ඔක්සිකරණ පරීක්ෂණයි. ජල ද්‍රාව්‍යතාව හා ෆෙලින් පරීක්ෂණ නිරූපණය නොවේ. සුවඳ, වේගය හෝ ප්‍රමාණාත්මක ඵලදා අනුකරණය නොවේ."
+        }
+      },
+      "handbookPages": [
+        91,
+        92,
+        93
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 28,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-28@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-28.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "conical_flask",
+        "beaker",
+        "water_bath"
+      ],
+      "chemicals": [
+        "handbook-28.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "add",
+        "mix",
+        "observe",
+        "warm",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-28.safety.0"
+      ],
+      "calculations": [],
+      "observations": [
+        "methanoic+carbonate",
+        "methanoic+hydroxide",
+        "methanoic+permanganate",
+        "methanoic+tollens",
+        "ethanoic+carbonate",
+        "ethanoic+hydroxide",
+        "ethanoic+permanganate",
+        "ethanoic+tollens",
+        "benzoic+carbonate",
+        "benzoic+hydroxide",
+        "benzoic+permanganate",
+        "benzoic+tollens"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Selected carbonate/base/redox tests only. Ester odours, quantitative solubility and product yields are not modelled; there is no sensory smell test.",
+          "si": "තෝරාගත් කාබනේට්/භෂ්ම/රෙඩොක්ස් පරීක්ෂණ පමණි. එස්ටර සුවඳ, ප්‍රමාණාත්මක ද්‍රාව්‍යතාව හා ඵලදා නිරූපණය නොවේ; සුවඳ පරීක්ෂාවක් නැත."
+        }
+      },
+      "handbookPages": [
+        94,
+        95
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 29,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-29@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-29.aim.0"
+      ],
+      "apparatus": [
+        "test_tube",
+        "dropper",
+        "glass_rod",
+        "ice_bath",
+        "beaker"
+      ],
+      "chemicals": [
+        "handbook-29.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "coupler",
+        "nitrite",
+        "aniline",
+        "diazotize",
+        "couple",
+        "observe",
+        "record"
+      ],
+      "inputs": [],
+      "safety": [
+        "handbook-29.safety.0",
+        "handbook-29.safety.1"
+      ],
+      "calculations": [],
+      "observations": [
+        "aniline+coupling"
+      ],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 1,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "The handbook prints coupling text before the diazotization steps. This model places diazotization before coupling and records that source-order conflict. Only the naphthalen-2-ol route is modelled; temperature outside 0–5 °C is blocked, not assigned invented degradation readings.",
+          "si": "අත්පොතේ යුග්මන පෙළ ඩයසෝකරණයට පෙර මුද්‍රිතය. මෙම ආකෘතිය ඩයසෝකරණය පළමුව තබා එම පිළිවෙළ ගැටුම සටහන් කරයි. නැෆ්තලීන්-2-ඔල් මාර්ගය පමණි; 0–5 °C පිටත උෂ්ණත්වය අවහිර වේ; කල්පිත වියෝජන පාඨාංක නොදෙයි."
+        }
+      },
+      "handbookPages": [
+        96,
+        97
+      ],
+      "results": "deterministic_engine"
+    },
+    {
+      "registryVersion": "1.0.0",
+      "experimentNumber": 30,
+      "engine": "teaching_template",
+      "engineVersion": "handbook-30@r1",
+      "modes": [
+        "guided"
+      ],
+      "guidanceLevels": [],
+      "objectives": [
+        "handbook-30.aim.0"
+      ],
+      "apparatus": [
+        "gas_collector",
+        "stopwatch",
+        "beaker",
+        "glass_rod"
+      ],
+      "chemicals": [
+        "handbook-30.chemical.0"
+      ],
+      "actions": [
+        "safety",
+        "select",
+        "prepare",
+        "invert",
+        "time",
+        "observe",
+        "record"
+      ],
+      "inputs": [
+        "time_at_1_mol_dm3",
+        "time_at_0.8_mol_dm3",
+        "time_at_0.6_mol_dm3",
+        "time_at_0.4_mol_dm3",
+        "time_at_0.2_mol_dm3"
+      ],
+      "safety": [
+        "handbook-30.safety.0",
+        "handbook-30.safety.1"
+      ],
+      "calculations": [
+        "kinetics.rate_from_time"
+      ],
+      "observations": [],
+      "assessment": {
+        "competencyEstimate": false,
+        "writtenAnswers": "teacher_review",
+        "report": false,
+        "preLabQuestions": 2,
+        "postLabQuestions": 2
+      },
+      "unsupported": [
+        "automatic_mode",
+        "manual_mode",
+        "guidance_levels",
+        "competency_estimate",
+        "written_answer_checking",
+        "server_session",
+        "predicted_measurements"
+      ],
+      "limitation": {
+        "text": {
+          "en": "Learner-entered data only. The fixed but unspecified collected gas volume makes 1/time a relative-rate proxy in s⁻¹, not mol dm⁻³ s⁻¹. The fitted log(1/time) versus log(concentration) slope estimates order under the controlled conditions; no rate constant or gas-generation curve is invented. The chapter's additional calcium-carbonate mass-loss route is not simulated.",
+          "si": "ශිෂ්‍යයා ඇතුළත් කරන දත්ත පමණි. නියත නමුත් නිශ්චිතව නොදුන් වායු පරිමාව නිසා 1/කාලය s⁻¹ හි සාපේක්ෂ වේග නියෝජිතයකි; mol dm⁻³ s⁻¹ නොවේ. log(1/කාලය) හා log(සාන්ද්‍රණය) බෑවුම පාලිත තත්ත්ව යටතේ පෙළ ඇස්තමේන්තු කරයි; කල්පිත වේග නියතයක් හෝ වායු වක්‍රයක් නැත. අමතර කැල්සියම් කාබනේට් ස්කන්ධ අඩුකිරීමේ මාර්ගය අනුකරණය නොවේ."
+        }
+      },
+      "handbookPages": [
+        98,
+        99,
+        100
+      ],
+      "results": "deterministic_engine"
+    }
+  ]
+}

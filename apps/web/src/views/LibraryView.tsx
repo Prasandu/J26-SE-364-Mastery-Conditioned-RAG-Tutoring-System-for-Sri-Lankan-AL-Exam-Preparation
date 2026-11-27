@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CapabilityNote } from '../components/CapabilityNote';
 import { ExperimentCard } from '../components/ExperimentCard';
 import { HandbookPracticalCard } from '../components/HandbookPracticalCard';
 import handbook from '../../../../content/library/handbook-first20.v1.json';
@@ -7,7 +8,7 @@ import { Icon } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
 import { StatusMessage } from '../components/ui/StatusMessage';
 import { useSession } from '../store/StoreProvider';
-import { teachingPractice } from '../engine/localAdapter';
+import { practicalCapabilities, teachingPractice } from '../engine/localAdapter';
 import type { TeachingDefinition } from '@vlab/contracts';
 
 function TeachingCard({ definition }: { definition: TeachingDefinition }) {
@@ -29,6 +30,7 @@ function TeachingCard({ definition }: { definition: TeachingDefinition }) {
         <summary>{t('teaching.scope')}</summary>
         <p>{definition.limitations[locale]}</p>
       </details>
+      <CapabilityNote capability={practicalCapabilities.forTeaching(definition)} />
       <button
         className="button button--primary"
         type="button"

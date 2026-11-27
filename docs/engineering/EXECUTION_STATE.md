@@ -636,6 +636,70 @@ It checks bookkeeping, not whether the reaction happens; citations cover that.
 
 **Note.** Running the support tests without `DATABASE_URL` picks up the local `.env` (the real pooler). The project is unreachable, so nothing was read or written. Always set `DATABASE_URL` to a disposable database.
 
+### S24 - LAB-011: practical capability registry - DONE (local) `[TESTED]`
+
+**What it is.** `packages/simulation-core/src/capabilities.ts` holds one versioned entry (`registryVersion` 1.0.0) per practical that has a simulation, 1-30. Each entry records:
+
+- the engine and the content version it was derived from;
+- the supported modes and guidance levels;
+- objectives, apparatus, chemicals, actions, inputs and safety rules;
+- calculations and observations;
+- assessment (competency estimate, written-answer handling, report, and pre-lab/post-lab counts);
+- an explicit **unsupported** list and the practical's own limitation text;
+- the handbook pages cited;
+- `results: deterministic_engine`.
+
+**Derived, not hand-written.**
+
+- Experiment 4 comes from its `ExperimentDefinition` and handler (`supportsMode`). Its handbook pages are every page cited anywhere in the definition: pp. 9, 10, 16, 29 and 30.
+- Bounded handbook models (1-3, 5-20) come from the model itself. Observations and calculated readings are found by running the model's own `calculateHandbook` over every choice combination. Combinations the engine refuses (sodium with dilute HCl in Experiment 9) are recorded as a safety behaviour.
+- Teaching templates 21-30 come from their definitions.
+- `buildCapabilityRegistry` refuses two engines claiming one practical, and any entry that claims more than its engine supports: a missing mode not declared unsupported, or a competency estimate outside the full engine.
+
+**Used by.**
+
+- **Lab app.** The catalog modes and the mode picker (modes and guidance levels) come from the registry. In API mode the server's modes are intersected with what the engine supports. Library cards for bounded models and teaching templates have a "What this simulation covers" note listing what is not included (English, and Sinhala as a draft). The registry is reached only through `engine/localAdapter.ts`, the lab's single engine boundary, which the `no-chemistry` guard enforces.
+- **Published artifact.** `content/experiments/capabilities.v1.json` is written by `pnpm --filter @vlab/simulation-core fixtures:write`. A drift test fails if it differs from what the engines derive.
+- **Lab API.** `app/capabilities.py` reads that file at startup and fails fast if it is missing or malformed. `GET /experiments` lists only the registry's modes, and `POST /sessions` refuses any other mode with 422 `invalid_request`. A practical missing from the registry offers no mode.
+
+**Tests**
+
+- `simulation-core/test/capabilities.test.ts` (11):
+  - one entry per practical 1-30;
+  - Experiment 4 matches its definition and handler;
+  - bounded models are guided-only and list their gaps;
+  - every declared step is accepted by the handbook engine in order;
+  - observations come from the calculation;
+  - the refused combination;
+  - teaching templates;
+  - a duplicate claim is refused;
+  - an over-claim is flagged;
+  - the registry is deterministic;
+  - the artifact is up to date.
+- `apps/web/src/test/capabilities.test.tsx` (4): catalog and registry agree; every unsupported code has English and Sinhala text; library notes; the mode picker offers only registry modes and levels.
+- `apps/api/tests/test_capabilities.py` (8): published modes; the list uses them; an unsupported mode is neither listed nor started; an unlisted practical offers nothing; a missing or malformed registry stops startup.
+
+**Results**
+
+| Check | Result |
+|---|---|
+| contracts | 95/95 |
+| simulation-core | **242/242** |
+| Lab web | **407/407** with `--maxWorkers=3` |
+| Lab API | 408 passed, 9 skipped (Postgres-only); ruff, format and mypy clean |
+| Lab typecheck | clean |
+| eslint | clean |
+| `pnpm build` (with content validation) | OK |
+
+A registry build takes about 1.3 ms.
+
+**Local timing note.** With the default worker count on this machine, two long handbook-journey tests (`handbook-labs`, plus `bilingual-answers` or `practical-journey`) sometimes miss their 1-second `findBy` wait. They pass alone and with fewer workers, and CI has been green. This is not caused by the registry; it is recorded here rather than hidden.
+
+**Not done:**
+
+- practicals 31-45 have no simulation, so no entries (Experiment 36 stays reserved);
+- the tutor (C4) and planner (C3) do not read the registry yet.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |
@@ -649,7 +713,6 @@ It checks bookkeeping, not whether the reaction happens; citations cover that.
 
 ## Next safe actions
 
-Done since this list was written: CI runs on every push (S16 onwards); SEC-008 per-component keys (S18); LAB-018 server and browser sides (S21, S22); TUT-014 Mode A/C (S23).
+Done since this list was written: CI runs on every push (S16 onwards); SEC-008 per-component keys (S18); LAB-018 server and browser sides (S21, S22); TUT-014 Mode A/C (S23); LAB-011 capability registry (S24).
 
-4. **LAB-011.** A per-practical capability registry (full engine vs bounded guided). Hide unsupported modes.
 5. **PL-010.** A scheduler benchmark fixture set, before any OR-Tools work.

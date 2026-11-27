@@ -15,6 +15,7 @@ from app.admin.assist import build_assistant as build_extraction_assistant
 from app.admin.manage_routes import register_manage_routes
 from app.admin.routes import register_admin_routes
 from app.admin.teaching_routes import register_teaching_routes
+from app.capabilities import load_modes
 from app.content import load_experiments
 from app.contracts import ContractRegistry
 from app.errors import ApiError, correlation_id_var, install_error_handlers, new_correlation_id
@@ -124,7 +125,11 @@ def create_app(
         fixed = settings.fixed_seed
         seed_kwargs["seed"] = lambda: fixed
     service = factory(
-        repos, verifier, utc_offset_minutes=settings.utc_offset_minutes, **seed_kwargs
+        repos,
+        verifier,
+        utc_offset_minutes=settings.utc_offset_minutes,
+        modes=load_modes(settings.content_dir),
+        **seed_kwargs,
     )
     knowledge = build_knowledge_runtime(settings)
     assistant_service = assistant or build_assistant(settings, knowledge)

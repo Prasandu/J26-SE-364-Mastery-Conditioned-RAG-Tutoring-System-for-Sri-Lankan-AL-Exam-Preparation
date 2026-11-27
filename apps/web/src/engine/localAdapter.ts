@@ -18,7 +18,11 @@ import {
   initialTeachingRun,
   transitionTeaching,
   projectTeaching,
+  buildCapabilityRegistry,
+  capabilityFor,
+  capabilityForTeaching,
   type OperationError,
+  type PracticalCapability,
   type SimulationContext,
 } from '@vlab/simulation-core';
 import { EngineError, type EngineAdapter, type SubmitRequest } from './adapter';
@@ -41,6 +45,24 @@ export type {
   TeachingError,
   TeachingTrial,
 } from '@vlab/simulation-core';
+
+/**
+ * LAB-011: each bundled practical's capabilities, derived from the engines above. The UI
+ * offers only what an entry says its engine supports.
+ */
+const capabilityRegistry = buildCapabilityRegistry({
+  full: [{ definition, assessment }],
+  teaching: teachingPractice.bundled,
+});
+export const practicalCapabilities = {
+  all: capabilityRegistry,
+  of: (experimentNumber: number) => capabilityFor(capabilityRegistry, experimentNumber),
+  modes: (experimentNumber: number) =>
+    capabilityFor(capabilityRegistry, experimentNumber)?.modes ?? [],
+  /** An authored teaching definition is described from itself: it is what runs. */
+  forTeaching: capabilityForTeaching,
+};
+export type { PracticalCapability };
 
 /** Local-only teaching models use this same engine boundary, separately from API sessions. */
 export const handbookPractice = {
@@ -205,7 +227,12 @@ export const createLocalEngineAdapter = (deps: LocalAdapterDeps = {}): EngineAda
       return result.report;
     },
 
-    listExperiments: async () => [bundledCatalogEntry(ctx.definition)],
+    listExperiments: async () => [
+      bundledCatalogEntry(
+        ctx.definition,
+        practicalCapabilities.modes(ctx.definition.experimentNumber),
+      ),
+    ],
 
     // The grounded assistant needs the server's private knowledge base; offline it is unavailable.
     askAssistant: async () => {

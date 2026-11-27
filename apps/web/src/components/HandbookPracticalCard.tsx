@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import handbook from '../../../../content/library/handbook-first20.v1.json';
 import { Icon } from './ui/Icon';
-import { handbookPractice } from '../engine/localAdapter';
+import { CapabilityNote } from './CapabilityNote';
+import { handbookPractice, practicalCapabilities } from '../engine/localAdapter';
 import { useSession } from '../store/StoreProvider';
 
 /** A source-backed reference, deliberately separate from the runnable engine catalog. */
@@ -38,6 +39,9 @@ export function HandbookPracticalCard({ entry }: { entry: (typeof handbook.entri
           <p className="hint-text">{t('ui.handbook.translation_draft')}</p>
         )}
       </details>
+      {model ? (
+        <CapabilityNote capability={practicalCapabilities.of(entry.experimentNumber)} />
+      ) : null}
       {model ? (
         <button
           type="button"

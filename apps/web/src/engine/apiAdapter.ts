@@ -14,6 +14,7 @@ import {
 import { EngineError, type EngineAdapter } from './adapter';
 import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
+import { practicalCapabilities } from './localAdapter';
 import type { LabAuth } from '../auth/labAuth';
 
 /**
@@ -149,11 +150,13 @@ export const createApiEngineAdapter = ({
     listExperiments: async () => {
       const summaries = await request('GET', '/experiments', SummaryListParser);
       // Only published (active) practicals that this client's bundled simulation can run.
+      // LAB-011: never offer a mode the server lists but the practical's engine does not support.
+      const supported = practicalCapabilities.modes(definition.experimentNumber);
       return summaries
         .filter((s) => s.active && s.experimentId === definition.experimentId)
         .map((s) => ({
-          ...bundledCatalogEntry(definition),
-          modes: s.modes,
+          ...bundledCatalogEntry(definition, supported),
+          modes: s.modes.filter((mode) => supported.includes(mode)),
           locales: s.locales,
           definitionVersion: s.definitionVersion,
         }));

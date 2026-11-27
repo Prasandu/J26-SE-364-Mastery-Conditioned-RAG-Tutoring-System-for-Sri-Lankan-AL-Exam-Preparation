@@ -4,6 +4,7 @@ import { FlowSteps } from '../components/FlowSteps';
 import { SourceList } from '../components/SourceList';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
+import { practicalCapabilities } from '../engine/localAdapter';
 import { definition } from '../engine/content';
 import { useSession } from '../store/StoreProvider';
 
@@ -27,6 +28,10 @@ export function ModeSelectView() {
   const preLab = useSession((s) => s.preLab);
   const toggleSafetyAcknowledgement = useSession((s) => s.toggleSafetyAcknowledgement);
   const checklist = definition.safetyRules.filter((rule) => rule.kind === 'checklist');
+  // LAB-011: offer only what this practical's engine supports.
+  const capability = practicalCapabilities.of(definition.experimentNumber);
+  const modes = MODES.filter(({ mode }) => capability?.modes.includes(mode));
+  const levels = LEVELS.filter((level) => capability?.guidanceLevels.includes(level));
   const allAcknowledged = checklist.every((rule) => preLab.acknowledgedSafety.includes(rule.id));
 
   const start = () => {
@@ -40,7 +45,7 @@ export function ModeSelectView() {
       <FlowSteps current="mode" />
       <fieldset className="mode-options">
         <legend className="visually-hidden">{t('ui.mode.legend')}</legend>
-        {MODES.map(({ mode: m, icon }) => (
+        {modes.map(({ mode: m, icon }) => (
           <div
             key={m}
             className={
@@ -83,7 +88,7 @@ export function ModeSelectView() {
         <fieldset className="level-options">
           <legend>{t('ui.mode.level_legend')}</legend>
           <div className="level-options__row">
-            {LEVELS.map((l) => (
+            {levels.map((l) => (
               <div
                 className={
                   selection.guidanceLevel === l ? 'level-option is-selected' : 'level-option'

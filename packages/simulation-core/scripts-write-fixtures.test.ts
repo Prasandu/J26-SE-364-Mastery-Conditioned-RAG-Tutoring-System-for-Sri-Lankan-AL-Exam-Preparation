@@ -3,6 +3,11 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { it } from 'vitest';
+import {
+  buildCapabilityArtifact,
+  CAPABILITY_ARTIFACT,
+  renderArtifact,
+} from './test/capability-artifact';
 import { buildSharedFixtures } from './test/shared-fixtures';
 
 it('writes shared fixtures', () => {
@@ -11,4 +16,9 @@ it('writes shared fixtures', () => {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, `${JSON.stringify(value, null, 2)}\n`);
   }
+});
+
+it('writes the practical capability registry', () => {
+  const target = fileURLToPath(new URL(`../../${CAPABILITY_ARTIFACT}`, import.meta.url));
+  writeFileSync(target, renderArtifact(buildCapabilityArtifact()));
 });

@@ -329,5 +329,17 @@
   "labs.precaution.17": "Nitrogen dioxide is toxic. Use supervised ventilation, heat-resistant equipment and disconnect gas tubing before stopping heat.",
   "labs.precaution.18": "Metal salts can be harmful; avoid contact and collect waste separately.",
   "labs.precaution.19": "Permanganate is an oxidizer; the acid mixture is corrosive. Never mouth-pipette.",
-  "labs.precaution.20": "Hot acidified oxalate and permanganate require eye protection and supervised handling. Never mouth-pipette."
+  "labs.precaution.20": "Hot acidified oxalate and permanganate require eye protection and supervised handling. Never mouth-pipette.",
+  "capability.summary": "What this simulation covers",
+  "capability.modes": "Modes:",
+  "capability.not_included": "Not included in this simulation:",
+  "capability.unsupported.automatic_mode": "Automatic demonstration",
+  "capability.unsupported.manual_mode": "Manual mode (free choice of actions)",
+  "capability.unsupported.guidance_levels": "Choice of guidance level",
+  "capability.unsupported.competency_estimate": "A scored practical competency estimate",
+  "capability.unsupported.written_answer_checking": "Automatic checking of written answers (your teacher reviews them)",
+  "capability.unsupported.server_session": "Saving to your account (work stays in this tab until refresh)",
+  "capability.unsupported.itemised_apparatus": "Each piece of apparatus and each chemical as a separate object",
+  "capability.unsupported.predicted_measurements": "Predicted measurements (readings come from you or from practice data)",
+  "capability.engine_results": "Results come only from the simulation's fixed rules, never from AI."
 }

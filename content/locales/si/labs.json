@@ -329,5 +329,17 @@
   "labs.precaution.17": "නයිට්‍රජන් ඩයොක්සයිඩ් විෂයි. අධීක්ෂිත වාතාශ්‍රය, තාප ප්‍රතිරෝධී උපකරණ භාවිත කර රත් කිරීම නැවැත්වීමට පෙර වායු නළය ඉවත් කරන්න.",
   "labs.precaution.18": "ලෝහ ලවණ හානිකර විය හැක; ස්පර්ශය වළක්වා අපද්‍රව්‍ය වෙන් කර එකතු කරන්න.",
   "labs.precaution.19": "පර්මැංගනේට් ඔක්සිකාරකයකි; අම්ල මිශ්‍රණය විඛාදකයි. මුඛයෙන් පිපෙට් නොකරන්න.",
-  "labs.precaution.20": "උණු ආම්ලික ඔක්සලේට් හා පර්මැංගනේට් සඳහා ඇස් ආරක්ෂාව හා අධීක්ෂිත හැසිරවීම අවශ්‍යය. මුඛයෙන් පිපෙට් නොකරන්න."
+  "labs.precaution.20": "උණු ආම්ලික ඔක්සලේට් හා පර්මැංගනේට් සඳහා ඇස් ආරක්ෂාව හා අධීක්ෂිත හැසිරවීම අවශ්‍යය. මුඛයෙන් පිපෙට් නොකරන්න.",
+  "capability.summary": "මෙම අනුකරණයේ ඇතුළත් දේ",
+  "capability.modes": "ප්‍රකාර:",
+  "capability.not_included": "මෙම අනුකරණයේ ඇතුළත් නොවේ:",
+  "capability.unsupported.automatic_mode": "ස්වයංක්‍රීය නිරූපණය",
+  "capability.unsupported.manual_mode": "අතින් කරන ප්‍රකාරය (ක්‍රියා නිදහසේ තේරීම)",
+  "capability.unsupported.guidance_levels": "මඟපෙන්වීම් මට්ටම තේරීම",
+  "capability.unsupported.competency_estimate": "ලකුණු සහිත ප්‍රායෝගික නිපුණතා ඇස්තමේන්තුවක්",
+  "capability.unsupported.written_answer_checking": "ලිඛිත පිළිතුරු ස්වයංක්‍රීයව පරීක්ෂා කිරීම (ඔබේ ගුරුවරයා ඒවා සමාලෝචනය කරයි)",
+  "capability.unsupported.server_session": "ඔබේ ගිණුමට සුරැකීම (නැවත පූරණය කරන තුරු වැඩ මෙම ටැබයේ පමණක් රැඳේ)",
+  "capability.unsupported.itemised_apparatus": "එක් එක් උපකරණය හා රසායනය වෙනම වස්තුවක් ලෙස",
+  "capability.unsupported.predicted_measurements": "පුරෝකථනය කළ මිනුම් (පාඨාංක ඔබෙන් හෝ පුහුණු දත්ත වලින් ලැබේ)",
+  "capability.engine_results": "ප්‍රතිඵල ලැබෙන්නේ අනුකරණයේ ස්ථාවර නීති වලින් පමණි; කිසිවිට AI මගින් නොවේ."
 }

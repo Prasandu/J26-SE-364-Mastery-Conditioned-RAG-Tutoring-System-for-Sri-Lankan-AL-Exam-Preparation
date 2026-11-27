@@ -6,13 +6,14 @@ import hashlib
 import json
 import secrets
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
 from starlette.concurrency import run_in_threadpool
 
+from app.capabilities import load_modes
 from app.errors import ApiError
 from app.models import ActionSubmission, CreateSessionRequest, NotebookSaveRequest
 from app.principal import Principal
@@ -24,6 +25,7 @@ from app.repositories import (
     SessionRecord,
     StoredEvent,
 )
+from app.settings import REPO_ROOT
 from app.verifier import ExperimentContext, Verifier, VerifierFailure, VerifierRejected
 
 _FAILURE = {
@@ -57,8 +59,11 @@ class SessionService:
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         seed: Callable[[], int] = lambda: secrets.randbelow(2**32),
         utc_offset_minutes: int = 330,
+        modes: Mapping[int, Sequence[str]] | None = None,
     ) -> None:
         self._repos = repos
+        # LAB-011: modes per practical from the engines' published capability registry.
+        self._modes = modes if modes is not None else load_modes(REPO_ROOT / "content")
         self._verifier = verifier
         self._now = now
         self._seed = seed
@@ -172,8 +177,7 @@ class SessionService:
         exp = self._experiment(experiment_id)
         return {"summary": self._summary(exp), "definition": exp.definition}
 
-    @staticmethod
-    def _summary(exp: ExperimentRecord) -> dict[str, Any]:
+    def _summary(self, exp: ExperimentRecord) -> dict[str, Any]:
         return {
             "experimentId": exp.experiment_id,
             "experimentNumber": exp.experiment_number,
@@ -181,7 +185,7 @@ class SessionService:
             "definitionVersion": exp.definition_version,
             "assessmentVersion": exp.assessment_version,
             "active": exp.active,
-            "modes": ["automatic", "guided", "manual"],
+            "modes": list(self._modes.get(exp.experiment_number, ())),
             "locales": ["en", "si"],
         }
 
@@ -203,6 +207,14 @@ class SessionService:
                     "definitionVersion": exp.definition_version,
                     "assessmentVersion": exp.assessment_version,
                 },
+            )
+        supported = list(self._modes.get(exp.experiment_number, ()))
+        if req.mode not in supported:
+            raise ApiError(
+                422,
+                "invalid_request",
+                "This practical's simulation does not support the requested mode",
+                details={"supportedModes": ",".join(supported)},
             )
         now = self._now()
         session_id = uuid.uuid4()

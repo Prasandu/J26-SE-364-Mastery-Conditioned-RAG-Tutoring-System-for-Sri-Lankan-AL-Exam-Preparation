@@ -93,6 +93,8 @@ def is_placeholder(name: str, match: re.Match[str]) -> bool:
 
 
 def scan_text(text: str) -> list[tuple[int, str]]:
+    # Same result on a Windows (CRLF) checkout as on CI (LF): "$" never matches before "\r".
+    text = text.replace("\r\n", "\n")
     findings: list[tuple[int, str]] = []
     for name, pattern in PATTERNS:
         for match in pattern.finditer(text):
@@ -122,11 +124,14 @@ def scan_repository() -> list[tuple[str, int, str]]:
 
 
 def self_test() -> int:
+    # Positive fixtures are assembled at run time so this file never matches its own scan.
     fake = "gsk_" + "A1b2C3d4" * 6
+    remote_url = "postgresql+psycopg://user:" + "Zx9QwErTy7" + "@aws-0-ap-south-1.pooler.supabase.com:6543/db"
+    key_block = "-----BEGIN EC " + "PRIVATE KEY-----"
     cases = {
         f"GROQ_API_KEY={fake}": True,
-        "DATABASE_URL=postgresql+psycopg://user:Zx9QwErTy7@aws-0-ap-south-1.pooler.supabase.com:6543/postgres": True,
-        "-----BEGIN EC PRIVATE KEY-----": True,
+        f"DATABASE_URL={remote_url}": True,
+        key_block: True,
         "GROQ_API_KEY=": False,
         "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres": False,
         "JWT_SECRET=change-me-to-a-long-random-string": False,

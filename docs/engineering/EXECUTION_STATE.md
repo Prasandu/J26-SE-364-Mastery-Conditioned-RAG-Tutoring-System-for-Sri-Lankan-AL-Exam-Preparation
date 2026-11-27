@@ -764,6 +764,8 @@ Rotation is still needed for the credentials pasted into a chat.
 - `undici` via jsdom, tests only: every patched release needs Node ≥ 22.19, above the declared engines;
 - C4 `transformers` / `sentence-transformers`: the fixes are major versions that need a retrieval re-evaluation first.
 
+**First CI run (`ac7da55`).** 7/8 jobs green, including `journey` on a clean runner. `security` failed on its own self-test fixtures: the scanner was untracked locally, so it never scanned itself. The run also exposed a second gap: on this CRLF checkout the credential-assignment rule never matched, because `$` does not match before ``. Fixed by building the fixtures at run time and normalising line endings; the scan stays clean with the rule active.
+
 **Runbook.** `docs/engineering/PRODUCTION_READINESS.md` covers credential rotation (names only), RLS and ownership evidence, rate-limit inventory, health, recovery and open items. CI gains a `security` job.
 
 **Results**

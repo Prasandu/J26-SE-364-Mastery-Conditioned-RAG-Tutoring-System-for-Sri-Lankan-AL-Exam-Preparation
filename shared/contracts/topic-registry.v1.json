@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "DAT-009 canonical topic registry. Canonical ids are the planner taxonomy in shared/contracts/topics.json. Each alias maps one source component's code to exactly one canonical id and is usable only once a Chemistry reviewer has approved it. Unknown, unreviewed or conflicting codes are quarantined - never fuzzy-matched. Assessment codes (e.g. U03_5) come from its syllabus import (assessment-service/app/import_syllabus.py), which is not in git, so no alias is listed yet.",
+  "canonicalSource": "shared/contracts/topics.json",
+  "sources": ["assessment", "support", "lab"],
+  "aliases": []
+}

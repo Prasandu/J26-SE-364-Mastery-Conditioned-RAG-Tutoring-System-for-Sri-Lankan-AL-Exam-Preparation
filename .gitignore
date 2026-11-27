@@ -76,17 +76,15 @@ web_modules/
 !.env.example
 secrets.json
 
+# Do not add blanket ignores for project folders (docs/, tests/, migrations/, infra/,
+# shared/): every component tracks files there, and a blanket rule silently keeps
+# new tests and migrations out of commits.
+
 # Research proposal document
 IT23278530.pdf
 
-docs/
-infra/
-shared/
 state/
-CLAUDE.md
 .claude/
-migrations/
-chemistry-tutor/support-service/migrations/versions/
 IT23215306.pdf
 
 # Python  ->  assessment-service/
@@ -151,8 +149,6 @@ desktop.ini
 .DS_Store
 
 IT23278530.txt
-tests/
-docs/
 sheets/
 results/
 state/

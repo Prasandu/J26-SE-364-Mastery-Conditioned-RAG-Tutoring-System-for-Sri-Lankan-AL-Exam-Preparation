@@ -1,0 +1,5 @@
+# Generated JSON Schemas are compared byte-for-byte with renderSchema() output
+# (packages/contracts/test/schema-export.test.ts), which writes LF. Without this,
+# Git for Windows' default core.autocrlf=true turns them into CRLF on checkout
+# and the contract tests fail although the content is identical.
+packages/contracts/schema/*.json text eol=lf

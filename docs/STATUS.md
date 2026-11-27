@@ -1,6 +1,26 @@
 # Status — Milestone M1
 
-_Last updated: 2026-10-22 (full learner journeys; workbench interactions; practicals 21–30 and local simulation authoring)_
+_Last updated: 2026-11-24 (four-component integration on `all-features`)_
+
+## Four-component integration (2026-11-24)
+
+- The lab now runs alongside assessment, planning and support in one repository (root
+  [README](../README.md)); the lab's own run guide moved to [apps/README.md](../apps/README.md).
+- Lab changes only: `apps/web` dev server moved from 5173 to **5174** (the integrated web app in
+  `frontend/` owns 5173 and links to the lab from `/lab`); `LAB_CORS_ORIGINS` template lists both;
+  the local `.env` points `LAB_DATABASE_URL` at the shared Supabase project (previous lab-only URL
+  kept as a comment). No simulation, content or contract change.
+- The lab's tables stay in `public`; checked against the assessment service's 20 `public` tables:
+  no name overlap. The support service's `knowledge_chunks` now lives in `support`.
+- Not done: Supabase sign-in for the lab (`LAB_PRINCIPAL_PROVIDER=supabase_jwt` is still a
+  fail-closed placeholder; production authentication is outside M1 scope). Copying the lab's
+  admin records from the old project waits until both projects are reachable again.
+- Not run against a database: every Supabase project (shared, old lab, old assessment) answered
+  "tenant/user not found" on 2026-11-24, most likely paused.
+- 2026-11-26: on 2026-11-25 (13:28-13:34) the files directly in the repository root and in each
+  top-level folder were deleted, `.git/HEAD`/`config`/`index` included (cause unknown). Repaired:
+  `.git` metadata recreated (objects, refs and the stash had survived; `git fsck` clean), tracked
+  files restored from `HEAD`, and this session's edited files recreated.
 
 ## Admin availability restoration (2026-10-22)
 

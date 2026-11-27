@@ -131,6 +131,14 @@ use `{"detail": "..."}`.
 
 ## Pull adapter coordination
 
+**Superseded (DAT-010):** the finalized-mark pull is `app/adapters/assessment_feed.py`
+against assessment's `GET /integration/events` (`X-Integration-Key`); see
+`docs/engineering/INTEGRATION_CONTRACTS.md` and
+`shared/contracts/assessment-criterion-finalized.v1.json`. Service-only triggers:
+`POST /api/v1/integration/assessment/pull`, `GET .../quarantine`,
+`POST .../quarantine/release` (`X-API-Key`). The older proposal below is kept for
+reference only.
+
 The optional planning-service pull adapter expects the assessment service to
 provide `GET /api/v1/assessment-events`, optionally accepting a `since` query
 parameter and returning either an event array or `{"events": [...]}`. Each
@@ -191,6 +199,23 @@ Predicted plans use the authenticated student's stored mastery/weak-topic
 state; an optional `topics` list filters that state. Predicted plans without
 stored mastery data return 409. Client-provided priorities do not override
 predicted priorities.
+
+**Self-reported syllabus coverage (manual plans only, PL-008).** Optional
+`coverage: [{"topic_id", "covered_percent": 0-100, "need": "learn_new" |
+"repeat_theory" | "past_papers" | "laboratory" | "exam_sprint" | null}]`, each
+topic one of `topics`. It is stored in `constraints.coverage` with
+`"source": "self_reported"` and `updated_at`, and it never creates mastery or
+topic evidence. A topic's priority is the student's priority scaled by the
+remaining coverage, never below 25% of it. While a topic has no results, the
+coverage and need choose its activity. A parent and its own sub-topic reported
+in contradiction (100% vs less, 0% vs more) → 422. `coverage` on a predicted
+plan → 422.
+
+Every scheduled task's `reason_details.evidence_source` says what drove it
+(PL-009): `results`, `self_reported_coverage`, `student_choice` or
+`no_evidence`, with `self_reported_coverage` / `coverage_need` when given.
+Without results `has_evidence` is false and `mastery` is only the planner's
+neutral prior - clients must not display it as the student's mastery.
 
 Returns **201 Created** with the plan ID, mode, exam date, target grade, and
 stored constraints. Creation and subsequent constraint edits are recorded in

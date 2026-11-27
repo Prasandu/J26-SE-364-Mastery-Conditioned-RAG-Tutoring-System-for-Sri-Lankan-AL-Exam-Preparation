@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://j26-se-364.local/contracts/assessment-criterion-finalized.v1.json",
+  "title": "assessment.criterion.finalized v1",
+  "description": "DAT-010. One finalized official decision on one marking point, produced by assessment-service GET /integration/events (X-Integration-Key) and consumed by planning-service. Only rule, checker and teacher decisions are emitted - never a generative model's. eventId = UUIDv5(eventIdNamespace, sourceEntityId + '#' + sourceVersion), so ids are stable across reads and any version's id can be derived. Consumers dedupe on event_id and, per source_entity_id, keep only the highest source_version (a teacher correction supersedes; an older version arriving later is stale). Additive fields may appear within major version 1; consumers ignore unknown fields and reject any other major version.",
+  "x-eventIdNamespace": "5b0f0c34-6a8e-4c2b-9d1f-2a7e3c4b5d6e",
+  "x-feed": {
+    "endpoint": "GET /integration/events?since=&limit=&after=",
+    "auth": "X-Integration-Key (assessment INTEGRATION_KEY_COMPONENT3 = planner ASSESSMENT_SERVICE_API_KEY)",
+    "order": "(occurred_at, point result id) ascending - keyset",
+    "page": { "events": "array of this event", "next_cursor": "opaque string or null", "has_more": "boolean", "as_of": "date-time", "schema_version": "1.0.0" }
+  },
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "producer",
+    "subject_user_id",
+    "source_entity_id",
+    "source_version",
+    "source_topic_codes",
+    "status",
+    "evidence_class",
+    "score",
+    "paper_id",
+    "assessed_at",
+    "occurred_at"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "const": "assessment.criterion.finalized" },
+    "producer": { "const": "assessment-service" },
+    "subject_user_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The student's Supabase user id from the linked account - never a client-supplied value."
+    },
+    "source_entity_id": {
+      "type": "string",
+      "pattern": "^attempt/[0-9a-fA-F-]{36}/point/[^/]{1,80}$",
+      "description": "attempt/<attempt id>/point/<marking point code>"
+    },
+    "source_version": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 = deterministic rule/checker decision; n = the n-th teacher decision on the point."
+    },
+    "source_topic_codes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 80 },
+      "description": "Assessment topic codes (e.g. U03_5). The consumer maps them only through reviewed aliases in topic-registry.v1.json; anything else is quarantined."
+    },
+    "status": { "const": "final" },
+    "evidence_class": { "enum": ["deterministic", "teacher_verified"] },
+    "score": {
+      "type": "object",
+      "required": ["awarded", "maximum"],
+      "properties": {
+        "awarded": { "type": "number", "minimum": 0 },
+        "maximum": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "paper_id": { "type": "integer" },
+    "assessed_at": { "type": "string", "format": "date-time", "description": "When the student answered (attempt submitted, else marked)." },
+    "occurred_at": { "type": "string", "format": "date-time", "description": "When this decision became final (marking or latest teacher review)." }
+  }
+}

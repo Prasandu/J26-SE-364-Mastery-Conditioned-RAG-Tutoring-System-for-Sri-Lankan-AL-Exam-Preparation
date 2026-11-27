@@ -13,8 +13,8 @@ export function AttemptNotices({ attempt }: { attempt: Attempt }) {
       )}
       {attempt.includes_ai_judged_marks && (
         <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-700" role="note">
-          Some marks in this result were decided by the earlier automatic marker and have not been
-          checked by a teacher. You can ask your teacher to review them.
+          Some marks in this result were decided by the earlier automatic marker. They are not
+          official marks: they stay provisional until a teacher checks them.
         </p>
       )}
     </>

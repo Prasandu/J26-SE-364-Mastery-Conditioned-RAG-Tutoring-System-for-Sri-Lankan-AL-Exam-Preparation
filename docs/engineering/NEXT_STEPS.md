@@ -6,7 +6,7 @@ _Checkpoint 2026-11-27 (after operator approvals). Everything up to `9f7c30d` is
 
 - Committed and pushed. The first GitHub CI run failed only in the support job (index rule); after the fix, all 6 jobs pass.
 - `refs/agents/*` deleted. Lab stash kept.
-- Legacy AI marks: confidence <= 0.5 → teacher review, otherwise kept and labelled (tool built; not yet run on real data).
+- Legacy AI marks (corrected 2026-11-27): **every** AI-only decision goes to teacher review whatever its confidence; confidence only sets review priority (tool built; not run on real data, `--apply` needs explicit approval).
 - Class rosters for teacher review.
 
 ## Still needs the operator (access, people or permissions)

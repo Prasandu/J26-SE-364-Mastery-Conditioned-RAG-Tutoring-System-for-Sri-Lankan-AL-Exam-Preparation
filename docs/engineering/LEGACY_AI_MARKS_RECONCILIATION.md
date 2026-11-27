@@ -1,19 +1,29 @@
 # Legacy AI-awarded marks: reconciliation plan
 
-_Status 2026-11-27. **Operator decision recorded (2026-11-27): an AI-decided point with confidence 50% or less goes to teacher review; otherwise it is kept and labelled.** Implemented and tested locally; **not yet applied to any real database** (the shared Supabase project is unreachable)._
+_Status 2026-11-27. **Operator decision, corrected 2026-11-27: no AI-only decision is an official mark, whatever its confidence.** Every historical AI-decided point stays provisional, and outside trusted mastery, until an approved deterministic checker or an authorized teacher validates it. Confidence may only order the review. The policy is implemented and tested locally. It has **not been run on any real database**, and `--apply` on real student data needs explicit operator approval._
+
+> Superseded: the first version of the decision ("confidence > 0.5 kept and labelled") was never applied to real data. The code no longer keeps any AI-only mark. Audit rows that version may have written in test databases (`action = kept_labelled`) do not stop a point from being sent now.
 
 ## Decision as implemented
 
-- `assessment-service/app/services/legacy_ai_policy.py` and CLI `python -m app.reconcile_legacy_ai_marks`. The CLI dry-runs by default; `--apply` changes data, `--threshold` sets the cut-off (default 0.5), `--revert RUN_ID` undoes a run.
-- Confidence at or below the threshold, or none recorded, sends the point to teacher review: `needs_review`, 0 marks, with the AI verdict, confidence and evidence kept as the suggestion.
-- The attempt becomes `submitted` and keeps its old total, flagged `score_is_provisional`, until a teacher decides. The existing review flow then recomputes the total.
-- A point above the threshold stays and is labelled `includes_ai_judged_marks` on the attempt. It still never reaches mastery or the planner.
-- Every point a run examines is recorded in `legacy_ai_reclassifications` (migration 0024, RLS). A run is one transaction, and running it again touches nothing new.
-- A revert keeps any decision a teacher made since.
-- Students see a plain notice for provisional totals and for AI-judged marks (`frontend/src/features/attempt/AttemptNotices.tsx`).
-- Tests: `assessment-service/tests/test_legacy_ai_policy.py`, 13 (SQLite and Postgres); `frontend/tests/AttemptNotices.test.tsx`, 3.
+- Code: `assessment-service/app/services/legacy_ai_policy.py`. CLI: `python -m app.reconcile_legacy_ai_marks` (dry run by default; `--apply`; `--priority-threshold`, default 0.5; `--revert RUN_ID`).
+- **Every** AI-decided point (`method = llm`, awarded or not awarded) goes to teacher review: `needs_review`, 0 marks counted. The AI verdict, confidence and evidence stay on the point as the teacher's suggestion.
+- **Confidence sets only `review_priority`**: `high` at or below the threshold or when none was recorded, `normal` above it (migration 0026). It never keeps or awards a mark.
+- **Original results are preserved.** Each sent point's previous status, marks, attempt status and confidence are written to `legacy_ai_reclassifications` (migrations 0024/0026, RLS). Nothing is deleted.
+- **The attempt total is provisional.** The attempt becomes `submitted` and keeps its old total as provisional until the points are decided. The existing review flow (`review.record_decision` → `refresh_scores`) then recomputes it.
+- **Before any run**, an attempt that still counts an AI-only decision is already reported as `score_is_provisional` with `includes_ai_judged_marks`. Students are told the marks are not official (`frontend/src/features/attempt/AttemptNotices.tsx`).
+- AI-only decisions never reach mastery or the planner feed (`TRUSTED_METHODS`). This is tested for a 0.9-confidence point.
+- A run is one transaction and running it again touches nothing new. A revert keeps any decision a teacher made since.
+- Tests: `assessment-service/tests/test_legacy_ai_policy.py` (SQLite and Postgres) and `frontend/tests/AttemptNotices.test.tsx`.
 
-**To run on the real database:** back it up, run the dry run, review the counts, run `--apply`, and keep the printed `run_id`.
+**To run on the real database, only after explicit approval:**
+
+1. Back it up.
+2. Run the dry run and review the counts.
+3. Run `--apply` and keep the printed `run_id`.
+4. Teachers work through the queue, `high` priority first.
+
+A later approved deterministic checker could validate some points automatically. That is a separate, reviewed re-marking job, not part of this script.
 
 ## The problem
 

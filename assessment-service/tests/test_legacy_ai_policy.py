@@ -1,7 +1,8 @@
-"""Legacy AI-marks policy (operator decision 2026-11-27): AI-decided points with
-confidence <= 0.5 (or none) go back to a teacher; the rest stay, labelled as AI-judged.
-Dry run by default, audited, idempotent, revertible; the total is provisional until the
-teacher decides. Throwaway SQLite (and Postgres when ASSESSMENT_TEST_PG_URL is set)."""
+"""Legacy AI-marks policy (operator correction 2026-11-27): no AI-only decision is an
+official mark, whatever its confidence. Every one goes back to a teacher; confidence only
+sets the review priority; originals stay in the audit and on the point; the total is
+provisional until a teacher decides. Dry run by default, idempotent, revertible.
+Throwaway SQLite (and Postgres when ASSESSMENT_TEST_PG_URL is set)."""
 
 import os
 
@@ -39,7 +40,8 @@ from app.models import (
     UserRole,
 )
 from app.schemas.review import ReviewDecisionIn
-from app.services.legacy_ai_policy import apply_policy, attempt_labels, goes_to_review, revert_run
+from app.services.integration import finalized_events
+from app.services.legacy_ai_policy import apply_policy, attempt_labels, revert_run, review_priority
 from app.services.review import record_decision
 
 PG_URL = os.environ.get("ASSESSMENT_TEST_PG_URL")
@@ -131,54 +133,79 @@ def by_code(db: Session) -> dict[str, PointResult]:
     return {r.point.code: r for r in db.scalars(select(PointResult))}
 
 
-def test_the_cut_off_is_inclusive_and_missing_confidence_counts_as_low():
-    assert goes_to_review(0.5, 0.5) and goes_to_review(0.1, 0.5) and goes_to_review(None, 0.5)
-    assert not goes_to_review(0.51, 0.5)
+AI_CODES = ("KEEP", "LOW", "EDGE", "NONE")
 
 
-def test_a_dry_run_changes_nothing(db):
+def test_confidence_only_sets_the_review_priority():
+    assert review_priority(0.5, 0.5) == "high" and review_priority(None, 0.5) == "high"
+    assert review_priority(0.51, 0.5) == "normal" and review_priority(0.99, 0.5) == "normal"
+
+
+def test_a_dry_run_changes_nothing_but_the_total_is_already_provisional(db):
     attempt = seed(db)
 
     report = apply_policy(db, apply=False)
     db.rollback()
 
-    assert report.summary() | {"run_id": None} == {
+    assert report.summary() == {
         "run_id": None,
         "applied": False,
-        "threshold": 0.5,
-        "sent_to_review": 3,
-        "kept_labelled": 1,
+        "priority_threshold": 0.5,
+        "sent_to_review": 4,
+        "high_priority": 3,
+        "normal_priority": 1,
         "attempts": 1,
         "students": 1,
     }
     assert db.scalar(select(func.count()).select_from(LegacyAiReclassification)) == 0
     db.refresh(attempt)
     assert attempt.status == AttemptStatus.MARKED and attempt.score == 8.0
-    assert by_code(db)["LOW"].status == PointStatus.AWARDED
+    assert by_code(db)["KEEP"].status == PointStatus.AWARDED
+    # Not reconciled yet, and still not an official result: AI-only marks are in the total.
+    assert attempt_labels(attempt)["includes_ai_judged_marks"] is True
+    assert attempt_labels(attempt)["score_is_provisional"] is True
 
 
-def test_applying_sends_low_confidence_points_to_a_teacher_and_labels_the_rest(db):
+def test_every_ai_only_decision_goes_to_a_teacher_whatever_its_confidence(db):
     attempt = seed(db)
 
     report = apply_policy(db, apply=True)
 
     points = by_code(db)
-    for code in ("LOW", "EDGE", "NONE"):
+    for code in AI_CODES:  # including KEEP, decided with confidence 0.9
         assert points[code].status == PointStatus.NEEDS_REVIEW and points[code].awarded == 0
         assert points[code].evidence == "quoted evidence"  # the AI's suggestion is kept
-    assert points["LOW"].ai_awarded is True and points["LOW"].confidence == 0.4
-    assert points["KEEP"].status == PointStatus.AWARDED and points["KEEP"].awarded == 2
+        assert "not a validated mark" in points[code].reason
+    assert points["KEEP"].ai_awarded is True and points["KEEP"].confidence == 0.9
     assert points["RULE"].status == PointStatus.AWARDED and points["RULE"].method == MarkingMethod.RULE
     db.refresh(attempt)
-    assert attempt.status == AttemptStatus.SUBMITTED and attempt.score == 8.0  # provisional total
+    assert attempt.status == AttemptStatus.SUBMITTED and attempt.score == 8.0  # original total kept
     assert attempt_labels(attempt) == {
-        "includes_ai_judged_marks": True,
-        "points_awaiting_teacher": 3,
+        "includes_ai_judged_marks": False,
+        "points_awaiting_teacher": 4,
         "score_is_provisional": True,
     }
-    audit = db.scalars(select(LegacyAiReclassification)).all()
-    assert len(audit) == 4 and {a.run_id for a in audit} == {report.run_id}
-    assert sorted(a.action for a in audit) == ["kept_labelled"] + ["sent_to_review"] * 3
+    audit = {a.point_result_id: a for a in db.scalars(select(LegacyAiReclassification))}
+    assert len(audit) == 4 and {a.run_id for a in audit.values()} == {report.run_id}
+    assert {a.action for a in audit.values()} == {"sent_to_review"}
+    assert audit[points["KEEP"].id].review_priority == "normal"
+    assert {audit[points[c].id].review_priority for c in ("LOW", "EDGE", "NONE")} == {"high"}
+    assert audit[points["KEEP"].id].previous_status == "awarded"  # original result preserved
+    assert audit[points["KEEP"].id].previous_awarded == 2.0
+
+
+def test_ai_only_marks_never_reach_the_planner_feed(db):
+    attempt = seed(db)
+    student = db.scalar(select(User).where(User.email == attempt.student_ref))
+    student.supabase_user_id = "6f1c0d2e-8b3a-4c5d-9e7f-0a1b2c3d4e5f"
+    db.commit()
+
+    before = finalized_events(db, since=NOW - timedelta(days=60)).events
+    apply_policy(db, apply=True)
+    after = finalized_events(db, since=NOW - timedelta(days=60)).events
+
+    assert [e.source_entity_id.rsplit("/", 1)[1] for e in before] == ["RULE"]  # not KEEP (0.9)
+    assert after == []  # the attempt is waiting for a teacher again
 
 
 def test_a_second_run_touches_nothing_new(db):
@@ -187,8 +214,33 @@ def test_a_second_run_touches_nothing_new(db):
 
     again = apply_policy(db, apply=True)
 
-    assert (again.sent_to_review, again.kept_labelled) == (0, 0)
+    assert again.sent_to_review == 0
     assert db.scalar(select(func.count()).select_from(LegacyAiReclassification)) == 4
+
+
+def test_points_only_labelled_under_the_superseded_policy_are_sent_now(db):
+    attempt = seed(db)
+    keep = by_code(db)["KEEP"]
+    db.add(
+        LegacyAiReclassification(
+            run_id=uuid.uuid4(),
+            run_at=NOW,
+            threshold=0.5,
+            point_result_id=keep.id,
+            attempt_id=attempt.id,
+            action="kept_labelled",
+            previous_status="awarded",
+            previous_awarded=2.0,
+            previous_attempt_status="marked",
+            confidence=0.9,
+        )
+    )
+    db.commit()
+
+    report = apply_policy(db, apply=True)
+
+    assert report.sent_to_review == 4
+    assert by_code(db)["KEEP"].status == PointStatus.NEEDS_REVIEW
 
 
 def test_teacher_decisions_finalize_the_total(db):
@@ -196,7 +248,7 @@ def test_teacher_decisions_finalize_the_total(db):
     apply_policy(db, apply=True)
     points = by_code(db)
 
-    for code, awarded in (("LOW", False), ("EDGE", True), ("NONE", True)):
+    for code, awarded in (("KEEP", True), ("LOW", False), ("EDGE", True), ("NONE", True)):
         record_decision(
             db,
             points[code].id,
@@ -205,9 +257,13 @@ def test_teacher_decisions_finalize_the_total(db):
 
     db.refresh(attempt)
     assert attempt.status == AttemptStatus.MARKED
-    assert attempt.score == 8.0  # KEEP 2 + RULE 2 + EDGE 2 + NONE 2 (LOW now 0)
-    assert attempt_labels(attempt)["score_is_provisional"] is False
-    assert by_code(db)["LOW"].method == MarkingMethod.TEACHER
+    assert attempt.score == 8.0  # RULE 2 + KEEP 2 + EDGE 2 + NONE 2; LOW now 0
+    assert attempt_labels(attempt) == {
+        "includes_ai_judged_marks": False,
+        "points_awaiting_teacher": 0,
+        "score_is_provisional": False,
+    }
+    assert {by_code(db)[c].method for c in AI_CODES} == {MarkingMethod.TEACHER}
 
 
 def test_a_revert_restores_untouched_points_and_keeps_teacher_decisions(db):
@@ -221,19 +277,15 @@ def test_a_revert_restores_untouched_points_and_keeps_teacher_decisions(db):
     reverted = revert_run(db, report.run_id)
 
     points = by_code(db)
-    assert reverted == 3  # EDGE, NONE and the KEEP label; LOW was decided by a teacher
-    assert points["EDGE"].status == PointStatus.AWARDED and points["EDGE"].awarded == 2
+    assert reverted == 3  # KEEP, EDGE, NONE; LOW was decided by a teacher
+    assert points["KEEP"].status == PointStatus.AWARDED and points["KEEP"].awarded == 2
     assert points["NONE"].status == PointStatus.NOT_AWARDED
     assert points["LOW"].method == MarkingMethod.TEACHER and points["LOW"].awarded == 0
     db.refresh(attempt)
     assert attempt.status == AttemptStatus.MARKED
-    assert all(
-        a.reverted_at is not None
-        for a in db.scalars(select(LegacyAiReclassification))
-        if a.point_result_id != points["LOW"].id
-    )
+    assert attempt_labels(attempt)["score_is_provisional"] is True  # AI-only marks are back in
 
 
-def test_the_threshold_must_be_a_probability(db):
+def test_the_priority_threshold_must_be_a_probability(db):
     with pytest.raises(ValueError):
-        apply_policy(db, threshold=1.5)
+        apply_policy(db, priority_threshold=1.5)

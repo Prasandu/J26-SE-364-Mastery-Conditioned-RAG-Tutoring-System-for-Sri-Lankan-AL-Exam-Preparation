@@ -186,9 +186,9 @@ class PointReview(Base):
 class LegacyAiReclassification(Base):
     """Audit of the legacy AI-marks policy (docs/engineering/LEGACY_AI_MARKS_RECONCILIATION.md).
 
-    One row per AI-decided point a reconciliation run looked at: what it was before and what
-    the run did - sent back to a teacher (AI confidence at or below the threshold, or none
-    recorded) or kept with an "AI-judged" label. Never deleted; a revert stamps reverted_at.
+    One row per AI-decided point a reconciliation run sent back to a teacher: what it was
+    before (status, marks, attempt status, confidence) and its review priority. Never
+    deleted; a revert stamps reverted_at.
     """
 
     __tablename__ = "legacy_ai_reclassifications"
@@ -201,7 +201,9 @@ class LegacyAiReclassification(Base):
         ForeignKey("point_results.id", ondelete="CASCADE"), index=True
     )
     attempt_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True)
-    action: Mapped[str] = mapped_column(String(20))  # sent_to_review | kept_labelled
+    action: Mapped[str] = mapped_column(String(20))  # sent_to_review (kept_labelled: superseded policy)
+    # Review order only (confidence never authorises a mark): high | normal. Migration 0026.
+    review_priority: Mapped[str | None] = mapped_column(String(10))
     previous_status: Mapped[str] = mapped_column(String(20))
     previous_awarded: Mapped[float] = mapped_column(Float)
     previous_attempt_status: Mapped[str] = mapped_column(String(20))

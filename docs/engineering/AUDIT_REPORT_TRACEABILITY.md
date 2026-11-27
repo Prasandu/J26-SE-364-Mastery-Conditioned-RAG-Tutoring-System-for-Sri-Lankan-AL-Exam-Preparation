@@ -30,7 +30,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | SEC-003 flagged intake | Done (service key) `[TESTED]` | `chemistry-tutor/support-service/app/security.py`. A separate "flag my own question" student endpoint is not built |
 | SEC-004 lab JWT + durable sessions | JWT done `[TESTED]`; durable sessions open | `apps/api/app/principal.py` |
 | DAT-005 canonical ids + event schemas | Done for C2→C3 `[TESTED]`; topic aliases `[BLOCKED]` | `shared/contracts/assessment-criterion-finalized.v1.json`, `topic-registry.v1.json` (0 approved aliases; needs C2+C3 owner review) |
-| GRD-006 remove AI judge from official scoring | Done `[TESTED]`; legacy policy (confidence <= 0.5 → teacher review, else labelled) implemented, not yet run on real data | `assessment-service/app/services/marking.py`, `mastery.py`. Plan for historical marks: `LEGACY_AI_MARKS_RECONCILIATION.md` (operator decision) |
+| GRD-006 remove AI judge from official scoring | Done `[TESTED]`; legacy policy (every AI-only decision → teacher review; confidence only orders the review) implemented, not yet run on real data | `assessment-service/app/services/marking.py`, `mastery.py`. Plan for historical marks: `LEGACY_AI_MARKS_RECONCILIATION.md` (operator decision) |
 | GRD-007 expand chemistry equivalence | `[BLOCKED]` | Needs teacher-approved equivalence content; we must not invent chemistry rules |
 | PL-008 coverage-percentage planner | Done `[TESTED]` | `PlanInput.coverage`, parent/child consistency, coverage-scaled priority, coverage-driven activity, Setup UI (S12) |
 | PL-009 evidence-source labels | Done `[TESTED]` | `reason_details.evidence_source` (results / self_reported_coverage / student_choice / no_evidence); UI "why now" text (S12) |

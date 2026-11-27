@@ -31,10 +31,16 @@ describe("AttemptNotices (legacy AI-marks policy)", () => {
     expect(screen.getByRole("note")).toHaveTextContent("provisional and can go up or down");
   });
 
-  it("labels marks the earlier automatic marker decided", () => {
-    render(<AttemptNotices attempt={attempt({ status: "marked", includes_ai_judged_marks: true })} />);
+  it("says AI-judged marks are not official, even on a marked attempt", () => {
+    render(
+      <AttemptNotices
+        attempt={attempt({ status: "marked", includes_ai_judged_marks: true, score_is_provisional: true })}
+      />,
+    );
 
-    expect(screen.getByRole("note")).toHaveTextContent("earlier automatic marker");
+    const notes = screen.getAllByRole("note").map((note) => note.textContent);
+    expect(notes.some((text) => text?.includes("not official marks"))).toBe(true);
+    expect(notes.some((text) => text?.includes("provisional"))).toBe(true);
   });
 
   it("shows nothing for an ordinary teacher- or rule-marked result", () => {

@@ -159,9 +159,10 @@ def main() -> int:
                 if run.returncode != 0:
                     break
 
-        # Roll back the newest assessment migrations (0025 rosters, 0024 legacy-AI audit, 0023 RLS), then forward.
+        # Roll back the newest assessment migrations (0026 review priority, 0025 rosters, 0024 legacy-AI
+        # audit, 0023 RLS), then forward again.
         down = alembic("assessment", port, "downgrade", "0022")
-        check("assessment: downgrade 0025 -> 0022", down.returncode == 0, (down.stderr or "")[-200:])
+        check("assessment: downgrade 0026 -> 0022", down.returncode == 0, (down.stderr or "")[-200:])
         up = alembic("assessment", port, "upgrade", "head")
         check("assessment: upgrade back to head", up.returncode == 0, (up.stderr or "")[-200:])
         # Same for the planner's newest migration (0010, DAT-010 finalized-mark ledger).
@@ -246,7 +247,7 @@ def main() -> int:
             rows("select tablename from pg_tables where schemaname='public' and not rowsecurity;")
         )
         check("every public table has RLS enabled (lab + assessment)", not no_rls, ",".join(no_rls))
-        check("assessment head is 0025", rows("select version_num from public.alembic_version;") == {"0025"})
+        check("assessment head is 0026", rows("select version_num from public.alembic_version;") == {"0026"})
 
         # Role matrix for assessment's public tables, the way Supabase would expose them:
         # Supabase grants anon/authenticated broad privileges on `public` by default, so

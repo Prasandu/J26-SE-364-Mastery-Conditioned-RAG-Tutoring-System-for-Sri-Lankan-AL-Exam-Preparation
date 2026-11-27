@@ -405,7 +405,7 @@ The audit report (`J26-SE-364_Final_Code_Audit_…pdf`) is mapped item by item i
 
 - Lab stash: kept.
 - Class rosters: approved; next slice.
-- Legacy AI marks: confidence <= 0.5 (or none) goes to teacher review, otherwise kept and labelled.
+- Legacy AI marks: first version (confidence <= 0.5 → review, else kept and labelled) **superseded by the operator's correction in S17**: every AI-only decision goes to review.
 
 **Legacy AI-marks policy as built:** `app/services/legacy_ai_policy.py`, CLI `app/reconcile_legacy_ai_marks.py`, migration 0024 `legacy_ai_reclassifications` (RLS), `AttemptOut` labels and the frontend `AttemptNotices`.
 

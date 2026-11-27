@@ -1,20 +1,28 @@
 # Next steps
 
-_Checkpoint 2026-11-27 05:10 +05:30. M0: `M0_LOCAL_VERIFIED` with exceptions, `M0_REMOTE_BLOCKED` (`BASELINE_AUDIT.md` §6). M1 slices A1-A5, SEC-005c, D (DAT-010) and E (GRD-011), plus audit-report tickets PL-008, PL-009, TUT-014 (Mode B) and the CI workflow (not yet run on GitHub), done locally; full mapping in `AUDIT_REPORT_TRACEABILITY.md`; evidence in `EXECUTION_STATE.md`. Nothing committed._
+_Checkpoint 2026-11-27 (after operator approvals). Everything up to `9f7c30d` is committed and pushed to `all-features`. CI on GitHub runs all 6 jobs. Evidence is in `EXECUTION_STATE.md`; the audit-report mapping is in `AUDIT_REPORT_TRACEABILITY.md`._
 
-## Needs the operator (approval or access)
+## Done after the operator's approval (2026-11-27)
 
-1. **Restore the shared Supabase project** (`oepkg…`); then run each service's migrations
-   (root `README.md`) and set `VITE_SUPABASE_ANON_KEY` in `frontend/.env`.
-2. **Rotate** the credentials in `BASELINE_AUDIT.md` §4.3.
-3. Approve deleting local `refs/agents/*` (old lab keys) and the stray `%USERPROFILE%\.git`
-   (`Remove-Item -Recurse -Force %USERPROFILE%\.git`).
-4. Decide on the lab stash (`feature/Virtual-Laboratory`); its admin-test fix is already applied.
-5. Ask the assessment owner for the uncommitted assessment test suite and `conftest.py`.
-6. Approve committing and pushing to `all-features`.
-7. Decide on historical AI-awarded scores - option A, B or C in `LEGACY_AI_MARKS_RECONCILIATION.md`.
-8. Get C2 + C3 owners to approve assessment-code aliases in `shared/contracts/topic-registry.v1.json` (until then every real finalized mark is quarantined; `GET /api/v1/integration/assessment/quarantine` lists the codes seen).
-9. Choose a scheduler for `python -m scripts.pull_assessment_marks` (cron, platform job) - none is configured.
+- Committed and pushed. The first GitHub CI run failed only in the support job (index rule); after the fix, all 6 jobs pass.
+- `refs/agents/*` deleted. Lab stash kept.
+- Legacy AI marks: confidence <= 0.5 → teacher review, otherwise kept and labelled (tool built; not yet run on real data).
+- Class rosters for teacher review.
+
+## Still needs the operator (access, people or permissions)
+
+1. **Rotate credentials** (`BASELINE_AUDIT.md` §4.3), most urgently the support-service database password that was committed in `.env.example` since `b8abed0`. It is still in the git history.
+2. **Restore the shared Supabase project.** Then:
+   - run each service's migrations;
+   - set `VITE_SUPABASE_ANON_KEY`;
+   - back up the database;
+   - run `python -m app.reconcile_legacy_ai_marks` (dry run, then `--apply`);
+   - create classes in Admin → Classes.
+3. Delete the stray `%USERPROFILE%\.git` yourself (`Remove-Item -Recurse -Force $env:USERPROFILE\.git`). The tool's safety layer blocked it here. It has 0 commits and only an index and blob copies of profile files.
+4. Ask the assessment owner for the original test suite.
+5. C2 + C3 owners: approve assessment-code aliases in `shared/contracts/topic-registry.v1.json`. Until then every real finalized mark is quarantined.
+6. Choose a scheduler for `python -m scripts.pull_assessment_marks`.
+7. Teacher-approved chemistry content (GRD-007, LAB-012), licensing, consent/privacy policy, pilots and pricing.
 
 ## M0 exceptions still open
 

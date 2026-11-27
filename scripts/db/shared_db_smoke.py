@@ -36,14 +36,31 @@ DB = "shared"
 
 # Supabase puts its `extensions` schema (where the lab installs pgvector) on the
 # default search path; a plain container does not, so mirror that here.
-SUPABASE_SEARCH_PATH = f'alter database {DB} set search_path = "$user", public, extensions;'
+SUPABASE_SEARCH_PATH = (
+    f'alter database {DB} set search_path = "$user", public, extensions;'
+)
 
 # Only what each service's migrations/env.py imports (no torch, no AI SDKs).
-ALEMBIC_DEPS = ["alembic", "sqlalchemy>=2", "psycopg[binary]", "pgvector", "pydantic-settings"]
+ALEMBIC_DEPS = [
+    "alembic",
+    "sqlalchemy>=2",
+    "psycopg[binary]",
+    "pgvector",
+    "pydantic-settings",
+]
 SERVICES = {
     "assessment": (
         ROOT / "assessment-service",
-        [*ALEMBIC_DEPS, "fastapi", "pyjwt[crypto]", "bcrypt", "email-validator", "pint", "sympy", "numpy"],
+        [
+            *ALEMBIC_DEPS,
+            "fastapi",
+            "pyjwt[crypto]",
+            "bcrypt",
+            "email-validator",
+            "pint",
+            "sympy",
+            "numpy",
+        ],
         "postgresql+psycopg",
         "public",
     ),
@@ -78,8 +95,12 @@ LAB_TABLES = {
 }
 
 
-def docker(*args: str, input_text: str | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["docker", *args], input=input_text, capture_output=True, text=True, check=check)
+def docker(
+    *args: str, input_text: str | None = None, check: bool = True
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["docker", *args], input=input_text, capture_output=True, text=True, check=check
+    )
 
 
 def psql(sql: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -114,7 +135,9 @@ def alembic(service: str, port: str, *command: str) -> subprocess.CompletedProce
     for dep in deps:
         argv += ["--with", dep]
     argv += ["alembic", *(command or ("upgrade", "head"))]
-    return subprocess.run(argv, check=False, cwd=folder, env=env, capture_output=True, text=True)
+    return subprocess.run(
+        argv, check=False, cwd=folder, env=env, capture_output=True, text=True
+    )
 
 
 def main() -> int:
@@ -139,11 +162,21 @@ def main() -> int:
     )
     try:
         for _ in range(60):
-            if docker("exec", NAME, "pg_isready", "-U", "postgres", "-d", DB, check=False).returncode == 0:
+            if (
+                docker(
+                    "exec", NAME, "pg_isready", "-U", "postgres", "-d", DB, check=False
+                ).returncode
+                == 0
+            ):
                 break
             time.sleep(1)
         time.sleep(2)
-        port = docker("port", NAME, "5432").stdout.strip().splitlines()[0].rsplit(":", 1)[1]
+        port = (
+            docker("port", NAME, "5432")
+            .stdout.strip()
+            .splitlines()[0]
+            .rsplit(":", 1)[1]
+        )
 
         psql(MOCK_SUPABASE)
         psql(SUPABASE_SEARCH_PATH)
@@ -155,41 +188,87 @@ def main() -> int:
             for attempt in ("first", "second (no-op)"):
                 run = alembic(service, port)
                 tail = (run.stderr or run.stdout).strip().splitlines()[-3:]
-                check(f"{service}: alembic upgrade head ({attempt})", run.returncode == 0, " | ".join(tail))
+                check(
+                    f"{service}: alembic upgrade head ({attempt})",
+                    run.returncode == 0,
+                    " | ".join(tail),
+                )
                 if run.returncode != 0:
                     break
 
         # Roll back the newest assessment migrations (0026 review priority, 0025 rosters, 0024 legacy-AI
         # audit, 0023 RLS), then forward again.
         down = alembic("assessment", port, "downgrade", "0022")
-        check("assessment: downgrade 0026 -> 0022", down.returncode == 0, (down.stderr or "")[-200:])
+        check(
+            "assessment: downgrade 0026 -> 0022",
+            down.returncode == 0,
+            (down.stderr or "")[-200:],
+        )
         up = alembic("assessment", port, "upgrade", "head")
-        check("assessment: upgrade back to head", up.returncode == 0, (up.stderr or "")[-200:])
+        check(
+            "assessment: upgrade back to head",
+            up.returncode == 0,
+            (up.stderr or "")[-200:],
+        )
         # Same for the planner's newest migration (0010, DAT-010 finalized-mark ledger).
         down = alembic("planning", port, "downgrade", "0009_task_outcome_undo")
-        check("planning: downgrade 0010 -> 0009", down.returncode == 0, (down.stderr or "")[-200:])
+        check(
+            "planning: downgrade 0010 -> 0009",
+            down.returncode == 0,
+            (down.stderr or "")[-200:],
+        )
         up = alembic("planning", port, "upgrade", "head")
-        check("planning: upgrade back to head", up.returncode == 0, (up.stderr or "")[-200:])
+        check(
+            "planning: upgrade back to head",
+            up.returncode == 0,
+            (up.stderr or "")[-200:],
+        )
 
         def rows(sql: str) -> set[str]:
             return {line for line in psql(sql).stdout.splitlines() if line}
 
         public = rows("select tablename from pg_tables where schemaname='public';")
-        check("lab tables intact in public", LAB_TABLES <= public, ",".join(sorted(LAB_TABLES - public)))
+        check(
+            "lab tables intact in public",
+            LAB_TABLES <= public,
+            ",".join(sorted(LAB_TABLES - public)),
+        )
         for service, (_, _, _, schema) in SERVICES.items():
-            version = rows(f"select version_num from {schema}.alembic_version;") if schema else set()
+            version = (
+                rows(f"select version_num from {schema}.alembic_version;")
+                if schema
+                else set()
+            )
             check(
                 f"{service}: one head recorded in {schema}.alembic_version",
                 len(version) == 1,
                 ",".join(version),
             )
-        planning_tables = rows("select tablename from pg_tables where schemaname='planning';")
-        support_tables = rows("select tablename from pg_tables where schemaname='support';")
-        check("planning tables live in schema planning", len(planning_tables) > 1, str(len(planning_tables)))
-        ledger = {"assessment_decisions", "integration_rejections", "integration_cursors"}
+        planning_tables = rows(
+            "select tablename from pg_tables where schemaname='planning';"
+        )
+        support_tables = rows(
+            "select tablename from pg_tables where schemaname='support';"
+        )
+        check(
+            "planning tables live in schema planning",
+            len(planning_tables) > 1,
+            str(len(planning_tables)),
+        )
+        ledger = {
+            "assessment_decisions",
+            "integration_rejections",
+            "integration_cursors",
+        }
         missing = ",".join(sorted(ledger - planning_tables))
-        check("planning DAT-010 tables present (0010)", ledger <= planning_tables, missing)
-        check("support tables live in schema support", len(support_tables) > 1, str(len(support_tables)))
+        check(
+            "planning DAT-010 tables present (0010)", ledger <= planning_tables, missing
+        )
+        check(
+            "support tables live in schema support",
+            len(support_tables) > 1,
+            str(len(support_tables)),
+        )
         check(
             "support knowledge tables not in public",
             "knowledge_documents" not in public
@@ -230,24 +309,44 @@ def main() -> int:
             "where c.contype = 'f' and sn.nspname in ('public','planning','support') and sn.nspname <> tn.nspname "
             "and tn.nspname <> 'auth';"
         )
-        check("no foreign key crosses service schemas", not cross, "; ".join(sorted(cross)))
+        check(
+            "no foreign key crosses service schemas",
+            not cross,
+            "; ".join(sorted(cross)),
+        )
         lab_fk = rows(
             "select c.conrelid::regclass || ' -> ' || c.confrelid::regclass from pg_constraint c "
             "where c.contype = 'f' and c.connamespace = 'public'::regnamespace;"
         )
         mixed = [
-            fk for fk in lab_fk if (fk.split(" -> ")[0] in LAB_TABLES) != (fk.split(" -> ")[1] in LAB_TABLES)
+            fk
+            for fk in lab_fk
+            if (fk.split(" -> ")[0] in LAB_TABLES)
+            != (fk.split(" -> ")[1] in LAB_TABLES)
         ]
-        check("no foreign key between lab and assessment tables in public", not mixed, "; ".join(mixed))
+        check(
+            "no foreign key between lab and assessment tables in public",
+            not mixed,
+            "; ".join(mixed),
+        )
 
         # Row-level security on every public table. Supabase exposes `public` through its
         # REST API to the anon/authenticated roles, so a public table without RLS is
         # readable with the (public) anon key wherever those roles hold grants.
         no_rls = sorted(
-            rows("select tablename from pg_tables where schemaname='public' and not rowsecurity;")
+            rows(
+                "select tablename from pg_tables where schemaname='public' and not rowsecurity;"
+            )
         )
-        check("every public table has RLS enabled (lab + assessment)", not no_rls, ",".join(no_rls))
-        check("assessment head is 0026", rows("select version_num from public.alembic_version;") == {"0026"})
+        check(
+            "every public table has RLS enabled (lab + assessment)",
+            not no_rls,
+            ",".join(no_rls),
+        )
+        check(
+            "assessment head is 0026",
+            rows("select version_num from public.alembic_version;") == {"0026"},
+        )
 
         # Role matrix for assessment's public tables, the way Supabase would expose them:
         # Supabase grants anon/authenticated broad privileges on `public` by default, so
@@ -274,13 +373,23 @@ def main() -> int:
         )
         user_a = "00000000-0000-4000-8000-00000000000a"
         for role in ("anon", "authenticated"):
-            claim = f"set local request.jwt.claim.sub = '{user_a}';" if role == "authenticated" else ""
+            claim = (
+                f"set local request.jwt.claim.sub = '{user_a}';"
+                if role == "authenticated"
+                else ""
+            )
             for table in sensitive:
                 seen = psql(
                     f"begin; {claim} set local role {role}; select count(*) from public.{table}; commit;"
                 )
-                counts = [line for line in seen.stdout.splitlines() if line.strip().isdigit()]
-                check(f"{role}: reads 0 rows from {table}", counts == ["0"], seen.stdout.strip())
+                counts = [
+                    line for line in seen.stdout.splitlines() if line.strip().isdigit()
+                ]
+                check(
+                    f"{role}: reads 0 rows from {table}",
+                    counts == ["0"],
+                    seen.stdout.strip(),
+                )
             write = psql(
                 f"begin; {claim} set local role {role}; "
                 "insert into public.alembic_version (version_num) values ('forged'); commit;",
@@ -302,8 +411,63 @@ def main() -> int:
                 seen.returncode != 0 and "permission denied" in seen.stderr,
                 (seen.stderr or seen.stdout).strip()[:120],
             )
-        owner = psql("select count(*) from public.users where email = 'rls-owner@example.test';")
-        check("table owner (service connection) still reads its rows", owner.stdout.strip() == "1")
+        owner = psql(
+            "select count(*) from public.users where email = 'rls-owner@example.test';"
+        )
+        check(
+            "table owner (service connection) still reads its rows",
+            owner.stdout.strip() == "1",
+        )
+        # The read-only live verifier (scripts/db/verify_live_database.py) on this database.
+        verify = subprocess.run(
+            [
+                "uv",
+                "run",
+                "--no-project",
+                "--with",
+                "psycopg[binary]>=3.2,<4",
+                "python",
+                str(ROOT / "scripts" / "db" / "verify_live_database.py"),
+            ],
+            env={
+                **os.environ,
+                "VERIFY_DATABASE_URL": f"postgresql://postgres:{PASSWORD}@127.0.0.1:{port}/{DB}",
+            },
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=600,
+            check=False,
+        )
+        check(
+            "live verifier passes on the migrated database",
+            verify.returncode == 0,
+            verify.stdout[-400:],
+        )
+        check(
+            "live verifier never prints the password",
+            PASSWORD not in verify.stdout + verify.stderr,
+        )
+        # ...and it must notice a real problem: RLS switched off on one table (this
+        # throwaway container only), then restored.
+        psql("alter table public.topic_edges disable row level security;")
+        broken = subprocess.run(
+            verify.args,
+            env={
+                **os.environ,
+                "VERIFY_DATABASE_URL": f"postgresql://postgres:{PASSWORD}@127.0.0.1:{port}/{DB}",
+            },
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=600,
+            check=False,
+        )
+        psql("alter table public.topic_edges enable row level security;")
+        check(
+            "live verifier fails when a public table loses RLS",
+            broken.returncode == 1 and "topic_edges" in broken.stdout,
+        )
     except Exception as error:  # noqa: BLE001 - report, then still clean up
         check("smoke run", False, repr(error))
     finally:
@@ -311,7 +475,10 @@ def main() -> int:
         check("container removed", removed)
 
     for name, ok, detail in results:
-        print(f"{'PASS' if ok else 'FAIL'} {name}" + (f"  [{detail}]" if detail and not ok else ""))
+        print(
+            f"{'PASS' if ok else 'FAIL'} {name}"
+            + (f"  [{detail}]" if detail and not ok else "")
+        )
     return 0 if all(ok for _, ok, _ in results) else 1
 
 

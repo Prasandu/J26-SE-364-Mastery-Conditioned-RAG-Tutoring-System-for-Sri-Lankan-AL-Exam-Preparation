@@ -483,6 +483,26 @@ Not applied to real data (Supabase is unreachable).
   - `tests/test_feed_worker_db.py`: lock contention, lock released after a failure, status route and its auth.
 - Planner: **446 passed** with Postgres.
 
+### S20 - live Supabase verification prepared (nothing run against the cloud) - DONE (local) `[TESTED]` locally
+
+- `scripts/db/verify_live_database.py` is a read-only verifier.
+  - It uses a `default_transaction_read_only` session and takes the URL from an env var it never prints.
+  - It derives the expected Alembic heads from the repository.
+  - Checks: RLS on every public table, anon/authenticated denied on the `planning`/`support` schemas, pgvector, roster readiness and pending AI-only marks (as counts).
+- The shared-DB smoke runs it on a freshly migrated database and checks that it fails when RLS is turned off on a table: smoke **59/59**.
+- `docs/engineering/SUPABASE_GO_LIVE.md` is the ordered runbook:
+  1. rotate credentials;
+  2. back up;
+  3. read-only baseline;
+  4. review `alembic upgrade head --sql`;
+  5. apply (approval);
+  6. verify;
+  7. app configuration;
+  8. roster onboarding;
+  9. legacy-marks dry run;
+  10. end-to-end check.
+- `[BLOCKED]` on the operator restoring the project.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

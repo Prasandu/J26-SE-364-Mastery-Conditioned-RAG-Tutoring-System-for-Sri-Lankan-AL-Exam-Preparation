@@ -537,6 +537,42 @@ The CI lab job gained a Postgres service, so these tests run in CI.
 
 **Still open for LAB-018:** the lab web app sending the shared Supabase token (browser side).
 
+### S22 - LAB-018 browser side: lab sign-in, token handling, session restore - DONE (local) `[TESTED]`
+
+**Sign-in.** `apps/web/src/auth/labAuth.ts` signs in with the platform's Supabase project (`@supabase/supabase-js` added to `apps/web`).
+
+- The token is sent as `Authorization: Bearer` on every lab API request. The browser never names the student.
+- On a 401 it refreshes once and retries; the action's `clientActionId` keeps a retry idempotent. If it is still refused, the state becomes `expired`.
+- A production build in API mode throws without `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, so there is no unsigned fallback.
+
+**Screens.** `AuthGate.tsx` has loading, signed-out, expired ("your work is saved") and restoring states, plus sign-out (English strings; Sinhala draft).
+
+- The open session id is remembered per user in `localStorage` (`vlab.activeSession.<userId>`).
+- After a refresh the store reopens it through the new `GET /sessions/{id}` adapter call (`restoreSession`). A 404 forgets it.
+- If a different student signs in on the tab, or the student signs out, the page reloads so no in-memory lab state carries over.
+
+**Tests**
+
+- `apps/web/src/test/lab-auth.test.tsx`, 15: token, refresh-retry, expiry, production refusal, the sign-in form, restore for the right student only, forget on 404, identity change.
+- `apps/api/tests/test_lab_session_e2e_pg.py`: signed students and Postgres over HTTP.
+  - The practical and its recorded action survive an API restart.
+  - A retried action is applied once.
+  - Another student gets 404 on read and act; no token or a forged token gets 401.
+
+**Results**
+
+| Check | Result |
+|---|---|
+| Lab web | **402/402** |
+| typecheck | clean |
+| eslint | clean |
+| build | OK |
+| Lab API | e2e + repository tests 9 passed; mypy and ruff clean |
+
+A real bug found and fixed by the tests: the disabled auth returned a new state object on every read, which made React re-render forever.
+
+**Not done:** a browser (Playwright) run against a real Supabase project. It is `[BLOCKED]` on the project being restored, and the CI e2e still uses the local engine.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

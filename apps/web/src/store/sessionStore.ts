@@ -173,6 +173,8 @@ export interface SessionStoreState {
   selectMode(mode: Mode, guidanceLevel: GuidanceLevel | null): void;
   canStart(): boolean;
   createSession(): Promise<boolean>;
+  /** LAB-018: reopen a stored session of the signed-in student after a refresh or restart. */
+  restoreSession(sessionId: string): Promise<'restored' | 'not_found' | 'unavailable' | 'failed'>;
   dispatchLabAction(
     action: Action,
     opts?: { confirmed?: boolean; acknowledgeSafety?: boolean; actor?: 'student' | 'system' },
@@ -332,6 +334,40 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
       return true;
     };
 
+    const restoreSession = async (
+      sessionId: string,
+    ): Promise<'restored' | 'not_found' | 'unavailable' | 'failed'> => {
+      if (!adapter.getSession) return 'unavailable';
+      try {
+        const resource = await adapter.getSession(sessionId);
+        set({
+          session: resource.session,
+          feedback: [],
+          log: [],
+          automatic: { running: false },
+          connection: null,
+          notebook: {
+            ...freshNotebook(),
+            savedVersion: resource.notebook.version,
+            draft: resource.notebook.document,
+          },
+          report: { status: 'idle', data: null },
+          ui: { pendingApparatus: [], focusedItem: null, pending: null, busy: false },
+          selection: {
+            mode: resource.session.mode,
+            guidanceLevel: resource.session.guidanceLevel,
+          },
+          view: 'workbench',
+        });
+        return 'restored';
+      } catch (error) {
+        // Not found: gone, or another student's - the server answers 404 either way.
+        if (error instanceof EngineError && error.status === 404) return 'not_found';
+        fail(error, null);
+        return 'failed';
+      }
+    };
+
     return {
       engine: adapter,
       view: 'dashboard',
@@ -467,6 +503,7 @@ export const createSessionStore = (deps: StoreDeps): SessionStore => {
           checklistIds.every((id) => preLab.acknowledgedSafety.includes(id))
         );
       },
+      restoreSession,
       createSession: () =>
         serial(async () => {
           if (!get().canStart()) return false;

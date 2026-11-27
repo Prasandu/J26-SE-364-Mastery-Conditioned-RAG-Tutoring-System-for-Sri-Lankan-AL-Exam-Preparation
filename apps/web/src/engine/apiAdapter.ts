@@ -14,6 +14,7 @@ import {
 import { EngineError, type EngineAdapter } from './adapter';
 import { bundledCatalogEntry } from './catalog';
 import { assessment, definition } from './content';
+import type { LabAuth } from '../auth/labAuth';
 
 /**
  * API adapter: every state change goes to the FastAPI server, which replays the stored event chain
@@ -23,6 +24,8 @@ import { assessment, definition } from './content';
 export interface ApiAdapterDeps {
   baseUrl: string;
   fetch?: typeof fetch;
+  /** LAB-018: the signed-in student's token for every request (see auth/labAuth.ts). */
+  auth?: Pick<LabAuth, 'getAccessToken' | 'refresh' | 'markExpired'>;
 }
 
 /** Structural type for a contract schema, so the web app does not import Zod directly. */
@@ -47,6 +50,7 @@ const SummaryListParser: Parser<ExperimentSummary[]> = {
 export const createApiEngineAdapter = ({
   baseUrl,
   fetch: fetchImpl,
+  auth,
 }: ApiAdapterDeps): EngineAdapter => {
   const doFetch = fetchImpl ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const root = baseUrl.replace(/\/+$/, '');
@@ -57,15 +61,30 @@ export const createApiEngineAdapter = ({
     schema: Parser<T>,
     body?: unknown,
   ): Promise<T> => {
-    let response: Response;
-    try {
-      response = await doFetch(`${root}${path}`, {
-        method,
-        headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      });
-    } catch {
-      throw new EngineError('network_unavailable', null, true);
+    const send = async (token: string | null): Promise<Response> => {
+      const headers: Record<string, string> =
+        body === undefined ? {} : { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      try {
+        return await doFetch(`${root}${path}`, {
+          method,
+          headers,
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+      } catch {
+        throw new EngineError('network_unavailable', null, true);
+      }
+    };
+    let response = await send(auth ? await auth.getAccessToken() : null);
+    if (response.status === 401 && auth) {
+      // An expired access token: renew once and retry; the action carries its own clientActionId,
+      // so a retried submission can never be applied twice (the server deduplicates it).
+      const renewed = await auth.refresh();
+      if (renewed) response = await send(renewed);
+      if (response.status === 401) {
+        auth.markExpired();
+        throw new EngineError('unauthenticated', 401, false);
+      }
     }
     let json: unknown;
     try {
@@ -125,6 +144,8 @@ export const createApiEngineAdapter = ({
       ),
     getReport: (sessionId) =>
       request('GET', `/sessions/${encodeURIComponent(sessionId)}/report`, ReportSchema),
+    getSession: (sessionId) =>
+      request('GET', `/sessions/${encodeURIComponent(sessionId)}`, SessionResourceSchema),
     listExperiments: async () => {
       const summaries = await request('GET', '/experiments', SummaryListParser);
       // Only published (active) practicals that this client's bundled simulation can run.

@@ -64,6 +64,8 @@ export interface EngineAdapter {
     req: NotebookSaveRequest,
   ): Promise<{ version: number; updatedAt: string }>;
   getReport(sessionId: string): Promise<Report>;
+  /** API only: a stored session of the signed-in student, rebuilt by the server (restore). */
+  getSession?(sessionId: string): Promise<SessionResource>;
   /** Grounded assistant: sends only the session, question and locale (never state or sources). */
   askAssistant(req: AssistantRequest): Promise<AssistantAnswer>;
   /** Published practicals that this client can run (see CatalogEntry). */

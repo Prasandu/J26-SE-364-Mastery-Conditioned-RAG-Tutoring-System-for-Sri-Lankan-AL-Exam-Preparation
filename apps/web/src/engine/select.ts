@@ -1,3 +1,4 @@
+import type { LabAuth } from '../auth/labAuth';
 import type { EngineAdapter } from './adapter';
 import { createApiEngineAdapter } from './apiAdapter';
 import { createLocalEngineAdapter } from './localAdapter';
@@ -7,11 +8,14 @@ import { createLocalEngineAdapter } from './localAdapter';
  * The choice never changes during a session: API failures are reported, never hidden by switching
  * to the local engine.
  */
-export const selectEngineAdapter = (env: ImportMetaEnv = import.meta.env): EngineAdapter => {
+export const selectEngineAdapter = (
+  env: ImportMetaEnv = import.meta.env,
+  auth?: LabAuth,
+): EngineAdapter => {
   if (env.VITE_ENGINE_ADAPTER === 'api') {
     const baseUrl = env.VITE_API_BASE_URL;
     if (!baseUrl) throw new Error('VITE_API_BASE_URL must be set when VITE_ENGINE_ADAPTER=api');
-    return createApiEngineAdapter({ baseUrl });
+    return createApiEngineAdapter({ baseUrl, ...(auth ? { auth } : {}) });
   }
   return createLocalEngineAdapter();
 };

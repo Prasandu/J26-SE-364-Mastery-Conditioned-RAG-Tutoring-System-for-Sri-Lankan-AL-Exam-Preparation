@@ -1,12 +1,23 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
+import type { LabAuth } from '../auth/labAuth';
 import { selectEngineAdapter } from '../engine/select';
 import { createSessionStore, type SessionStore, type SessionStoreState } from './sessionStore';
 
 const StoreContext = createContext<SessionStore | null>(null);
 
-export function StoreProvider({ children, store }: { children: ReactNode; store?: SessionStore }) {
-  const [value] = useState(() => store ?? createSessionStore({ adapter: selectEngineAdapter() }));
+export function StoreProvider({
+  children,
+  store,
+  auth,
+}: {
+  children: ReactNode;
+  store?: SessionStore;
+  auth?: LabAuth;
+}) {
+  const [value] = useState(
+    () => store ?? createSessionStore({ adapter: selectEngineAdapter(import.meta.env, auth) }),
+  );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 

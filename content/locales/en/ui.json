@@ -572,5 +572,16 @@
   "ui.answers.needs_revision": "The checked calculation or relationship differs from the source guide. Review your answer.",
   "ui.answers.review_required": "Your answer was received. This response needs teacher review; the available rules cannot reliably judge it.",
   "ui.answers.scope": "This is a limited source-guide check, not a grade. English, Sinhala and mixed answers are accepted; no automatic check guarantees every explanation is correct.",
-  "ui.answers.guide": "Compare with the source answer guide"
+  "ui.answers.guide": "Compare with the source answer guide",
+  "auth.checking": "Checking your sign-in…",
+  "auth.title": "Sign in to the virtual laboratory",
+  "auth.intro": "Sign in with your platform account so your practical work is saved.",
+  "auth.expired": "Your sign-in has expired. Sign in again to continue - your work is saved.",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.failed": "Could not sign in. Check your email and password.",
+  "auth.signIn": "Sign in",
+  "auth.signingIn": "Signing in…",
+  "auth.restoring": "Reopening your practical…",
+  "auth.signOut": "Sign out"
 }

@@ -1,5 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { AdminProvider, defaultAdminClient } from './admin/AdminContext';
+import { AuthGate } from './auth/AuthGate';
+import { createLabAuthFromEnv, type LabAuth } from './auth/labAuth';
 import { LocalTeachingSync } from './admin/LocalTeachingSync';
 import type { AdminClient } from './admin/adminClient';
 import { I18nextProvider } from 'react-i18next';
@@ -108,11 +110,15 @@ function AppBody() {
 export function App({
   store,
   adminClient,
+  auth: injectedAuth,
 }: {
   store?: SessionStore;
   adminClient?: AdminClient | null;
+  /** LAB-018: defaults to the Supabase sign-in configured by VITE_SUPABASE_* (or none). */
+  auth?: LabAuth;
 }) {
   const [i18n] = useState(() => createI18n('en'));
+  const [auth] = useState(() => injectedAuth ?? createLabAuthFromEnv(import.meta.env));
   const [admin] = useState(() => (adminClient === undefined ? defaultAdminClient() : adminClient));
   if (showR1Prototype) {
     return (
@@ -123,13 +129,15 @@ export function App({
   }
   return (
     <I18nextProvider i18n={i18n}>
-      <StoreProvider {...(store ? { store } : {})}>
+      <StoreProvider {...(store ? { store } : {})} auth={auth}>
         <AdminProvider client={admin}>
           {/* Toasts and themed confirmations for both the student app and the admin console. */}
           <FeedbackProvider>
             <LocaleSync />
             <LocalTeachingSync />
-            <AppBody />
+            <AuthGate auth={auth}>
+              <AppBody />
+            </AuthGate>
             <ConfirmDialog />
             <Lab2DDefs />
           </FeedbackProvider>

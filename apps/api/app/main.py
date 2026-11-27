@@ -27,7 +27,7 @@ from app.models import (
 )
 from app.principal import Principal, PrincipalProvider, build_principal_provider
 from app.rag.assistant import AssistantService, build_assistant
-from app.repositories import InMemoryRepositories, in_memory_repositories
+from app.repositories import in_memory_repositories
 from app.service import SessionService
 from app.settings import Settings, get_settings
 from app.verifier import NodeCliVerifier, Verifier
@@ -43,7 +43,7 @@ class AppState:
     contracts: ContractRegistry
     service: SessionService
     verifier: Verifier
-    store: InMemoryRepositories
+    store: Any  # InMemoryRepositories or PostgresLabStore (both give owner_summary)
     principal_provider: PrincipalProvider
     assistant: AssistantService
     knowledge: KnowledgeRuntime
@@ -100,7 +100,16 @@ def create_app(
     settings.validate_for_startup()
     _warm_outbound_sockets(settings)
     contracts = ContractRegistry(settings.schema_dir)
-    repos, store = in_memory_repositories(load_experiments(settings.content_dir, contracts))
+    experiment_records = load_experiments(settings.content_dir, contracts)
+    store: Any
+    if settings.repository == "postgres" and settings.database_url is not None:
+        from app.repositories_pg import postgres_repositories
+
+        repos, store = postgres_repositories(
+            experiment_records, settings.database_url.get_secret_value()
+        )
+    else:
+        repos, store = in_memory_repositories(experiment_records)
     verifier = verifier or NodeCliVerifier(
         node=settings.resolved_node(),
         script=settings.verifier_script,

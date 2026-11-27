@@ -197,8 +197,17 @@ class Settings(BaseSettings):
             )
         if self.embedding_provider == "fake" and self.environment == "production":
             raise ConfigurationError("The fake embedding provider is not allowed in production")
-        if self.repository == "postgres":
-            raise ConfigurationError("The PostgreSQL repository is not implemented in M1")
+        if self.repository == "postgres" and not _secret(self.database_url):
+            raise ConfigurationError("LAB_DATABASE_URL is required for LAB_REPOSITORY=postgres")
+        if self.repository == "postgres" and self.principal_provider != "supabase_jwt":
+            raise ConfigurationError(
+                "LAB_REPOSITORY=postgres keeps sessions per Supabase user: "
+                "set LAB_PRINCIPAL_PROVIDER=supabase_jwt"
+            )
+        if self.environment == "production" and self.repository != "postgres":
+            raise ConfigurationError(
+                "Production needs LAB_REPOSITORY=postgres: in-memory sessions are lost on restart"
+            )
 
 
 def _secret(value: SecretStr | None) -> bool:

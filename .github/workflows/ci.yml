@@ -32,10 +32,22 @@ jobs:
     name: C1 virtual lab (web, core, contracts, API)
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: lab_admin
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       LAB_LLM_PROVIDER: disabled
       LAB_EMBEDDING_PROVIDER: disabled
       LAB_ADMIN_EXTRACTION_ASSIST: disabled
+      # SEC-004 session persistence tests create (and drop) their own database here.
+      LAB_TEST_PG_URL: postgresql://test:test@127.0.0.1:5432/lab_admin
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

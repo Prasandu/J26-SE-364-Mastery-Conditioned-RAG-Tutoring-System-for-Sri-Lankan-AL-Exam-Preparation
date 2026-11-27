@@ -503,6 +503,40 @@ Not applied to real data (Supabase is unreachable).
   10. end-to-end check.
 - `[BLOCKED]` on the operator restoring the project.
 
+### S21 - SEC-004/LAB-018: durable lab sessions in PostgreSQL - DONE (local) `[TESTED]`
+
+**`apps/api/app/repositories_pg.py`** implements the lab's repository protocols on the existing `supabase/migrations` tables:
+
+- Ownership is part of every lookup.
+- `commit_action` is one transaction: row lock, next sequence, unique client id, then advance the head.
+- Append-only events, enforced by the triggers.
+- Notebooks use optimistic versions.
+- The report cache is keyed per version and never overwritten.
+- Each loaded experiment version is mirrored into `public.experiments`.
+
+**Startup rules** (the `LAB_REPOSITORY=postgres` setting previously refused "not implemented in M1"):
+
+- `LAB_REPOSITORY=postgres` needs `LAB_DATABASE_URL` and `LAB_PRINCIPAL_PROVIDER=supabase_jwt`.
+- **Production now refuses in-memory sessions.**
+
+**Tests**
+
+- `tests/test_repositories_pg.py`, 8 on a fresh database migrated with the real lab SQL: owner isolation, non-uuid owners, sequence/idempotency conflicts, append-only trigger, 4 concurrent commits → exactly one wins, notebook versions, report cache, **survives a restart**.
+- `tests/test_repository_settings.py`, 4.
+
+**Results**
+
+| Check | Result |
+|---|---|
+| Lab API full suite | **404 passed** (before the settings tests) |
+| Targeted tests | 8 + 4 passed |
+| `mypy app tests` | clean |
+| ruff | clean |
+
+The CI lab job gained a Postgres service, so these tests run in CI.
+
+**Still open for LAB-018:** the lab web app sending the shared Supabase token (browser side).
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

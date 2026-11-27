@@ -68,7 +68,8 @@ class ReviewDecisionIn(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     awarded: bool
-    teacher_ref: str = Field(min_length=1, max_length=64, description="Who is marking (until login exists)")
+    # Ignored by POST /review/points/{id}: the signed-in account is recorded instead.
+    teacher_ref: str = Field(default="", max_length=64, description="Overwritten with the signed-in teacher")
     comment: str | None = Field(default=None, max_length=2000)
     saw_machine: bool = Field(
         default=False,

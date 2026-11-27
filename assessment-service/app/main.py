@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import admin, attempts, auth, extract, integration, papers, resources, review
+from app.api import admin, attempts, auth, classes, extract, integration, papers, resources, review
 from app.config import get_settings
 from app.errors import DomainError
 
@@ -34,6 +34,7 @@ app.include_router(admin.router)
 app.include_router(resources.router)
 app.include_router(extract.router)
 app.include_router(integration.router)
+app.include_router(classes.router)
 
 
 @app.exception_handler(DomainError)

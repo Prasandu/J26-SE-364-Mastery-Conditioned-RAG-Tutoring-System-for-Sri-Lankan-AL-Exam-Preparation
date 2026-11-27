@@ -419,6 +419,33 @@ The audit report (`J26-SE-364_Final_Code_Audit_…pdf`) is mapped item by item i
 
 Not applied to real data (Supabase is unreachable).
 
+### S16 - class rosters for teacher review (operator decision 2026-11-27) - DONE (local) `[TESTED]`
+
+**Backend**
+
+- Migration 0025: `classes`, `class_teachers`, `class_students`, all with RLS.
+- `app/services/classes.py`: a `ReviewScope` scopes every `/review` route (queue, scripts, attempt points, images, history, decision, agreement). A teacher sees only students in an active class they teach; an admin sees all. Out-of-scope ids → 404.
+- `POST /review/points/{id}` records the signed-in account as `teacher_ref`. Before, it came from the request body, so any teacher could sign as another.
+- Admin API `/admin/classes` (list, create, set teachers or students with role checks, archive).
+
+**Frontend:** admin page `Classes`.
+
+**Tests**
+
+- `tests/test_class_rosters.py`: 12 (SQLite and Postgres).
+- Mutation check: disabling the scope → 4 failed; the file was restored and its hash verified.
+- `frontend/tests/ClassesPage.test.tsx`: 3.
+
+**Results**
+
+| Suite | Result |
+|---|---|
+| C2 with Postgres | **93 passed** |
+| Frontend | **102/102**, tsc clean |
+| Shared-DB smoke | **56/56** |
+
+**Rollout note:** after migrating, an admin must create classes before teachers see any scripts.
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

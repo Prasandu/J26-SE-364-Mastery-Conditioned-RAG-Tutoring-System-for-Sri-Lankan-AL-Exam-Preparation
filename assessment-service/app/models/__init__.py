@@ -21,6 +21,7 @@ from app.models.attempts import (
     PointStatus,
 )
 from app.models.base import JSON_DOC, utcnow
+from app.models.classes import ClassStudent, ClassTeacher, SchoolClass
 from app.models.content import (
     AnswerMode,
     ContentStatus,
@@ -57,6 +58,9 @@ from app.models.topic_suggestion import SuggestionStatus, TopicSuggestion
 from app.models.users import User, UserRole
 
 __all__ = [
+    "ClassStudent",
+    "ClassTeacher",
+    "SchoolClass",
     "EDITABLE",
     "EMBEDDING_DIMENSIONS",
     "JSON_DOC",

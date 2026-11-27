@@ -12,6 +12,7 @@ import { PastPaperImportPage } from "./PastPaperImportPage";
 import { ResourcesPage } from "./ResourcesPage";
 import { SuggestionsPage } from "./SuggestionsPage";
 import { TopicGraphPage } from "./TopicGraphPage";
+import { ClassesPage } from "./ClassesPage";
 import { UsersPage } from "./UsersPage";
 
 /**
@@ -34,6 +35,7 @@ export function AdminPage() {
         <Route path="past-papers" element={<PastPaperImportPage />} />
         <Route path="generate" element={<GeneratePage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="classes" element={<ClassesPage />} />
       </Routes>
     </AdminLayout>
   );

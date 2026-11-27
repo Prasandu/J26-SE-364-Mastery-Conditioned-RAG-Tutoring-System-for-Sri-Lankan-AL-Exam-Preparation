@@ -30,7 +30,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | SEC-003 flagged intake | Done (service key) `[TESTED]` | `chemistry-tutor/support-service/app/security.py`. A separate "flag my own question" student endpoint is not built |
 | SEC-004 lab JWT + durable sessions | JWT done `[TESTED]`; durable sessions open | `apps/api/app/principal.py` |
 | DAT-005 canonical ids + event schemas | Done for C2→C3 `[TESTED]`; topic aliases `[BLOCKED]` | `shared/contracts/assessment-criterion-finalized.v1.json`, `topic-registry.v1.json` (0 approved aliases; needs C2+C3 owner review) |
-| GRD-006 remove AI judge from official scoring | Done `[TESTED]` | `assessment-service/app/services/marking.py`, `mastery.py`. Plan for historical marks: `LEGACY_AI_MARKS_RECONCILIATION.md` (operator decision) |
+| GRD-006 remove AI judge from official scoring | Done `[TESTED]`; legacy policy (confidence <= 0.5 → teacher review, else labelled) implemented, not yet run on real data | `assessment-service/app/services/marking.py`, `mastery.py`. Plan for historical marks: `LEGACY_AI_MARKS_RECONCILIATION.md` (operator decision) |
 | GRD-007 expand chemistry equivalence | `[BLOCKED]` | Needs teacher-approved equivalence content; we must not invent chemistry rules |
 | PL-008 coverage-percentage planner | Done `[TESTED]` | `PlanInput.coverage`, parent/child consistency, coverage-scaled priority, coverage-driven activity, Setup UI (S12) |
 | PL-009 evidence-source labels | Done `[TESTED]` | `reason_details.evidence_source` (results / self_reported_coverage / student_choice / no_evidence); UI "why now" text (S12) |
@@ -56,6 +56,7 @@ Labels: `[TESTED]` (executed locally, with results recorded in `EXECUTION_STATE.
 | E19 whiteboard shows only validated steps | `[TESTED]` validator + `Whiteboard.test.tsx` |
 | E22 provider unavailable | Partly: marking and planning never call a provider. Tutor failure modes are not re-tested |
 | E01, E06–E09, E11, E13–E18, E20, E21, E23, E24 | Not yet run as cross-component E2E. E13/E14 have lab unit tests. E24 needs a tenant model (none exists yet) |
+| Teacher reviews only assigned cohorts (report §10.2) | `[TESTED]` class rosters scope all `/review` routes; decisions signed by the logged-in teacher (S16) |
 
 ## §15 release gates
 

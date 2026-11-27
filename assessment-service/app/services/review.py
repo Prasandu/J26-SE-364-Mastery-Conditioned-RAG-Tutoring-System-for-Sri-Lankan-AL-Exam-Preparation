@@ -32,6 +32,7 @@ from app.schemas.review import (
     ReviewItemOut,
     ReviewScriptOut,
 )
+from app.services.classes import EVERYONE, ReviewScope
 from app.services.marking import question_with_context, refresh_scores
 
 MAX_QUEUE_PAGE = 200
@@ -46,6 +47,7 @@ def review_queue(
     status: PointStatus | None = None,
     limit: int = 50,
     offset: int = 0,
+    scope: ReviewScope = EVERYONE,
 ) -> Sequence[PointResult]:
     """Points waiting for a teacher, oldest submission first so nobody waits too long.
 
@@ -67,7 +69,7 @@ def review_queue(
     )
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
-    return db.scalars(stmt).all()
+    return db.scalars(_in_scope(stmt, scope)).all()
 
 
 def review_scripts(
@@ -76,6 +78,7 @@ def review_scripts(
     paper_id: int | None = None,
     limit: int = 50,
     offset: int = 0,
+    scope: ReviewScope = EVERYONE,
 ) -> list[ReviewScriptOut]:
     """Submitted scripts a teacher can mark, oldest first, with how many points are done.
 
@@ -96,7 +99,7 @@ def review_scripts(
         stmt = stmt.where(Attempt.paper_id == paper_id)
 
     scripts = []
-    for attempt in db.scalars(stmt):
+    for attempt in db.scalars(_in_scope(stmt, scope)):
         results = [
             r
             for answer in attempt.answers
@@ -121,22 +124,24 @@ def review_scripts(
     return scripts
 
 
-def get_point(db: Session, result_id: int) -> PointResult:
+def get_point(db: Session, result_id: int, scope: ReviewScope = EVERYONE) -> PointResult:
     result = db.get(PointResult, result_id)
-    if result is None:
+    if result is None or not scope.allows(result.answer.attempt.student_ref):
         raise NotFoundError("Marking point not found")
     if result.answer.attempt.status == AttemptStatus.IN_PROGRESS:
         raise ConflictError("This attempt has not been submitted yet")
     return result
 
 
-def record_decision(db: Session, result_id: int, decision: ReviewDecisionIn) -> PointResult:
+def record_decision(
+    db: Session, result_id: int, decision: ReviewDecisionIn, scope: ReviewScope = EVERYONE
+) -> PointResult:
     """The teacher's decision is final and replaces whatever the machine decided.
 
     The earlier decision is not lost: every one is appended to point_reviews, so a
     changed mind or a second marker can still be reported.
     """
-    result = get_point(db, result_id)
+    result = get_point(db, result_id, scope)
     result.reviews.append(
         PointReview(
             awarded=decision.awarded,
@@ -161,9 +166,9 @@ def record_decision(db: Session, result_id: int, decision: ReviewDecisionIn) -> 
     return result
 
 
-def agreement(db: Session, *, paper_id: int | None = None) -> AgreementOut:
+def agreement(db: Session, *, paper_id: int | None = None, scope: ReviewScope = EVERYONE) -> AgreementOut:
     """How often each machine marker reached the same decision as the teacher."""
-    stmt = _submitted_points().where(PointResult.teacher_awarded.is_not(None))
+    stmt = _in_scope(_submitted_points().where(PointResult.teacher_awarded.is_not(None)), scope)
     if paper_id is not None:
         stmt = stmt.where(Attempt.paper_id == paper_id)
     reviewed = db.scalars(stmt).all()
@@ -222,6 +227,13 @@ def to_review_item(result: PointResult) -> ReviewItemOut:
     )
 
 
+def _in_scope(stmt, scope: ReviewScope):
+    """Limit a query over attempts (already joined) to the teacher's class rosters."""
+    if scope.student_refs is None:
+        return stmt
+    return stmt.where(Attempt.student_ref.in_(sorted(scope.student_refs)))
+
+
 def _submitted_points() -> Select[tuple[PointResult]]:
     """Points of attempts that are no longer being answered, joined ready for filtering."""
     return (
@@ -245,30 +257,40 @@ def _compare(results: Sequence[PointResult], left: str, right: str) -> MarkerAgr
     )
 
 
-def attempt_points(db: Session, attempt_id: uuid.UUID) -> Sequence[PointResult]:
+def attempt_points(
+    db: Session, attempt_id: uuid.UUID, scope: ReviewScope = EVERYONE
+) -> Sequence[PointResult]:
     """Unresolved or already-reviewed points of one submitted attempt.
 
     Not every point of the attempt - a point no marker ever doubted (an MCQ key, a
     confidently checker-decided calculation) is not something a teacher is asked to
     double-check just because it exists.
     """
-    stmt = _submitted_points().where(
-        Attempt.id == attempt_id,
-        PointResult.status.in_(UNRESOLVED) | PointResult.teacher_awarded.is_not(None),
-    ).order_by(PointResult.id)
-    results = db.scalars(stmt).all()
+    stmt = (
+        _submitted_points()
+        .where(
+            Attempt.id == attempt_id,
+            PointResult.status.in_(UNRESOLVED) | PointResult.teacher_awarded.is_not(None),
+        )
+        .order_by(PointResult.id)
+    )
+    results = db.scalars(_in_scope(stmt, scope)).all()
     if not results:
         raise NotFoundError("No submitted attempt with that id")
     return results
 
 
-def answer_image(db: Session, image_id: int) -> AnswerImage:
+def answer_image(db: Session, image_id: int, scope: ReviewScope = EVERYONE) -> AnswerImage:
     """One photo of a submitted answer, for a teacher marking a drawing.
 
     Only from a script the student has handed in: an attempt still being answered is
     the student's own work in progress, not a teacher's to look at.
     """
     image = db.get(AnswerImage, image_id)
-    if image is None or image.answer.attempt.status == AttemptStatus.IN_PROGRESS:
+    if (
+        image is None
+        or image.answer.attempt.status == AttemptStatus.IN_PROGRESS
+        or not scope.allows(image.answer.attempt.student_ref)
+    ):
         raise NotFoundError("No photo with that id")
     return image

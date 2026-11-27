@@ -14,6 +14,7 @@ const SECTIONS = [
   { to: "/admin/topics", label: "Syllabus graph", end: false },
   { to: "/admin/generate", label: "Generate a paper", end: false },
   { to: "/admin/users", label: "Users Management", end: false },
+  { to: "/admin/classes", label: "Classes", end: false },
 ];
 
 /**

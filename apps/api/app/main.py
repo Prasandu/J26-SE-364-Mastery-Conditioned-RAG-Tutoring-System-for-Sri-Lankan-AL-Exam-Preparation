@@ -125,7 +125,9 @@ def create_app(
         service,
         verifier,
         store,
-        build_principal_provider(settings.principal_provider),
+        build_principal_provider(
+            settings.principal_provider, settings.jwks_url, settings.supabase_jwt_audience
+        ),
         assistant_service,
         knowledge,
     )
@@ -142,7 +144,8 @@ def create_app(
         allow_origins=settings.cors_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT"],
-        allow_headers=["Content-Type", "X-Correlation-ID"],
+        # Authorization: the Supabase access token (LAB_PRINCIPAL_PROVIDER=supabase_jwt).
+        allow_headers=["Content-Type", "X-Correlation-ID", "Authorization"],
         expose_headers=["X-Correlation-ID"],
     )
 

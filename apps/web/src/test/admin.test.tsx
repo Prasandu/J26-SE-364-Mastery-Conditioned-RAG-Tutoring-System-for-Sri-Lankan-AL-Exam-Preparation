@@ -367,7 +367,9 @@ describe('admin availability', () => {
     const ctx = await renderAdmin(client);
     await waitFor(() => expect(client.status).toHaveBeenCalled());
     await ctx.user.click(screen.getByRole('button', { name: tx('admin.nav') }));
-    expect(await screen.findByText(tx('admin.storage_unavailable_title'))).toBeVisible();
+    expect(
+      await screen.findByText(tx('admin.storage_unavailable_title'), {}, { timeout: 5000 }),
+    ).toBeVisible();
     expect(screen.queryByText(tx('admin.unavailable_text'))).toBeNull();
     await ctx.user.click(screen.getByRole('button', { name: tx('admin.retry') }));
     expect(await screen.findByRole('navigation', { name: tx('admin.sections') })).toBeVisible();

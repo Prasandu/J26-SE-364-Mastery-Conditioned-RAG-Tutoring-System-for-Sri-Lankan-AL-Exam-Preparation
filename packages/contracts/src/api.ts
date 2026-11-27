@@ -135,6 +135,7 @@ export const ApiErrorCodeSchema = z.enum([
   'assistant_invalid_response',
   'knowledge_unavailable',
   'auth_not_configured',
+  'unauthenticated',
   'internal_error',
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;

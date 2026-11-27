@@ -48,6 +48,7 @@
             "assistant_rate_limited",
             "assistant_invalid_response",
             "auth_not_configured",
+            "unauthenticated",
             "internal_error"
           ]
         },

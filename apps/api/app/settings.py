@@ -84,6 +84,13 @@ class Settings(BaseSettings):
     knowledge_data_dir: Path = REPO_ROOT / "data" / "knowledge"
     cors_origins: list[str] = ["http://localhost:5173"]
     principal_provider: Literal["development", "test", "supabase_jwt"] = "development"
+    # supabase_jwt: the shared Supabase Auth sign-in of the integrated app. Tokens are
+    # verified against the project's public signing keys (JWKS), so no signing secret
+    # is held here. LAB_SUPABASE_JWKS_URL defaults to
+    # <LAB_SUPABASE_URL>/auth/v1/.well-known/jwks.json.
+    supabase_url: str | None = None
+    supabase_jwks_url: str | None = None
+    supabase_jwt_audience: str = "authenticated"
 
     content_dir: Path = REPO_ROOT / "content"
     schema_dir: Path = REPO_ROOT / "packages" / "contracts" / "schema"
@@ -108,6 +115,14 @@ class Settings(BaseSettings):
         data = json.loads(self.engine_package_json.read_text(encoding="utf-8"))
         return str(data["version"])
 
+    @property
+    def jwks_url(self) -> str | None:
+        if self.supabase_jwks_url:
+            return self.supabase_jwks_url
+        if self.supabase_url:
+            return f"{self.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        return None
+
     def validate_for_startup(self) -> None:
         if self.admin_mode == "development":
             if self.environment != "development":
@@ -122,6 +137,11 @@ class Settings(BaseSettings):
             raise ConfigurationError("Wildcard CORS origins are not allowed")
         if self.environment == "production" and self.principal_provider != "supabase_jwt":
             raise ConfigurationError("Production requires a real authentication provider")
+        if self.principal_provider == "supabase_jwt" and not self.jwks_url:
+            raise ConfigurationError(
+                "LAB_PRINCIPAL_PROVIDER=supabase_jwt needs LAB_SUPABASE_URL "
+                "or LAB_SUPABASE_JWKS_URL"
+            )
         if self.principal_provider == "test" and self.environment != "test":
             raise ConfigurationError("The test principal is only allowed in the test environment")
         if self.fixed_seed is not None and self.environment != "test":

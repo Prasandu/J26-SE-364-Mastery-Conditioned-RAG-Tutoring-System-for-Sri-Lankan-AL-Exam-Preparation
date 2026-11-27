@@ -43,6 +43,7 @@ from app.schemas.attempts import (
     QuestionResultOut,
 )
 from app.services.drawing_judge import DrawingJudge
+from app.services.legacy_ai_policy import attempt_labels
 from app.services.marking import (
     FINAL_STATUSES,
     finalize_without_ai,
@@ -374,6 +375,7 @@ def to_attempt_out(attempt: Attempt) -> AttemptOut:
             for question in attempt.paper.iter_questions()
             if not question.sub_questions
         ],
+        **attempt_labels(attempt),
     )
 
 

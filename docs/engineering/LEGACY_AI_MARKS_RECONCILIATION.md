@@ -1,6 +1,19 @@
 # Legacy AI-awarded marks: reconciliation plan
 
-_Status 2026-11-27. Nothing in this plan has been applied. Every step that changes data needs an explicit operator decision._
+_Status 2026-11-27. **Operator decision recorded (2026-11-27): an AI-decided point with confidence 50% or less goes to teacher review; otherwise it is kept and labelled.** Implemented and tested locally; **not yet applied to any real database** (the shared Supabase project is unreachable)._
+
+## Decision as implemented
+
+- `assessment-service/app/services/legacy_ai_policy.py` and CLI `python -m app.reconcile_legacy_ai_marks`. The CLI dry-runs by default; `--apply` changes data, `--threshold` sets the cut-off (default 0.5), `--revert RUN_ID` undoes a run.
+- Confidence at or below the threshold, or none recorded, sends the point to teacher review: `needs_review`, 0 marks, with the AI verdict, confidence and evidence kept as the suggestion.
+- The attempt becomes `submitted` and keeps its old total, flagged `score_is_provisional`, until a teacher decides. The existing review flow then recomputes the total.
+- A point above the threshold stays and is labelled `includes_ai_judged_marks` on the attempt. It still never reaches mastery or the planner.
+- Every point a run examines is recorded in `legacy_ai_reclassifications` (migration 0024, RLS). A run is one transaction, and running it again touches nothing new.
+- A revert keeps any decision a teacher made since.
+- Students see a plain notice for provisional totals and for AI-judged marks (`frontend/src/features/attempt/AttemptNotices.tsx`).
+- Tests: `assessment-service/tests/test_legacy_ai_policy.py`, 13 (SQLite and Postgres); `frontend/tests/AttemptNotices.test.tsx`, 3.
+
+**To run on the real database:** back it up, run the dry run, review the counts, run `--apply`, and keep the printed `run_id`.
 
 ## The problem
 

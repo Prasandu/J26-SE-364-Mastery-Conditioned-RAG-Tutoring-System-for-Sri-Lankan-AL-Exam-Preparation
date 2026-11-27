@@ -183,6 +183,32 @@ class PointReview(Base):
     result: Mapped["PointResult"] = relationship(back_populates="reviews")
 
 
+class LegacyAiReclassification(Base):
+    """Audit of the legacy AI-marks policy (docs/engineering/LEGACY_AI_MARKS_RECONCILIATION.md).
+
+    One row per AI-decided point a reconciliation run looked at: what it was before and what
+    the run did - sent back to a teacher (AI confidence at or below the threshold, or none
+    recorded) or kept with an "AI-judged" label. Never deleted; a revert stamps reverted_at.
+    """
+
+    __tablename__ = "legacy_ai_reclassifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True)
+    run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    threshold: Mapped[float] = mapped_column(Float)
+    point_result_id: Mapped[int] = mapped_column(
+        ForeignKey("point_results.id", ondelete="CASCADE"), index=True
+    )
+    attempt_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True)
+    action: Mapped[str] = mapped_column(String(20))  # sent_to_review | kept_labelled
+    previous_status: Mapped[str] = mapped_column(String(20))
+    previous_awarded: Mapped[float] = mapped_column(Float)
+    previous_attempt_status: Mapped[str] = mapped_column(String(20))
+    confidence: Mapped[float | None] = mapped_column(Float)
+    reverted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class AnswerImage(Base):
     """A photo of one handwritten answer. Several pages may belong to one answer."""
 

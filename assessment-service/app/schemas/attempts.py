@@ -118,6 +118,11 @@ class AttemptOut(BaseModel):
     duration_minutes: float
     expires_at: datetime
     questions: list[QuestionResultOut]
+    # Honesty labels (legacy AI-marks policy): the total includes marks the earlier AI judge
+    # decided, points still wait for a teacher, and the total shown is provisional until then.
+    includes_ai_judged_marks: bool = False
+    points_awaiting_teacher: int = 0
+    score_is_provisional: bool = False
 
 
 class SheetAnswerOut(BaseModel):

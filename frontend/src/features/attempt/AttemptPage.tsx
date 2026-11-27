@@ -13,6 +13,7 @@ import { PdfViewer } from "@/components/PdfViewer";
 import { Spinner } from "@/components/Spinner";
 import { answerableQuestions, hasMcq, isMcq, optionLabels } from "@/lib/questions";
 
+import { AttemptNotices } from "./AttemptNotices";
 import { AnswerSheetUpload } from "./AnswerSheetUpload";
 import { ExamTimer } from "./ExamTimer";
 import { MarkingProgress } from "./MarkingProgress";
@@ -270,6 +271,7 @@ export function AttemptPage() {
               )}
             </div>
           </div>
+          <AttemptNotices attempt={attempt} />
           {needsTeacherCount > 0 && (
             <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
               {needsTeacherCount === 1 ? "One marking point is" : `${needsTeacherCount} marking points are`}{" "}

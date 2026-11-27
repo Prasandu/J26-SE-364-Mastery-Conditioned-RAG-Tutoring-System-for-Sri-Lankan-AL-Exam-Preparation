@@ -382,6 +382,43 @@ The audit report (`J26-SE-364_Final_Code_Audit_…pdf`) is mapped item by item i
 | Support | **143 passed, 6 failed** (the same 6 asset-blocked tests: `test_rag_extraction`, `test_retrieval`, 4 in `test_consultation`) |
 | Frontend | **96/96**; eslint 0 errors (11 pre-existing warnings); `tsc -b` clean; `npm run build` OK |
 
+### S15 - operator approvals (2026-11-27) and legacy AI-marks policy - DONE
+
+**Committed and pushed** `all-features`: `e186ecf..d78b302` (7 commits), then `cbc25da` (CI fix).
+
+**Before committing:**
+
+- Full-tree secret scan. It found a **real Supabase pooler `DATABASE_URL` with password committed in `chemistry-tutor/support-service/.env.example` since `b8abed0`**. It is replaced by a placeholder at the tip; it **still has to be rotated** and remains in history.
+- Removed personal local paths from the docs.
+
+**CI on GitHub:**
+
+- Run 1 (`d78b302`): 5/6 jobs passed. The support job failed: with the PyTorch CPU index first, uv saw only `requests` 2.28.1 there.
+- Fixed with `UV_INDEX_STRATEGY=unsafe-best-match` (both indexes trusted).
+- Run 2 (`cbc25da`): **all 6 jobs passed** - `[TESTED]` on GitHub.
+
+**Refs:** `refs/agents/*` deleted (17 refs, none contained in any branch).
+
+**Blocked:** deleting `%USERPROFILE%\.git` (0 commits, 0 refs, an index of 8,911 staged profile files, ~575 MB of blobs) was blocked by the tool's safety layer. The operator should run it.
+
+**Decisions:**
+
+- Lab stash: kept.
+- Class rosters: approved; next slice.
+- Legacy AI marks: confidence <= 0.5 (or none) goes to teacher review, otherwise kept and labelled.
+
+**Legacy AI-marks policy as built:** `app/services/legacy_ai_policy.py`, CLI `app/reconcile_legacy_ai_marks.py`, migration 0024 `legacy_ai_reclassifications` (RLS), `AttemptOut` labels and the frontend `AttemptNotices`.
+
+**Results:**
+
+| Suite | Result |
+|---|---|
+| C2 with Postgres | **81 passed** |
+| Shared-DB smoke | **50/50** (0024 down/up, RLS, anon/authenticated denied on the new table) |
+| Frontend | **99/99**, tsc clean |
+
+Not applied to real data (Supabase is unreachable).
+
 ## Open blockers
 
 | Blocker | Owner | Effect |

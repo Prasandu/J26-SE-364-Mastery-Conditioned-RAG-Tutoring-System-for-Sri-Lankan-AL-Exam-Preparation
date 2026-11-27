@@ -139,6 +139,11 @@ export interface Attempt {
   duration_minutes: number;
   expires_at: string;
   questions: QuestionResult[];
+  // Legacy AI-marks policy: earlier AI-judged marks are labelled, and a total given before
+  // a teacher re-checked some points is provisional (it can go up or down).
+  includes_ai_judged_marks?: boolean;
+  points_awaiting_teacher?: number;
+  score_is_provisional?: boolean;
 }
 
 export interface AnswerInput {

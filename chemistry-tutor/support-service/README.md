@@ -10,7 +10,8 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements-dev.txt
 copy .env.example .env   # fill in values
-uvicorn app.main:app --reload --port 8000
+alembic upgrade head     # creates the "support" schema in the shared database
+uvicorn app.main:app --reload --port 8002   # 8000 is the virtual lab API
 ```
 
 ## Test

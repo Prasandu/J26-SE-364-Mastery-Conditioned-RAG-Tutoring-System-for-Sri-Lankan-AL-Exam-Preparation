@@ -8,12 +8,13 @@ from app.schemas.practice import (
     CheckFlaggedAnswerRequest,
     CheckFlaggedAnswerResponse,
     ExplainResponse,
-    FlagQuestionRequest,
     FlaggedHintRequest,
     FlaggedHintResponse,
     FlaggedQuestionResponse,
+    FlagQuestionRequest,
 )
 from app.schemas.tutor import Citation
+from app.security import require_integration_caller
 from app.services.adaptive_hints.hint_engine import HINT_LEVEL_NAMES, choose_hint_level
 from app.services.practice.explain import explain_flagged_question
 from app.services.practice.flagged_questions import (
@@ -51,7 +52,7 @@ def flag_question(
     request: Request,
     body: FlagQuestionRequest,
     db: Session = Depends(get_db),
-    _current_user_id: str = Depends(get_current_user_id),
+    _caller: str = Depends(require_integration_caller),
 ) -> FlaggedQuestionResponse:
     """Record a question a student got wrong, reported by another component
     (e.g. the model-paper/past-paper processing component). This is the
@@ -59,10 +60,11 @@ def flag_question(
     scripts/seed_flagged_questions.py exercises this exact endpoint with
     mock data so the Practice "Review Mistakes" flow is testable standalone.
 
-    Requires a valid token (any authenticated caller), but deliberately
-    does NOT require it to match body.student_id — this is meant to be
-    called by another service reporting on a student's behalf, not by the
-    student themselves.
+    Machine ingestion only: the caller authenticates as a component with its
+    X-Integration-Key (app.security.require_integration_caller). An end-user
+    token is not accepted here - before, any signed-in student could create
+    mistake records for any other student_id. body.student_id is the reporting
+    service's claim about whose answer it marked.
     """
     flagged = create_flagged_question(
         db,

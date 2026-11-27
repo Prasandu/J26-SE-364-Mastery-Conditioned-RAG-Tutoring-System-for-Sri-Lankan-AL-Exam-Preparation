@@ -1,7 +1,8 @@
 import io
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 
+from app.auth import get_current_user_id
 from app.rate_limit import limiter
 from app.schemas.voice import SynthesizeRequest, TranscribeResponse
 from app.services.speech.synthesis import synthesize_sinhala_speech
@@ -16,7 +17,11 @@ router = APIRouter()
 MAX_AUDIO_BYTES = 15 * 1024 * 1024
 
 
-@router.post("/voice/transcribe", response_model=TranscribeResponse)
+# Both routes call paid speech providers: signed-in callers only, checked before the
+# upload or text reaches a provider.
+@router.post(
+    "/voice/transcribe", response_model=TranscribeResponse, dependencies=[Depends(get_current_user_id)]
+)
 @limiter.limit("10/minute")
 async def transcribe(
     request: Request, audio: UploadFile = File(...), language: str | None = Form(None)
@@ -31,7 +36,7 @@ async def transcribe(
     return TranscribeResponse(text=text)
 
 
-@router.post("/voice/synthesize")
+@router.post("/voice/synthesize", dependencies=[Depends(get_current_user_id)])
 @limiter.limit("10/minute")
 def synthesize(request: Request, body: SynthesizeRequest) -> Response:
     """Synthesize Sinhala text to speech (WAV). English is handled entirely

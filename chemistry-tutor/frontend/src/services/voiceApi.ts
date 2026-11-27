@@ -1,3 +1,5 @@
+import { authFetch } from "./apiClient";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function transcribeAudio(audioBlob: Blob, language: "en" | "si"): Promise<string> {
@@ -5,7 +7,7 @@ export async function transcribeAudio(audioBlob: Blob, language: "en" | "si"): P
   formData.append("audio", audioBlob, "recording.webm");
   formData.append("language", language);
 
-  const res = await fetch(`${API_BASE_URL}/api/v1/voice/transcribe`, {
+  const res = await authFetch(`${API_BASE_URL}/api/v1/voice/transcribe`, {
     method: "POST",
     body: formData,
   });
@@ -15,7 +17,7 @@ export async function transcribeAudio(audioBlob: Blob, language: "en" | "si"): P
 }
 
 export async function synthesizeSinhalaSpeech(text: string): Promise<Blob> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/voice/synthesize`, {
+  const res = await authFetch(`${API_BASE_URL}/api/v1/voice/synthesize`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),

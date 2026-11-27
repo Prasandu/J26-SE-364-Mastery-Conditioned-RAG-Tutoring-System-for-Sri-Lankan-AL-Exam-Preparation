@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user_id
 from app.db import get_db
 from app.rate_limit import limiter
 from app.schemas.tutor import AskRawRequest, AskRawResponse, AskRequest, AskResponse, Citation
+from app.security import require_raw_tutor_enabled
 from app.services.tutoring.grounded_answer import answer_question
 from app.services.tutoring.llm_adapter import get_llm_provider
 
@@ -15,10 +17,15 @@ SYSTEM_PROMPT = (
 )
 
 
-@router.post("/tutor/ask-raw", response_model=AskRawResponse)
+@router.post(
+    "/tutor/ask-raw",
+    response_model=AskRawResponse,
+    dependencies=[Depends(require_raw_tutor_enabled), Depends(get_current_user_id)],
+)
 @limiter.limit("20/minute")
 def ask_raw(request: Request, body: AskRawRequest) -> AskRawResponse:
-    """Temporary ungrounded endpoint, kept only to compare against /tutor/ask."""
+    """Ungrounded development-only comparison against /tutor/ask: 404 unless
+    ENABLE_RAW_TUTOR=true (refused in production), and signed-in callers only."""
     provider = get_llm_provider()
     try:
         answer = provider.generate_response(SYSTEM_PROMPT, body.question)
@@ -27,7 +34,7 @@ def ask_raw(request: Request, body: AskRawRequest) -> AskRawResponse:
     return AskRawResponse(answer=answer)
 
 
-@router.post("/tutor/ask", response_model=AskResponse)
+@router.post("/tutor/ask", response_model=AskResponse, dependencies=[Depends(get_current_user_id)])
 @limiter.limit("20/minute")
 def ask(request: Request, body: AskRequest, db: Session = Depends(get_db)) -> AskResponse:
     """Curriculum-grounded answer: retrieves relevant NIE passages, answers from

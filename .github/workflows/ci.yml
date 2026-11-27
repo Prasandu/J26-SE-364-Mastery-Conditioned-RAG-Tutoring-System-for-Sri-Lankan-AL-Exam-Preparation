@@ -144,6 +144,10 @@ jobs:
       DATABASE_URL: postgresql+psycopg://test:test@127.0.0.1:5432/support_test
       SUPABASE_URL: http://127.0.0.1:9
       UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+      # The PyTorch CPU index also hosts an old `requests` (2.28.1); with uv's default
+      # first-index rule that blocks google-genai (needs >=2.30). Both indexes are trusted
+      # (PyPI and the official PyTorch index), so pick the best version across them.
+      UV_INDEX_STRATEGY: unsafe-best-match
     defaults:
       run:
         working-directory: chemistry-tutor/support-service
